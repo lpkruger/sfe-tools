@@ -53,6 +53,11 @@ public class GCircuitEval extends CircuitCrypt {
 	}
 	
 	byte[] eval_rec(Gate g, GarbledCircuit gcc, TreeMap<Integer, byte[]> vals) {
+		if (g.arity == 0) {
+			vals.put(g.id, g.truthtab[0]);
+			return g.truthtab[0];
+		}
+		
 		byte[] ink = vals.get(g.inputs[0]);
 		if (ink == null) {
 			ink = eval_rec(getGate(g.inputs[0], gcc), gcc, vals);

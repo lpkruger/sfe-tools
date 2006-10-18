@@ -92,12 +92,16 @@ class GarbledCircuit implements Serializable {
 			}
 			int tts = -1;
 			switch(gcc.allGates[i].arity) {
+			case 0:
+				tts = 1; break;
 			case 1:
 				tts = 2; break;
 			case 2:
 				tts = 4; break;
 			case 3:
 				tts = 8; break;
+			default:
+				throw new RuntimeException("Unexpected arity: " + tts);
 			}
 			
 			gcc.allGates[i].truthtab = new byte[tts][seclen];

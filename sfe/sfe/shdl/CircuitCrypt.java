@@ -53,6 +53,14 @@ public class CircuitCrypt {
 		for (int i=0; i<cc.outputs.length; ++i) {
 			data.gcc.outputs[i] = encGate_rec(cc.outputs[i]);
 			data.gcc.outputSecrets[i] = secrets.get(data.gcc.outputs[i]);
+			
+			// special case
+			if (cc.outputs[i].arity == 0) {
+				boolean val = cc.outputs[i].truthtab[0];
+				data.gcc.outputSecrets[i][val ? 1 : 0] = 
+					new SFEKey(map.get(cc.outputs[i]).truthtab[0]);
+				// TODO: replace call to SFEKey constructor
+			}
 		}
 		
 		for (int i=0; i<cc.inputs.length; ++i) {
@@ -103,6 +111,13 @@ public class CircuitCrypt {
 		map.put(gate, egate);
 		SecretKey[] secr = genKeyPair(gate);
 		secrets.put(egate.id, secr);
+		
+		if (gate.arity == 0) {  // special case to avoid NullPointerException
+			inpsecs = new SecretKey[][] { genKeyPair(null) };
+		}
+		
+		//System.out.println("inpsecs.length : " + inpsecs.length);
+		//System.out.println("gate.truthtab.length : " + gate.truthtab.length);
 		
 		egate.truthtab = new byte[gate.truthtab.length][];
 		for (int i=0; i<gate.truthtab.length; ++i) {

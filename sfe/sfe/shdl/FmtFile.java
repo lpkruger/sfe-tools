@@ -15,17 +15,32 @@ public class FmtFile {
 	
 	HashMap<String, Obj> mapping = new HashMap<String, Obj>();
 	VarDesc vardesc = new VarDesc();
+	TreeMap<Integer, Integer> outputmap = new TreeMap<Integer, Integer>();
 	
 	public void mapBits(BigInteger n, TreeMap<Integer,Boolean> vals, String name) {
 		Obj obj = mapping.get(name);
 		for (int j=0; j<obj.bits.length; ++j) {
 			int i = obj.bits[j];
+			System.out.println("set bit " + j + " of " + name + " (" + i + ") = " + n.testBit(j));
             vals.put(i, n.testBit(j));
 		}
 	}
 	
-	public VarDesc getVarDesc() {
-		return vardesc;
+	public BigInteger readBits(boolean[] vals, String name) {
+		Obj obj = mapping.get(name);
+		BigInteger zz = BigInteger.ZERO;
+		for (int j=0; j<obj.bits.length; ++j) {
+			int i = obj.bits[j];
+			int ri = outputmap.get(i);
+			
+			System.out.print(vals[ri] ? "1" : "0");
+			if (vals[ri]) {
+				zz = zz.setBit(j);
+			}
+		}
+		System.out.println();
+		return zz;
+
 	}
 	
 	public BigInteger readBits(TreeMap<Integer,Boolean> vals, String name) {
@@ -39,12 +54,18 @@ public class FmtFile {
 		return n;
 	}
 	
+
+	public VarDesc getVarDesc() {
+		return vardesc;
+	}
+	
 	public static FmtFile readFile(String file) {
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(file));
 			String line;
 			
 			FmtFile fmt = new FmtFile();
+			int outputNum = 0;
 			
 			while ((line = in.readLine()) != null) {
 				String[] spl = line.split(" ");
@@ -69,7 +90,15 @@ public class FmtFile {
 				
 				for (int i=5; i<spl.length-1; ++i) {
 					obj.bits[i-5] = Integer.parseInt(spl[i]);
-					fmt.vardesc.who.put(obj.bits[i-5], obj.party==1 ? "B" : "A");
+	
+					if (spl[1].equals("input")) {
+						fmt.vardesc.who.put(obj.bits[i-5], obj.party==1 ? "B" : "A");
+						System.out.println("inp " + obj.bits[i-5] + " : " + (obj.party==1 ? "B" : "A"));
+					}
+					
+					if (spl[1].equals("output")) {
+						fmt.outputmap.put(obj.bits[i-5], outputNum++);
+					}
 				}
 				
 				fmt.mapping.put(obj.name, obj);
