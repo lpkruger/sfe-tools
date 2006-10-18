@@ -3,17 +3,16 @@ n=$2
 
 cat << END
 program edit_${m}_${n} {
-        const N=4;
+        const N=8;
         type Num = Int<N>;
         type Char = Int<8>;
 	type StrA = Char[$m];
 	type StrB = Char[$n];
         type AliceInput = struct { StrA x };
         type BobInput = struct { StrB x };
-        type AliceOutput = Num; 
         type BobOutput = Num; 
         type Input = struct {AliceInput alice,  BobInput bob};
-        type Output = struct {AliceOutput alice, BobOutput bob};
+        type Output = struct {BobOutput bob};
 
         function Output output(Input input) {
 	var Num xx;
@@ -60,8 +59,6 @@ END
 done
 done
 
-
-echo "	output.alice=dd_${m}_${n};"
 echo "	output.bob=dd_${m}_${n};"
 echo "	}"
 echo "}"

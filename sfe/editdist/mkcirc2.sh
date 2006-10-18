@@ -3,7 +3,7 @@ n=$2
 
 cat << END
 program edit_${m}_${n} {
-        const N=4;
+        const N=8;
         type Num = Int<N>;
         type Char = Int<8>;
 	type StrA = Char[$m];
@@ -12,45 +12,43 @@ END
 
 echo -n "        type AliceInput = struct { StrA x"
 for ((i=0; i<=m; ++i)) ; do
-	echo -n ", dd_${i}_0_a"
+	echo -n ", Num dd_${i}_0_a"
 done
 for ((j=1; j<=n; ++j)) ; do
-	echo -n ", dd_0_${j}_a"
+	echo -n ", Num dd_0_${j}_a"
 done
 for ((i=1; i<=m; ++i)) ; do
-	echo -n ", out_${i}_${n}_a"
+	echo -n ", Num out_${i}_${n}_a"
 done
 for ((j=1; j<=n-1; ++j)) ; do
-	echo -n ", out_${m}_${j}_a"
+	echo -n ", Num out_${m}_${j}_a"
 done
 
 echo " };"
 
 echo -n "        type BobInput = struct { StrB x" 
 for ((i=0; i<=m; ++i)) ; do
-	echo -n ", dd_${i}_0_b"
+	echo -n ", Num dd_${i}_0_b"
 done
 for ((j=1; j<=n; ++j)) ; do
-	echo -n ", dd_0_${j}_b"
+	echo -n ", Num dd_0_${j}_b"
 done
 echo " };"
 
 
-echo "        type AliceOutput = struct { };"
-
-echo -n "        type BobOutput = struct { out_${m}_${n}_b" 
+echo -n "        type BobOutput = struct { Num out_${m}_${n}_b" 
 for ((i=1; i<=m-1; ++i)) ; do
-	echo -n ", out_${i}_${n}_b"
+	echo -n ", Num out_${i}_${n}_b"
 done
 for ((j=1; j<=n-1; ++j)) ; do
-	echo -n ", out_${m}_${j}_b"
+	echo -n ", Num out_${m}_${j}_b"
 done
 
 echo " };"
 
 cat << END
         type Input = struct {AliceInput alice,  BobInput bob};
-        type Output = struct {AliceOutput alice, BobOutput bob};
+        type Output = struct {BobOutput bob};
 
         function Output output(Input input) {
 	var Num xx;
@@ -66,11 +64,11 @@ done
 done
 
 for ((i=0; i<=m; ++i)) ; do
-        echo "	dd_${i}_0 = dd_${i}_0_a + dd_${i}_0_b;"
+        echo "	dd_${i}_0 = input.alice.dd_${i}_0_a ^ input.bob.dd_${i}_0_b;"
 done
 
 for ((j=1; j<=n; ++j)) ; do
-        echo "	dd_0_${j} = dd_0_${j}_a + dd_0_${j}_b;"
+        echo "	dd_0_${j} = input.alice.dd_0_${j}_a ^ input.bob.dd_0_${j}_b;"
 done
 
 for ((i=1; i<=m; ++i)) ; do
@@ -98,10 +96,10 @@ done
 done
 
 for ((i=1; i<=m; ++i)) ; do
-	echo "	output.bob.out_${i}_${n}_b = dd_${i}_${n} - input.alice.out_${i}_${n}_a;"
+	echo "	output.bob.out_${i}_${n}_b = dd_${i}_${n} ^ input.alice.out_${i}_${n}_a;"
 done
 for ((j=1; j<=n-1; ++j)) ; do
-	echo "	output.bob.out_${m}_${j}_b = dd_${m}_${j} - input.alice.out_${m}_${j}_a;"
+	echo "	output.bob.out_${m}_${j}_b = dd_${m}_${j} ^ input.alice.out_${m}_${j}_a;"
 done
 
 echo "	}"
