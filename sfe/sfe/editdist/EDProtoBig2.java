@@ -102,8 +102,8 @@ public class EDProtoBig2 {
 			
 			D("prepare circuit");
 			// evaluate min circuit
-			Circuit circuit = CircuitParser.readFile("DYN_MN/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.circuit");
-			FmtFile fmt = FmtFile.readFile("DYN_MN/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.fmt");
+			Circuit circuit = CircuitParser.readFile("editdist/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.circuit");
+			FmtFile fmt = FmtFile.readFile("editdist/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.fmt");
 			VarDesc bdv = fmt.getVarDesc();
 			VarDesc aliceVars = bdv.filter("A");
 			VarDesc bobVars = bdv.filter("B");
@@ -161,7 +161,7 @@ public class EDProtoBig2 {
 		public static void main(String[] args) throws Exception {
 			int port = Integer.parseInt(args[0]);
 			String str2 = args[1];
-			
+
 			new Bob(port, str2).go();
 		}
 		
@@ -177,13 +177,14 @@ public class EDProtoBig2 {
 			
 			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 			
-			///
+			FmtFile fmt = FmtFile.readFile("editdist/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.fmt");
 			
 			int cBits=CHAR_BITS;
 			int bStart=0;
 			
 			for (int i=str2.length()-1; i>=0; --i) {
 				byte c1 = (byte) str2.charAt(i);
+				fmt.mapBits(BigInteger.valueOf(c1), vals, "input.bob.x[" + i + "]");
 				mapBits(BigInteger.valueOf(c1), vals, bStart, (bStart+=cBits)-1);
 			}
 			
@@ -196,16 +197,19 @@ public class EDProtoBig2 {
 			sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
 			cbob.go();
 					
+			/*
 			BigInteger zz = BigInteger.ZERO;
-			
 			for (int ri=N_BITS; ri<cbob.result.length; ++ri) {
 				System.out.print(cbob.result[ri] ? "1" : "0");
 				if (cbob.result[ri]) {
+					
 					zz = zz.setBit(ri-N_BITS);
 				}
 			}
-			
 			System.out.println();
+			*/
+			
+			BigInteger zz = fmt.readBits(cbob.result, "output.bob");
 			System.out.println();
 			
 			System.out.println("Bob circuit wrote " + out.getCount() + " bytes");
