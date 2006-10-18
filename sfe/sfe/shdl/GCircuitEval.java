@@ -33,9 +33,11 @@ public class GCircuitEval extends CircuitCrypt {
 			byte[] retval = eval_rec(getGate(gcc.outputs[i], gcc), gcc, vals);
 			SecretKey retkey = SFEKey.bytesToKey(retval, CIPHER);
 			
+			/*
 			System.out.println("O " + i + " " + Base64.encodeBytes(retval) + " " + 
 					Base64.encodeBytes(gcc.outputSecrets[i][0].getEncoded()) + " " + 
 					Base64.encodeBytes(gcc.outputSecrets[i][1].getEncoded()));
+			*/
 			if (gcc.outputSecrets[i][0].equals(retkey))
 				ret[i] = false;
 			else if (gcc.outputSecrets[i][1].equals(retkey))

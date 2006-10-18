@@ -168,8 +168,8 @@ public class Protocol {
 			int j = 0;
 			for (int i=0; i<data.inputSecrets.length; ++i) {
 				if (bobVars.contains(i)) {
-					System.out.println("secrets " + i);
-					System.out.println(data.inputSecrets[i]);
+					//System.out.println("secrets " + i);
+					//System.out.println(data.inputSecrets[i]);
 					
 					otarray[j][0] = SFEKey.keyToBigInt(data.inputSecrets[i][0]);
 					otarray[j][1] = SFEKey.keyToBigInt(data.inputSecrets[i][1]);

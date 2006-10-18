@@ -185,7 +185,7 @@ public class EDProtoBig2 {
 			for (int i=str2.length()-1; i>=0; --i) {
 				byte c1 = (byte) str2.charAt(i);
 				fmt.mapBits(BigInteger.valueOf(c1), vals, "input.bob.x[" + i + "]");
-				mapBits(BigInteger.valueOf(c1), vals, bStart, (bStart+=cBits)-1);
+				//mapBits(BigInteger.valueOf(c1), vals, bStart, (bStart+=cBits)-1);
 			}
 			
 			boolean[] vv = new boolean[vals.size()];

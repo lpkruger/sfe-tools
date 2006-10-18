@@ -21,7 +21,7 @@ public class FmtFile {
 		Obj obj = mapping.get(name);
 		for (int j=0; j<obj.bits.length; ++j) {
 			int i = obj.bits[j];
-			System.out.println("set bit " + j + " of " + name + " (" + i + ") = " + n.testBit(j));
+			//System.out.println("set bit " + j + " of " + name + " (" + i + ") = " + n.testBit(j));
             vals.put(i, n.testBit(j));
 		}
 	}
@@ -33,12 +33,12 @@ public class FmtFile {
 			int i = obj.bits[j];
 			int ri = outputmap.get(i);
 			
-			System.out.print(vals[ri] ? "1" : "0");
+			//System.out.print(vals[ri] ? "1" : "0");
 			if (vals[ri]) {
 				zz = zz.setBit(j);
 			}
 		}
-		System.out.println();
+		//System.out.println();
 		return zz;
 
 	}
@@ -93,7 +93,7 @@ public class FmtFile {
 	
 					if (spl[1].equals("input")) {
 						fmt.vardesc.who.put(obj.bits[i-5], obj.party==1 ? "B" : "A");
-						System.out.println("inp " + obj.bits[i-5] + " : " + (obj.party==1 ? "B" : "A"));
+						//System.out.println("inp " + obj.bits[i-5] + " : " + (obj.party==1 ? "B" : "A"));
 					}
 					
 					if (spl[1].equals("output")) {
