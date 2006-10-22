@@ -27,7 +27,7 @@ import sfe.crypto.*;
  * 
  */
 
-public class EDProtoBig2 {
+public class EDProtoBlock {
 	
 	static void D(Object s) {
 		System.out.println(s);
@@ -36,6 +36,9 @@ public class EDProtoBig2 {
 	static BigInteger TWO = BigInteger.valueOf(2);
 	static final int N_BITS=8;
 	static final int CHAR_BITS=8;
+	
+	static final int BLOCK_SIZE=8;  // block size for larger strings
+	
 	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
 	
 	static final boolean use_fairplay = false;
@@ -63,6 +66,11 @@ public class EDProtoBig2 {
 		ByteCountOutputStreamSFE byteCount;
 		
 		String str1;
+		Circuit circuit;
+		FmtFile fmt;
+		VarDesc aliceVars;
+		VarDesc bobVars;
+		
 		
 		Alice(String to, int port, String str1) throws IOException {
 			bob = new Socket(to, port);
@@ -100,26 +108,19 @@ public class EDProtoBig2 {
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(this.in);
 			
-			D("prepare circuit");
-			// evaluate min circuit
-			Circuit circuit = CircuitParser.readFile("editdist/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.circuit");
-			FmtFile fmt = FmtFile.readFile("editdist/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.fmt");
+			circuit = CircuitParser.readFile("editdist/block_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.circuit");
+			fmt = FmtFile.readFile("editdist/block_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.fmt");
+			
 			VarDesc bdv = fmt.getVarDesc();
-			VarDesc aliceVars = bdv.filter("A");
-			VarDesc bobVars = bdv.filter("B");
+			aliceVars = bdv.filter("A");
+			bobVars = bdv.filter("B");
 			
-			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 			
-			for (int i=str1.length()-1; i>=0; --i) {
-				byte c0 = (byte) str1.charAt(i);
-				fmt.mapBits(BigInteger.valueOf(c0), vals, "input.alice.x[" + i + "]");
+			for (int i=BLOCK_SIZE; i<=astrlen; i+=BLOCK_SIZE) {
+				for (int j=BLOCK_SIZE; j<=bstrlen; j+=BLOCK_SIZE) {
+					computeRecurrence(i,j);
+				}
 			}
-	
-			D("eval circuit");
-			sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
-			calice.go(vals, 
-					new TreeSet<Integer>(aliceVars.who.keySet()),
-					new TreeSet<Integer>(bobVars.who.keySet()));
 			
 			System.out.println("Alice circuit wrote " + out.getCount() + " bytes");
 			
@@ -128,7 +129,27 @@ public class EDProtoBig2 {
 			//BigInteger combined = r0.add(bobVal).and(MAX_BIGINT);
 			//System.out.println("result after stage: " + combined);
 		}
+	
+		public void computeRecurrence(int x, int y) throws Exception {
+			D("prepare circuit");
+
+		
+			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
+			
+			for (int i=str1.length()-1; i>=0; --i) {
+				byte c0 = (byte) str1.charAt(i);
+				fmt.mapBits(BigInteger.valueOf(c0), vals, "input.alice.x[" + i + "]");
+			}
+			
+			D("eval circuit");
+			sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
+			calice.go(vals, 
+					new TreeSet<Integer>(aliceVars.who.keySet()),
+					new TreeSet<Integer>(bobVars.who.keySet()));
+		}		
 	}
+
+	
 	
 	public static class Bob {
 		ServerSocket listen;
