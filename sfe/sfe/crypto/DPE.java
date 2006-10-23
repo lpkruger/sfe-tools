@@ -55,6 +55,9 @@ public final class DPE {
 		BigInteger encrypt(BigInteger M, BigInteger u) {
 			return modMul(y.modPow(M, n), u.modPow(r, n), n);
 		}
+		public BigInteger add(BigInteger x, BigInteger y) {
+			return modMul(x, y, n);
+		}
 		EncKey(BigInteger r, BigInteger y, BigInteger n) {
 			this.r = r;
 			this.y = y;

@@ -10,6 +10,8 @@ public class HomomorphicCipher {
 	
 	public static interface EncKey extends java.io.Serializable {
 		BigInteger encrypt(BigInteger M);
+		
+		BigInteger add(BigInteger x1, BigInteger x2);
 	}
 	
 	public static HomomorphicCipher getInstance() {

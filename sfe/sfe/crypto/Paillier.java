@@ -29,6 +29,11 @@ public class Paillier {
 			
 		}
 		
+		public BigInteger add(BigInteger x, BigInteger y) {
+			BigInteger n2 = n.multiply(n);
+			return x.multiply(y).mod(n2);
+		}
+		
 		EncKey(BigInteger n, BigInteger g) {
 			this.g = g;
 			this.n = n;
