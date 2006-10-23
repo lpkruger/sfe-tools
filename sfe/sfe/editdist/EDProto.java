@@ -37,11 +37,11 @@ public class EDProto {
 	static BigInteger QQQ = TWO.pow(128).nextProbablePrime();
 	static BigInteger GGG = OT.findGenerator(QQQ);
 	
-	static final int N_BITS=8;
+	static final int N_BITS=80;
 	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
 	
 	static final boolean use_fairplay = false;
-	static final boolean use_circuitonly = true;
+	static final boolean use_circuitonly = false;
 	
 	public static void main(String[] args) throws Exception {
 		if (System.getProperty("BOB") != null) {
@@ -52,7 +52,7 @@ public class EDProto {
 	}
 	
 	public static BigInteger getRandom() {
-		return new BigInteger(N_BITS, new Random());
+		return new BigInteger(N_BITS-8, new Random());
 		// DEBUG:
 		//return BigInteger.ZERO;
 	}
@@ -65,9 +65,11 @@ public class EDProto {
 		long startTime;
 		ByteCountOutputStreamSFE byteCount;
 	
+		/*
 		Domain domain = new Domain(-20, 20,
 	               java.math.BigInteger.valueOf(3).pow(32),
 	               BigInteger.valueOf(500));
+		*/
 		
 		String str1;
 		
@@ -145,8 +147,9 @@ public class EDProto {
 			
 			D("prepare circuit");
 			// evaluate min circuit
-			Circuit circuit = CircuitParser.readFile("SPLIT_" + N_BITS + "bit/splitmin3cmp.txt.Opt.circuit");
-			VarDesc bdv = VarDesc.readFile("SPLIT_" + N_BITS + "bit/splitmin3cmp.txt.Opt.fmt.split");
+			Circuit circuit = CircuitParser.readFile("editdist/proto2a_" + N_BITS + ".txt.Opt.circuit");
+			FmtFile fmt = FmtFile.readFile("editdist/proto2a_" + N_BITS + ".txt.Opt.fmt");
+			VarDesc bdv = fmt.getVarDesc();
 			VarDesc aliceVars = bdv.filter("A");
 			VarDesc bobVars = bdv.filter("B");
 			
@@ -160,13 +163,11 @@ public class EDProto {
 			
 			aState[i][j] = r0;
 			
-			int nBits=N_BITS;
-			int aStart=8+N_BITS*3;
-			mapBits(x0, vals, aStart, (aStart+=8)-1);
-			mapBits(r0, vals, aStart, (aStart+=nBits)-1);
-			mapBits(c0, vals, aStart, (aStart+=nBits)-1);
-			mapBits(b0, vals, aStart, (aStart+=nBits)-1);
-			mapBits(a0, vals, aStart, (aStart+=nBits)-1);
+			fmt.mapBits(x0, vals, "input.alice.x");
+			fmt.mapBits(r0, vals, "input.alice.r");
+			fmt.mapBits(c0, vals, "input.alice.c");
+			fmt.mapBits(b0, vals, "input.alice.b");
+			fmt.mapBits(a0, vals, "input.alice.a");
 			
 			D("eval circuit");
 			sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
@@ -193,7 +194,9 @@ public class EDProto {
 			ObjectInputStream in = new ObjectInputStream(this.in);
 			
 			System.out.println("compute " + i + "," + j);
-			HomomorphicCipher.DecKey prkey = DPE.genKey(domain.dint, domain.dint.bitLength());
+			BigInteger NUM = BigInteger.valueOf(3).pow(64);
+			HomomorphicCipher.DecKey prkey = DPE.genKey(NUM, NUM.bitLength());
+			//HomomorphicCipher.DecKey prkey = DPE.genKey(domain.dint, domain.dint.bitLength());
 			//HomomorphicCipher.DecKey prkey = Paillier.genKey(256);
 			HomomorphicCipher.EncKey pubkey = prkey.encKey();
 			
@@ -216,35 +219,37 @@ public class EDProto {
 			D("Do OT, choose " + thisbyte);
 			BigInteger aa0 = chooser.go();
 			
+			D("OT read: " + aa0);
+			
 			// decrypt
 			BigInteger a0 = prkey.decrypt(aa0);
 			BigInteger b0 = aState[i-1][j].add(BigInteger.ONE);
 			BigInteger c0 = aState[i][j-1].add(BigInteger.ONE);
-			BigInteger r0 = getRandom();
+			BigInteger r0 = getRandom().negate();
 			//r0 = BigInteger.ONE.add(BigInteger.ONE).add(BigInteger.ONE);
 			
 			aState[i][j] = r0;
 	
 			if (use_fairplay) {
-				AliceLib calice = new AliceLib("SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.circuit", "SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.fmt", "123", in, out,
+				AliceLib calice = new AliceLib("editdist/proto2b_" + N_BITS + ".txt.Opt.circuit", "SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.fmt", "123", in, out,
 						new String[] { String.valueOf(r0), String.valueOf(c0), String.valueOf(b0), String.valueOf(a0) },
 				false);		
 			} else {
 				D("prepare circuit");
 				// evaluate min circuit
-				Circuit circuit = CircuitParser.readFile("SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.circuit");
-				VarDesc bdv = VarDesc.readFile("SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.fmt.split");
+				Circuit circuit = CircuitParser.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.circuit");
+				
+				FmtFile fmt = FmtFile.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.fmt");
+				VarDesc bdv = fmt.getVarDesc();
 				VarDesc aliceVars = bdv.filter("A");
 				VarDesc bobVars = bdv.filter("B");
 				
 				TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 				
-				int nBits=N_BITS;
-				int aStart=N_BITS*3;
-				mapBits(r0, vals, aStart, (aStart+=nBits)-1);
-				mapBits(c0, vals, aStart, (aStart+=nBits)-1);
-				mapBits(b0, vals, aStart, (aStart+=nBits)-1);
-				mapBits(a0, vals, aStart, (aStart+=nBits)-1);
+				fmt.mapBits(r0, vals, "input.alice.r");
+				fmt.mapBits(c0, vals, "input.alice.c");
+				fmt.mapBits(b0, vals, "input.alice.b");
+				fmt.mapBits(a0, vals, "input.alice.a");
 				
 				D("eval circuit");
 				sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
@@ -341,6 +346,8 @@ public class EDProto {
 			out.flush();
 			ObjectInputStream in = new ObjectInputStream(this.in);
 			
+			FmtFile fmt = FmtFile.readFile("editdist/proto2a_" + N_BITS + ".txt.Opt.fmt");
+			
 			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 			
 			BigInteger c1 = bState[i-1][j-1];
@@ -348,13 +355,10 @@ public class EDProto {
 			BigInteger a1 = bState[i][j-1];
 			BigInteger x0 = BigInteger.valueOf(str2.charAt(j-1) & 0xff);
 			
-			int nBits=N_BITS;
-			int bStart=0;
-			
-			mapBits(x0, vals, bStart, (bStart+=8)-1);
-			mapBits(c1, vals, bStart, (bStart+=nBits)-1);
-			mapBits(b1, vals, bStart, (bStart+=nBits)-1);
-			mapBits(a1, vals, bStart, (bStart+=nBits)-1);
+			fmt.mapBits(x0, vals, "input.bob.x");
+			fmt.mapBits(c1, vals, "input.bob.c");
+			fmt.mapBits(b1, vals, "input.bob.b");
+			fmt.mapBits(a1, vals, "input.bob.a");
 			
 			boolean[] vv = new boolean[vals.size()];
 			int vi=0;
@@ -365,15 +369,7 @@ public class EDProto {
 			sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
 			cbob.go();
 					
-			BigInteger zz = BigInteger.ZERO;
-			
-			for (int ri=N_BITS; ri<cbob.result.length; ++ri) {
-				System.out.print(cbob.result[ri] ? "1" : "0");
-				if (cbob.result[ri]) {
-					zz = zz.setBit(ri-N_BITS);
-				}
-			}
-			System.out.println();
+			BigInteger zz = fmt.readBits(cbob.result, "output.bob");
 			
 			bState[i][j] = zz;
 			
@@ -404,16 +400,22 @@ public class EDProto {
 			BigInteger enc2 = enc1.multiply(pubkey.encrypt(bState[i-1][j-1]));
 			
 			// choose random R
-			BigInteger r = getRandom();
-			BigInteger rsub = TWO.pow(N_BITS).subtract(r);
-			BigInteger val = enc2.multiply(pubkey.encrypt(rsub));
+			BigInteger rsub = getRandom();
+			
+			//BigInteger rsub = TWO.pow(N_BITS).subtract(r);
+			BigInteger r = rsub.negate();
+			BigInteger val = pubkey.add(enc2, pubkey.encrypt(rsub));
 			/*
 			if (val.compareTo(BigInteger.ZERO) < 0) {
 				val = val.add(TWO.pow(N_BITS));
 			}
 			*/
 			
-			BigInteger val2 = val.multiply(pubkey.encrypt(BigInteger.ONE));
+			BigInteger val2 = pubkey.add(val, pubkey.encrypt(BigInteger.ONE));
+			
+
+			D("val0 : " + val);
+			D("val1 : " + val2);
 			
 			// prepare the OT
 			byte thisbyte = (byte) str2.charAt(j-1);
@@ -441,13 +443,12 @@ public class EDProto {
 				D("res len " + cbob.outputs);
 				zz = BigInteger.valueOf(cbob.outputs[0]);
 			} else {
+				FmtFile fmt = FmtFile.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.fmt");
 				TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 				
-				int nBits=N_BITS;
-				int bStart=0;
-				mapBits(c1, vals, bStart, (bStart+=nBits)-1);
-				mapBits(b1, vals, bStart, (bStart+=nBits)-1);
-				mapBits(a1, vals, bStart, (bStart+=nBits)-1);
+				fmt.mapBits(c1, vals, "input.bob.c");
+				fmt.mapBits(b1, vals, "input.bob.b");
+				fmt.mapBits(a1, vals, "input.bob.a");
 				
 				boolean[] vv = new boolean[vals.size()];
 				int vi=0;
@@ -458,17 +459,7 @@ public class EDProto {
 				sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
 				cbob.go();
 			
-				D("res len " + cbob.result.length);
-				for (int ri=0; ri<cbob.result.length; ++ri) {
-					System.out.print(cbob.result[ri] ? "1" : "0");
-				}
-				System.out.println();
-				for (int ri=N_BITS; ri<cbob.result.length; ++ri) {
-					System.out.print(cbob.result[ri] ? "1" : "0");
-					if (cbob.result[ri]) {
-						zz = zz.setBit(ri-N_BITS);
-					}
-				}
+				zz = fmt.readBits(cbob.result, "output.bob");
 				System.out.println();
 			}
 			

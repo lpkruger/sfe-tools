@@ -4,9 +4,12 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.GeneralSecurityException;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import javax.crypto.BadPaddingException;
 
 import fairplay.BOAL.AliceLib;
 import fairplay.BOAL.BobLib;
@@ -33,15 +36,23 @@ public class EDProto2 {
 		System.out.println(s);
 	}
 	
+	static SFECipher C;
+	
+	static {
+		try {
+			C = SFECipher.getInstance("SHA-256");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			throw new RuntimeException(ex);
+		}
+	}
+	
 	static BigInteger TWO = BigInteger.ONE.add(BigInteger.ONE);
 	static BigInteger QQQ = TWO.pow(128).nextProbablePrime();
 	static BigInteger GGG = OT.findGenerator(QQQ);
 	
-	static final int N_BITS=8;
+	static final int N_BITS=80;
 	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
-	
-	static final boolean use_fairplay = false;
-	static final boolean use_circuitonly = true;
 	
 	public static void main(String[] args) throws Exception {
 		if (System.getProperty("BOB") != null) {
@@ -52,7 +63,7 @@ public class EDProto2 {
 	}
 	
 	public static BigInteger getRandom() {
-		return new BigInteger(N_BITS, new Random());
+		return new BigInteger(N_BITS-8, new Random());
 		// DEBUG:
 		//return BigInteger.ZERO;
 	}
@@ -65,9 +76,11 @@ public class EDProto2 {
 		long startTime;
 		ByteCountOutputStreamSFE byteCount;
 	
+		/*
 		Domain domain = new Domain(-20, 20,
 	               java.math.BigInteger.valueOf(3).pow(32),
 	               BigInteger.valueOf(500));
+		*/
 		
 		String str1;
 		
@@ -123,11 +136,7 @@ public class EDProto2 {
 			
 			for (int i=1; i<=astrlen; ++i) {
 				for (int j=1; j<=bstrlen; ++j) {
-					if (use_circuitonly) {
-						computeRecurrenceCircuit(i,j);
-					} else {
-						computeRecurrence(i,j);
-					}
+					computeRecurrence(i,j);
 				}
 			}
 			
@@ -135,52 +144,6 @@ public class EDProto2 {
 			System.out.println("Alice result:" + aState[astrlen][bstrlen]);
 		}
 		
-		
-		void computeRecurrenceCircuit (int i, int j) throws Exception {
-			out.flush();
-			
-			ByteCountObjectOutputStream out = ByteCountObjectOutputStream.wrapObjectStream(this.out);
-			out.flush();
-			ObjectInputStream in = new ObjectInputStream(this.in);
-			
-			D("prepare circuit");
-			// evaluate min circuit
-			Circuit circuit = CircuitParser.readFile("SPLIT_" + N_BITS + "bit/splitmin3cmp.txt.Opt.circuit");
-			VarDesc bdv = VarDesc.readFile("SPLIT_" + N_BITS + "bit/splitmin3cmp.txt.Opt.fmt.split");
-			VarDesc aliceVars = bdv.filter("A");
-			VarDesc bobVars = bdv.filter("B");
-			
-			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
-			
-			BigInteger c0 = aState[i-1][j-1];
-			BigInteger b0 = aState[i-1][j].add(BigInteger.ONE);
-			BigInteger a0 = aState[i][j-1].add(BigInteger.ONE);
-			BigInteger r0 = getRandom();
-			BigInteger x0 = BigInteger.valueOf(str1.charAt(i-1) & 0xff);
-			
-			aState[i][j] = r0;
-			
-			int nBits=N_BITS;
-			int aStart=8+N_BITS*3;
-			mapBits(x0, vals, aStart, (aStart+=8)-1);
-			mapBits(r0, vals, aStart, (aStart+=nBits)-1);
-			mapBits(c0, vals, aStart, (aStart+=nBits)-1);
-			mapBits(b0, vals, aStart, (aStart+=nBits)-1);
-			mapBits(a0, vals, aStart, (aStart+=nBits)-1);
-			
-			D("eval circuit");
-			sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
-			calice.go(vals, 
-					new TreeSet<Integer>(aliceVars.who.keySet()),
-					new TreeSet<Integer>(bobVars.who.keySet()));
-			
-			System.out.println("Alice Iteration wrote " + out.getCount() + " bytes");
-			
-			// for DEBUG
-			BigInteger bobVal = (BigInteger) in.readObject();
-			BigInteger combined = r0.add(bobVal).and(MAX_BIGINT);
-			System.out.println("result after stage: " + combined);
-		}
 		
 		
 		void computeRecurrence(int i, int j) throws Exception {
@@ -193,7 +156,9 @@ public class EDProto2 {
 			ObjectInputStream in = new ObjectInputStream(this.in);
 			
 			System.out.println("compute " + i + "," + j);
-			HomomorphicCipher.DecKey prkey = DPE.genKey(domain.dint, domain.dint.bitLength());
+			BigInteger NUM = BigInteger.valueOf(3).pow(64);
+			HomomorphicCipher.DecKey prkey = DPE.genKey(NUM, NUM.bitLength());
+			//HomomorphicCipher.DecKey prkey = DPE.genKey(domain.dint, domain.dint.bitLength());
 			//HomomorphicCipher.DecKey prkey = Paillier.genKey(256);
 			HomomorphicCipher.EncKey pubkey = prkey.encKey();
 			
@@ -209,50 +174,82 @@ public class EDProto2 {
 			out.writeObject(enc1);
 			out.flush();
 			
-			// do OT
-			byte thisbyte = (byte) str1.charAt(i-1);
-			OTN.Chooser chooser = new OTN.Chooser(thisbyte, QQQ, GGG);
-			chooser.setStreams(in, out);
-			D("Do OT, choose " + thisbyte);
-			BigInteger aa0 = chooser.go();
+			//BigInteger mm1 = (BigInteger) in.readObject();
+			//BigInteger mm2 = (BigInteger) in.readObject();
+			byte[] mm1 = (byte[]) in.readObject();
+			byte[] mm2 = (byte[]) in.readObject();
+			
+			////////////////
+			
+			FmtFile fmt2c = FmtFile.readFile("editdist/proto2c_128.txt.Opt.fmt");
+			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
+			
+			fmt2c.mapBits(BigInteger.valueOf(str1.charAt(i-1)), vals, "input.bob.y");
+			
+			boolean[] vv = new boolean[vals.size()];
+			int vi=0;
+			for (Boolean bb : vals.values()) {
+				vv[vi] = bb;
+				vi++;
+			}
+			sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
+			cbob.go();
+			
+			BigInteger kk0 = fmt2c.readBits(cbob.result, "output.bob.k");
+			if (cbob.result[0] & 0x80 != 0) {
+				
+			}
+			
+			SFEKey k0 = decodeKey(kk0);
+			
+			BigInteger aa0 = null;
+			try {
+				C.init(C.DECRYPT_MODE, k0);
+				byte[] m1 = C.doFinal(mm1);
+				aa0 = new BigInteger(m1);
+			} catch (BadPaddingException ex) {
+			}
+			
+			if (aa0 == null) {
+				C.init(C.DECRYPT_MODE, k0);
+				byte[] m2 = C.doFinal(mm2);
+				aa0 = new BigInteger(m2);
+			}
+			
+			////////////////
+			
 			
 			// decrypt
 			BigInteger a0 = prkey.decrypt(aa0);
 			BigInteger b0 = aState[i-1][j].add(BigInteger.ONE);
 			BigInteger c0 = aState[i][j-1].add(BigInteger.ONE);
-			BigInteger r0 = getRandom();
+			BigInteger r0 = getRandom().negate();
 			//r0 = BigInteger.ONE.add(BigInteger.ONE).add(BigInteger.ONE);
 			
 			aState[i][j] = r0;
-	
-			if (use_fairplay) {
-				AliceLib calice = new AliceLib("SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.circuit", "SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.fmt", "123", in, out,
-						new String[] { String.valueOf(r0), String.valueOf(c0), String.valueOf(b0), String.valueOf(a0) },
-				false);		
-			} else {
-				D("prepare circuit");
-				// evaluate min circuit
-				Circuit circuit = CircuitParser.readFile("SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.circuit");
-				VarDesc bdv = VarDesc.readFile("SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.fmt.split");
-				VarDesc aliceVars = bdv.filter("A");
-				VarDesc bobVars = bdv.filter("B");
-				
-				TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
-				
-				int nBits=N_BITS;
-				int aStart=N_BITS*3;
-				mapBits(r0, vals, aStart, (aStart+=nBits)-1);
-				mapBits(c0, vals, aStart, (aStart+=nBits)-1);
-				mapBits(b0, vals, aStart, (aStart+=nBits)-1);
-				mapBits(a0, vals, aStart, (aStart+=nBits)-1);
-				
-				D("eval circuit");
-				sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
-				calice.go(vals, 
-						new TreeSet<Integer>(aliceVars.who.keySet()),
-						new TreeSet<Integer>(bobVars.who.keySet()));
-			}
 			
+			D("prepare circuit");
+			// evaluate min circuit
+			Circuit circuit = CircuitParser.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.circuit");
+			
+			FmtFile fmt = FmtFile.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.fmt");
+			VarDesc bdv = fmt.getVarDesc();
+			VarDesc aliceVars = bdv.filter("A");
+			VarDesc bobVars = bdv.filter("B");
+			
+			vals.clear();
+			
+			fmt.mapBits(r0, vals, "input.alice.r");
+			fmt.mapBits(c0, vals, "input.alice.c");
+			fmt.mapBits(b0, vals, "input.alice.b");
+			fmt.mapBits(a0, vals, "input.alice.a");
+			
+			D("eval circuit");
+			sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
+			calice.go(vals, 
+					new TreeSet<Integer>(aliceVars.who.keySet()),
+					new TreeSet<Integer>(bobVars.who.keySet()));
+		
 			System.out.println("Alice Iteration wrote " + out.getCount() + " bytes");
 			
 			// for DEBUG
@@ -324,69 +321,14 @@ public class EDProto2 {
 			// domain = (Domain) in.readObject();
 			
 			for (int i=1; i<=astrlen; ++i) {
-				for (int j=1; j<=bstrlen; ++j) {
-					if (use_circuitonly) {
-						computeRecurrenceCircuit(i,j);
-					} else {
-						computeRecurrence(i,j);
-					}
+				for (int j=1; j<=bstrlen; ++j) {	
+					computeRecurrence(i,j);
 				}
 			}
 			
 			System.out.println("Bob result:" + bState[astrlen][bstrlen]);
 		}
 		
-		void computeRecurrenceCircuit(int i, int j) throws Exception {
-			ByteCountObjectOutputStream out = ByteCountObjectOutputStream.wrapObjectStream(this.out);
-			out.flush();
-			ObjectInputStream in = new ObjectInputStream(this.in);
-			
-			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
-			
-			BigInteger c1 = bState[i-1][j-1];
-			BigInteger b1 = bState[i-1][j];
-			BigInteger a1 = bState[i][j-1];
-			BigInteger x0 = BigInteger.valueOf(str2.charAt(j-1) & 0xff);
-			
-			int nBits=N_BITS;
-			int bStart=0;
-			
-			mapBits(x0, vals, bStart, (bStart+=8)-1);
-			mapBits(c1, vals, bStart, (bStart+=nBits)-1);
-			mapBits(b1, vals, bStart, (bStart+=nBits)-1);
-			mapBits(a1, vals, bStart, (bStart+=nBits)-1);
-			
-			boolean[] vv = new boolean[vals.size()];
-			int vi=0;
-			for (Boolean bb : vals.values()) {
-				vv[vi] = bb;
-				vi++;
-			}
-			sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
-			cbob.go();
-					
-			BigInteger zz = BigInteger.ZERO;
-			
-			for (int ri=N_BITS; ri<cbob.result.length; ++ri) {
-				System.out.print(cbob.result[ri] ? "1" : "0");
-				if (cbob.result[ri]) {
-					zz = zz.setBit(ri-N_BITS);
-				}
-			}
-			System.out.println();
-			
-			bState[i][j] = zz;
-			
-			System.out.println("Bob Iteration wrote " + out.getCount() + " bytes");
-			
-//			 for DEBUG
-			System.out.println("state eval: " + zz);
-			out.writeObject(zz);
-			out.flush();
-			// end DEBUG
-			
-			
-		}
 		
 		void computeRecurrence(int i, int j) throws Exception {
 			//  first, compute state[i-1][j-1] + t(i,j) - r with Alice
@@ -404,28 +346,67 @@ public class EDProto2 {
 			BigInteger enc2 = enc1.multiply(pubkey.encrypt(bState[i-1][j-1]));
 			
 			// choose random R
-			BigInteger r = getRandom();
-			BigInteger rsub = TWO.pow(N_BITS).subtract(r);
-			BigInteger val = enc2.multiply(pubkey.encrypt(rsub));
+			BigInteger rsub = getRandom();
+			
+			//BigInteger rsub = TWO.pow(N_BITS).subtract(r);
+			BigInteger r = rsub.negate();
+			BigInteger val = pubkey.add(enc2, pubkey.encrypt(rsub));
 			/*
 			if (val.compareTo(BigInteger.ZERO) < 0) {
 				val = val.add(TWO.pow(N_BITS));
 			}
 			*/
 			
-			BigInteger val2 = val.multiply(pubkey.encrypt(BigInteger.ONE));
+			BigInteger val2 = pubkey.add(val, pubkey.encrypt(BigInteger.ONE));
+
+			D("val0 : " + val);
+			D("val1 : " + val2);
 			
-			// prepare the OT
-			byte thisbyte = (byte) str2.charAt(j-1);
-			BigInteger[] choose = new BigInteger[256];
-			for (int k=0; k<256; ++k) {
-				choose[k] = (k==thisbyte ? val : val2);
+			// encrypt two values with random keys
+			SFEKeyGenerator keygen = new SFEKeyGenerator();
+			keygen.init(120);
+			SFEKey k0 = (SFEKey) keygen.generateKey();
+			SFEKey k1 = (SFEKey) keygen.generateKey();
+			
+
+			
+			byte[] m1, m2;
+		
+			try {
+				C.init(C.ENCRYPT_MODE, k0);
+				m1 = C.doFinal(val.toByteArray());
+				C.init(C.ENCRYPT_MODE, k1);
+				m2 = C.doFinal(val2.toByteArray());
+				
+				//m1 = new BigInteger(mm1);
+				//m2 = new BigInteger(mm1);
+			} catch (GeneralSecurityException ex) {
+				ex.printStackTrace();
+				throw new RuntimeException("encryption error");
 			}
 			
-			// do OT
-			OTN.Sender sender = new OTN.Sender(choose, QQQ, GGG);
-			sender.setStreams(in, out);
-			sender.go();
+			out.writeObject(m1);
+			out.writeObject(m2);
+			out.flush();
+			
+			// run equality circuit
+			Circuit circuit2c = CircuitParser.readFile("editdist/proto2c_128.txt.Opt.circuit");
+			FmtFile fmt2c = FmtFile.readFile("editdist/proto2c_128.txt.Opt.fmt");
+			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
+			
+			fmt2c.mapBits(encodeKey(k0), vals, "input.alice.k0");
+			fmt2c.mapBits(encodeKey(k1), vals, "input.alice.k1");
+			fmt2c.mapBits(BigInteger.valueOf(str2.charAt(j-1)), vals, "input.alice.x");
+			
+			VarDesc bdv = fmt2c.getVarDesc();
+			VarDesc aliceVars = bdv.filter("A");
+			VarDesc bobVars = bdv.filter("B");
+			
+			sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit2c);
+			calice.go(vals, 
+					new TreeSet<Integer>(aliceVars.who.keySet()),
+					new TreeSet<Integer>(bobVars.who.keySet()));
+		
 			
 //			 run circuit
 			BigInteger a1 = r;
@@ -434,43 +415,24 @@ public class EDProto2 {
 			
 			BigInteger zz = BigInteger.ZERO;
 			
-			if (use_fairplay) {
-				BobLib cbob = new BobLib("splitmin3.txt.Opt.circuit", "splitmin3.txt.Opt.fmt", "234", in, out,
-						new String[] {String.valueOf(c1), String.valueOf(b1), String.valueOf(a1) },
-				"4");		
-				D("res len " + cbob.outputs);
-				zz = BigInteger.valueOf(cbob.outputs[0]);
-			} else {
-				TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
-				
-				int nBits=N_BITS;
-				int bStart=0;
-				mapBits(c1, vals, bStart, (bStart+=nBits)-1);
-				mapBits(b1, vals, bStart, (bStart+=nBits)-1);
-				mapBits(a1, vals, bStart, (bStart+=nBits)-1);
-				
-				boolean[] vv = new boolean[vals.size()];
-				int vi=0;
-				for (Boolean bb : vals.values()) {
-					vv[vi] = bb;
-					vi++;
-				}
-				sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
-				cbob.go();
+			FmtFile fmt = FmtFile.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.fmt");
+			vals.clear();
 			
-				D("res len " + cbob.result.length);
-				for (int ri=0; ri<cbob.result.length; ++ri) {
-					System.out.print(cbob.result[ri] ? "1" : "0");
-				}
-				System.out.println();
-				for (int ri=N_BITS; ri<cbob.result.length; ++ri) {
-					System.out.print(cbob.result[ri] ? "1" : "0");
-					if (cbob.result[ri]) {
-						zz = zz.setBit(ri-N_BITS);
-					}
-				}
-				System.out.println();
+			fmt.mapBits(c1, vals, "input.bob.c");
+			fmt.mapBits(b1, vals, "input.bob.b");
+			fmt.mapBits(a1, vals, "input.bob.a");
+			
+			boolean[] vv = new boolean[vals.size()];
+			int vi=0;
+			for (Boolean bb : vals.values()) {
+				vv[vi] = bb;
+				vi++;
 			}
+			sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
+			cbob.go();
+			
+			zz = fmt.readBits(cbob.result, "output.bob");
+			System.out.println();
 			
 			bState[i][j] = zz;
 			
@@ -491,5 +453,20 @@ public class EDProto2 {
 			//D("put " + n.testBit(i) + " in " + (lsb+i));   // lsb first
             vals.put(lsb+i, n.testBit(i));
 		}
+	}
+	
+	static BigInteger encodeKey(SFEKey k) {
+		byte[] bytes = k.getEncoded();
+		byte[] encbytes = new byte[bytes.length+1];
+		System.arraycopy(bytes, 0, encbytes, 1, bytes.length);
+		encbytes[0] = 1;
+		return new BigInteger(encbytes);
+	}
+	
+	static SFEKey decodeKey(BigInteger n) {
+		byte[] bytes = n.toByteArray();
+		byte[] decbytes = new byte[bytes.length-1];
+		System.arraycopy(bytes, 1, decbytes, 0, decbytes.length);
+		return new SFEKey(decbytes);
 	}
 }

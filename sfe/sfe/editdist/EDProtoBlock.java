@@ -51,17 +51,21 @@ public class EDProtoBlock {
 		} else System.out.println("Must use -DALICE or -DBOB");
 	}
 	
-	public static BigInteger getRandom() {
-		return new BigInteger(N_BITS, new Random());
+	//public static BigInteger getRandom() {
+		//return new BigInteger(N_BITS, new Random());
 		// DEBUG:
 		//return BigInteger.ZERO;
-	}
+	//}
+	
+	public static Random rand = new Random();
 	
 	public static class Alice {
 		
 		Socket bob;
+		ObjectInputStream in_raw;
 		ObjectInputStream in;
-		ObjectOutputStream out;
+		ObjectOutputStream out_raw;
+		ByteCountObjectOutputStream out;
 		long startTime;
 		ByteCountOutputStreamSFE byteCount;
 		
@@ -71,6 +75,7 @@ public class EDProtoBlock {
 		VarDesc aliceVars;
 		VarDesc bobVars;
 		
+		int[][] matrix;
 		
 		Alice(String to, int port, String str1) throws IOException {
 			bob = new Socket(to, port);
@@ -79,9 +84,9 @@ public class EDProtoBlock {
 			byteCount = 
 				new ByteCountOutputStreamSFE(
 						bob.getOutputStream());
-			out = new ObjectOutputStream(byteCount);
-			out.flush();
-			in = new ObjectInputStream
+			out_raw = new ObjectOutputStream(byteCount);
+			out_raw.flush();
+			in_raw = new ObjectInputStream
 			(new BufferedInputStream
 					(bob.getInputStream()));
 			
@@ -99,28 +104,40 @@ public class EDProtoBlock {
 		
 		void go() throws Exception {
 			int astrlen = str1.length();
-			out.writeInt(astrlen);
-			out.flush();
+			out_raw.writeInt(astrlen);
+			out_raw.flush();
 			
-			int bstrlen = in.readInt();
+			int bstrlen = in_raw.readInt();
+			
+			matrix = new int[astrlen+1][bstrlen+1];
+			
+			for (int i=1; i<=astrlen; ++i) {
+				matrix[i][0] = i;
+			}
+			for (int j=1; j<=bstrlen; ++j) {
+				matrix[0][j] = j;
+			}
 				
-			ByteCountObjectOutputStream out = ByteCountObjectOutputStream.wrapObjectStream(this.out);
+			out = ByteCountObjectOutputStream.wrapObjectStream(this.out_raw);
 			out.flush();
-			ObjectInputStream in = new ObjectInputStream(this.in);
+			in = new ObjectInputStream(this.in_raw);
 			
-			circuit = CircuitParser.readFile("editdist/block_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.circuit");
-			fmt = FmtFile.readFile("editdist/block_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.fmt");
+			//circuit = CircuitParser.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.circuit");
+			fmt = FmtFile.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.fmt");
 			
 			VarDesc bdv = fmt.getVarDesc();
 			aliceVars = bdv.filter("A");
 			bobVars = bdv.filter("B");
 			
 			
-			for (int i=BLOCK_SIZE; i<=astrlen; i+=BLOCK_SIZE) {
-				for (int j=BLOCK_SIZE; j<=bstrlen; j+=BLOCK_SIZE) {
+			for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
+				for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
 					computeRecurrence(i,j);
 				}
 			}
+			
+			out.writeInt(matrix[astrlen][bstrlen]);
+			out.flush();
 			
 			System.out.println("Alice circuit wrote " + out.getCount() + " bytes");
 			
@@ -130,18 +147,36 @@ public class EDProtoBlock {
 			//System.out.println("result after stage: " + combined);
 		}
 	
-		public void computeRecurrence(int x, int y) throws Exception {
+		public void computeRecurrence(int ibase, int jbase) throws Exception {
 			D("prepare circuit");
 
-		
+			circuit = CircuitParser.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.circuit");
 			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 			
-			for (int i=str1.length()-1; i>=0; --i) {
-				byte c0 = (byte) str1.charAt(i);
-				fmt.mapBits(BigInteger.valueOf(c0), vals, "input.alice.x[" + i + "]");
+			for (int i=0; i<=BLOCK_SIZE; ++i) {
+				if (i<BLOCK_SIZE) {
+					byte c0 = (byte) str1.charAt(ibase + i);
+					fmt.mapBits(BigInteger.valueOf(c0), vals, "input.alice.x[" + i + "]");
+				}
+				
+				fmt.mapBits(BigInteger.valueOf(matrix[ibase+i][jbase]), vals, 
+						"input.alice.dd_" + i + "_0_a");
+				fmt.mapBits(BigInteger.valueOf(matrix[ibase][jbase+i]), vals, 
+						"input.alice.dd_0_" + i + "_a");
+				
+				if (i>0) {
+					matrix[ibase+i][jbase+BLOCK_SIZE] = rand.nextInt() & ((1<<N_BITS)-1);
+					matrix[ibase+BLOCK_SIZE][jbase+i] = rand.nextInt() & ((1<<N_BITS)-1);
+					
+					fmt.mapBits(BigInteger.valueOf(matrix[ibase+i][jbase+BLOCK_SIZE]), vals, 
+							"input.alice.out_" + i + "_" + BLOCK_SIZE + "_a");
+					fmt.mapBits(BigInteger.valueOf(matrix[ibase+BLOCK_SIZE][jbase+i]), vals, 
+							"input.alice.out_" + BLOCK_SIZE + "_" + i + "_a");
+				}
 			}
-			
+		
 			D("eval circuit");
+			
 			sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
 			calice.go(vals, 
 					new TreeSet<Integer>(aliceVars.who.keySet()),
@@ -154,14 +189,20 @@ public class EDProtoBlock {
 	public static class Bob {
 		ServerSocket listen;
 		Socket alice;
+		ObjectInputStream in_raw;
 		ObjectInputStream in;
-		ObjectOutputStream out;
+		ObjectOutputStream out_raw;
+		ByteCountObjectOutputStream out;
 		ByteCountOutputStreamSFE byteCount;
 		long startTime;
 		
 		Domain domain;
 		
 		String str2;
+		
+		FmtFile fmt;
+		
+		int[][] matrix;
 		
 		Bob(int port, String str2) throws IOException {
 			listen = new ServerSocket(port);
@@ -170,9 +211,9 @@ public class EDProtoBlock {
 			byteCount = 
 				new ByteCountOutputStreamSFE(
 						alice.getOutputStream());
-			out = new ObjectOutputStream(byteCount);
-			out.flush();
-			in = new ObjectInputStream
+			out_raw = new ObjectOutputStream(byteCount);
+			out_raw.flush();
+			in_raw = new ObjectInputStream
 			(new BufferedInputStream
 					(alice.getInputStream()));
 			
@@ -187,26 +228,60 @@ public class EDProtoBlock {
 		}
 		
 		void go() throws Exception {
-			int astrlen = in.readInt();
+			int astrlen = in_raw.readInt();
 			int bstrlen = str2.length();
-			out.writeInt(bstrlen);
-			out.flush();
+			out_raw.writeInt(bstrlen);
+			out_raw.flush();
 			
-			ByteCountObjectOutputStream out = ByteCountObjectOutputStream.wrapObjectStream(this.out);
-			out.flush();
-			ObjectInputStream in = new ObjectInputStream(this.in);
+			matrix = new int[astrlen+1][bstrlen+1];
 			
+			out = ByteCountObjectOutputStream.wrapObjectStream(this.out_raw);
+			out.flush();
+			in = new ObjectInputStream(this.in_raw);
+			
+			fmt = FmtFile.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.fmt");
+			
+
+			
+			for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
+				for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
+					computeRecurrence(i,j);
+				}
+			}
+			
+			int aliceout = in.readInt();
+		
+			System.out.println("Alice out = " + aliceout);
+			System.out.println("Bob out = " + matrix[astrlen][bstrlen]);
+			System.out.println("Ans = " + (matrix[astrlen][bstrlen] ^ aliceout));
+			System.out.println();
+			
+			System.out.println("Bob circuit wrote " + out.getCount() + " bytes");
+			
+			System.out.println();
+			
+			//System.out.println("state eval: " + zz);
+			//out.writeObject(zz);
+			//out.flush();
+			// end DEBUG
+			
+		}
+		
+		void computeRecurrence(int ibase, int jbase) throws Exception {
+	
 			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 			
-			FmtFile fmt = FmtFile.readFile("editdist/circ_" + N_BITS + "_" + astrlen + "_" + bstrlen + ".txt.Opt.fmt");
-			
-			int cBits=CHAR_BITS;
-			int bStart=0;
-			
-			for (int i=str2.length()-1; i>=0; --i) {
-				byte c1 = (byte) str2.charAt(i);
-				fmt.mapBits(BigInteger.valueOf(c1), vals, "input.bob.x[" + i + "]");
-				//mapBits(BigInteger.valueOf(c1), vals, bStart, (bStart+=cBits)-1);
+			for (int i=0; i<=BLOCK_SIZE; ++i) {
+				if (i<BLOCK_SIZE) {
+					byte c0 = (byte) str2.charAt(jbase + i);
+					fmt.mapBits(BigInteger.valueOf(c0), vals, "input.bob.x[" + i + "]");
+				}
+				
+				fmt.mapBits(BigInteger.valueOf(matrix[ibase+i][jbase]), vals, 
+						"input.bob.dd_" + i + "_0_b");
+				fmt.mapBits(BigInteger.valueOf(matrix[ibase][jbase+i]), vals, 
+						"input.bob.dd_0_" + i + "_b");
+				
 			}
 			
 			boolean[] vv = new boolean[vals.size()];
@@ -217,31 +292,16 @@ public class EDProtoBlock {
 			}
 			sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
 			cbob.go();
-					
-			/*
-			BigInteger zz = BigInteger.ZERO;
-			for (int ri=N_BITS; ri<cbob.result.length; ++ri) {
-				System.out.print(cbob.result[ri] ? "1" : "0");
-				if (cbob.result[ri]) {
-					
-					zz = zz.setBit(ri-N_BITS);
-				}
+			
+			for (int i=1; i<=BLOCK_SIZE; ++i) {
+				BigInteger zz;
+				zz = fmt.readBits(cbob.result, "output.bob.out_" + i + "_" + BLOCK_SIZE + "_b");
+				matrix[ibase+i][jbase+BLOCK_SIZE] = zz.intValue();
+				
+				zz = fmt.readBits(cbob.result, "output.bob.out_" + BLOCK_SIZE + "_" + i + "_b");
+				matrix[ibase+BLOCK_SIZE][jbase+i] = zz.intValue();
 			}
-			System.out.println();
-			*/
-			
-			BigInteger zz = fmt.readBits(cbob.result, "output.bob");
-			System.out.println();
-			
-			System.out.println("Bob circuit wrote " + out.getCount() + " bytes");
-			
-			System.out.println();
-			
-			System.out.println("state eval: " + zz);
-			//out.writeObject(zz);
-			//out.flush();
-			// end DEBUG
-			
+	
 		}
 	}
 }
