@@ -1,7 +1,7 @@
 /*
  */
 program splitmin3 {
-	const N=80
+	const N=80;
 	type Num = Int<N>;
 	type AliceInput = struct { Num a, Num b, Num c, Num r };
 	type BobInput = struct { Num a, Num b, Num c };

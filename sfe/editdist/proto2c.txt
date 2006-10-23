@@ -1,0 +1,18 @@
+program eqkey {
+        const N=128;
+        type Key = Int<N>;
+        type Char = Int<8>;
+        type AliceInput = struct { Char x, Key k0, Key k1 };
+        type BobInput = struct { Char y };
+        type BobOutput = struct { Key k };
+        type Input = struct {AliceInput alice,  BobInput bob};
+        type Output = struct {BobOutput bob};
+
+        function Output output(Input input) {
+	if (0 == (input.alice.x ^ input.bob.y)) {
+	  output.bob.k = input.alice.k0;
+	} else {
+	  output.bob.k = input.alice.k1;
+	}
+	}
+}
