@@ -18,7 +18,7 @@ public class FmtFile {
 	TreeMap<Integer, Integer> outputmap = new TreeMap<Integer, Integer>();
 	
 	public void mapBits(BigInteger n, TreeMap<Integer,Boolean> vals, String name) {
-		System.out.println("set bits: " + name + " = " + n);
+		//System.out.println("set bits: " + name + " = " + n);
 		Obj obj = mapping.get(name);
 		for (int j=0; j<obj.bits.length; ++j) {
 			int i = obj.bits[j];
@@ -30,7 +30,7 @@ public class FmtFile {
 	// BUG: outputmap is wrong if format file is not monotonic
 	
 	public BigInteger readBits(boolean[] vals, String name) {
-		System.out.print("get bits: " + name);
+		//System.out.print("get bits: " + name);
 		Obj obj = mapping.get(name);
 		BigInteger zz = BigInteger.ZERO;
 		for (int j=0; j<obj.bits.length; ++j) {
@@ -42,7 +42,7 @@ public class FmtFile {
 				zz = zz.setBit(j);
 			}
 		}
-		System.out.println(" = " + zz);
+		//System.out.println(" = " + zz);
 		return zz;
 
 	}
@@ -112,6 +112,8 @@ public class FmtFile {
 			for (Integer i : fmt.outputmap.keySet()) {
 				fmt.outputmap.put(i, outputNum++);
 			}
+			
+			in.close();
 			
 			return fmt;
 		} catch (IOException ex) {

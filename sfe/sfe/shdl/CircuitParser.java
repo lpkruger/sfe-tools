@@ -119,7 +119,9 @@ public class CircuitParser {
 	public static Circuit readFile(String file) {
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(file));
-			return new CircuitParser().parse(in);
+			Circuit cc = new CircuitParser().parse(in);
+			in.close();
+			return cc;
 		} catch (IOException ex) {
 			ex.printStackTrace();
 			throw new RuntimeException("Error reading circuit file: " + file);
