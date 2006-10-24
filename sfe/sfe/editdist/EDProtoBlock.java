@@ -37,7 +37,7 @@ public class EDProtoBlock {
 	static final int N_BITS=8;
 	static final int CHAR_BITS=8;
 	
-	static final int BLOCK_SIZE=8;  // block size for larger strings
+	static final int BLOCK_SIZE=4;  // block size
 	
 	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
 	
@@ -70,7 +70,6 @@ public class EDProtoBlock {
 		ByteCountOutputStreamSFE byteCount;
 		
 		String str1;
-		Circuit circuit;
 		FmtFile fmt;
 		VarDesc aliceVars;
 		VarDesc bobVars;
@@ -132,6 +131,10 @@ public class EDProtoBlock {
 			
 			for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
 				for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
+					//Runtime.getRuntime().gc();
+					long free = Runtime.getRuntime().freeMemory();
+					long total = Runtime.getRuntime().totalMemory();
+					System.out.println("Used " + (total-free) + "  Free: " + free + "  out of " + total);
 					computeRecurrence(i,j);
 				}
 			}
@@ -150,7 +153,7 @@ public class EDProtoBlock {
 		public void computeRecurrence(int ibase, int jbase) throws Exception {
 			D("prepare circuit");
 
-			circuit = CircuitParser.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.circuit");
+			Circuit circuit = CircuitParser.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.circuit");
 			TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 			
 			for (int i=0; i<=BLOCK_SIZE; ++i) {
