@@ -130,6 +130,7 @@ public class EDProto {
 					} else {
 						computeRecurrence(i,j);
 					}
+					out.reset();
 				}
 			}
 			
@@ -335,6 +336,7 @@ public class EDProto {
 					} else {
 						computeRecurrence(i,j);
 					}
+					out.reset();
 				}
 			}
 			

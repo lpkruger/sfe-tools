@@ -135,7 +135,9 @@ public class EDProtoBlock {
 					long free = Runtime.getRuntime().freeMemory();
 					long total = Runtime.getRuntime().totalMemory();
 					System.out.println("Used " + (total-free) + "  Free: " + free + "  out of " + total);
+					System.out.println("Iteration " + i + ", " + j);
 					computeRecurrence(i,j);
+					out.reset();
 				}
 			}
 			
@@ -249,6 +251,7 @@ public class EDProtoBlock {
 			for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
 				for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
 					computeRecurrence(i,j);
+					out.reset();
 				}
 			}
 			

@@ -137,6 +137,7 @@ public class EDProto2 {
 			for (int i=1; i<=astrlen; ++i) {
 				for (int j=1; j<=bstrlen; ++j) {
 					computeRecurrence(i,j);
+					out.reset();
 				}
 			}
 			
@@ -323,6 +324,7 @@ public class EDProto2 {
 			for (int i=1; i<=astrlen; ++i) {
 				for (int j=1; j<=bstrlen; ++j) {	
 					computeRecurrence(i,j);
+					out.reset();
 				}
 			}
 			
