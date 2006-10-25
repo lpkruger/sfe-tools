@@ -37,7 +37,13 @@ public class EDProtoBlock {
 	static final int N_BITS=8;
 	static final int CHAR_BITS=8;
 	
-	static final int BLOCK_SIZE=4;  // block size
+	static int BLOCK_SIZE=4;  // block size
+	static {
+		String blocksize = System.getProperty("BLOCKSIZE");
+		if (blocksize != null) {
+			BLOCK_SIZE=Integer.parseInt(blocksize);
+		}
+	}
 	
 	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
 	
