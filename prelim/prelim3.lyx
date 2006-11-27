@@ -1,0 +1,343 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Prelim 
+\newline
+Optimization of Secure Function Evaluation
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Subsection
+Usefulness of privacy preserving protocols
+\end_layout
+
+\begin_layout Standard
+(phishing, computers stolen, wells fargo, cruzer drive from pentagon).
+ more sexy and scary.
+ identify theft.
+ aol search terms.
+ The internet is growing rapidly.
+ Every year, the number of people, businesses, traffic, and transactions
+ on the internet increases.
+ More and more data is stored on machines that are connected to the internet,
+ directly or indirectly.
+ With this rapid growth of the internet there is also a growing concern
+ about privacy.
+ [cra99,tur03] There are many reasons why data must be protected, including
+ competitive interests, personal privacy, and government mandate.
+ [expand- more about real life examples, hippa] There is also a conflicting
+ desire to perform useful computations with data, while preserving as much
+ privacy as possible.
+\end_layout
+
+\begin_layout Standard
+There are several methods of using data to perform computation while preserving
+ privacy.
+ The most simple method, conceptually, is to replace identifying information
+ (name, social security number, etc.) with random unique identifiers, and
+ then share the transformed data.
+ However, this method has been shown to be vulnerable to attacks that correlate
+ the transformed data with externally available information to reconstruct
+ the scrambled data.
+ (more about this?) Another method (of privacy preserving) is known as secure
+ function evaluation, or SFE.
+ (explain how SFE works) SFE has provable privacy guarantees, but its implementa
+tion tends to be computationally expensive.
+ (and therefore not the most efficient - or whatever...
+ explain how currently not effective)
+\end_layout
+
+\begin_layout Standard
+In this document, I am proposing a line of inquiry into a particular field
+ of applied cryptography that has come to be known as Secure Function Evaluation
+, abbreviated as 
+\begin_inset Quotes eld
+\end_inset
+
+SFE
+\begin_inset Quotes erd
+\end_inset
+
+ in the remainder of this document.
+ SFE is a class of multiparty computation in which the parties collaborate
+ to evaluate a function of several variables in a privacy preserving way.
+ The inputs to the function are partitioned among each party in the joint
+ computation.
+ The function evaluation is 
+\begin_inset Quotes eld
+\end_inset
+
+secure
+\begin_inset Quotes erd
+\end_inset
+
+ if the process of evaluating the function reveals no information to any
+ party, except for the designated outputs.
+ No party should learn the inputs of any other party, and no party should
+ learn any intermediate results of the function evaluation.
+ More specifically, the information 
+\begin_inset Quotes eld
+\end_inset
+
+leaked
+\begin_inset Quotes erd
+\end_inset
+
+ by an SFE can be quantified as an entropy measure, this measure will be
+ zero if the probability distribution over each part of the computation
+ that any party can determine after the computation is equivalent to the
+ probability distribution that the party can determine solely from his own
+ inputs and the designated outputs.
+ (expand on entropy)
+\end_layout
+
+\begin_layout Standard
+SFE has been studied theoretically for 20 years, but there is very little
+ use in practice.
+ There have been attempts in recent years, such as the FairPlay system [mnps04]
+ to make SFE usable and practical.
+\end_layout
+
+\begin_layout Standard
+My contribution will be to improve the state of the art in practical security,
+ by providing tools and methods for securely evaluating functions of interest
+ in efficient ways.
+\end_layout
+
+\begin_layout Standard
+- technique1, technique2, technique3 (1 paragraph each)
+\end_layout
+
+\begin_layout Standard
+(picture of Yao circuit, picture of Alice and Bob communicating, etc - get
+ pictures out of last talk.
+\end_layout
+
+\begin_layout Section
+Related work
+\end_layout
+
+\begin_layout Subsection
+Yao '86
+\end_layout
+
+\begin_layout Standard
+Yao [x] proved that every computation that can be expressed as a circuit
+ can be evaluated securely under standard cryptographic assumptions.
+ (fill in).
+ 
+\end_layout
+
+\begin_layout Subsection
+Fairplay 
+\end_layout
+
+\begin_layout Standard
+Fairplay is the first system, designed to be practical, that attempts to
+ make SFE using Yao's protocol accessible to the average programmer.
+ It consists of a compiler from a standard procedural language called Secure
+ Function Description Language, or SFDL, to a circuit description language
+ called Secure Hardware Description Langauge, or SHDL.
+ Fairplay also includes an implementation of the two party Yao protocol
+ which evaluates an SHDL function.
+\end_layout
+
+\begin_layout Subsection
+Primitives
+\end_layout
+
+\begin_layout Subsubsection
+homomorphic encryption
+\end_layout
+
+\begin_layout Standard
+Homomorphic Encryption is a class of public key encryption algorithms that
+ satisfies the homomorphism property:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $E(a+b)=E(a)\oplus E(b)$
+\end_inset
+
+ where 
+\begin_inset Formula $\oplus$
+\end_inset
+
+ is an efficient and publically computable operator.
+\end_layout
+
+\begin_layout Standard
+For general purpose cryptography, the homomorphism property are considered
+ undesirable because it can make cryptanalysis easier.
+ However, it has been found that homomorphic encryption can lead to efficient
+ secure protocols for evaluating certain functions.
+ It has found particular application in secure voting protocols.
+\end_layout
+
+\begin_layout Subsubsection
+oblivious transfer
+\end_layout
+
+\begin_layout Standard
+Oblivious Transfer, or 
+\begin_inset Quotes eld
+\end_inset
+
+OT
+\begin_inset Quotes erd
+\end_inset
+
+, is a protocol that allows one party to receive a choice of data from another
+ party.
+ In the two party case, one party is known as the 
+\begin_inset Quotes eld
+\end_inset
+
+sender
+\begin_inset Quotes erd
+\end_inset
+
+ and the other party the 
+\begin_inset Quotes eld
+\end_inset
+
+chooser
+\begin_inset Quotes erd
+\end_inset
+
+.
+ It has the property that the chooser does not learn data that is not chosen,
+ and the sender does not know what choice the chooser made.
+\end_layout
+
+\begin_layout Subsection
+privacy preserving data mining 
+\end_layout
+
+\begin_layout Section
+My work to date
+\end_layout
+
+\begin_layout Subsection
+k-means clustering protocol
+\end_layout
+
+\begin_layout Standard
+This work was an efficient application of privacy preserving design principles
+ to a commonly used data mining problem.
+\end_layout
+
+\begin_layout Subsection
+BDD protool
+\end_layout
+
+\begin_layout Section
+Proposal
+\end_layout
+
+\begin_layout Subsection
+privacy preserving toolkit 
+\end_layout
+
+\begin_layout Subsection
+primitives:
+\end_layout
+
+\begin_layout Subsubsection
+oblivious transfer 
+\end_layout
+
+\begin_layout Subsubsection
+Pallier encryption 
+\end_layout
+
+\begin_layout Subsection
+general protocols: 
+\end_layout
+
+\begin_layout Subsubsection
+Enhanced SHDL (boolean) - 
+\end_layout
+
+\begin_layout Subsubsection
+Extended BDDs 
+\end_layout
+
+\begin_layout Subsection
+application protocols 
+\end_layout
+
+\begin_layout Subsubsection
+data mining algorithms
+\end_layout
+
+\begin_layout Subsubsection
+dynamic programming 
+\end_layout
+
+\begin_layout Subsection
+optimizing protocol compiler
+\end_layout
+
+\begin_layout Subsubsection
+Enhanced SFDL
+\end_layout
+
+\begin_layout Section
+timeline / publications:
+\end_layout
+
+\begin_layout Subsection
+dynamic programming 
+\end_layout
+
+\begin_layout Subsection
+hierarchial clustering 
+\end_layout
+
+\begin_layout Subsection
+extended BDDs 
+\end_layout
+
+\begin_layout Subsection
+protocol compiler 
+\end_layout
+
+\begin_layout Section
+Conclusion
+\end_layout
+
+\end_body
+\end_document
