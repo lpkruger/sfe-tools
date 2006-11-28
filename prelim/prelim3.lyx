@@ -71,10 +71,12 @@ There are several methods of using data to perform computation while preserving
  However, this method has been shown to be vulnerable to attacks that correlate
  the transformed data with externally available information to reconstruct
  the scrambled data.
- (more about this?) Another method (of privacy preserving) is known as secure
- function evaluation, or SFE.
- (explain how SFE works) SFE has provable privacy guarantees, but its implementa
-tion tends to be computationally expensive.
+ (more about this?) Another method of preserving privacy preserving is known
+ as secure function evaluation, or SFE.
+ SFE is a general technique of evaluating computable functions over arbitrary
+ inputs, where the inputs are partitioned over multiple parties.
+ SFE has provable privacy guarantees, but its implementation tends to be
+ computationally expensive.
  (and therefore not the most efficient - or whatever...
  explain how currently not effective)
 \end_layout
