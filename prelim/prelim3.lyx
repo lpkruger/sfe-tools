@@ -55,8 +55,13 @@ Usefulness of privacy preserving protocols
  directly or indirectly.
  With this rapid growth of the internet there is also a growing concern
  about privacy.
- [cra99,tur03] There are many reasons why data must be protected, including
- competitive interests, personal privacy, and government mandate.
+ 
+\begin_inset LatexCommand \cite{cra99,tur03}
+
+\end_inset
+
+ There are many reasons why data must be protected, including competitive
+ interests, personal privacy, and government mandate.
  [expand- more about real life examples, hippa] There is also a conflicting
  desire to perform useful computations with data, while preserving as much
  privacy as possible.
@@ -128,7 +133,11 @@ leaked
 \begin_layout Standard
 SFE has been studied theoretically for 20 years, but there is very little
  use in practice.
- There have been attempts in recent years, such as the FairPlay system [mnps04]
+ There have been attempts in recent years, such as the FairPlay system 
+\begin_inset LatexCommand \cite{Fairplay}
+
+\end_inset
+
  to make SFE usable and practical.
 \end_layout
 
@@ -339,6 +348,14 @@ protocol compiler
 
 \begin_layout Section
 Conclusion
+\end_layout
+
+\begin_layout Title
+\begin_inset LatexCommand \bibtex[plain]{somesh}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
