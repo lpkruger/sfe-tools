@@ -54,6 +54,14 @@ public class Circuit {
 		public Gate(int id) {
 			super(id);
 		}
+		
+		Gate(Gate g) {
+			this(g.id);
+			arity = g.arity;
+			truthtab = g.truthtab;
+			inputs = g.inputs;
+			deps = g.deps;
+		}
 
 		public String toString() {
 			return "[Gate " + id + " arity " + arity + "]";
