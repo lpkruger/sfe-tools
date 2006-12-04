@@ -44,64 +44,58 @@ Usefulness of privacy preserving protocols
 \end_layout
 
 \begin_layout Standard
-(phishing, computers stolen, wells fargo, cruzer drive from pentagon).
- more sexy and scary.
- identify theft.
- aol search terms.
- The internet is growing rapidly.
- Every year, the number of people, businesses, traffic, and transactions
- on the internet increases.
- More and more data is stored on machines that are connected to the internet,
- directly or indirectly.
- With this rapid growth of the internet there is also a growing concern
- about privacy.
+Secure function evaluation is a technique which can address the many privacy
+ concerns of the modern age.
+ Privacy is becoming an important concern as computers increase in power
+ and the internet continues to grow.
  
 \begin_inset LatexCommand \cite{cra99,tur03}
 
 \end_inset
 
- There are many reasons why data must be protected, including competitive
- interests, personal privacy, and government mandate.
- [expand- more about real life examples, hippa] There is also a conflicting
- desire to perform useful computations with data, while preserving as much
- privacy as possible.
+ More and more data is stored on machines that are connected to the internet,
+ directly or indirectly, and there are many examples in the newspapers today
+ of privacy compromising activities such as phishing, data theft, and identity
+ theft involving this massive amount of data.
+ There are also many other reasons why should be protected, including business
+ competition, respect of personal privacy, and government mandate, such
+ as HIPPA laws 
+\begin_inset LatexCommand \cite{hippa}
+
+\end_inset
+
+ which mandate strict privacy among healthcare professionals along with
+ stiff penalties for violation.
 \end_layout
 
 \begin_layout Standard
-There are several methods of using data to perform computation while preserving
- privacy.
+Despite these many concerns, there is also a conflicting desire to perform
+ useful computations with data.
+ Data is not useful unless it can be accessed and manipulated.
+ Sometimes various parties would like to collaborate on research involving
+ sensitive data.
+ The challenge is how to balance these concerns, making data available for
+ legitimate uses while preserving as much privacy as possible.
+\end_layout
+
+\begin_layout Standard
+There have been several methods developed so far of preserving privacy while
+ permitting use of data.
  The most simple method, conceptually, is to replace identifying information
  (name, social security number, etc.) with random unique identifiers, and
- then share the transformed data.
+ then using the transformed data for computation.
+ If it is necessary to correlate the outputs of the computation with individuals
+, the data owner can do this, but other parties presumably can not.
  However, this method has been shown to be vulnerable to attacks that correlate
- the transformed data with externally available information to reconstruct
- the scrambled data.
- (more about this?) Another method of preserving privacy preserving is known
- as secure function evaluation, or SFE.
- SFE is a general technique of evaluating computable functions over arbitrary
- inputs, where the inputs are partitioned over multiple parties.
- SFE has provable privacy guarantees, but its implementation tends to be
- computationally expensive.
- (and therefore not the most efficient - or whatever...
- explain how currently not effective)
-\end_layout
-
-\begin_layout Standard
-In this document, I am proposing a line of inquiry into a particular field
- of applied cryptography that has come to be known as Secure Function Evaluation
-, abbreviated as 
-\begin_inset Quotes eld
-\end_inset
-
-SFE
-\begin_inset Quotes erd
-\end_inset
-
- in the remainder of this document.
- SFE is a class of multiparty computation in which the parties collaborate
- to evaluate a function of several variables in a privacy preserving way.
- The inputs to the function are partitioned among each party in the joint
- computation.
+ the transformed data with information available from other sources to reconstru
+ct the obfuscated data.
+ [cite] Another method of preserving privacy is known as secure multiparty
+ computation, which is a technique of performing computation while provably
+ maintaining privacy guarantees.
+ If the computation is a function evaluation, then it is called secure function
+ evaluation, or SFE.
+ In a SFE a function is computed over various inputs, where the inputs are
+ partitioned among multiple parties.
  The function evaluation is 
 \begin_inset Quotes eld
 \end_inset
@@ -111,10 +105,20 @@ secure
 \end_inset
 
  if the process of evaluating the function reveals no information to any
- party, except for the designated outputs.
- No party should learn the inputs of any other party, and no party should
- learn any intermediate results of the function evaluation.
- More specifically, the information 
+ party, except for the designated outputs, as an entropy measure over statistica
+l distributions.
+ Depending on the specific protocols, these guarentees can be based on computati
+onal hardness, or information theoretic.
+ Although SFE has provable privacy guarantees, its implementation tends
+ to be very expensive in terms of both computational and networking resources,
+ and therefore has not been used very much outside of academic literature.
+ 
+\end_layout
+
+\begin_layout Standard
+My research studies ways to improve the efficiency of SFE in order to make
+ it more useful in practice.
+  More specifically, the information 
 \begin_inset Quotes eld
 \end_inset
 
@@ -154,6 +158,10 @@ My contribution will be to improve the state of the art in practical security,
 \begin_layout Standard
 (picture of Yao circuit, picture of Alice and Bob communicating, etc - get
  pictures out of last talk.
+\end_layout
+
+\begin_layout Standard
+talk to lammie!
 \end_layout
 
 \begin_layout Section
@@ -356,6 +364,96 @@ Conclusion
 \end_inset
 
 
+\end_layout
+
+\begin_layout Part*
+Random thoughts
+\end_layout
+
+\begin_layout Standard
+I will write a paper about secure authentication.
+ Secure password authentication, known as SPAKA, is a method for mutual
+ authentication uwsing a short secret (such as an easily remembered password),
+ with strong security guarentees in the face of adversaries.
+ In a typical asymmetric SPAKA protocol, Alice knows a secret 
+\begin_inset Formula $P$
+\end_inset
+
+, and Bob knows 
+\begin_inset Formula $H(P)$
+\end_inset
+
+, where 
+\begin_inset Formula $H$
+\end_inset
+
+ is a one way function, with the following security guarentees:
+\end_layout
+
+\begin_layout Enumerate
+If the (polynomial computationally bounded) adversary has eavesdropping
+ abilities only, then Alice and Bob should be able to successfully authenticate
+ and setup a secure communication channel without the adversary learning
+ anything about 
+\begin_inset Formula $P$
+\end_inset
+
+ or being able to interpret the secure channel.
+ 
+\end_layout
+
+\begin_layout Enumerate
+If the adversary has complete control over the network then the adversary
+ will not be able to successfully impersonate either Alice or Bob to the
+ other party, nor learn any information about P.
+ At most, the adversary can disrupt communication between Alice and Bob.
+\end_layout
+
+\begin_layout Enumerate
+If the adversary has complete control over the network, and additionally
+ has learned 
+\begin_inset Formula $H(P)$
+\end_inset
+
+, then the adversary will be able to impersonate Bob to Alice.
+ However, the adversary will not learn any information from Alice that decreases
+ the difficulty of calculating 
+\begin_inset Formula $P$
+\end_inset
+
+ from 
+\begin_inset Formula $H(P)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
+Optimizing
+\end_layout
+
+\begin_layout Standard
+I will research a secure function compiler with defined 
+\begin_inset Quotes eld
+\end_inset
+
+leak points
+\begin_inset Quotes erd
+\end_inset
+
+.
+ These are subcomputations of the function, which are not outputs, but where
+ an information leak is deemed acceptable if it allows the compiler to produce
+ a more efficient protocol to evaluate the function securely.
+\end_layout
+
+\begin_layout Subsection*
+Homomorphic encryption
+\end_layout
+
+\begin_layout Standard
+I will investigate possible ways to create a more powerful homoorphic encryption
+ scheme.
 \end_layout
 
 \end_body
