@@ -39,8 +39,19 @@ Optimization of Secure Function Evaluation
 Introduction
 \end_layout
 
+\begin_layout Quote
+"If a computer programmed by people learns the contents of a communication,
+ and takes action based on what it learns, it invades privacy." 
+\end_layout
+
+\begin_deeper
+\begin_layout Quote
+Mark Rasch, former head of the US Justice Dept's computer crime unit 
+\end_layout
+
+\end_deeper
 \begin_layout Subsection
-Usefulness of privacy preserving protocols
+Importance of privacy preserving protocols
 \end_layout
 
 \begin_layout Standard
@@ -78,47 +89,130 @@ Despite these many concerns, there is also a conflicting desire to perform
  legitimate uses while preserving as much privacy as possible.
 \end_layout
 
+\begin_layout Subsection
+Methods of privacy preservation
+\end_layout
+
 \begin_layout Standard
-There have been several methods developed so far of preserving privacy while
- permitting use of data.
- The most simple method, conceptually, is to replace identifying information
- (name, social security number, etc.) with random unique identifiers, and
- then using the transformed data for computation.
+There have been several methods developed so far of preserving personal
+ privacy while permitting use of data.
+ The most simple method, conceptually, is to replace identifying information,
+ such as the name, social security number, and other personally identifying
+ data with random unique identifiers, and then using the transformed data
+ for computation.
  If it is necessary to correlate the outputs of the computation with individuals
-, the data owner can do this, but other parties presumably can not.
+ , the data owner can do this, but other parties presumably can not.
  However, this method has been shown to be vulnerable to attacks that correlate
- the transformed data with information available from other sources to reconstru
-ct the obfuscated data.
+ the transformed data with information available from external sources to
+ reconstruct the obfuscated data, thereby breaking the privacy protection.
  [cite] Another method of preserving privacy is known as secure multiparty
- computation, which is a technique of performing computation while provably
- maintaining privacy guarantees.
+ computation.
+ This is a technique of performing computations on inputs supplied by multiple
+ parties while provably maintaining privacy guarantees.
  If the computation is a function evaluation, then it is called secure function
  evaluation, or SFE.
- In a SFE a function is computed over various inputs, where the inputs are
- partitioned among multiple parties.
- The function evaluation is 
-\begin_inset Quotes eld
+ The inputs to the function are partitioned among more than one party, {look
+ up definition in Goldreich} and the function is computed collaboratively
+ while preserving the privacy of each participants' individual inputs.
+ In this case, privacy is considered preserved if no party learns any informatio
+n that would affect th eir estimate of the probability distribution of another
+ party's inputs, except for that which can be calculated by the parties
+ own inputs and the final output of the function evaluation.
+ In other words, the entropy gain of each party is equivalent to the entropy
+ gain in an idealized protocol where a trusted third party collects all
+ the inputs, evaluates the function, and transmits only the output to each
+ party.
+ Depending on the protocol, the guarentees for some parties may be based
+ on typical assumptions of computational hardness, while the guarentees
+ for other parties may be or information theoretic.
+\end_layout
+
+\begin_layout Standard
+Although SFE has provable privacy guarantees, its implementation tends to
+ be very expensive in terms of both computational and networking resources,
+ and therefore has not been used very much outside of academic literature,
+ despite the fact that was introduced 20 years ago in 
+\begin_inset LatexCommand \cite{Yao:86}
+
 \end_inset
 
-secure
-\begin_inset Quotes erd
+ There has been research in recent years to make SFE more practical.
+ This research falls into two categories: general and function specific.
+ General protocols allow any function expressed as a circuit computation
+ to be securely evaluatable.
+ The Fairplay system 
+\begin_inset LatexCommand \cite{Fairplay}
+
 \end_inset
 
- if the process of evaluating the function reveals no information to any
- party, except for the designated outputs, as an entropy measure over statistica
-l distributions.
- Depending on the specific protocols, these guarentees can be based on computati
-onal hardness, or information theoretic.
- Although SFE has provable privacy guarantees, its implementation tends
- to be very expensive in terms of both computational and networking resources,
- and therefore has not been used very much outside of academic literature.
+ is a straightforward implementation of the Yao protocol, along with a supportin
+g compiler that allow s secure functions to be written in a more familiar
+ functional programming notation.
+ Kruger et al .
+ 
+\begin_inset LatexCommand \cite{kruger06}
+
+\end_inset
+
+ showed how ordered binary decision diagrams can be used to produce more
+ efficient secure circuits.
+ Funct ion specific protocol design has produced secure protocols which
+ perform dramatically better than general constructions.
+ Privacy preserving data mining (PPDM) has been one of the main applications
+ driving such research.
+ Other protocols have been developed for classes of functions such as polynomial
+ evaluation {cite} and string alignment algorithms such as edit distance
+ 
+\begin_inset LatexCommand \cite{kruger07}
+
+\end_inset
+
+.
  
 \end_layout
 
 \begin_layout Standard
-My research studies ways to improve the efficiency of SFE in order to make
- it more useful in practice.
-  More specifically, the information 
+I am proposing to continue researching ways to improve the efficiency of
+ privacy preserving protocols, culminating in an optimizing protocol compiler
+ that will greatly simplify the task of constructing efficient privacy preservin
+g protocols.
+ 
+\end_layout
+
+\begin_layout Standard
+- 
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
+put a box around it
+\end_layout
+
+\begin_layout Standard
+kruger07
+\end_layout
+
+\begin_layout Standard
+track down citations
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+.
+ 
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
+More specifically, the information 
 \begin_inset Quotes eld
 \end_inset
 
@@ -134,14 +228,19 @@ leaked
  (expand on entropy)
 \end_layout
 
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+My research studies ways to improve the efficiency of SFE in order to make
+ it more useful in practice
+\end_layout
+
 \begin_layout Standard
 SFE has been studied theoretically for 20 years, but there is very little
  use in practice.
- There have been attempts in recent years, such as the FairPlay system 
-\begin_inset LatexCommand \cite{Fairplay}
-
-\end_inset
-
  to make SFE usable and practical.
 \end_layout
 
@@ -405,7 +504,11 @@ If the (polynomial computationally bounded) adversary has eavesdropping
 \begin_layout Enumerate
 If the adversary has complete control over the network then the adversary
  will not be able to successfully impersonate either Alice or Bob to the
- other party, nor learn any information about P.
+ other party, nor learn any information about 
+\begin_inset Formula $P$
+\end_inset
+
+.
  At most, the adversary can disrupt communication between Alice and Bob.
 \end_layout
 
@@ -416,8 +519,8 @@ If the adversary has complete control over the network, and additionally
 \end_inset
 
 , then the adversary will be able to impersonate Bob to Alice.
- However, the adversary will not learn any information from Alice that decreases
- the difficulty of calculating 
+ However, the adversary will not learn any information from Alice that changes
+ the difficulty to the adversary of calculating 
 \begin_inset Formula $P$
 \end_inset
 
@@ -425,7 +528,8 @@ If the adversary has complete control over the network, and additionally
 \begin_inset Formula $H(P)$
 \end_inset
 
-.
+, thus Alice's identity can remain computationally protected against the
+ adversary impersonating Alice.
 \end_layout
 
 \begin_layout Subsection*
@@ -445,6 +549,12 @@ leak points
  These are subcomputations of the function, which are not outputs, but where
  an information leak is deemed acceptable if it allows the compiler to produce
  a more efficient protocol to evaluate the function securely.
+ My previous research has demonstrated that it is possible to use alternate
+ circuit representations, such as OBDDs (ordered binary decision diagrams),
+ to improve the efficiency of secure circuits.
+ I want to investigate other more exotic representations, such as hybrid
+ circuits combining OBDDs, boolean circuits, and alternate constructions
+ based on OBDDs, as suggested in the conclusion of [Kruger06].
 \end_layout
 
 \begin_layout Subsection*
@@ -452,8 +562,51 @@ Homomorphic encryption
 \end_layout
 
 \begin_layout Standard
-I will investigate possible ways to create a more powerful homoorphic encryption
- scheme.
+I will investigate possible ways to create a more powerful homomorphic encryptio
+n scheme.
+ 
+\end_layout
+
+\begin_layout Standard
+I am writing about nothing in particular right now.
+ I think secure function evaluation is an interesting topic, but right now
+ I don't have anything coming to mind.
+ Probably because I am anxietous.
+ My hope is that by meta-writing about writing anxiety, it will help to
+ focus my mind and relieve a bit of stress.
+ Perhaps it is better than web-surfing anyway, because I have an strong
+ urge to distract my brain by doing something else, even if the alternate
+ activity is not rewarding to me.
+ Web surfing can be like crack, a quick 
+\begin_inset Quotes eld
+\end_inset
+
+information high
+\begin_inset Quotes erd
+\end_inset
+
+.
+ An article I once read described it as a 
+\begin_inset Quotes eld
+\end_inset
+
+dopamine squirt
+\begin_inset Quotes erd
+\end_inset
+
+.
+ I merely need to remember that writing something, anything, is better than
+ writing nothing, because it keeps my brain's writing circuits engaged.
+ Eventually, I will 
+\begin_inset Quotes eld
+\end_inset
+
+cross over
+\begin_inset Quotes erd
+\end_inset
+
+ into writing useful things that will become part of my prelim.
+ It is a long term goal, and it will be accomplished one step at a time.
 \end_layout
 
 \end_body

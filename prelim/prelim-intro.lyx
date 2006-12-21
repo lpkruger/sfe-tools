@@ -1,0 +1,264 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+
+\linespread{1.1}
+\end_preamble
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 1.25in
+\topmargin 1.25in
+\rightmargin 1.25in
+\bottommargin 1.25in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes true
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Optimization of Secure Function Evaluation
+\shape italic
+\size normal
+
+\newline
+Research Proposal for Ph.D Preliminary Exam
+\end_layout
+
+\begin_layout Author
+Louis Kruger
+\newline
+University of Wisconsin Madison
+\end_layout
+
+\begin_layout Date
+Jan xx, 2006
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Quote
+\begin_inset Note Comment
+status open
+
+\begin_layout Quote
+As every man goes through life he fills in a number of forms for the record,
+ each containing a number of questions...
+ There are thus hundreds of little threads radiating from every man, millions
+ of threads in all.
+ If these threads were suddenly to become visible, the whole sky would look
+ like a spider's web, and if they materialized as rubber bands, buses; trams
+ and even people would all lose the ability to move, and the wind would
+ be unable to carry torn-up newspapers or autumn leaves along the streets
+ of the city.
+ They are not visible, they are not material, but every man is constantly
+ aware of their existence....
+ Each man, permanently aware of his own invisible threads, naturally develops
+ a respect for the people who manipulate the threads.
+\end_layout
+
+\begin_layout Quote
+--Alexander Solzhenitsyn, Cancer Ward, 1968.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Secure function evaluation is a technique which can address the many privacy
+ concerns of the modern age.
+ Privacy is becoming an important concern as computers increase in power
+ and the internet continues to grow.
+ 
+\begin_inset LatexCommand \cite{cra99,tur03}
+
+\end_inset
+
+ More and more data is stored on machines that are connected to the Internet,
+ directly or indirectly, and there are many examples in the newspapers today
+ of privacy compromising activities such as phishing, data theft, and identity
+ theft involving this massive amount of data.
+ There are also many other reasons why privacy should be protected, including
+ business competition, respect of personal privacy, and government mandate,
+ such as HIPPA laws 
+\begin_inset LatexCommand \cite{hippa}
+
+\end_inset
+
+ which mandate strict privacy among health-care professionals along with
+ stiff penalties for violation.
+\end_layout
+
+\begin_layout Standard
+Despite these many concerns, there is also a conflicting desire to perform
+ useful computations with data.
+ Data is not useful unless it can be accessed and manipulated.
+ Sometimes various parties would like to collaborate on research involving
+ sensitive data.
+ The challenge is how to balance these competing concerns, making data available
+ for legitimate uses while preserving as much privacy as possible.
+\end_layout
+
+\begin_layout Standard
+There have been several methods developed so far of preserving personal
+ privacy while permitting use of data.
+ The most simple method, conceptually, is to replace identifying information,
+ such as the name, social security number, and other personally identifying
+ data with random unique identifiers, and then using the transformed data
+ for computation.
+ If it is necessary to correlate the outputs of the computation with individuals
+, the data owner can do this, but other parties presumably can not.
+ However, this method has been shown to be vulnerable to attacks that correlate
+ the transformed data with information available from external sources to
+ reconstruct the obfuscated data, thereby breaking the privacy protection.
+ Another method of preserving privacy is known as secure multiparty computation.
+ This is a technique of performing computations on inputs supplied by multiple
+ parties while provably maintaining privacy guarantees.
+ If the computation is a function evaluation, then it is called secure function
+ evaluation, or SFE.
+ The inputs to the function are partitioned among more than one party, and
+ the function is computed collaboratively while preserving the privacy of
+ each participant's individual inputs.
+ In this case, privacy is considered preserved if no party learns any informatio
+n that would affect their estimate of the probability distribution of another
+ party's inputs, except for that which can be calculated by the parties
+ own inputs and the final output of the function evaluation.
+ In other words, the entropy gain of each party is equivalent to the entropy
+ gain in an idealized protocol where a trusted third party collects all
+ the inputs, evaluates the function, and transmits only the output to each
+ party.
+ Depending on the protocol, the guarantees for some parties may be based
+ on typical assumptions of computational hardness, while the guarantees
+ for other parties may be information theoretic.
+\end_layout
+
+\begin_layout Standard
+Although SFE has provable privacy guarantees, its implementation tends to
+ be very expensive in terms of time and space for practical use.
+ The space expense manifests itself in network bandwidth used in the protocols.
+ These expenses explain why SFE has not been used very much outside of academic
+ literature, despite the fact that was formally introduced manyt years ago.
+ There has been research in recent years to make SFE more practical.
+ This research falls into two categories: general and function specific.
+ General protocols allow any function expressed as a circuit computation
+ to be securely evaluable.
+ The Fairplay system 
+\begin_inset LatexCommand \cite{Fairplay}
+
+\end_inset
+
+ is a straightforward implementation of the Yao protocol, along with a supportin
+g compiler that allows secure functions to be written in a more familiar
+ functional programming notation.
+ Kruger et al .
+ 
+\begin_inset LatexCommand \cite{kruger06}
+
+\end_inset
+
+ showed how ordered binary decision diagrams can be used to produce more
+ efficient secure circuits.
+ Function specific protocol design has produced secure protocols which perform
+ dramatically better than general protocols.
+ Privacy preserving data mining (PPDM) has been a major application driving
+ such research.
+ Other protocols have been developed for various classes of functions such
+ as polynomial evaluation and string alignment algorithms such as edit distance
+ 
+\begin_inset LatexCommand \cite{kruger07}
+
+\end_inset
+
+.
+ Also, the amount of time required for the computations has benefited greatly
+ form Moore's law.
+ Recent work has shown that in some cases, the computation requirements
+ of the most general protocols can be adequate for practical use when performed
+ on today's fastest CPUs.
+ 
+\end_layout
+
+\begin_layout Standard
+My research investigates ways to improve the efficiency and practicality
+ of privacy preserving protocols.
+ My past work has looked at finding efficient protocols for specific classes
+ of functions, in particular, one study analyzes several designs of a k-means
+ clustering algorithm, and another discusses ways to design efficient protocols
+ for many dynamic programming problems.
+ I have also investigated the use of alternate circuit representations using
+ OBDDs to improve the performance of general purpose protocols and showed
+ that they can be beneficial for certain functions.
+\end_layout
+
+\begin_layout Standard
+I am proposing to continue the work suggested by these initial studies,
+ and further investigate ways to improve the performance and simplify the
+ task of of constructing efficient privacy preserving protocols, culminating
+ in an optimizing protocol compiler.
+ In addition to the research results, I also plan to publishing code which
+ implementing the compiler and related tools as a stimulus to expand future
+ research in secure function evaluation.
+\end_layout
+
+\begin_layout Standard
+Specifically, my work will create the following contributions:
+\end_layout
+
+\begin_layout Itemize
+Protocols for other alternative representation of circuits.
+ I will extend the previous work with OBDDs by creating hybrid circuits
+ which compose sub-circuits represented as OBDDs with sub-circuits represented
+ as boolean circuits.
+ I will also investigate whether extended OBDD models can be used to create
+ additional efficiency improvements
+\end_layout
+
+\begin_layout Itemize
+Protocols for evaluating functions will controlled leakage of information.
+ The question being answered is whether performance improvements can be
+ achieved by loosening the privacy guarantees in a controlled way, by specifying
+ which data may and may not leak.
+\end_layout
+
+\begin_layout Itemize
+A framework for analyzing a specific protocol and creating an equivalent
+ protocol which is more efficient.
+ This is analogous to the role played by an optimizing compiler for program
+ code.
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[plain]{somesh}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
