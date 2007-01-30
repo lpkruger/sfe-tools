@@ -1,0 +1,494 @@
+#LyX 1.4.3-5 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+SSH Protocol Overview and MITM Mitigation
+\end_layout
+
+\begin_layout Author
+Louis Kruger
+\end_layout
+
+\begin_layout Section
+SSH Protocol
+\end_layout
+
+\begin_layout Standard
+SSH is an application originally designed as an alternative to telnet for
+ interactive sessions with confidentiality, authentication, and integrity.
+ In the years since it was first introduced, it has gained many features
+ and can now serve as a secure transport layer underneath many other insecure
+ protocols.
+ Version 1 of the SSH protocol was essentially undocumented, but version
+ 2, which is commonly used today, is an IETF standard.
+ From here on, all mention of the SSH protocol refers to version 2.
+\end_layout
+
+\begin_layout Standard
+The SSH protocol is defined in terms of layers, much like the OSI networking
+ stack.
+ Each layer is defined somewhat independantly of the others.
+ The lowest level is a packet based transport protocol that runs over a
+ stream transport such as TCP.
+ All SSH messages of the higher layers are sent as packets.
+ This packet protocol is known as the SSH transport layer protocol and is
+ defined in 
+\begin_inset LatexCommand \cite{rfc4253}
+
+\end_inset
+
+.
+ Figure 
+\begin_inset LatexCommand \ref{fig:ssh-overview}
+
+\end_inset
+
+ shows the hierarchy of the ssh protocol layers discussed here.
+ The SSH transport layer also handles the server key authentication, encryption,
+ and integrity of a session.
+ During the initial handshake, the hosts perform a key exchange and the
+ client validates the server key, and there is negotiation for an initial
+ set of cryptographic algorithms (cipher, HMAC) that will used for the session.
+ Following the handshake, all of the SSH stream is encrypted.
+ Logically, the stream is broken up into packets.
+ The structure of a packet is shown in figure 
+\begin_inset LatexCommand \ref{fig:ssh-packet}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-overview}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename ssh_overview.png
+	lyxscale 5
+	scale 40
+	keepAspectRatio
+	clip
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When the initial handshake is complete, the client has verified the server
+ key, if possible, but the client has not yet authenticated to the server.
+ The SSH auth protocol can be initiated to perform this, and is defined
+ by 
+\begin_inset LatexCommand \cite{rfc4252}
+
+\end_inset
+
+.
+ The auth protocol is flexible, and while the SSH standard describes several
+ standard methods of authentication, such as password and public-key, arbitrary
+ additional authentication methods can be added.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-packet}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename ssh_packet.png
+	lyxscale 5
+	scale 40
+	keepAspectRatio
+	clip
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To authenticate, the client chooses an authentication protocol.
+ Here, we will consider two standard authentication types: 
+\begin_inset Quotes eld
+\end_inset
+
+password
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+keyboard-interactive
+\begin_inset Quotes erd
+\end_inset
+
+.
+ The difference between these methods is that 
+\begin_inset Quotes eld
+\end_inset
+
+password
+\begin_inset Quotes erd
+\end_inset
+
+ allows only a single packet with a user name and password combination,
+ whereas 
+\begin_inset Quotes eld
+\end_inset
+
+keyboard-interactive
+\begin_inset Quotes erd
+\end_inset
+
+ allows the server to send arbitrary prompts and wait for responses.
+ This is suitable for multi-factor authentication.
+\end_layout
+
+\begin_layout Standard
+In both of these methods, the password or response strings are sent directly
+ from the client to the server in a packet.
+ Thus, the only protection from eavesdroppers is the previously-negotiated
+ encryption key.
+ However, if the 
+\begin_inset Quotes eld
+\end_inset
+
+server
+\begin_inset Quotes erd
+\end_inset
+
+ is in fact an eavesdropper itself, or a 3rd party manages to learn the
+ session key, the value of the password is compromised.
+\end_layout
+
+\begin_layout Section
+Man in the Middle Attack
+\end_layout
+
+\begin_layout Standard
+As mentioned in the previous section, the SSH protocol is vulnerable to
+ password compromise.
+ An attacker can exploit the insecurity of password transmission by mounting
+ a 
+\emph on
+man in the middle
+\emph default
+ (MITM) attack.
+ Although the protocol does provide some protection against MITM in the
+ form of host key authentication, there are at least three ways in which
+ an attacker can thrwart this protection:
+\end_layout
+
+\begin_layout Enumerate
+If the attacker manages to steal the host key, then the attacker can successfull
+y impersonate the server without detection.
+ There is no other means for the client to authenticate the server.
+\end_layout
+
+\begin_layout Enumerate
+If the client does not know the server's host key, then the host cannot
+ be authenticated unless the client has an alternative trusted channel to
+ validate the host key.
+ The following message is typically displayed by the OpenSSH client when
+ connecting to a server with an unknown key
+\newline
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+The authenticity of host 'prospero (128.105.121.27)' can't be established.
+\end_layout
+
+\begin_layout LyX-Code
+RSA key fingerprint is 3f:76:22:43:c2:03:b9:71:b0:31:ce:87:37:45:cb:02.
+ 
+\end_layout
+
+\begin_layout LyX-Code
+Are you sure you want to continue connecting (yes/no)?
+\end_layout
+
+\end_inset
+
+
+\newline
+Practically speaking, it may be inconvenient for a user to authenticate
+ the server using this message and make a correct decision.
+ It is easy to imagine a user simply answering yes in order to bypass the
+ inconvenience.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Even if the client does know the server's key, the there is no guarantee
+ that a user would refuse to connect even if the authentication fails.
+ For example, the user might think the server key changed for a non-malicious
+ reason such as an operating system upgrade where the administrator forgot
+ to backup the old key.
+\end_layout
+
+\begin_layout Standard
+This vulnerability can be mitigated by using additional secrets which are
+ shared between the client and server.
+ The password is convenient shared secret in common use today.
+ Typically, a password is considered only as a means of authenticating a
+ client to a server, but with special protocols a password can also be used
+ for simultaneous mutual authentication in a way that is secure, and does
+ not compromise the password if the server is malicious.
+ Such protocols are known as 
+\emph on
+shared password and key authentication 
+\emph default
+(SPAKA).
+\end_layout
+
+\begin_layout Standard
+It is important to note that a 
+\begin_inset Quotes eld
+\end_inset
+
+password
+\begin_inset Quotes erd
+\end_inset
+
+ need not be a constant string that the user remembers over a long period
+ of time, it can be any string that serves as a mutual authenticator.
+ For example, secure ID tokens that display constantly changing strings,
+ time synchronized with the server, are considered to be a more secure alternati
+ve to traditional passwords, such alternatives are readily usable in SPAKA
+ protocols.
+\end_layout
+
+\begin_layout Section
+SPAKA using SFE
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Secure Password and Key Authentication 
+\emph default
+(SPAKA) is a class of authentication protocols first described in 
+\begin_inset LatexCommand \cite{bellovin92}
+
+\end_inset
+
+.
+ For an authentication protocol to be a SPAKA protocol, it must guarentee
+ confidentiality of secrets even when one party in the authentication protocol
+ is malicious.
+ There have been various SPAKA protocols proposed in the literature with
+ varying properties.
+ 
+\begin_inset LatexCommand \cite{brainard03}
+
+\end_inset
+
+ Here, I propose a novel SPAKA protocol based on 
+\emph on
+Secure Function Evaluation 
+\emph default
+(SFE).
+ 
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $X$
+\end_inset
+
+ be the user's password.
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $Y=H(X)$
+\end_inset
+
+ be a hash of 
+\begin_inset Formula $X$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $C$
+\end_inset
+
+ be the client and 
+\begin_inset Formula $S$
+\end_inset
+
+ be the server.
+ 
+\begin_inset Formula $C$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ participate in a secure evaluation of the following function 
+\begin_inset Formula $f$
+\end_inset
+
+, where 
+\begin_inset Formula $C$
+\end_inset
+
+ provides input 
+\begin_inset Formula $X$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ provides input 
+\begin_inset Formula $Y$
+\end_inset
+
+.
+ 
+\begin_inset Formula $C$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ both receive the same output from 
+\begin_inset Formula $f$
+\end_inset
+
+, which is a single bit.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $f(X,Y)=\left(Y=H\left(X\right)\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If the value of the function is 
+\begin_inset Formula $false$
+\end_inset
+
+ then the mutual authentication fails, otherwise the mutual authentication
+ succeeds.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $f$
+\end_inset
+
+ is evaluated securely, then 
+\begin_inset Formula $C$
+\end_inset
+
+ and 
+\begin_inset Formula $S$
+\end_inset
+
+ are guaranteed not to learn any information about the computation except
+ for the single bit of output.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[plain]{ssh}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
