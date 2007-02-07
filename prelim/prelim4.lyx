@@ -38,7 +38,7 @@
 \begin_body
 
 \begin_layout Title
-Optimization of Secure Function Evaluation
+Practical Secure Function Evaluation
 \shape italic
 \size normal
 
@@ -121,16 +121,12 @@ Despite these many concerns, there is also a conflicting desire to perform
  Sometimes various parties would like to collaborate on research involving
  sensitive data.
  For example, genetic data is the subject of much current research, but
- it is considered private 
-\begin_inset Note Greyedout
-status open
-
-\begin_layout Standard
-example here.
-\end_layout
-
-\end_inset
-
+ it is considered private.
+ Researchers with access to different patients' data may want to combine
+ their knowledge in the search for new cures for diseases, yet not reveal
+ the sensitive data to collaborating parties.
+ Competing businesses may want to perform joint market research for mutual
+ benefit, without revealing sensitive customer data.
  The challenge is how to balance these competing concerns, making data available
  for legitimate uses while preserving as much privacy as possible.
 \end_layout
@@ -147,7 +143,7 @@ There have been several methods developed so far for preserving personal
  the transformed data with information available from external sources to
  reconstruct the obfuscated data, thereby breaking the privacy protection.
  
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+\begin_inset LatexCommand \cite{Malin04}
 
 \end_inset
 
@@ -229,14 +225,14 @@ Ordered Binary Decision Diagrams
  dramatically better than general protocols.
  Privacy preserving data mining (PPDM) has been a major application driving
  such research 
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+\begin_inset LatexCommand \cite{verykios04stateart}
 
 \end_inset
 
 .
  Other protocols have been developed for various classes of functions such
  as polynomial evaluation 
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+\begin_inset LatexCommand \cite{naor99otope}
 
 \end_inset
 
@@ -248,10 +244,10 @@ Ordered Binary Decision Diagrams
 .
  Also, the amount of time required for the computations has benefited greatly
  from Moore's law.
- Recent work has shown that in some cases, the computation requirements
- of the most general protocols can be adequate for practical use when performed
- on today's fastest CPUs 
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+ I have shown that in some cases, the computation requirements of the most
+ general protocols can be adequate for practical use when performed on today's
+ fastest CPUs 
+\begin_inset LatexCommand \cite{kruger06}
 
 \end_inset
 
@@ -326,8 +322,11 @@ A framework for analyzing a specific protocol and creating an equivalent
  code.
 \end_layout
 
-\begin_layout Author
-
+\begin_layout Itemize
+An example showing that SFE can is useful in other aspects of security where
+ it has not previously been used.
+ Specificaly, I will show how SFE can be used to implement a more secure
+ authentication protocol in SSH.
 \end_layout
 
 \begin_layout Section
@@ -346,13 +345,13 @@ SSH is an application originally designed as an alternative to telnet for
  protocols.
  Version 1 of the SSH protocol was essentially undocumented, but version
  2, which is commonly used today, is an IETF standard.
- From here on, all mention of the SSH protocol refers to version 2.
+ From here on, all references to the SSH protocol refer to version 2.
 \end_layout
 
 \begin_layout Standard
 The SSH protocol is defined in terms of layers, much like the OSI networking
  stack.
- Each layer is defined somewhat independantly of the others.
+ Each layer is defined in terms of messages from the underlying layer.
  The lowest level is a packet based transport protocol that runs over a
  stream transport such as TCP.
  All SSH messages of the higher layers are sent as packets.
