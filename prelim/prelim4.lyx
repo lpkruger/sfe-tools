@@ -163,11 +163,11 @@ secure multiparty computation
 n that would affect their estimate of the probability distribution of another
  party's inputs, except for that which can be calculated by the parties'
  own inputs and the output of the joint function.
-\begin_inset Note Greyedout
+\begin_inset Note Comment
 status open
 
 \begin_layout Standard
-\begin_inset Note Comment
+\begin_inset Note Greyedout
 status open
 
 \begin_layout Standard
@@ -345,7 +345,8 @@ SSH is an application originally designed as an alternative to telnet for
  protocols.
  Version 1 of the SSH protocol was essentially undocumented, but version
  2, which is commonly used today, is an IETF standard.
- From here on, all references to the SSH protocol refer to version 2.
+ From here on, all references to the SSH protocol refer to version 2 unless
+ otherwise specified.
 \end_layout
 
 \begin_layout Standard
@@ -370,10 +371,107 @@ The SSH protocol is defined in terms of layers, much like the OSI networking
  shows the hierarchy of the ssh protocol layers discussed here.
  The SSH transport layer also handles the server key authentication, encryption,
  and integrity of a session.
- During the initial handshake, the hosts perform a key exchange and the
- client validates the server key, and there is negotiation for an initial
- set of cryptographic algorithms (cipher, HMAC) that will used for the session.
- Following the handshake, all of the SSH stream is encrypted.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Session Initialization
+\end_layout
+
+\begin_layout Standard
+During the initial handshake, the hosts perform a key exchange and the client
+ validates the server key, and there is negotiation for an initial set of
+ cryptographic algorithms (cipher, HMAC) that will used for the session.
+ After the network connection is established, both SSH servers send a string
+ of the form 
+\begin_inset Quotes eld
+\end_inset
+
+SSH-2.0-
+\emph on
+software
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ The 
+\emph on
+software
+\emph default
+ string identifies the particular client or server.
+ (as a variation, it may also send SSH-1.99-
+\emph on
+software
+\begin_inset Quotes erd
+\end_inset
+
+
+\emph default
+ to indicate protocol version 1 compatibility) For example, the OpenSSH
+ 4.5 software sends 
+\begin_inset Quotes eld
+\end_inset
+
+SSH-1.99-OpenSSH_4.5
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Each party sends an SSH_MSG_KEXINIT message to begin the key exchange.
+ This message includes a list of supported ciphers, HMAC algorithms, compression
+ algorithms, and key exchange algorithms, ranked by preference.
+ For each algorithm, the parties choose the highest preference algorithm
+ of the client, which is also supported by the server.
+ If one of the algorithm lists has no algorithm in common, the connection
+ is terminated.
+ The series of handshake messages are shown in 
+\begin_inset LatexCommand \ref{fig:ssh-init}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename ssh_init.png
+	lyxscale 5
+	scale 40
+	keepAspectRatio
+	clip
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-init}
+
+\end_inset
+
+ connection handshake protocol
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Following the handshake, all of the SSH stream is encrypted.
  Logically, the stream is broken up into packets.
  The structure of a packet is shown in figure 
 \begin_inset LatexCommand \ref{fig:ssh-packet}
@@ -389,14 +487,6 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{fig:ssh-overview}
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 \begin_inset Graphics
 	filename ssh_overview.png
@@ -411,9 +501,21 @@ status open
 
 \end_layout
 
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-overview}
+
+\end_inset
+
+ protocol hierarchy
+\end_layout
+
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsubsection
+Client Authentication
 \end_layout
 
 \begin_layout Standard
@@ -437,14 +539,6 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
-\begin_inset LatexCommand \label{fig:ssh-packet}
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 \begin_inset Graphics
 	filename ssh_packet.png
@@ -457,6 +551,14 @@ status open
 \end_inset
 
 
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-packet}
+
+\end_inset
+
+ binary packet structure
 \end_layout
 
 \end_inset
@@ -505,23 +607,95 @@ keyboard-interactive
 \end_layout
 
 \begin_layout Standard
-In both of these methods, the password or response strings are sent directly
- from the client to the server in a packet.
- Thus, the only protection from eavesdroppers is the previously-negotiated
- encryption key.
- However, if the 
+The messages used in password authentication are shown in 
+\begin_inset LatexCommand \ref{fig:ssh-auth}
+
+\end_inset
+
+.
+ The client chooses an authentication method and sends a username and addition
+ information to the server in an SSH_MSG_USERAUTH_REQUEST message.
+ If the server does not support the authentication method choses, or the
+ credentials fail, the server may respond with an SSH_MSG_USERAUTH_FAILURE
+ message.
+ If the server wants addition information from the user, it may send SSH_MSG_USE
+RAUTH_BANNER, along with text to display to the user.
+ The 
 \begin_inset Quotes eld
 \end_inset
 
-server
+keyboard-interactive
 \begin_inset Quotes erd
 \end_inset
 
- is in fact an eavesdropper itself, or a 3rd party manages to learn the
- session key, the value of the password is compromised.
+ authentication method may repeat this several times.
+ When the user has successfully authentication, the server sends a SSH_MSG_USERA
+UTH_SUCCESS message, and the client may begin opening services.
+ For some authentication methods, there be additional method-specific packets
+ used.
 \end_layout
 
-\begin_layout Section
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename ssh_auth.png
+	lyxscale 5
+	scale 40
+	keepAspectRatio
+	clip
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-auth}
+
+\end_inset
+
+ authentication protocol messages
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the 
+\begin_inset Quotes eld
+\end_inset
+
+password
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+authentication
+\begin_inset Quotes erd
+\end_inset
+
+ methods, the password or response strings are sent directly from the client
+ to the server in a packet.
+ Thus, the only protection from eavesdroppers is the negotiated encryption
+ applied at the SSH transport layer.
+ There is no protection of the client's authentication credentials from
+ the server itself, so if the server is malicious or has been compromised,
+ an attacker will learn everything the client sends, and can potentially
+ impersonate the client at another time.
+\end_layout
+
+\begin_layout Subsection
 Man in the Middle Attack
 \end_layout
 
@@ -586,6 +760,10 @@ Are you sure you want to continue connecting (yes/no)?
 
 
 \newline
+
+\end_layout
+
+\begin_layout Enumerate
 Practically speaking, it may be inconvenient for a user to authenticate
  the server using this message and make a correct decision.
  It is easy to imagine a user simply answering yes in order to bypass the
@@ -633,7 +811,7 @@ ve to traditional passwords, such alternatives are readily usable in SPAKA
  protocols.
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 SPAKA using SFE
 \end_layout
 
