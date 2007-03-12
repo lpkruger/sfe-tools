@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ROOT item="y" tlversion="1.0.1"
+line0="{*Name*}"
+line1="{*Name*}"
+childtype="DEFAULT"
+icon="home">
+<Name type="Text" ref="y">Main</Name>
+<DEFAULT item="y"
+line0="{*Name*}"
+line1="{*Name*}"
+line2="{*Body*}"
+icon="bullet_3">
+<Name type="Text" ref="y">Text</Name>
+<Body type="Text" lines="12"></Body>
+<DEFAULT item="y">
+<Name>Primitives</Name>
+<DEFAULT item="y">
+<Name>Homomorphic Encryption</Name>
+<Body>Additively homomorphic encryption. Let (G,E,D,M) be a public-key encryption scheme, where G is
+the key generation function, E and D are the encryption and decryption functions, and M is the message
+space respectively. We will assume that:
+• The encryption scheme is semantically secure [10]. Informally, this means that the ciphertext leaks
+no useful information about the plaintext even after the adversary has previously observed many
+plaintext-ciphertext pairs on plaintexts of his choice.
+• There exists a computational function g such that for allm ∈ M and  ∈ M,m1 ∈ E(m) implies that
+g(m1, ) ∈ E(m). With any semantically secure encryption scheme, encrypting the same message
+twice will yield different ciphertexts, so E(m) denotes the set of ciphertexts that can be obtained by
+encrypting m. 1
+• There exists a computable function f such that for all messages m1 and m2, the following property
+holds:
+f(E(m1),E(m2)) = E(m1 + m2)
+There are several encryption scheme that satisfy these properties, of which Paillier’s encryption scheme
+is perhaps the most famous [17]. Since we will use the encryption scheme as a black-box cryptographic
+primitive, we omit the details of the scheme.</Body>
+<CITATION item="y"
+line0="{*Name*}"
+line1="{*Author*} {*Year*}"
+line2="&lt;br&gt;"
+line3="{*Description*}"
+line4="&lt;br&gt;"
+line5="{*Details*}"
+icon="doc">
+<Name type="Text" ref="y">Pallier</Name>
+<Done type="Boolean" format="yes/no" init="false"></Done>
+<Author type="Text"></Author>
+<Year type="Text"></Year>
+<Description type="Text" lines="4"></Description>
+<Details type="Text" lines="8"></Details>
+</CITATION>
+<CITATION item="y">
+<Name>DPE</Name>
+</CITATION>
+</DEFAULT>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Protocols</Name>
+<CITATION item="y">
+<Name>Yao86</Name>
+<Author>Andrew Yao</Author>
+<Year>1986</Year>
+<Description>This paper introduced the idea of secure function evaluation using cryptographic primitives.</Description>
+<Details>One of the fundamental cryptographic primitives for designing
+privacy-preserving protocols is {\it secure function evaluation
+(SFE)}. A protocol for SFE enables two parties $A$ and $B$ with inputs
+$x$ and $y$ respectively to jointly compute a function $f(x,y)$ while
+preserving the privacy of the two parties (i.e., at the end of the
+protocol, party $A$ only knows its input $x$ and the value of the
+function $f(x,y)$, and similarly for $B$).
+Yao showed that for a polynomial-time computable function $f$, there
+exists a SFE protocol that executes in polynomial
+time~\cite{GMW87,Yao:86} (details about this protocol can be found in
+Goldreich's book~\cite[Chapter 7]{Goldreich:vol2}). Yao's classic
+solution for SFE has been used to design privacy-preserving protocols
+for various applications~\cite{AMP04}.  The importance of Yao's
+protocol spurred researchers to design a compiler that takes a
+description of the function $f$ and emits code corresponding to Yao's
+protocol for secure evaluation of $f$. Such compilers, for example
+Fairplay~\cite{Fairplay}, enable wider applicability of SFE.
+MacKenzie {\it et al.}~\cite{Reiter:CCS:2003} implemented a compiler for
+generating secure two-party protocols for a restricted but important
+class of functions, which is particularly suited for applications
+where the secret key is protected using threshold
+cryptography. For most applications, the classic protocol for SFE is
+quite expensive, which has led researchers to develop more efficient
+privacy-preserving protocols for specific
+problems~\cite{FPRS04,FNP04,LP02,NPS99}.
+
+One of the fundamental cryptographic primitives for designing privacy-preserving protocols is secure
+function evaluation (SFE). A protocol for SFE enables two parties A and B with respective inputs x and
+y to jointly compute a function f(x, y) while preserving the privacy of their respective inputs, i.e., A does
+not learn anything from the protocol execution beyond what is revealed by her own input x and the result
+f(x, y); a similar condition holds for B.
+One of the seminal results in secure multi-party computation, due to Yao [23] and Goldreich, Micali, and
+Wigderson [9], is that for any efficiently computable (i.e., probabilistic polynomial-time) function f, there
+exists an efficient protocol for securely evaluating f. Details of this result can be found in standard textbooks
+on secure multi-party computation [8, chapter 7].
+
+Consider any (arithmetic or Boolean) circuit
+C, and two parties, Alice and Bob, who wish to evaluate C on their respective inputs x and y. In Yao’s
+3
+“garbled circuits” method, originally proposed in [23], Alice securely transforms the circuit so that Bob
+can evaluate it obliviously, i.e., without learning Alice’s inputs into the circuit or the values on any internal
+circuit wire except the output wires.
+Alice does this by generating two random keys for each circuit wire, one representing 0 on that wire,
+the other representing 1. The keys encoding Alice’s own inputs into the circuit she simply sends to Bob.
+The keys encoding Bob’s inputs are transferred to Bob via the OT2
+1 protocol. For each of Bob’s input wires,
+where Bob acts as the chooser using his circuit input bit as his input into OT2
+1 , and Alice acts as the sender
+with the two wire keys for that wire as her inputs into OT2
+1 . Alice produces the “garbled” truth table for
+each circuit gate in such a way that Bob, if he knows the wire keys encoding the values on the gate input
+wires, can decrypt exactly one row of the garbled truth table and obtain the key encoding the value of the
+output wire. Yao’s protocol maintains the invariant that for every circuit wire, Bob learns exactly one wire
+key.
+Because wire keys are random and the mapping from wire keys to values is not known to Bob (except
+for the wire keys corresponding to his own inputs), this does not leak any information about actual wire
+values. The circuit can thus be evaluated “obliviously.” To save space, we omit the details. A complete
+description of Yao’s method and security proofs can be found in [13].</Details>
+</CITATION>
+<CITATION item="y">
+<Name>SplitSecrets</Name>
+<Author>Goldreich</Author>
+<Year>198?</Year>
+<Description>Split secret with shares is a protocol for secure evaluation of functions.  It works by evaluating the circuit from inputs to outputs jointly, such that for each wire, the value of the wire is A+B where A and B and randomly split among Alice and Bob.</Description>
+<Details>The second standard method is secure computation with shares (SCWS). Details of this method can be
+found in [8, Chapter 7]. This protocol maintains the invariant that, for every circuit wire w, Alice learns a
+random value s and Bob learns bw − s, where bw is the bit value of the wire. Therefore, Alice’s and Bob’s
+shares add up to bw, but because the shares are random, neither party knows the actual wire value. For each
+output wire of the circuit, Alice and Bob combine their shares to reconstruct the circuit output. Either Yao’s
+“garbled circuits” method, or SCWS can be used to securely and privately evaluate any circuit C.</Details>
+</CITATION>
+<CITATION item="y">
+<Name>ProtocolCompiler</Name>
+<Done>false</Done>
+<Author>Goldreich, Michali, ???</Author>
+<Year>????</Year>
+<Description>The protocol compiler transforms a protocol that is secure in the semi-honest threat model into a protocol that is secure in the honest model.</Description>
+</CITATION>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>PPDM</Name>
+<Body>Privacy Preserving Data Mining</Body>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Implementations</Name>
+<CITATION item="y">
+<Name>Fairplay</Name>
+<Author>MNPS</Author>
+<Year>200?</Year>
+</CITATION>
+</DEFAULT>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>TODO</Name>
+<TASK_PRIO item="y"
+line0="[{*Priority*}] {*Name*}"
+line1="{*Name*}"
+line2="&lt;br&gt;"
+line3="{*Notes*}"
+childtype="TASK"
+generic="TASK"
+condition="Priority != &quot;&quot; and Done != &quot;true&quot;"
+icon="task_1">
+<Name type="Text" ref="y">background section - cutandpaste</Name>
+<Done type="Boolean" format="yes/no"></Done>
+<Priority type="Number" format="##">1</Priority>
+<Notes type="Text" lines="8">Find references to the important papers.  Cut and paste the text.</Notes>
+<TASK item="y"
+line0="{*Name*}"
+line1="{*Name*}"
+line2="&lt;br&gt;"
+line3="{*Notes*}"
+icon="task_2">
+<Name type="Text" ref="y">Dynamic Programming paper</Name>
+<Done type="Boolean" format="yes/no"></Done>
+<Priority type="Number" format="##"></Priority>
+<Notes type="Text" lines="8"></Notes>
+</TASK>
+<TASK item="y">
+<Name>BDD paper</Name>
+<Done>false</Done>
+</TASK>
+<TASK item="y">
+<Name>Privacy preserving clustering</Name>
+</TASK>
+<TASK item="y">
+<Name>other stuff on net</Name>
+</TASK>
+</TASK_PRIO>
+<TASK_PRIO item="y">
+<Name>Introduction - fix comments</Name>
+<Priority>2</Priority>
+</TASK_PRIO>
+<TASK_PRIO item="y">
+<Name>SSH section - rework</Name>
+<Priority>3</Priority>
+<TASK item="y">
+<Name>review Stallings book</Name>
+</TASK>
+</TASK_PRIO>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Day</Name>
+<DEFAULT item="y">
+<Name>Monday 3/12/07</Name>
+<Body>Read Randy's intro
+Usenix review
+Use Stallings book.</Body>
+</DEFAULT>
+</DEFAULT>
+<TASK_DONE item="n"
+line0="{*Name*}"
+line1="{*Name*}"
+generic="TASK"
+condition="Done == &quot;true&quot;"
+icon="star">
+<Name type="Text" ref="y"></Name>
+<Done type="Boolean" format="yes/no"></Done>
+<Priority type="Number" format="##"></Priority>
+<Notes type="Text" lines="8"></Notes>
+</TASK_DONE>
+</ROOT>
