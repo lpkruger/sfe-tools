@@ -1,0 +1,459 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Section
+Techniques for Protocol Optimization
+\end_layout
+
+\begin_layout Standard
+There are various ways to approach the problem of designing optimized secure
+ function evaluation protocols.
+ My prior work has focused on three general methodologies.
+ From most specific to least specific, three approaches I have looked at
+ are algorithm specific, algorithm 
+\emph on
+class
+\emph default
+ specific, and a general approach that is applicable to all computable functions.
+ The trade-off between these different approaches is a balance between performan
+ce and general applicability.
+ This trade-off has an analogy in traditional programming: General code
+ optimizations, such as loop unrolling or strength reduction can make all
+ code faster to a limited degree (although this is not guarenteed), but
+ tuning a specific algorithm by hand often yields superior results.
+ Algorithm class methods fall in between, with ideas that apply to more
+ than one related algorithm, but not to all algorithms in general.
+\end_layout
+
+\begin_layout Subsection
+General: Protocol Optimization using Ordered Binary Decision Diagrams
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Ordered Binary Decision Diagrams
+\emph default
+ (OBDDS) are a graph-based representation of Boolean functions that have
+ been used in a variety of applications in computer-aided design, including
+ symbolic model checking (a technique for verifying designs), verification
+ of combinational logic, and verification of finite-state concurrent systems
+ 
+\begin_inset LatexCommand \cite{Bryant:BDD,Clarke:book}
+
+\end_inset
+
+.
+ OBDDs can be readily extended to represent functions with arbitrary domains
+ and ranges.
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \cite{kruger06}
+
+\end_inset
+
+, presents an SFE algorithm that directly uses an OBDD representation of
+ the function 
+\begin_inset Formula $f$
+\end_inset
+
+ that the two parties want to jointly compute.
+ The advantage of using an OBDD representation over the gate-representation
+ is that OBDDs are more succinct for certain widely used classes of functions
+ than the gate representation.
+ For example, among other functions, the results show the OBDD representation
+ is more efficient than the Boolean gate representation for 8-bit AND, 8-bit
+ addition, and the millionaire's and billionaire's problems
+\begin_inset LatexCommand \cite{Yao:86}
+
+\end_inset
+
+ For other functions, such as multiplication, the OBDD performed worse than
+ the Boolean gate representation.
+\end_layout
+
+\begin_layout Standard
+The conclusion is that SFE optimization using OBDDs are a technique that
+ is applicable to any function.
+ 
+\end_layout
+
+\begin_layout Subsection
+Algorithm Class Specific: Protocol Optimization of Dynamic Programming
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+Let ${
+\backslash
+cal P}(x,y)$ be a problem with two inputs $x$ and $y$, e.g., for the problem
+ of computing edit-distance between two strings the inputs $x$ and $y$ are
+ the strings.
+ Typically, a dynamic-programming algorithm ${
+\backslash
+cal A}_{
+\backslash
+cal P}$ for problem ${
+\backslash
+cal P}$ has the following components: 
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+begin{itemize} 
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+item A set $S$ of sub-problems and a dependency relation $R 
+\backslash
+subseteq S 
+\backslash
+times S$ between the sub-problems.
+ Intuitively, $(s,s') 
+\backslash
+in R$ means that the sub-problem $s'$ depends on the sub-problem $s$.
+ If there is a dependency between $s$ and $s'$, we write it as $s 
+\backslash
+rightarrow s'$.
+ In the case of the problem of computing edit-distance between two strings
+ $
+\backslash
+alpha$ and $
+\backslash
+beta$ of length $n$ and $m$, the set of sub-problems is $[0,
+\backslash
+cdots,n] 
+\backslash
+times [0,
+\backslash
+cdots,m]$.
+ For all sub-problems $(i,j)$ such that $i 
+\backslash
+not= 0$ and $j 
+\backslash
+not=0$, we have the following dependencies: $(i-1,j) 
+\backslash
+rightarrow (i,j)$, $(i,j-1) 
+\backslash
+rightarrow (i,j)$, and $(i-1,j-1) 
+\backslash
+rightarrow (i,j)$.
+ The {
+\backslash
+it base sub-problems} are $s 
+\backslash
+in S$ such that they have no dependencies.
+ For the edit-distance problem, the base sub-problems are: 
+\backslash
+[ 
+\backslash
+begin{array}{l} 
+\backslash
+{ (i,0) 
+\backslash
+; 
+\backslash
+mid 
+\backslash
+;  0 
+\backslash
+leq i 
+\backslash
+leq n 
+\backslash
+} 
+\backslash
+
+\backslash
+ 
+\backslash
+{ (0,j) 
+\backslash
+; 
+\backslash
+mid 
+\backslash
+;  0 
+\backslash
+leq j 
+\backslash
+leq m 
+\backslash
+} 
+\backslash
+
+\backslash
+ 
+\backslash
+end{array} 
+\backslash
+] We also assume that there is a unique root sub-problem ${
+\backslash
+it root} 
+\backslash
+in S$ such that there does not exist a sub-problem that depends on ${
+\backslash
+it root}$.
+ For the edit-distance problem the unique root sub-problem is $(n,m)$.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+item Each sub-problem $s$ is assigned a value ${
+\backslash
+it val}(s)$.
+ The goal is to compute ${
+\backslash
+it val}({
+\backslash
+it root})$.
+  The function ${
+\backslash
+it val}$ from $S$ to $
+\backslash
+Re$ assigns values to sub-problems, such that it satisfies the following
+ properties: 
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+begin{itemize} 
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+item For all the base sub-problems $s 
+\backslash
+in S$, ${
+\backslash
+it val}(s)$ is defined.
+ 
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+item Let $s 
+\backslash
+in S$ be a non-base sub-problem.
+ Define ${
+\backslash
+it pred}(s)$ as all the predecessors of $s$, i.e.
+ the set ${
+\backslash
+it pred}(s)$ is defined as $
+\backslash
+{ s' 
+\backslash
+; 
+\backslash
+mid 
+\backslash
+; s' 
+\backslash
+rightarrow s 
+\backslash
+}$.
+  Assume that ${
+\backslash
+it pred}(s)$ is equal to $
+\backslash
+{ s_1 , 
+\backslash
+cdots, s_k 
+\backslash
+}$.
+  There is a recursive function $f$ defining ${
+\backslash
+it val}(s)$ in terms of ${
+\backslash
+it val}(s_1), {
+\backslash
+it val}(s_2), 
+\backslash
+cdots , {
+\backslash
+it val}(s_k)$, $s(x)$, and $s(y)$, where $s(x)$ and $s(y)$ are parts of
+ the input $x$ and $y$ that are relevant to the sub-problem $s$.
+ In case of the edit-distance problem ${
+\backslash
+it val} ((i,j))$ is equal to $D(i,j)$.
+ The value for the base and non-base sub problems for the edit-distance
+ problems was defined in equations~
+\backslash
+ref{eqn:base-case} and~
+\backslash
+ref{eqn:recursive} in Section~
+\backslash
+ref{sec:edit-distance}.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{itemize}
+\end_layout
+
+\begin_layout Standard
+
+
+\backslash
+end{itemize}
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Algorithm Specific: Protocol Optimization of K-Means Clustering
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Standard
+
+The $k$-means algorithm~
+\backslash
+cite{pattern-classification,Llyod-82} is shown in Figure~
+\backslash
+ref{fig:k-means}.
+ Assume that we are given $n$ samples $x_1,
+\backslash
+cdots,x_n$, where each sample is a $m$-dimensional vector of real numbers.
+ The number of clusters is $c$.
+ The algorithm maintains $c$ means $
+\backslash
+mu_1,
+\backslash
+cdots,
+\backslash
+mu_c$.
+ Initially, assume that the means are assigned arbitrary values.
+ A sample $x_i$ is deemed to be in the cluster $j$ if it is closest to the
+ mean $
+\backslash
+mu_j$, where mean of a cluster $
+\backslash
+{x'_1,
+\backslash
+cdots,x'_r 
+\backslash
+}$ is $
+\backslash
+frac{x'_1+
+\backslash
+cdots,x'_r}{r}$.
+ Distance between two $m$-dimensional vectors $x$ and $y$ is given by $
+\backslash
+sum_{j=1}^m (x[j] - y[j])^2$, where $x[j]$ is the $j$-th element of the
+ vector $x$.
+  Other distance metrics~
+\backslash
+cite[Chapter 10]{pattern-classification}, such as scatter metrics, can be
+ used instead of the distance metric mentioned above.
+ Each iteration of the $k$-means algorithms recomputes the means and reclassifie
+s the samples.
+ The algorithm terminates when it detects ``no change'' in the means.
+ The precise definition of ``no change'' depends on the specific metric
+ being used.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[plain]{somesh}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

@@ -1,0 +1,99 @@
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\linespread{1.2}
+\end_preamble
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Optimization of Secure Function Evaluation
+\shape italic
+\size normal
+
+\newline
+Research Proposal for Ph.D Preliminary Exam
+\end_layout
+
+\begin_layout Author
+Louis Kruger
+\newline
+University of Wisconsin Madison
+\end_layout
+
+\begin_layout Standard
+\begin_inset Include \input{prelim-intro.lyx}
+preview true
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Include \input{background.lyx}
+preview true
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Include \input{mywork.lyx}
+preview false
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Include \input{ssh.lyx}
+preview false
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[plain]{somesh,ssh}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

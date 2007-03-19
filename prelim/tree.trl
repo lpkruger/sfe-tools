@@ -11,7 +11,9 @@ line1="{*Name*}"
 line2="{*Body*}"
 icon="bullet_3">
 <Name type="Text" ref="y">Text</Name>
-<Body type="Text" lines="12"></Body>
+<Body type="Text" lines="30"></Body>
+<DEFAULT item="y">
+<Name>Background Section</Name>
 <DEFAULT item="y">
 <Name>Primitives</Name>
 <DEFAULT item="y">
@@ -152,18 +154,51 @@ output wire of the circuit, Alice and Bob combine their shares to reconstruct th
 </DEFAULT>
 </DEFAULT>
 <DEFAULT item="y">
+<Name>Completed Work</Name>
+<DEFAULT item="y">
+<Name>Privacy Preserving Clustering</Name>
+<Body>Given a set of data items, clustering algorithms group similar items together. Clustering has many
+applications, such as customer-behavior analysis, targeted marketing, forensics, and bioinformatics. In
+this paper, we present the design and analysis of a privacy-preserving k-means clustering algorithm,
+where only the cluster means at the various steps of the algorithm are revealed to the participating parties.
+The crucial step in our privacy-preserving k-means is privacy-preserving computation of cluster
+means. We present two protocols (one based on oblivious polynomial evaluation and the second based
+on homomorphic encryption) for privacy-preserving computation of cluster means. We have a JAVA implementation
+of our algorithm. Using our implementation, we have performed a thorough evaluation of
+our privacy-preserving clustering algorithm on three data sets. Our evaluation demonstrates that privacypreserving
+clustering is feasible, i.e., our homomorphic-encryption based algorithm finished clustering a
+large data set in approximately 66 seconds.</Body>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Secure OBDD Evaluation</Name>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Secure Dynamic Programming</Name>
+</DEFAULT>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Proposed Work</Name>
+<DEFAULT item="y">
+<Name>SSH</Name>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Theoretical</Name>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>New Protocol</Name>
+</DEFAULT>
+</DEFAULT>
+</DEFAULT>
+<DEFAULT item="y">
 <Name>TODO</Name>
-<TASK_PRIO item="y"
-line0="[{*Priority*}] {*Name*}"
+<TASK_DONE item="y"
+line0="{*Name*}"
 line1="{*Name*}"
-line2="&lt;br&gt;"
-line3="{*Notes*}"
-childtype="TASK"
 generic="TASK"
-condition="Priority != &quot;&quot; and Done != &quot;true&quot;"
-icon="task_1">
-<Name type="Text" ref="y">background section - cutandpaste</Name>
-<Done type="Boolean" format="yes/no"></Done>
+condition="Done == &quot;true&quot;"
+icon="star">
+<Name type="Text" ref="y">background section</Name>
+<Done type="Boolean" format="yes/no">true</Done>
 <Priority type="Number" format="##">1</Priority>
 <Notes type="Text" lines="8">Find references to the important papers.  Cut and paste the text.</Notes>
 <TASK item="y"
@@ -187,16 +222,29 @@ icon="task_2">
 <TASK item="y">
 <Name>other stuff on net</Name>
 </TASK>
-</TASK_PRIO>
-<TASK_PRIO item="y">
-<Name>Introduction - fix comments</Name>
-<Priority>2</Priority>
+</TASK_DONE>
+<TASK_PRIO item="y"
+line0="[{*Priority*}] {*Name*}"
+line1="{*Name*}"
+line2="&lt;br&gt;"
+line3="{*Notes*}"
+childtype="TASK"
+generic="TASK"
+condition="Priority != &quot;&quot; and Done != &quot;true&quot;"
+icon="task_1">
+<Name type="Text" ref="y">Introduction - fix comments</Name>
+<Done type="Boolean" format="yes/no"></Done>
+<Priority type="Number" format="##">2</Priority>
+<Notes type="Text" lines="8"></Notes>
 </TASK_PRIO>
 <TASK_PRIO item="y">
 <Name>SSH section - rework</Name>
 <Priority>3</Priority>
 <TASK item="y">
 <Name>review Stallings book</Name>
+</TASK>
+<TASK item="y">
+<Name>detailed protocol diagram</Name>
 </TASK>
 </TASK_PRIO>
 </DEFAULT>
@@ -206,18 +254,21 @@ icon="task_2">
 <Name>Monday 3/12/07</Name>
 <Body>Read Randy's intro
 Usenix review
-Use Stallings book.</Body>
+
+Use Stallings book.
+Polish background section
+Polish Intro
+
+rewrite SSH</Body>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Tuesday 3/13/07</Name>
+<DEFAULT item="y">
+<Name>asdas</Name>
 </DEFAULT>
 </DEFAULT>
-<TASK_DONE item="n"
-line0="{*Name*}"
-line1="{*Name*}"
-generic="TASK"
-condition="Done == &quot;true&quot;"
-icon="star">
-<Name type="Text" ref="y"></Name>
-<Done type="Boolean" format="yes/no"></Done>
-<Priority type="Number" format="##"></Priority>
-<Notes type="Text" lines="8"></Notes>
-</TASK_DONE>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>New</Name>
+</DEFAULT>
 </ROOT>

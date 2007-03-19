@@ -37,335 +37,6 @@
 
 \begin_body
 
-\begin_layout Title
-Practical Secure Function Evaluation
-\shape italic
-\size normal
-
-\newline
-Research Proposal for Ph.D Preliminary Exam
-\end_layout
-
-\begin_layout Author
-Louis Kruger
-\newline
-University of Wisconsin Madison
-\end_layout
-
-\begin_layout Section
-Introduction
-\end_layout
-
-\begin_layout Quote
-\begin_inset Note Comment
-status open
-
-\begin_layout Quote
-As every man goes through life he fills in a number of forms for the record,
- each containing a number of questions...
- There are thus hundreds of little threads radiating from every man, millions
- of threads in all.
- If these threads were suddenly to become visible, the whole sky would look
- like a spider's web, and if they materialized as rubber bands, buses; trams
- and even people would all lose the ability to move, and the wind would
- be unable to carry torn-up newspapers or autumn leaves along the streets
- of the city.
- They are not visible, they are not material, but every man is constantly
- aware of their existence....
- Each man, permanently aware of his own invisible threads, naturally develops
- a respect for the people who manipulate the threads.
-\end_layout
-
-\begin_layout Quote
---Alexander Solzhenitsyn, Cancer Ward, 1968.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Privacy is becoming an important concern as computers increase in power
- and the Internet continues to grow 
-\begin_inset LatexCommand \cite{cra99,tur03}
-
-\end_inset
-
-.
- More and more data is stored on machines that are connected to the Internet,
- directly or indirectly, and there are many examples in the newspapers today
- of privacy compromising activities such as phishing, data theft, and identity
- theft.
- There are also many other reasons why privacy should be protected, including
- business competition, respect of personal privacy, and government mandate,
- such as HIPPA laws 
-\begin_inset LatexCommand \cite{hippa}
-
-\end_inset
-
- which mandate strict privacy among health-care professionals along with
- stiff penalties for violations.
-\end_layout
-
-\begin_layout Standard
-Despite these many concerns, there is also a conflicting desire to perform
- useful computations with data.
- Data is not useful unless it can be accessed and manipulated.
- Sometimes various parties would like to collaborate on research involving
- sensitive data.
- For example, genetic data is the subject of much current research, but
- it is considered private.
- Researchers with access to different patients' data may want to combine
- their knowledge in the search for new cures for diseases, yet not reveal
- the sensitive data to collaborating parties.
- Competing businesses may want to perform joint market research for mutual
- benefit, without revealing sensitive customer data.
- The challenge is how to balance these competing concerns, making data available
- for legitimate uses while preserving as much privacy as possible.
-\end_layout
-
-\begin_layout Standard
-There have been several methods developed so far for preserving personal
- privacy while permitting use of data.
- The most simple method, conceptually, is to replace identifying information,
- such as the name, social security number, and other sensitive data with
- random unique identifiers, and then using the transformed data for computation.
- If it is necessary to correlate the outputs of the computation with individuals
-, the data owner can do this, but other parties presumably can not.
- However, this method has been shown to be vulnerable to attacks that correlate
- the transformed data with information available from external sources to
- reconstruct the obfuscated data, thereby breaking the privacy protection
- 
-\begin_inset LatexCommand \cite{Malin04}
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-Another method of preserving privacy is known as 
-\emph on
-secure multiparty computation
-\emph default
-.
- This is a technique of performing computations on inputs supplied by multiple
- parties while provably maintaining privacy guarantees.
- If the computation is a function evaluation, then it is called 
-\emph on
-secure function evaluation
-\emph default
-, or SFE.
-
-\emph on
- 
-\emph default
-This
-\emph on
- 
-\emph default
-is a technique which can address many of privacy concerns facing the modern
- age.
- The inputs to the function are partitioned among more than one party, and
- the function is computed collaboratively while preserving the privacy of
- each participant's individual inputs.
- In this case, privacy is considered preserved if no party learns any informatio
-n that would affect their estimate of the probability distribution of another
- party's inputs, except for that which can be calculated by the parties'
- own inputs and the output of the joint function.
-\begin_inset Note Comment
-status open
-
-\begin_layout Standard
-\begin_inset Note Greyedout
-status open
-
-\begin_layout Standard
-Needs clarification
-\end_layout
-
-\end_inset
-
- In other words, the entropy gain of each party is equivalent to the entropy
- gain in an idealized protocol where a trusted third party collects all
- the inputs, evaluates the function, and transmits only the output to each
- party.
- Depending on the protocol, the guarantees for some parties may be based
- on typical assumptions of computational hardness, while the guarantees
- for other parties may be information theoretic.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Although SFE has provable privacy guarantees, its implementation tends to
- be very expensive for practical use in terms of time and space.
- The space expense manifests itself in network bandwidth used in the protocols.
- These expenses explain why SFE has not been used very much outside of the
- academic literature, despite the fact that was formally introduced many
- years ago
-\begin_inset LatexCommand \cite{PLACEHOLDER}
-
-\end_inset
-
-.
- There has been research in recent years to make SFE more practical.
- This research falls into two categories: general and function specific.
- General protocols allow any function expressed as a circuit computation
- to be evaluated securely.
- The Fairplay system 
-\begin_inset LatexCommand \cite{Fairplay}
-
-\end_inset
-
- is a straightforward implementation of the Yao protocol, along with a supportin
-g compiler that allows secure functions to be written in a more familiar
- functional programming notation.
- Kruger 
-\emph on
-et al.
-
-\emph default
- 
-\begin_inset LatexCommand \cite{kruger06}
-
-\end_inset
-
- showed how 
-\emph on
-Ordered Binary Decision Diagrams
-\emph default
- (OBDD) can be used to produce a more efficient protocol for secure evaluation
- for certain functions.
- Function specific protocol design has produced secure protocols which perform
- dramatically better than general protocols.
- Privacy preserving data mining (PPDM) has been a major application driving
- such research 
-\begin_inset LatexCommand \cite{verykios04stateart}
-
-\end_inset
-
-.
- Other protocols have been developed for various classes of functions such
- as polynomial evaluation 
-\begin_inset LatexCommand \cite{naor99otope}
-
-\end_inset
-
- and string alignment algorithms such as edit distance 
-\begin_inset LatexCommand \cite{kruger07}
-
-\end_inset
-
-.
- Also, the amount of time required for the computations has benefited greatly
- from Moore's law.
- I have shown that in some cases, the computation requirements of the most
- general protocols can be adequate for practical use when performed on today's
- fastest CPUs 
-\begin_inset LatexCommand \cite{kruger06}
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-I propose to continue researching ways to improve the efficiency and practicalit
-y of privacy preserving protocols.
- My past work has looked at finding efficient protocols for specific classes
- of functions, in particular, one study analyzes several designs of a 
-\begin_inset Formula $k$
-\end_inset
-
--means clustering algorithm 
-\begin_inset LatexCommand \cite{kruger05}
-
-\end_inset
-
-, and another discusses ways to design efficient protocols for many dynamic
- programming problems 
-\begin_inset LatexCommand \cite{kruger07}
-
-\end_inset
-
-.
- I have also investigated the use of alternate circuit representations using
- OBDDs to improve the performance of general purpose protocols and showed
- that they can be beneficial for certain functions 
-\begin_inset LatexCommand \cite{kruger06}
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-I am proposing to continue the work suggested by these initial studies,
- and further investigate ways to improve the performance and simplify the
- task of constructing efficient privacy preserving protocols, culminating
- in an optimizing protocol compiler.
- In addition to the research results, I also plan to release the SFE compiler
- and supporting tools as a stimulus to expand future research in secure
- function evaluation.
-\end_layout
-
-\begin_layout Standard
-Specifically, I propose that my work will create the following contributions:
-\end_layout
-
-\begin_layout Itemize
-
-\emph on
-Protocols for other alternative representation of circuits
-\emph default
-.
- I will extend the previous work with OBDDs by creating hybrid circuits
- which compose sub-circuits represented as OBDDs with sub-circuits represented
- as Boolean circuits.
- I will also investigate whether extended OBDD models can be used to create
- additional efficiency improvements
-\end_layout
-
-\begin_layout Itemize
-
-\emph on
-Protocols for evaluating functions with controlled leakage of information
-\emph default
-.
- The question being answered is whether performance improvements can be
- achieved by loosening the privacy guarantees in a controlled way, by specifying
- which data may and may not leak.
-\end_layout
-
-\begin_layout Itemize
-
-\emph on
-A framework for analyzing a specific protocol and creating an equivalent
- protocol which is more efficient
-\emph default
-.
- This is analogous to the role played by an optimizing compiler for program
- code.
-\end_layout
-
-\begin_layout Itemize
-
-\emph on
-An example showing that SFE can is useful in other aspects of security where
- it has not previously been used
-\emph default
-.
- Specificaly, I will show how SFE can be used to implement a more secure
- authentication protocol in SSH.
-\end_layout
-
 \begin_layout Section
 Strengthening SSH Password Authentication
 \end_layout
@@ -390,8 +61,8 @@ SSH is an application originally designed as an alternative to telnet for
 The SSH protocol is defined in terms of layers, much like the OSI networking
  stack.
  Each layer is defined in terms of messages from the underlying layer.
- The lowest level is a packet based transport protocol that runs over a
- stream transport such as TCP.
+ The lowest level is an application packet based transport protocol that
+ is layered on top of TCP.
  All SSH messages of the higher layers are sent as packets.
  This packet protocol is known as the SSH transport layer protocol and is
  defined in 
@@ -641,6 +312,16 @@ keyboard-interactive
 
  allows the server to send arbitrary prompts and wait for responses.
  This is suitable for multi-factor authentication.
+ For example, using 
+\begin_inset Quotes eld
+\end_inset
+
+keyboard-interactive
+\begin_inset Quotes erd
+\end_inset
+
+ the server could first ask for a password, and then follow up with a series
+ of challenge questions, and a random string from a secure token.
 \end_layout
 
 \begin_layout Standard
@@ -650,13 +331,13 @@ The messages used in password authentication are shown in
 \end_inset
 
 .
- The client chooses an authentication method and sends a username and addition
+ The client chooses an authentication method and sends a username and additional
  information to the server in an SSH_MSG_USERAUTH_REQUEST message.
- If the server does not support the authentication method choses, or the
+ If the server does not support the authentication method chosen, or the
  credentials fail, the server may respond with an SSH_MSG_USERAUTH_FAILURE
  message.
- If the server wants addition information from the user, it may send SSH_MSG_USE
-RAUTH_BANNER, along with text to display to the user.
+ If the server wants additional information from the user, it may send SSH_MSG_U
+SERAUTH_BANNER, along with text to display to the user.
  The 
 \begin_inset Quotes eld
 \end_inset
@@ -868,17 +549,63 @@ Secure Password and Key Authentication
  is malicious.
  There have been various SPAKA protocols proposed in the literature with
  varying properties.
- 
+ A state of the art SPAKA protocol is presented in 
 \begin_inset LatexCommand \cite{brainard03}
 
 \end_inset
 
- Here, I propose a novel SPAKA protocol based on 
-\emph on
-Secure Function Evaluation 
-\emph default
-(SFE).
- 
+.
+ In this protocol, the user's password 
+\begin_inset Formula $P$
+\end_inset
+
+ is split into two shares: 
+\begin_inset Formula $P_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $P_{2}$
+\end_inset
+
+.
+ The value of 
+\begin_inset Formula $P$
+\end_inset
+
+ can not be derived from either of the two shares alone, and each share
+ is stored on a seperate server.
+ To perform the protocol, the client splits 
+\begin_inset Formula $P$
+\end_inset
+
+ into different shares 
+\begin_inset Formula $P_{1}'$
+\end_inset
+
+ and 
+\begin_inset Formula $P_{2}'$
+\end_inset
+
+, and sends these values to the servers.
+ The servers then perform an evaluation protocol to determine if 
+\begin_inset Formula $P_{1}\oplus P_{2}=P_{1}'\oplus P_{2}'$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+SPAKA using SFE
+\end_layout
+
+\begin_layout Standard
+The design of protocols such as 
+\begin_inset LatexCommand \cite{brainard03}
+
+\end_inset
+
+ suggests that SFE can be applied generally to the SPAKA problem.
+ Here, I propose a novel an general SPAKA construction.
 \end_layout
 
 \begin_layout Standard
@@ -990,14 +717,6 @@ If
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \bibtex[plain]{somesh,ssh}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -1015,6 +734,23 @@ Theoretical paper
 
 \begin_layout Enumerate
 Graduate!!!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[plain]{somesh,ssh}
+
+\end_inset
+
+
 \end_layout
 
 \end_inset

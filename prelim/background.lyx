@@ -341,32 +341,54 @@ chooser
  and the sender does not know what choice the chooser made.
 \end_layout
 
+\begin_layout Standard
+Oblivious transfer is a protocol originally proposed by Rabin 
+\begin_inset LatexCommand \cite{PLACEHOLDER}
+
+\end_inset
+
+.
+ Informally, a 1-out-of-n oblivious transfer (we will denote it as OTn 1
+ ) is a protocol between two parties, the Chooser and the Sender.
+ The Sender¿s inputs into the protocol are n values v1, .
+ .
+ .
+ , vn.
+ The Chooser¿s input is an index i such that 1 ¿ i ¿ n.
+ As a result of the protocol, the Chooser receives vi, but does not learn
+ anything about the rest of the Sender¿s values.
+ The Sender learns nothing.
+ The most efficient OT algorithm to date is described in 
+\begin_inset LatexCommand \cite{Noar-Pinkas:2001}
+
+\end_inset
+
+.
+\end_layout
+
 \begin_layout Subsection
 privacy preserving data mining 
 \end_layout
 
-\begin_layout Section
-My work to date
-\end_layout
-
-\begin_layout Subsection
-k-means clustering protocol
+\begin_layout Standard
+Initial focus in this area was on construction of decision trees from distribute
+d data sets [3, 33].
+ There is also a significant body of research on privacy-preserving mining
+ of association rules [15, 46, 50].
+ We will focus on existing work on privacy-preserving clustering.
+ In general, there are two approaches for designing privacy-preserving machine
+ learning algorithms.
+ The first approach is to use transformations to perturb the data set before
+ the algorithm is applied.
+ This approach for designing privacy-preserving clustering algorithms is
+ taken by several researchers [31, 37, 41].
+ A second approach to designing privacy preserving algorithms is to use
+ algorithms from the securemultiparty computation literature.
+ The advantage of this approach over the perturbation approach is that formal
+ guarantees of privacy can be given for these algorithms.e
 \end_layout
 
 \begin_layout Standard
-This work was an efficient application of privacy preserving design principles
- to a commonly used data mining problem.
-\end_layout
-
-\begin_layout Subsection
-BDD protool
-\end_layout
-
-\begin_layout Standard
-\begin_inset LatexCommand \bibtex[plain]{somesh}
-
-\end_inset
-
 
 \end_layout
 
