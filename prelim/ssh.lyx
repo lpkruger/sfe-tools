@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -82,6 +82,39 @@ The SSH protocol is defined in terms of layers, much like the OSI networking
  
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename ssh_overview.png
+	lyxscale 5
+	scale 40
+	keepAspectRatio
+	clip
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-overview}
+
+\end_inset
+
+ protocol hierarchy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsubsection
 Session Initialization
 \end_layout
@@ -90,8 +123,23 @@ Session Initialization
 During the initial handshake, the hosts perform a key exchange and the client
  validates the server key, and there is negotiation for an initial set of
  cryptographic algorithms (cipher, HMAC) that will used for the session.
- After the network connection is established, both SSH servers send a string
- of the form 
+ An overview of the handshake messages are shown in 
+\begin_inset LatexCommand \ref{fig:ssh-init}
+
+\end_inset
+
+.
+ The steps of the protocol are as follows.
+ Refer to 
+\begin_inset LatexCommand \ref{fig:ssh2-init}
+
+\end_inset
+
+ for details.
+\end_layout
+
+\begin_layout Enumerate
+The SSH server sends a string of the form 
 \begin_inset Quotes eld
 \end_inset
 
@@ -127,9 +175,50 @@ SSH-1.99-OpenSSH_4.5
 \end_inset
 
 .
-\end_layout
+ If the client does not understand the protocol version, it disconnects,
+ otherwise it sends a similar string to the server.
+ After these strings are sent, all traffic uses the binary packet protocol
+ shown in 
+\begin_inset LatexCommand \ref{fig:ssh-packet}
+
+\end_inset
+
+.
+\newline
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
 
 \begin_layout Standard
+\begin_inset Graphics
+	filename ssh_packet.png
+	lyxscale 5
+	scale 40
+	keepAspectRatio
+	clip
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:ssh-packet}
+
+\end_inset
+
+ binary packet structure
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
 Each party sends an SSH_MSG_KEXINIT message to begin the key exchange.
  This message includes a list of supported ciphers, HMAC algorithms, compression
  algorithms, and key exchange algorithms, ranked by preference.
@@ -137,12 +226,64 @@ Each party sends an SSH_MSG_KEXINIT message to begin the key exchange.
  of the client, which is also supported by the server.
  If one of the algorithm lists has no algorithm in common, the connection
  is terminated.
- The series of handshake messages are shown in 
-\begin_inset LatexCommand \ref{fig:ssh-init}
+ The format of the SSH_MSG_KEXINIT message are as follows:
+\end_layout
 
-\end_inset
+\begin_deeper
+\begin_layout LyX-Code
+      byte         SSH_MSG_KEXINIT
+\end_layout
 
-.
+\begin_layout LyX-Code
+      byte[16]     cookie (random bytes)
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    kex_algorithms
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    server_host_key_algorithms
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    encryption_algorithms_client_to_server
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    encryption_algorithms_server_to_client
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    mac_algorithms_client_to_server
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    mac_algorithms_server_to_client
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    compression_algorithms_client_to_server
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    compression_algorithms_server_to_client
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    languages_client_to_server
+\end_layout
+
+\begin_layout LyX-Code
+      name-list    languages_server_to_client
+\end_layout
+
+\begin_layout LyX-Code
+      boolean      first_kex_packet_follows
+\end_layout
+
+\begin_layout LyX-Code
+      uint32       0 (reserved for future extension)
 \end_layout
 
 \begin_layout Standard
@@ -179,17 +320,6 @@ status open
 \end_layout
 
 \begin_layout Standard
-Following the handshake, all of the SSH stream is encrypted.
- Logically, the stream is broken up into packets.
- The structure of a packet is shown in figure 
-\begin_inset LatexCommand \ref{fig:ssh-packet}
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -197,8 +327,8 @@ status open
 
 \begin_layout Standard
 \begin_inset Graphics
-	filename ssh_overview.png
-	lyxscale 5
+	filename ssh2_p1.png
+	lyxscale 50
 	scale 40
 	keepAspectRatio
 	clip
@@ -210,16 +340,54 @@ status open
 \end_layout
 
 \begin_layout Caption
-\begin_inset LatexCommand \label{fig:ssh-overview}
+\begin_inset LatexCommand \label{fig:ssh2-init}
 
 \end_inset
 
- protocol hierarchy
+ connection handshake protocol
 \end_layout
 
 \end_inset
 
 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Following the handshake, the key exchange protocol is performed.
+ The specific algorithm used to do the key exchange is negotiated in the
+ previous step.
+ The original SSH2 specification included a single Diffie-Hellman group
+ defined in 
+\begin_inset LatexCommand \cite{rfc4253}
+
+\end_inset
+
+.
+ A newer and more flexible key exchange algorithm is defined in 
+\begin_inset LatexCommand \cite{rfc4419}
+
+\end_inset
+
+.
+ The details of key exchange will not be discussed further.
+ After the key exchange is complete, all of the data in the SSH stream is
+ encrypted using the negotiated cipher and key.
+ Specifically, the sequence of packets, excluding the packet size header,
+ shown in 
+\begin_inset LatexCommand \ref{fig:ssh-packet}
+
+\end_inset
+
+ is a single stream of plaintext encrypted by the cipher.
+\end_layout
+
+\begin_layout Standard
+At this point, the protocol handshake is complete and the client may initiate
+ arbitrary sub-protocols of SSH.
+ Typically, however, the client will begin the client authentication protocol,
+ as most servers require authentication before allowing other services to
+ be provided.
 \end_layout
 
 \begin_layout Subsubsection
@@ -236,42 +404,10 @@ When the initial handshake is complete, the client has verified the server
 \end_inset
 
 .
- The auth protocol is flexible, and while the SSH standard describes several
- standard methods of authentication, such as password and public-key, arbitrary
- additional authentication methods can be added.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Standard
-\begin_inset Graphics
-	filename ssh_packet.png
-	lyxscale 5
-	scale 40
-	keepAspectRatio
-	clip
-	rotateAngle 270
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Caption
-\begin_inset LatexCommand \label{fig:ssh-packet}
-
-\end_inset
-
- binary packet structure
-\end_layout
-
-\end_inset
-
-
+ The auth protocol is flexible.
+ The SSH standard describes several standard methods of authentication,
+ such as password and public-key, arbitrary additional vendor or site specific
+ authentication methods can be added.
 \end_layout
 
 \begin_layout Standard
@@ -331,26 +467,68 @@ The messages used in password authentication are shown in
 \end_inset
 
 .
- The client chooses an authentication method and sends a username and additional
- information to the server in an SSH_MSG_USERAUTH_REQUEST message.
- If the server does not support the authentication method chosen, or the
- credentials fail, the server may respond with an SSH_MSG_USERAUTH_FAILURE
- message.
- If the server wants additional information from the user, it may send SSH_MSG_U
-SERAUTH_BANNER, along with text to display to the user.
- The 
+ For the purposes of this discussion, we will assume the client is using
+ the 
 \begin_inset Quotes eld
 \end_inset
 
-keyboard-interactive
+password
 \begin_inset Quotes erd
 \end_inset
 
- authentication method may repeat this several times.
- When the user has successfully authentication, the server sends a SSH_MSG_USERA
-UTH_SUCCESS message, and the client may begin opening services.
- For some authentication methods, there be additional method-specific packets
- used.
+ authentication method.
+ The steps of this authentication are as follows:
+\end_layout
+
+\begin_layout Enumerate
+The client sends the username and password to the server in an SSH_MSG_USERAUTH_
+REQUEST message.
+ The format of this message is:
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+      byte      SSH_MSG_USERAUTH_REQUEST
+\end_layout
+
+\begin_layout LyX-Code
+      string    user name in ISO-10646 UTF-8 encoding [RFC3629]
+\end_layout
+
+\begin_layout LyX-Code
+      string    "password"
+\end_layout
+
+\begin_layout LyX-Code
+      boolean   FALSE
+\end_layout
+
+\begin_layout LyX-Code
+      string    plaintext password in ISO-10646 UTF-8 encoding 
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+If the server does not support the 
+\begin_inset Quotes eld
+\end_inset
+
+password
+\begin_inset Quotes erd
+\end_inset
+
+ method chosen, or the password is incorrect, the server will respond with
+ an SSH_MSG_USERAUTH_FAILURE message.
+ If the password is correct, the server sends a SSH_MSG_USERAUTH_SUCCESS
+ message, and the client may begin requesting services.
+ (The server may also send a SSH_MSG_USERAUTH_BANNER packet to communicate
+ information directly to the user.
+ It is analogous to the /etc/issue file used in standard Unix systems to
+ display a message at a login prompt)
 \end_layout
 
 \begin_layout Standard
@@ -387,26 +565,10 @@ status open
 \end_layout
 
 \begin_layout Standard
-In the 
-\begin_inset Quotes eld
-\end_inset
-
-password
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-authentication
-\begin_inset Quotes erd
-\end_inset
-
- methods, the password or response strings are sent directly from the client
- to the server in a packet.
- Thus, the only protection from eavesdroppers is the negotiated encryption
- applied at the SSH transport layer.
+It is easy to see that the password is sent directly from the client to
+ the server in a packet.
+ Thus, the only protection from eavesdroppers is the encryption applied
+ at the SSH transport layer.
  There is no protection of the client's authentication credentials from
  the server itself, so if the server is malicious or has been compromised,
  an attacker will learn everything the client sends, and can potentially
@@ -530,7 +692,7 @@ ve to traditional passwords, such alternatives are readily usable in SPAKA
 \end_layout
 
 \begin_layout Subsection
-SPAKA using SFE
+SPAKA
 \end_layout
 
 \begin_layout Standard
@@ -544,12 +706,11 @@ Secure Password and Key Authentication
 \end_inset
 
 .
- For an authentication protocol to be a SPAKA protocol, it must guarentee
- confidentiality of secrets even when one party in the authentication protocol
- is malicious.
+ SPAKA protocols are designed to guarentee confidentiality of secrets even
+ against active adversaries.
  There have been various SPAKA protocols proposed in the literature with
  varying properties.
- A state of the art SPAKA protocol is presented in 
+ A recent SPAKA protocol is presented in 
 \begin_inset LatexCommand \cite{brainard03}
 
 \end_inset
@@ -591,7 +752,7 @@ Secure Password and Key Authentication
 \begin_inset Formula $P_{1}\oplus P_{2}=P_{1}'\oplus P_{2}'$
 \end_inset
 
-
+.
 \end_layout
 
 \begin_layout Subsection
@@ -605,7 +766,7 @@ The design of protocols such as
 \end_inset
 
  suggests that SFE can be applied generally to the SPAKA problem.
- Here, I propose a novel an general SPAKA construction.
+ Here, I propose a general SPAKA construction based on SFE.
 \end_layout
 
 \begin_layout Standard

@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -33,280 +33,11 @@ Background
 \end_layout
 
 \begin_layout Subsection
-Yao '86
-\end_layout
-
-\begin_layout Standard
-Yao 
-\begin_inset LatexCommand \cite{Yao:86}
-
-\end_inset
-
- proved that every computation that can be expressed as a circuit can be
- evaluated securely under standard cryptographic assumptions.
- (fill in).
- 
-\end_layout
-
-\begin_layout Standard
-One of the fundamental cryptographic primitives for designing privacy-preserving
- protocols is 
-\shape italic
-secure function evaluation (SFE)
-\shape default
-.
- A protocol for SFE enables two parties 
-\begin_inset Formula $A$
-\end_inset
-
- and 
-\begin_inset Formula $B$
-\end_inset
-
- with inputs 
-\begin_inset Formula $x$
-\end_inset
-
- and 
-\begin_inset Formula $y$
-\end_inset
-
- respectively to jointly compute a function 
-\begin_inset Formula $f(x,y)$
-\end_inset
-
- while preserving the privacy of the two parties (i.e., at the end of the
- protocol, party 
-\begin_inset Formula $A$
-\end_inset
-
- only knows its input 
-\begin_inset Formula $x$
-\end_inset
-
- and the value of the function 
-\begin_inset Formula $f(x,y)$
-\end_inset
-
-, and similarly for 
-\begin_inset Formula $B$
-\end_inset
-
-).
- Yao showed that for a polynomial-time computable function 
-\begin_inset Formula $f$
-\end_inset
-
-, there exists a SFE protocol that executes in polynomial time\InsetSpace ~
-
-\begin_inset LatexCommand \cite{GMW87,Yao:86}
-
-\end_inset
-
- (details about this protocol can be found in Goldreich's book\InsetSpace ~
-
-\begin_inset LatexCommand \cite[Chapter 7]{Goldreich:vol2}
-
-\end_inset
-
-).
- Yao's classic solution for SFE has been used to design privacy-preserving
- protocols for various applications\InsetSpace ~
-
-\begin_inset LatexCommand \cite{AMP04}
-
-\end_inset
-
-.
- The importance of Yao's protocol spurred researchers to design a compiler
- that takes a description of the function 
-\begin_inset Formula $f$
-\end_inset
-
- and emits code corresponding to Yao's protocol for secure evaluation of
- 
-\begin_inset Formula $f$
-\end_inset
-
-.
- Such compilers, for example Fairplay\InsetSpace ~
-
-\begin_inset LatexCommand \cite{Fairplay}
-
-\end_inset
-
-, enable wider applicability of SFE.
- MacKenzie 
-\shape italic
-et al.
-\shape default
-\InsetSpace ~
-
-\begin_inset LatexCommand \cite{Reiter:CCS:2003}
-
-\end_inset
-
- implemented a compiler for generating secure two-party protocols for a
- restricted but important class of functions, which is particularly suited
- for applications where the secret key is protected using threshold cryptography.
- For most applications, the classic protocol for SFE is quite expensive,
- which has led researchers to develop more efficient privacy-preserving
- protocols for specific problems\InsetSpace ~
-
-\begin_inset LatexCommand \cite{FPRS04,FNP04,LP02,NPS99}
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-One of the fundamental cryptographic primitives for designing privacy-preserving
- protocols is secure function evaluation (SFE).
- A protocol for SFE enables two parties A and B with respective inputs x
- and y to jointly compute a function f(x, y) while preserving the privacy
- of their respective inputs, i.e., A does not learn anything from the protocol
- execution beyond what is revealed by her own input x and the result f(x,
- y); a similar condition holds for B.
- One of the seminal results in secure multi-party computation, due to Yao
- [23] and Goldreich, Micali, and Wigderson [9], is that for any efficiently
- computable (i.e., probabilistic polynomial-time) function f, there exists
- an efficient protocol for securely evaluating f.
- Details of this result can be found in standard textbooks on secure multi-party
- computation [8, chapter 7].
-\end_layout
-
-\begin_layout Standard
-Consider any (arithmetic or Boolean) circuit C, and two parties, Alice and
- Bob, who wish to evaluate C on their respective inputs x and y.
- In Yao?s 3 ?garbled circuits? method, originally proposed in [23], Alice
- securely transforms the circuit so that Bob can evaluate it obliviously,
- i.e., without learning Alice?s inputs into the circuit or the values on any
- internal circuit wire except the output wires.
- Alice does this by generating two random keys for each circuit wire, one
- representing 0 on that wire, the other representing 1.
- The keys encoding Alice?s own inputs into the circuit she simply sends
- to Bob.
- The keys encoding Bob?s inputs are transferred to Bob via the OT2 1 protocol.
- For each of Bob?s input wires, where Bob acts as the chooser using his
- circuit input bit as his input into OT2 1 , and Alice acts as the sender
- with the two wire keys for that wire as her inputs into OT2 1 .
- Alice produces the ?garbled? truth table for each circuit gate in such
- a way that Bob, if he knows the wire keys encoding the values on the gate
- input wires, can decrypt exactly one row of the garbled truth table and
- obtain the key encoding the value of the output wire.
- Yao?s protocol maintains the invariant that for every circuit wire, Bob
- learns exactly one wire key.
- Because wire keys are random and the mapping from wire keys to values is
- not known to Bob (except for the wire keys corresponding to his own inputs),
- this does not leak any information about actual wire values.
- The circuit can thus be evaluated ?obliviously.? To save space, we omit
- the details.
- A complete description of Yao?s method and security proofs can be found
- in [13].
-\end_layout
-
-\begin_layout Subsection
-Secrets with Shares
-\end_layout
-
-\begin_layout Standard
-The second standard method is secure computation with shares (SCWS).
- Details of this method can be found in [8, Chapter 7].
- This protocol maintains the invariant that, for every circuit wire w, Alice
- learns a random value s and Bob learns bw ? s, where bw is the bit value
- of the wire.
- Therefore, Alice?s and Bob?s shares add up to bw, but because the shares
- are random, neither party knows the actual wire value.
- For each output wire of the circuit, Alice and Bob combine their shares
- to reconstruct the circuit output.
- Either Yao?s ?garbled circuits? method, or SCWS can be used to securely
- and privately evaluate any circuit C.
-\end_layout
-
-\begin_layout Subsection
-Fairplay 
-\end_layout
-
-\begin_layout Standard
-Fairplay is the first system, designed to be practical, that attempts to
- make SFE using Yao's protocol accessible to the average programmer.
- It consists of a compiler from a standard procedural language called Secure
- Function Description Language, or SFDL, to a circuit description language
- called Secure Hardware Description Langauge, or SHDL.
- Fairplay also includes an implementation of the two party Yao protocol
- which evaluates an SHDL function.
-\end_layout
-
-\begin_layout Subsection
 Primitives
 \end_layout
 
 \begin_layout Subsubsection
-homomorphic encryption
-\end_layout
-
-\begin_layout Standard
-Homomorphic Encryption is a class of public key encryption algorithms that
- satisfies the homomorphism property: 
-\begin_inset Formula $E(a+b)=E(a)\oplus E(b)$
-\end_inset
-
- where 
-\begin_inset Formula $\oplus$
-\end_inset
-
- is an efficient and publically computable operator.
-\end_layout
-
-\begin_layout Standard
-For general purpose cryptography, the homomorphism property are considered
- undesirable because it can make cryptanalysis easier.
- However, it has been found that homomorphic encryption can lead to efficient
- secure protocols for evaluating certain functions.
- It has found particular application in secure voting protocols.
-\end_layout
-
-\begin_layout Standard
-Additively homomorphic encryption.
- Let (G,E,D,M) be a public-key encryption scheme, where G is the key generation
- function, E and D are the encryption and decryption functions, and M is
- the message space respectively.
- We will assume that:
-\end_layout
-
-\begin_layout Itemize
-The encryption scheme is semantically secure [10].
- Informally, this means that the ciphertext leaks no useful information
- about the plaintext even after the adversary has previously observed many
- plaintext-ciphertext pairs on plaintexts of his choice.
-\end_layout
-
-\begin_layout Itemize
-There exists a computational function g such that for allm ? M and ? M,m1
- ? E(m) implies that g(m1, ) ? E(m).
- With any semantically secure encryption scheme, encrypting the same message
- twice will yield different ciphertexts, so E(m) denotes the set of ciphertexts
- that can be obtained by encrypting m.
- 1
-\end_layout
-
-\begin_layout Itemize
-There exists a computable function f such that for all messages m1 and m2,
- the following property holds:
-\newline
-f(E(m1),E(m2)) = E(m1 + m2)
-\end_layout
-
-\begin_layout Standard
-There are several encryption scheme that satisfy these properties, of which
- Paillier's encryption scheme is perhaps the most famous [17].
- Since we will use the encryption scheme as a black-box cryptographic primitive,
- we omit the details of the scheme.
-\end_layout
-
-\begin_layout Subsubsection
-oblivious transfer
+Oblivious Transfer
 \end_layout
 
 \begin_layout Standard
@@ -348,15 +79,26 @@ Oblivious transfer is a protocol originally proposed by Rabin
 \end_inset
 
 .
- Informally, a 1-out-of-n oblivious transfer (we will denote it as OTn 1
- ) is a protocol between two parties, the Chooser and the Sender.
- The Sender¿s inputs into the protocol are n values v1, .
- .
- .
- , vn.
- The Chooser¿s input is an index i such that 1 ¿ i ¿ n.
- As a result of the protocol, the Chooser receives vi, but does not learn
- anything about the rest of the Sender¿s values.
+ Informally, a 1-out-of-n oblivious transfer, denoted as 
+\begin_inset Formula $OT_{n}^{1}$
+\end_inset
+
+, is a protocol between two parties, the Chooser and the Sender.
+ The Sender's inputs into the protocol are n values 
+\begin_inset Formula $v_{1},...,v_{n}$
+\end_inset
+
+.
+ The Chooser's input is an index i such that 
+\begin_inset Formula $1\le i\le n$
+\end_inset
+
+.
+ As a result of the protocol, the Chooser receives 
+\begin_inset Formula $v_{i}$
+\end_inset
+
+, but does not learn anything about the rest of the Sender's values.
  The Sender learns nothing.
  The most efficient OT algorithm to date is described in 
 \begin_inset LatexCommand \cite{Noar-Pinkas:2001}
@@ -366,8 +108,480 @@ Oblivious transfer is a protocol originally proposed by Rabin
 .
 \end_layout
 
+\begin_layout Subsubsection
+Homomorphic Encryption
+\end_layout
+
+\begin_layout Standard
+Homomorphic Encryption is a class of public key encryption algorithms that
+ satisfies the homomorphism property: 
+\begin_inset Formula $E(a+b)=E(a)\oplus E(b)$
+\end_inset
+
+ where 
+\begin_inset Formula $\oplus$
+\end_inset
+
+ is an efficient and publically computable operator.
+\end_layout
+
+\begin_layout Standard
+For general purpose cryptography, the homomorphism property are considered
+ undesirable because it can make cryptanalysis easier.
+ However, it has been found that homomorphic encryption can lead to efficient
+ secure protocols for evaluating certain functions.
+ It has found particular application in secure voting protocols.
+\end_layout
+
+\begin_layout Standard
+Additively homomorphic encryption.
+ Let 
+\begin_inset Formula $(G,E,D,M)$
+\end_inset
+
+ be a public-key encryption scheme, where 
+\begin_inset Formula $G$
+\end_inset
+
+ is the key generation function, 
+\begin_inset Formula $E$
+\end_inset
+
+ and 
+\begin_inset Formula $D$
+\end_inset
+
+ are the encryption and decryption functions, and 
+\begin_inset Formula $M$
+\end_inset
+
+ is the message space respectively.
+ We will assume that:
+\end_layout
+
+\begin_layout Itemize
+The encryption scheme is semantically secure 
+\begin_inset LatexCommand \cite{PLACEHOLDER}
+
+\end_inset
+
+.
+ Informally, this means that the ciphertext leaks no useful information
+ about the plaintext even after the adversary has previously observed many
+ plaintext-ciphertext pairs on plaintexts of his choice.
+\end_layout
+
+\begin_layout Itemize
+There exists a computable function 
+\begin_inset Formula $g$
+\end_inset
+
+ such that for all 
+\begin_inset Formula $m\in M$
+\end_inset
+
+ and ? M,m1 ? E(m) implies that g(m1, ) ? E(m).
+ With any semantically secure encryption scheme, encrypting the same message
+ twice will yield different ciphertexts, so 
+\begin_inset Formula $E(m) $
+\end_inset
+
+denotes the set of ciphertexts that can be obtained by encrypting 
+\begin_inset Formula $m$
+\end_inset
+
+.
+ 1
+\end_layout
+
+\begin_layout Itemize
+There exists a computable function 
+\begin_inset Formula $f$
+\end_inset
+
+ such that for all messages 
+\begin_inset Formula $m_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $m_{2}$
+\end_inset
+
+, the following property holds:
+\newline
+
+\begin_inset Formula $f\left(E(m_{1}),E(m_{2})\right)=E(m_{1}+m_{2})$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+There are several encryption scheme that satisfy these properties, of which
+ Paillier's encryption scheme is perhaps the most famous 
+\begin_inset LatexCommand \cite{PLACEHOLDER}
+
+\end_inset
+
+.
+ Since we will use the encryption scheme as a black-box cryptographic primitive,
+ we omit the details of the scheme.
+\end_layout
+
 \begin_layout Subsection
-privacy preserving data mining 
+Secure Function Evaluation
+\end_layout
+
+\begin_layout Standard
+One of the fundamental cryptographic primitives for designing privacy-preserving
+ protocols is 
+\shape italic
+secure function evaluation (SFE)
+\shape default
+.
+ A protocol for SFE enables two parties 
+\begin_inset Formula $A$
+\end_inset
+
+ and 
+\begin_inset Formula $B$
+\end_inset
+
+ with inputs 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ respectively to jointly compute a function 
+\begin_inset Formula $f(x,y)$
+\end_inset
+
+ while preserving the privacy of the two parties' respective inputs.
+ At the end of the protocol, party 
+\begin_inset Formula $A$
+\end_inset
+
+ only knows its input 
+\begin_inset Formula $x$
+\end_inset
+
+ and the value of the function 
+\begin_inset Formula $f(x,y)$
+\end_inset
+
+, and a similar condition holds for 
+\begin_inset Formula $B$
+\end_inset
+
+.
+ It was proved by Yao 
+\begin_inset LatexCommand \cite{Yao:86}
+
+\end_inset
+
+ and Goldreich, Micali, and Wigderson 
+\begin_inset LatexCommand \cite{GMW87}
+
+\end_inset
+
+ that for a polynomially computable function 
+\begin_inset Formula $f$
+\end_inset
+
+, there exists protocols for securely evaluating 
+\begin_inset Formula $f$
+\end_inset
+
+ that executes in polynomial time.
+ Both proofs are constructive, and provide a method for transforming a boolean
+ circuit description of the function 
+\begin_inset Formula $f$
+\end_inset
+
+ into a protocol for secure evaluation.
+ Details about these protocols can be found in 
+\begin_inset LatexCommand \cite[Chapter 7]{Goldreich:vol2}
+
+\end_inset
+
+, and are summarized here.
+\end_layout
+
+\begin_layout Subsubsection
+Yao '86
+\end_layout
+
+\begin_layout Standard
+Consider any (arithmetic or Boolean) circuit 
+\begin_inset Formula $C$
+\end_inset
+
+, and two parties, Alice and Bob, who wish to evaluate 
+\begin_inset Formula $C$
+\end_inset
+
+ on their respective inputs 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+.
+ In Yao's 
+\begin_inset Quotes eld
+\end_inset
+
+garbled circuits
+\begin_inset Quotes erd
+\end_inset
+
+ method, originally proposed in [23], Alice securely transforms the circuit
+ so that Bob can evaluate it obliviously, i.e., without learning Alice's inputs
+ into the circuit or the values on any internal circuit wire except the
+ output wires.
+ Alice does this by generating two random keys 
+\begin_inset Formula $k_{i,0}$
+\end_inset
+
+ and 
+\begin_inset Formula $k_{i,1}$
+\end_inset
+
+ for each circuit wire 
+\begin_inset Formula $i$
+\end_inset
+
+, one representing 
+\begin_inset Formula $0$
+\end_inset
+
+ on that wire, the other representing 
+\begin_inset Formula $1$
+\end_inset
+
+.
+ For all wires except input wires, the truth table for the corresponding
+ boolean gate is encrypted.
+ If 
+\begin_inset Formula $g(x,y)$
+\end_inset
+
+ is a gate with input wires 
+\begin_inset Formula $j$
+\end_inset
+
+ and 
+\begin_inset Formula $l$
+\end_inset
+
+, and output wire 
+\begin_inset Formula $i$
+\end_inset
+
+, then the truth table value for 
+\begin_inset Formula $g(x,y)$
+\end_inset
+
+ is encoded as 
+\begin_inset Formula $E_{k_{j,x}}\left(E_{k_{l,y}}\left(k_{g(x,y)}\right)\right)$
+\end_inset
+
+.
+ The four encrypted values 
+\begin_inset Formula $g(0,0)$
+\end_inset
+
+, 
+\begin_inset Formula $g(0,1)$
+\end_inset
+
+, 
+\begin_inset Formula $g(1,0)$
+\end_inset
+
+, and 
+\begin_inset Formula $g(1,1)$
+\end_inset
+
+ fully specify the gate 
+\begin_inset Formula $g$
+\end_inset
+
+.
+ The keys encoding Alice's own inputs into the circuit she simply sends
+ to Bob.
+ The keys encoding Bob's inputs are transferred to Bob via the 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+ protocol.
+ For each of Bob's input wires, where Bob acts as the chooser using his
+ circuit input bit as his input into 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+ , and Alice acts as the sender with the two wire keys for that wire as
+ her inputs into 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+ .
+ Alice produces the 
+\begin_inset Quotes eld
+\end_inset
+
+garbled
+\begin_inset Quotes erd
+\end_inset
+
+ truth table for each circuit gate in such a way that Bob, if he knows the
+ wire keys encoding the values on the gate input wires, can decrypt exactly
+ one row of the garbled truth table and obtain the key encoding the value
+ of the output wire.
+ Yao's protocol maintains the invariant that for every circuit wire, Bob
+ learns exactly one wire key.
+ Because wire keys are random and the mapping from wire keys to values is
+ not known to Bob (except for the wire keys corresponding to his own inputs),
+ this does not leak any information about actual wire values.
+ The circuit can thus be evaluated obliviously.
+ A complete description of Yao's method and security proofs can be found
+ in 
+\begin_inset LatexCommand \cite{Goldreich:vol2}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Goldreich, Micali, and Wigderson '87
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \cite{GMW87}
+
+\end_inset
+
+ presents a protocol for securely evaluating circuits known as 
+\emph on
+secure computation with shares
+\emph default
+ (SCWS).
+ This protocol maintains the invariant that, for every circuit wire 
+\begin_inset Formula $w$
+\end_inset
+
+, Alice learns a random value 
+\begin_inset Formula $s$
+\end_inset
+
+ and Bob learns 
+\begin_inset Formula $b_{w}\oplus s$
+\end_inset
+
+, where 
+\begin_inset Formula $b_{w}$
+\end_inset
+
+ is the bit value of the wire.
+ Therefore, Alice's and Bob's shares add up to 
+\begin_inset Formula $b_{w}$
+\end_inset
+
+, but because the shares are random, neither party knows the actual wire
+ value.
+ For each output wire of the circuit, Alice and Bob combine their shares
+ to reconstruct the circuit output.
+ 
+\end_layout
+
+\begin_layout Subsection
+Implementations
+\end_layout
+
+\begin_layout Standard
+Yao's classic solution for SFE has been used to design privacy-preserving
+ protocols for various applications 
+\begin_inset LatexCommand \cite{AMP04}
+
+\end_inset
+
+.
+ The importance of Yao's protocol spurred researchers to design a compiler
+ that takes a description of the function 
+\begin_inset Formula $f$
+\end_inset
+
+ and emits code corresponding to Yao's protocol for secure evaluation of
+ 
+\begin_inset Formula $f$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Fairplay
+\end_layout
+
+\begin_layout Standard
+Fairplay 
+\begin_inset LatexCommand \cite{Fairplay}
+
+\end_inset
+
+ is an example of an SFE implementation designed to enable wider applicability
+ of SFE.
+ Fairplay is the first system, designed to be practical, that attempts to
+ make SFE using Yao's protocol accessible to the average programmer.
+ It consists of a compiler from a standard procedural language called Secure
+ Function Description Language, or SFDL, to a circuit description language
+ called Secure Hardware Description Langauge, or SHDL.
+ Fairplay also includes an implementation of the two party Yao protocol
+ which evaluates an SHDL function.
+\end_layout
+
+\begin_layout Subsubsection
+Other
+\end_layout
+
+\begin_layout Standard
+\begin_inset LatexCommand \cite{Reiter:CCS:2003}
+
+\end_inset
+
+ implemented a compiler for generating secure two-party protocols for a
+ restricted but important class of functions, which is particularly suited
+ for applications where the secret key is protected using threshold cryptography.
+ For most applications, the classic protocol for SFE is quite expensive,
+ which has led researchers to develop more efficient privacy-preserving
+ protocols for specific problems\InsetSpace ~
+
+\begin_inset LatexCommand \cite{FPRS04,FNP04,LP02,NPS99}
+
+\end_inset
+
+.
+ [MacKenzie 
+\shape italic
+et al.
+
+\shape default
+ ]
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Subsection
+Privacy Preserving Data Mining 
 \end_layout
 
 \begin_layout Standard
@@ -385,10 +599,23 @@ d data sets [3, 33].
  A second approach to designing privacy preserving algorithms is to use
  algorithms from the securemultiparty computation literature.
  The advantage of this approach over the perturbation approach is that formal
- guarantees of privacy can be given for these algorithms.e
+ guarantees of privacy can be given for these algorithms.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[plain]{somesh}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
 
 \end_layout
 

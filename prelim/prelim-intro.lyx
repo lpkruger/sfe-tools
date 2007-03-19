@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -183,9 +183,9 @@ Although SFE has provable privacy guarantees, its implementation tends to
  be very expensive for practical use in terms of time and space.
  The space expense manifests itself in network bandwidth used in the protocols.
  These expenses explain why SFE has not been used very much outside of the
- academic literature, despite the fact that was formally introduced many
+ academic literature, despite the fact that it was formally introduced many
  years ago
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+\begin_inset LatexCommand \cite{Fairplay}
 
 \end_inset
 
