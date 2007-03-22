@@ -1,4 +1,4 @@
-#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -41,40 +41,8 @@ Oblivious Transfer
 \end_layout
 
 \begin_layout Standard
-Oblivious Transfer, or 
-\begin_inset Quotes eld
-\end_inset
-
-OT
-\begin_inset Quotes erd
-\end_inset
-
-, is a protocol that allows one party to receive a choice of data from another
- party.
- In the two party case, one party is known as the 
-\begin_inset Quotes eld
-\end_inset
-
-sender
-\begin_inset Quotes erd
-\end_inset
-
- and the other party the 
-\begin_inset Quotes eld
-\end_inset
-
-chooser
-\begin_inset Quotes erd
-\end_inset
-
-.
- It has the property that the chooser does not learn data that is not chosen,
- and the sender does not know what choice the chooser made.
-\end_layout
-
-\begin_layout Standard
 Oblivious transfer is a protocol originally proposed by Rabin 
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+\begin_inset LatexCommand \cite{Rabin81}
 
 \end_inset
 
@@ -161,7 +129,7 @@ Additively homomorphic encryption.
 
 \begin_layout Itemize
 The encryption scheme is semantically secure 
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+\begin_inset LatexCommand \cite{Goldwasser:Micali}
 
 \end_inset
 
@@ -180,18 +148,38 @@ There exists a computable function
 \begin_inset Formula $m\in M$
 \end_inset
 
- and ? M,m1 ? E(m) implies that g(m1, ) ? E(m).
- With any semantically secure encryption scheme, encrypting the same message
- twice will yield different ciphertexts, so 
-\begin_inset Formula $E(m) $
+ and 
+\begin_inset Formula $\alpha\in M$
 \end_inset
 
-denotes the set of ciphertexts that can be obtained by encrypting 
+, 
+\begin_inset Formula $m_{1}\in E(m)$
+\end_inset
+
+ implies that 
+\begin_inset Formula $g(m_{1},\alpha)\in E(m)$
+\end_inset
+
+.
+ With any semantically secure encryption scheme, encrypting the same message
+ twice will yield different ciphertexts, so 
+\begin_inset Formula $E(m)$
+\end_inset
+
+ denotes the set of ciphertexts that can be obtained by encrypting 
 \begin_inset Formula $m$
 \end_inset
 
 .
- 1
+ Naturally, if 
+\begin_inset Formula $m_{1}\neq m_{2}$
+\end_inset
+
+, then 
+\begin_inset Formula $E(m_{1})\cap E(m_{2})=\emptyset$
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
@@ -218,14 +206,88 @@ There exists a computable function
 
 \begin_layout Standard
 There are several encryption scheme that satisfy these properties, of which
- Paillier's encryption scheme is perhaps the most famous 
-\begin_inset LatexCommand \cite{PLACEHOLDER}
+ Paillier's encryption scheme, based on composite residue classes, is the
+ most widely used 
+\begin_inset LatexCommand \cite{Paillier99}
 
 \end_inset
 
 .
- Since we will use the encryption scheme as a black-box cryptographic primitive,
- we omit the details of the scheme.
+ In the Paillier cryptosystem, the message space is 
+\begin_inset Formula $m<n$
+\end_inset
+
+, where 
+\begin_inset Formula $m=pq$
+\end_inset
+
+ for 
+\begin_inset Formula $p$
+\end_inset
+
+ and 
+\begin_inset Formula $q$
+\end_inset
+
+ prime.
+ The ciphertext space is 
+\begin_inset Formula $E(m)<n^{2}$
+\end_inset
+
+.
+ Let 
+\begin_inset Formula $g<n^{2}$
+\end_inset
+
+ such that 
+\begin_inset Formula $g$
+\end_inset
+
+ has order 
+\begin_inset Formula $n\alpha$
+\end_inset
+
+.
+ Using the public key 
+\begin_inset Formula $(g,n)$
+\end_inset
+
+, the encryption function 
+\begin_inset Formula $E(m)=g^{m}r^{n}\left(\mbox{mod }n^{2}\right)$
+\end_inset
+
+, for a random 
+\begin_inset Formula $r<n$
+\end_inset
+
+.
+ Using the private key 
+\begin_inset Formula $\lambda=\mbox{lcm}(p-1,q-1)$
+\end_inset
+
+, the decryption function for ciphertext 
+\begin_inset Formula $c$
+\end_inset
+
+ is 
+\begin_inset Formula $m=\frac{L\left(c^{\lambda}\mbox{ mod }n^{2}\right)}{L\left(g^{\lambda}\mbox{ mod }n^{2}\right)}\mbox{ mod }n$
+\end_inset
+
+ where 
+\begin_inset Formula $L(u)=\frac{u-1}{n}$
+\end_inset
+
+ is a well defined function for 
+\begin_inset Formula $u=n\alpha+1$
+\end_inset
+
+.
+ Further details can be found in 
+\begin_inset LatexCommand \cite{Paillier99}
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -302,12 +364,7 @@ secure function evaluation (SFE)
 \end_inset
 
  into a protocol for secure evaluation.
- Details about these protocols can be found in 
-\begin_inset LatexCommand \cite[Chapter 7]{Goldreich:vol2}
-
-\end_inset
-
-, and are summarized here.
+ These protocols are summarized here.
 \end_layout
 
 \begin_layout Subsubsection
@@ -315,7 +372,7 @@ Yao '86
 \end_layout
 
 \begin_layout Standard
-Consider any (arithmetic or Boolean) circuit 
+Consider any Boolean circuit 
 \begin_inset Formula $C$
 \end_inset
 
@@ -365,8 +422,8 @@ garbled circuits
 \end_inset
 
 .
- For all wires except input wires, the truth table for the corresponding
- boolean gate is encrypted.
+ For all wires in the circuit except input wires, the truth table for the
+ corresponding boolean gate is encrypted.
  If 
 \begin_inset Formula $g(x,y)$
 \end_inset
@@ -455,7 +512,7 @@ garbled
 
 \end_inset
 
-
+.
 \end_layout
 
 \begin_layout Subsubsection
@@ -497,7 +554,72 @@ secure computation with shares
  value.
  For each output wire of the circuit, Alice and Bob combine their shares
  to reconstruct the circuit output.
- 
+ Suppose 
+\begin_inset Formula $g(x,y)$
+\end_inset
+
+ is a gate, and 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $x_{a}\oplus x_{b}=x$
+\end_inset
+
+ and 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\noun default
+\color default
+
+\begin_inset Formula $y_{a}\oplus y_{b}=y$
+\end_inset
+
+.
+ To evaluate the gate, Alice selects a random bit 
+\begin_inset Formula $z_{a}$
+\end_inset
+
+ and constructs a quadruple 
+\begin_inset Formula $\left(g(x_{a},y_{a})\oplus z_{a},\, g(x_{a},1-y_{a})\oplus z_{a},\, g(1-x_{a},y_{a})\oplus z_{a},\, g(1-x_{a},1-y_{a})\oplus z_{a}\right)$
+\end_inset
+
+.
+ The value in this quadruple with index 
+\begin_inset Formula $2x_{b}+y_{b}$
+\end_inset
+
+ will be the value 
+\begin_inset Formula $z_{b}=g(x,y)\oplus z_{a}$
+\end_inset
+
+.
+ Using an 
+\begin_inset Formula $OT_{4}^{1}$
+\end_inset
+
+ protocol, Bob can receive the value 
+\begin_inset Formula $z_{b}$
+\end_inset
+
+ obliviously.
+ By evaluating all gates in the circuits using this method, the function
+ is securely evaluated.
+ Further details and security proofs are presented in 
+\begin_inset LatexCommand \cite{Goldreich:vol2}
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -505,25 +627,13 @@ Implementations
 \end_layout
 
 \begin_layout Standard
-Yao's classic solution for SFE has been used to design privacy-preserving
- protocols for various applications 
-\begin_inset LatexCommand \cite{AMP04}
-
-\end_inset
-
-.
- The importance of Yao's protocol spurred researchers to design a compiler
- that takes a description of the function 
-\begin_inset Formula $f$
-\end_inset
-
- and emits code corresponding to Yao's protocol for secure evaluation of
- 
-\begin_inset Formula $f$
-\end_inset
-
-.
- 
+In recent years, there have been implementations of SFE undertaken by researcher
+s to design secure multiparty protocols.
+ In the past, SFE was considered a theoretical topic too expensive for practical
+ use, but the convergence of ubiquitous communication using the Internet,
+ more efficient cryptographic primitives, and the exponentially increasing
+ available of processing power and network bandwidth are making SFE an area
+ of increasingly significant practical value.
 \end_layout
 
 \begin_layout Subsubsection
@@ -536,48 +646,70 @@ Fairplay
 
 \end_inset
 
- is an example of an SFE implementation designed to enable wider applicability
+ is an example of an SFE implementation designed to enable wider application
  of SFE.
  Fairplay is the first system, designed to be practical, that attempts to
- make SFE using Yao's protocol accessible to the average programmer.
- It consists of a compiler from a standard procedural language called Secure
- Function Description Language, or SFDL, to a circuit description language
- called Secure Hardware Description Langauge, or SHDL.
+ make SFE using Yao's protocol available to a wider audience.
+ It consists of a compiler that takes as input a function 
+\begin_inset Formula $f$
+\end_inset
+
+ defined using a procedural language called 
+\emph on
+Secure Function Description Language
+\emph default
+ (SFDL), and outputs a boolean circuit to evaluate 
+\begin_inset Formula $f$
+\end_inset
+
+ using a description language called 
+\emph on
+Secure Hardware Description Language
+\emph default
+ (SHDL).
  Fairplay also includes an implementation of the two party Yao protocol
- which evaluates an SHDL function.
+ which securely evaluates an SHDL function.
+ The paper provides the first empirical measurements from an implementation
+ of the Yao protocol.
 \end_layout
 
 \begin_layout Subsubsection
-Other
+Application specific
 \end_layout
 
 \begin_layout Standard
+Fairplay showed that the classic protocol for SFE is still quite expensive
+ for all but the simplest circuits.
+ There has been much research effort in designing more efficient privacy-preserv
+ing protocols for many problems of interest.
+ In 
 \begin_inset LatexCommand \cite{Reiter:CCS:2003}
 
 \end_inset
 
- implemented a compiler for generating secure two-party protocols for a
- restricted but important class of functions, which is particularly suited
- for applications where the secret key is protected using threshold cryptography.
- For most applications, the classic protocol for SFE is quite expensive,
- which has led researchers to develop more efficient privacy-preserving
- protocols for specific problems\InsetSpace ~
+, a compiler was implemented for generating secure two-party protocols for
+ a restricted class of functions built from modular arithmetic.
+ The particular design was motivated by the desire to build efficient secure
+ protocols such as signature schemes and threshold cryptography.
+ Secure protocols have been implemented for many problems such as auctions
+ 
+\begin_inset LatexCommand \cite{NPS99}
 
-\begin_inset LatexCommand \cite{FPRS04,FNP04,LP02,NPS99}
+\end_inset
+
+, set intersection 
+\begin_inset LatexCommand \cite{FNP04}
+
+\end_inset
+
+, and conducting surveys 
+\begin_inset LatexCommand \cite{FNP04}
 
 \end_inset
 
 .
- [MacKenzie 
-\shape italic
-et al.
-
-\shape default
- ]
-\end_layout
-
-\begin_layout Standard
-
+ A particularly important application of secure computation is discussed
+ in the next section.
 \end_layout
 
 \begin_layout Subsection
@@ -586,20 +718,119 @@ Privacy Preserving Data Mining
 
 \begin_layout Standard
 Initial focus in this area was on construction of decision trees from distribute
-d data sets [3, 33].
+d data sets 
+\begin_inset LatexCommand \cite{Agrawal-Srikant,Lindell-Pinkas}
+
+\end_inset
+
+.
  There is also a significant body of research on privacy-preserving mining
- of association rules [15, 46, 50].
- We will focus on existing work on privacy-preserving clustering.
- In general, there are two approaches for designing privacy-preserving machine
- learning algorithms.
+ of association rules 
+\begin_inset LatexCommand \cite{Gehrke:2002,RizviHarista,VaidyaClifton:2002}
+
+\end_inset
+
+.
+ In general, there are two approaches for designing privacy-preserving data
+ mining algorithms.
  The first approach is to use transformations to perturb the data set before
- the algorithm is applied.
- This approach for designing privacy-preserving clustering algorithms is
- taken by several researchers [31, 37, 41].
- A second approach to designing privacy preserving algorithms is to use
- algorithms from the securemultiparty computation literature.
- The advantage of this approach over the perturbation approach is that formal
- guarantees of privacy can be given for these algorithms.
+ the algorithm is applied, by replacing sensitive data with random unique
+ identifiers.
+ This approach for designing privacy-preserving algorithms is taken by several
+ researchers 
+\begin_inset LatexCommand \cite{Klusch,MeruguGhosh,Oliveira}
+
+\end_inset
+
+.
+ However, this approach suffers from a lack of formal guarentees of security,
+ and has been shown to be vulnerable to data correlation attacks 
+\begin_inset LatexCommand \cite{Malin04}
+
+\end_inset
+
+.
+ Secure multiparty computation is the basis of the other approach.
+ A survey of such techniques iss presented in 
+\begin_inset LatexCommand \cite{PinkasCryptoPPDM02}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Threat Models
+\end_layout
+
+\begin_layout Standard
+In the 
+\begin_inset Quotes eld
+\end_inset
+
+semi-honest
+\begin_inset Quotes erd
+\end_inset
+
+ threat model, also known as 
+\begin_inset Quotes eld
+\end_inset
+
+honest but curious
+\begin_inset Quotes erd
+\end_inset
+
+, or 
+\begin_inset Quotes eld
+\end_inset
+
+passive
+\begin_inset Quotes erd
+\end_inset
+
+, a party to the computation is assumed to behave correctly and follow the
+ protocol as proscribed.
+ However, the party also runs additional probabilistic polynomially bounded
+ computation on the side in order to learn information to which he is not
+ entitled.
+ A security proof using the semi-honest threat model implies that the protocol
+ as designed does not 
+\begin_inset Quotes eld
+\end_inset
+
+leak
+\begin_inset Quotes erd
+\end_inset
+
+ information.
+ For reasons that will be discussed shortly, security proofs in the semi-honest
+ model are useful despite that fact that it is not a natural model of adversaria
+l behavior.
+\end_layout
+
+\begin_layout Standard
+In the 
+\begin_inset Quotes eld
+\end_inset
+
+malicious
+\begin_inset Quotes erd
+\end_inset
+
+ threat model, a badly behaving party is free to use any available methods
+ to thwart the computation, including sending false or inconsistent messages
+ at any step of the protocol.
+ The malicious model is a stronger threat model, and naturally characterizes
+ the malicious behavior that a secure protocol would need to protect against.
+ These threat models were presented in 
+\begin_inset LatexCommand \cite{GMW87}
+
+\end_inset
+
+, along with a proof that it is possible to transform any protocol that
+ is secure in the semi-honest model into an equivalent protocol that is
+ secure in the malicious model.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -607,7 +838,7 @@ d data sets [3, 33].
 status open
 
 \begin_layout Standard
-\begin_inset LatexCommand \bibtex[plain]{somesh}
+\begin_inset LatexCommand \bibtex[plain]{privacy,somesh}
 
 \end_inset
 
