@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -8,6 +8,7 @@
 \fontscheme default
 \graphics default
 \paperfontsize default
+\spacing single
 \papersize default
 \use_geometry false
 \use_amsmath 1
@@ -16,7 +17,7 @@
 \paperorientation portrait
 \secnumdepth 3
 \tocdepth 3
-\paragraph_separation indent
+\paragraph_separation skip
 \defskip medskip
 \quotes_language english
 \papercolumns 1
@@ -76,19 +77,20 @@ Ordered Binary Decision Diagrams
 \end_layout
 
 \begin_layout Standard
+In 
 \begin_inset LatexCommand \cite{kruger06}
 
 \end_inset
 
-, presents an SFE algorithm that directly uses an OBDD representation of
+, I present an SFE algorithm that directly uses an OBDD representation of
  the function 
 \begin_inset Formula $f$
 \end_inset
 
- that the two parties want to jointly compute.
+ to be jointly computed.
  The advantage of using an OBDD representation over the gate-representation
- is that OBDDs are more succinct for certain widely used classes of functions
- than the gate representation.
+ is that OBDDs are more succinct for certain classes of functions than the
+ gate representation, including most linear functions.
  For example, among other functions, the results show the OBDD representation
  is more efficient than the Boolean gate representation for 8-bit AND, 8-bit
  addition, and the millionaire's and billionaire's problems
@@ -96,8 +98,8 @@ Ordered Binary Decision Diagrams
 
 \end_inset
 
- For other functions, such as multiplication, the OBDD performed worse than
- the Boolean gate representation.
+ For other functions, such as multiplication, the OBDD can be far worse
+ than the Boolean gate representation.
 \end_layout
 
 \begin_layout Standard
@@ -111,331 +113,437 @@ Algorithm Class Specific: Protocol Optimization of Dynamic Programming
 \end_layout
 
 \begin_layout Standard
-\begin_inset ERT
-status open
+Let 
+\begin_inset Formula ${\cal P}(x,y)$
+\end_inset
 
-\begin_layout Standard
+ be a problem with two inputs 
+\begin_inset Formula $x$
+\end_inset
 
-Let ${
-\backslash
-cal P}(x,y)$ be a problem with two inputs $x$ and $y$, e.g., for the problem
- of computing edit-distance between two strings the inputs $x$ and $y$ are
- the strings.
- Typically, a dynamic-programming algorithm ${
-\backslash
-cal A}_{
-\backslash
-cal P}$ for problem ${
-\backslash
-cal P}$ has the following components: 
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+, e.g., for the problem of computing edit-distance between two strings the
+ inputs 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ are the strings.
+ Typically, a dynamic-programming algorithm 
+\begin_inset Formula ${\cal A}_{{\cal P}}$
+\end_inset
+
+ for problem 
+\begin_inset Formula ${\cal P}$
+\end_inset
+
+ has the following components:
 \end_layout
 
-\begin_layout Standard
+\begin_layout Itemize
+A set 
+\begin_inset Formula $S$
+\end_inset
 
-\end_layout
+ of sub-problems and a dependency relation 
+\begin_inset Formula $R\subseteq S\times S$
+\end_inset
 
-\begin_layout Standard
+ between the sub-problems.
+ Intuitively, 
+\begin_inset Formula $(s,s')\in R$
+\end_inset
 
+ means that the sub-problem 
+\begin_inset Formula $s'$
+\end_inset
 
-\backslash
-begin{itemize} 
-\end_layout
+ depends on the sub-problem 
+\begin_inset Formula $s$
+\end_inset
 
-\begin_layout Standard
+.
+ If there is a dependency between 
+\begin_inset Formula $s$
+\end_inset
 
-\end_layout
+ and 
+\begin_inset Formula $s'$
+\end_inset
 
-\begin_layout Standard
+, we write it as 
+\begin_inset Formula $s\rightarrow s'$
+\end_inset
 
-
-\backslash
-item A set $S$ of sub-problems and a dependency relation $R 
-\backslash
-subseteq S 
-\backslash
-times S$ between the sub-problems.
- Intuitively, $(s,s') 
-\backslash
-in R$ means that the sub-problem $s'$ depends on the sub-problem $s$.
- If there is a dependency between $s$ and $s'$, we write it as $s 
-\backslash
-rightarrow s'$.
+.
  In the case of the problem of computing edit-distance between two strings
- $
-\backslash
-alpha$ and $
-\backslash
-beta$ of length $n$ and $m$, the set of sub-problems is $[0,
-\backslash
-cdots,n] 
-\backslash
-times [0,
-\backslash
-cdots,m]$.
- For all sub-problems $(i,j)$ such that $i 
-\backslash
-not= 0$ and $j 
-\backslash
-not=0$, we have the following dependencies: $(i-1,j) 
-\backslash
-rightarrow (i,j)$, $(i,j-1) 
-\backslash
-rightarrow (i,j)$, and $(i-1,j-1) 
-\backslash
-rightarrow (i,j)$.
- The {
-\backslash
-it base sub-problems} are $s 
-\backslash
-in S$ such that they have no dependencies.
+ 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ and 
+\begin_inset Formula $\beta$
+\end_inset
+
+ of length 
+\begin_inset Formula $n$
+\end_inset
+
+ and 
+\begin_inset Formula $m$
+\end_inset
+
+, the set of sub-problems is 
+\begin_inset Formula $[0,\cdots,n]\times[0,\cdots,m]$
+\end_inset
+
+.
+ For all sub-problems 
+\begin_inset Formula $(i,j)$
+\end_inset
+
+ such that 
+\begin_inset Formula $i\not=0$
+\end_inset
+
+ and 
+\begin_inset Formula $j\not=0$
+\end_inset
+
+, we have the following dependencies: 
+\begin_inset Formula $(i-1,j)\rightarrow(i,j)$
+\end_inset
+
+, 
+\begin_inset Formula $(i,j-1)\rightarrow(i,j)$
+\end_inset
+
+, and 
+\begin_inset Formula $(i-1,j-1)\rightarrow(i,j)$
+\end_inset
+
+.
+ The 
+\shape italic
+base sub-problems
+\shape default
+ are 
+\begin_inset Formula $s\in S$
+\end_inset
+
+ such that they have no dependencies.
  For the edit-distance problem, the base sub-problems are: 
-\backslash
-[ 
-\backslash
-begin{array}{l} 
-\backslash
-{ (i,0) 
-\backslash
-; 
-\backslash
-mid 
-\backslash
-;  0 
-\backslash
-leq i 
-\backslash
-leq n 
-\backslash
-} 
-\backslash
-
-\backslash
- 
-\backslash
-{ (0,j) 
-\backslash
-; 
-\backslash
-mid 
-\backslash
-;  0 
-\backslash
-leq j 
-\backslash
-leq m 
-\backslash
-} 
-\backslash
-
-\backslash
- 
-\backslash
-end{array} 
-\backslash
-] We also assume that there is a unique root sub-problem ${
-\backslash
-it root} 
-\backslash
-in S$ such that there does not exist a sub-problem that depends on ${
-\backslash
-it root}$.
- For the edit-distance problem the unique root sub-problem is $(n,m)$.
- 
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-item Each sub-problem $s$ is assigned a value ${
-\backslash
-it val}(s)$.
- The goal is to compute ${
-\backslash
-it val}({
-\backslash
-it root})$.
-  The function ${
-\backslash
-it val}$ from $S$ to $
-\backslash
-Re$ assigns values to sub-problems, such that it satisfies the following
- properties: 
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-begin{itemize} 
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-item For all the base sub-problems $s 
-\backslash
-in S$, ${
-\backslash
-it val}(s)$ is defined.
- 
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-item Let $s 
-\backslash
-in S$ be a non-base sub-problem.
- Define ${
-\backslash
-it pred}(s)$ as all the predecessors of $s$, i.e.
- the set ${
-\backslash
-it pred}(s)$ is defined as $
-\backslash
-{ s' 
-\backslash
-; 
-\backslash
-mid 
-\backslash
-; s' 
-\backslash
-rightarrow s 
-\backslash
-}$.
-  Assume that ${
-\backslash
-it pred}(s)$ is equal to $
-\backslash
-{ s_1 , 
-\backslash
-cdots, s_k 
-\backslash
-}$.
-  There is a recursive function $f$ defining ${
-\backslash
-it val}(s)$ in terms of ${
-\backslash
-it val}(s_1), {
-\backslash
-it val}(s_2), 
-\backslash
-cdots , {
-\backslash
-it val}(s_k)$, $s(x)$, and $s(y)$, where $s(x)$ and $s(y)$ are parts of
- the input $x$ and $y$ that are relevant to the sub-problem $s$.
- In case of the edit-distance problem ${
-\backslash
-it val} ((i,j))$ is equal to $D(i,j)$.
- The value for the base and non-base sub problems for the edit-distance
- problems was defined in equations~
-\backslash
-ref{eqn:base-case} and~
-\backslash
-ref{eqn:recursive} in Section~
-\backslash
-ref{sec:edit-distance}.
- 
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-end{itemize}
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-end{itemize}
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
+\begin_inset Formula \[
+\begin{array}{l}
+\{(i,0)\;\mid\;0\leq i\leq n\}\\
+\{(0,j)\;\mid\;0\leq j\leq m\}\end{array}\]
 
 \end_inset
 
+ We also assume that there is a unique root sub-problem 
+\begin_inset Formula ${\it root}\in S$
+\end_inset
 
+ such that there does not exist a sub-problem that depends on 
+\begin_inset Formula ${\it root}$
+\end_inset
+
+.
+ For the edit-distance problem the unique root sub-problem is 
+\begin_inset Formula $(n,m)$
+\end_inset
+
+.
 \end_layout
 
+\begin_layout Itemize
+Each sub-problem 
+\begin_inset Formula $s$
+\end_inset
+
+ is assigned a value 
+\begin_inset Formula ${\it val}(s)$
+\end_inset
+
+.
+ The goal is to compute 
+\begin_inset Formula ${\it val}({\it root})$
+\end_inset
+
+.
+ The function 
+\begin_inset Formula ${\it val}$
+\end_inset
+
+ from 
+\begin_inset Formula $S$
+\end_inset
+
+ to 
+\begin_inset Formula $\Re$
+\end_inset
+
+ assigns values to sub-problems, such that it satisfies the following properties
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+For all the base sub-problems 
+\begin_inset Formula $s\in S$
+\end_inset
+
+, 
+\begin_inset Formula ${\it val}(s)$
+\end_inset
+
+ is defined.
+\end_layout
+
+\begin_layout Itemize
+Let 
+\begin_inset Formula $s\in S$
+\end_inset
+
+ be a non-base sub-problem.
+ Define 
+\begin_inset Formula ${\it pred}(s)$
+\end_inset
+
+ as all the predecessors of 
+\begin_inset Formula $s$
+\end_inset
+
+, i.e.
+ the set 
+\begin_inset Formula ${\it pred}(s)$
+\end_inset
+
+ is defined as 
+\begin_inset Formula $\{ s'\;\mid\; s'\rightarrow s\}$
+\end_inset
+
+.
+ Assume that 
+\begin_inset Formula ${\it pred}(s)$
+\end_inset
+
+ is equal to 
+\begin_inset Formula $\{ s_{1},\cdots,s_{k}\}$
+\end_inset
+
+.
+ There is a recursive function 
+\begin_inset Formula $f$
+\end_inset
+
+ defining 
+\begin_inset Formula ${\it val}(s)$
+\end_inset
+
+ in terms of 
+\begin_inset Formula ${\it val}(s_{1}),{\it val}(s_{2}),\cdots,{\it val}(s_{k})$
+\end_inset
+
+, 
+\begin_inset Formula $s(x)$
+\end_inset
+
+, and 
+\begin_inset Formula $s(y)$
+\end_inset
+
+, where 
+\begin_inset Formula $s(x)$
+\end_inset
+
+ and 
+\begin_inset Formula $s(y)$
+\end_inset
+
+ are parts of the input 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ that are relevant to the sub-problem 
+\begin_inset Formula $s$
+\end_inset
+
+.
+ In case of the edit-distance problem 
+\begin_inset Formula ${\it val}((i,j))$
+\end_inset
+
+ is equal to 
+\begin_inset Formula $D(i,j)$
+\end_inset
+
+.
+ The value for the base and non-base sub problems for the edit-distance
+ problems was defined in equations\InsetSpace ~
+
+\begin_inset LatexCommand \ref{eqn:base-case}
+
+\end_inset
+
+ and\InsetSpace ~
+
+\begin_inset LatexCommand \ref{eqn:recursive}
+
+\end_inset
+
+ in Section\InsetSpace ~
+
+\begin_inset LatexCommand \ref{sec:edit-distance}
+
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
 \begin_layout Subsection
 Algorithm Specific: Protocol Optimization of K-Means Clustering
 \end_layout
 
 \begin_layout Standard
-\begin_inset ERT
-status open
+The 
+\begin_inset Formula $k$
+\end_inset
 
-\begin_layout Standard
+-means algorithm\InsetSpace ~
 
-The $k$-means algorithm~
-\backslash
-cite{pattern-classification,Llyod-82} is shown in Figure~
-\backslash
-ref{fig:k-means}.
- Assume that we are given $n$ samples $x_1,
-\backslash
-cdots,x_n$, where each sample is a $m$-dimensional vector of real numbers.
- The number of clusters is $c$.
- The algorithm maintains $c$ means $
-\backslash
-mu_1,
-\backslash
-cdots,
-\backslash
-mu_c$.
- Initially, assume that the means are assigned arbitrary values.
- A sample $x_i$ is deemed to be in the cluster $j$ if it is closest to the
- mean $
-\backslash
-mu_j$, where mean of a cluster $
-\backslash
-{x'_1,
-\backslash
-cdots,x'_r 
-\backslash
-}$ is $
-\backslash
-frac{x'_1+
-\backslash
-cdots,x'_r}{r}$.
- Distance between two $m$-dimensional vectors $x$ and $y$ is given by $
-\backslash
-sum_{j=1}^m (x[j] - y[j])^2$, where $x[j]$ is the $j$-th element of the
- vector $x$.
-  Other distance metrics~
-\backslash
-cite[Chapter 10]{pattern-classification}, such as scatter metrics, can be
- used instead of the distance metric mentioned above.
- Each iteration of the $k$-means algorithms recomputes the means and reclassifie
-s the samples.
- The algorithm terminates when it detects ``no change'' in the means.
- The precise definition of ``no change'' depends on the specific metric
- being used.
-\end_layout
+\begin_inset LatexCommand \cite{pattern-classification,Llyod-82}
 
 \end_inset
 
+ is shown in Figure\InsetSpace ~
 
+\begin_inset LatexCommand \ref{fig:k-means}
+
+\end_inset
+
+.
+ Assume that we are given 
+\begin_inset Formula $n$
+\end_inset
+
+ samples 
+\begin_inset Formula $x_{1},\cdots,x_{n}$
+\end_inset
+
+, where each sample is a 
+\begin_inset Formula $m$
+\end_inset
+
+-dimensional vector of real numbers.
+ The number of clusters is 
+\begin_inset Formula $c$
+\end_inset
+
+.
+ The algorithm maintains 
+\begin_inset Formula $c$
+\end_inset
+
+ means 
+\begin_inset Formula $\mu_{1},\cdots,\mu_{c}$
+\end_inset
+
+.
+ Initially, assume that the means are assigned arbitrary values.
+ A sample 
+\begin_inset Formula $x_{i}$
+\end_inset
+
+ is deemed to be in the cluster 
+\begin_inset Formula $j$
+\end_inset
+
+ if it is closest to the mean 
+\begin_inset Formula $\mu_{j}$
+\end_inset
+
+, where mean of a cluster 
+\begin_inset Formula $\{ x'_{1},\cdots,x'_{r}\}$
+\end_inset
+
+ is 
+\begin_inset Formula $\frac{x'_{1}+\cdots,x'_{r}}{r}$
+\end_inset
+
+.
+ Distance between two 
+\begin_inset Formula $m$
+\end_inset
+
+-dimensional vectors 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ is given by 
+\begin_inset Formula $\sum_{j=1}^{m}(x[j]-y[j])^{2}$
+\end_inset
+
+, where 
+\begin_inset Formula $x[j]$
+\end_inset
+
+ is the 
+\begin_inset Formula $j$
+\end_inset
+
+-th element of the vector 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ Other distance metrics\InsetSpace ~
+
+\begin_inset LatexCommand \cite[Chapter 10]{pattern-classification}
+
+\end_inset
+
+, such as scatter metrics, can be used instead of the distance metric mentioned
+ above.
+ Each iteration of the 
+\begin_inset Formula $k$
+\end_inset
+
+-means algorithms recomputes the means and reclassifies the samples.
+ The algorithm terminates when it detects 
+\begin_inset Quotes eld
+\end_inset
+
+no change
+\begin_inset Quotes erd
+\end_inset
+
+ in the means.
+ The precise definition of 
+\begin_inset Quotes eld
+\end_inset
+
+no change
+\begin_inset Quotes erd
+\end_inset
+
+ depends on the specific metric being used.
+ 
 \end_layout
 
 \begin_layout Standard

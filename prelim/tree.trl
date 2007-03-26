@@ -223,6 +223,11 @@ icon="task_2">
 <Name>other stuff on net</Name>
 </TASK>
 </TASK_DONE>
+<TASK_DONE item="y">
+<Name>Introduction - fix comments</Name>
+<Done>true</Done>
+<Priority>2</Priority>
+</TASK_DONE>
 <TASK_PRIO item="y"
 line0="[{*Priority*}] {*Name*}"
 line1="{*Name*}"
@@ -232,20 +237,22 @@ childtype="TASK"
 generic="TASK"
 condition="Priority != &quot;&quot; and Done != &quot;true&quot;"
 icon="task_1">
-<Name type="Text" ref="y">Introduction - fix comments</Name>
+<Name type="Text" ref="y">SSH section - rework</Name>
 <Done type="Boolean" format="yes/no"></Done>
-<Priority type="Number" format="##">2</Priority>
+<Priority type="Number" format="##">3</Priority>
 <Notes type="Text" lines="8"></Notes>
+<TASK_DONE item="y">
+<Name>review Stallings book</Name>
+<Done>true</Done>
+</TASK_DONE>
+<TASK_DONE item="y">
+<Name>detailed protocol diagram</Name>
+<Done>true</Done>
+</TASK_DONE>
 </TASK_PRIO>
 <TASK_PRIO item="y">
-<Name>SSH section - rework</Name>
-<Priority>3</Priority>
-<TASK item="y">
-<Name>review Stallings book</Name>
-</TASK>
-<TASK item="y">
-<Name>detailed protocol diagram</Name>
-</TASK>
+<Name>Optimization section</Name>
+<Priority>4</Priority>
 </TASK_PRIO>
 </DEFAULT>
 <DEFAULT item="y">
@@ -263,9 +270,13 @@ rewrite SSH</Body>
 </DEFAULT>
 <DEFAULT item="y">
 <Name>Tuesday 3/13/07</Name>
-<DEFAULT item="y">
-<Name>asdas</Name>
 </DEFAULT>
+<DEFAULT item="y">
+<Name>Fri/Sat/Sun Mar 23,24,25</Name>
+<Body>Review / work on optimization chapter
+- import .tex content
+- fix transitions
+- do what I did with background section</Body>
 </DEFAULT>
 </DEFAULT>
 <DEFAULT item="y">
