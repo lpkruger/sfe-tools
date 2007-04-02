@@ -154,7 +154,7 @@ output wire of the circuit, Alice and Bob combine their shares to reconstruct th
 </DEFAULT>
 </DEFAULT>
 <DEFAULT item="y">
-<Name>Completed Work</Name>
+<Name>Optimization Section</Name>
 <DEFAULT item="y">
 <Name>Privacy Preserving Clustering</Name>
 <Body>Given a set of data items, clustering algorithms group similar items together. Clustering has many
@@ -228,6 +228,19 @@ icon="task_2">
 <Done>true</Done>
 <Priority>2</Priority>
 </TASK_DONE>
+<TASK_DONE item="y">
+<Name>SSH section - rework</Name>
+<Done>true</Done>
+<Priority>3</Priority>
+<TASK_DONE item="y">
+<Name>review Stallings book</Name>
+<Done>true</Done>
+</TASK_DONE>
+<TASK_DONE item="y">
+<Name>detailed protocol diagram</Name>
+<Done>true</Done>
+</TASK_DONE>
+</TASK_DONE>
 <TASK_PRIO item="y"
 line0="[{*Priority*}] {*Name*}"
 line1="{*Name*}"
@@ -237,22 +250,13 @@ childtype="TASK"
 generic="TASK"
 condition="Priority != &quot;&quot; and Done != &quot;true&quot;"
 icon="task_1">
-<Name type="Text" ref="y">SSH section - rework</Name>
+<Name type="Text" ref="y">Optimization section</Name>
 <Done type="Boolean" format="yes/no"></Done>
-<Priority type="Number" format="##">3</Priority>
+<Priority type="Number" format="##">4</Priority>
 <Notes type="Text" lines="8"></Notes>
-<TASK_DONE item="y">
-<Name>review Stallings book</Name>
-<Done>true</Done>
-</TASK_DONE>
-<TASK_DONE item="y">
-<Name>detailed protocol diagram</Name>
-<Done>true</Done>
-</TASK_DONE>
-</TASK_PRIO>
-<TASK_PRIO item="y">
-<Name>Optimization section</Name>
-<Priority>4</Priority>
+<TASK item="y">
+<Name>Discuss K-means algorithm</Name>
+</TASK>
 </TASK_PRIO>
 </DEFAULT>
 <DEFAULT item="y">
@@ -277,6 +281,12 @@ rewrite SSH</Body>
 - import .tex content
 - fix transitions
 - do what I did with background section</Body>
+</DEFAULT>
+<DEFAULT item="y">
+<Name>Monday 3/26/07</Name>
+<Body>Review / work on optimization chapter
+- fix transitions
+- discuss k-means alg</Body>
 </DEFAULT>
 </DEFAULT>
 <DEFAULT item="y">

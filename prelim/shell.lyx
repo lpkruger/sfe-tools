@@ -118,6 +118,15 @@ preview false
 \end_layout
 
 \begin_layout Standard
+\begin_inset Include \input{timeline.lyx}
+preview false
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset LatexCommand \bibtex[plain]{privacy,somesh,ssh}
 
 \end_inset

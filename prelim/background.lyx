@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -218,7 +218,7 @@ There are several encryption scheme that satisfy these properties, of which
 \end_inset
 
 , where 
-\begin_inset Formula $m=pq$
+\begin_inset Formula $n=pq$
 \end_inset
 
  for 
@@ -278,7 +278,7 @@ There are several encryption scheme that satisfy these properties, of which
 \end_inset
 
  is a well defined function for 
-\begin_inset Formula $u=n\alpha+1$
+\begin_inset Formula $u\equiv1\;(\mbox{mod }n)$
 \end_inset
 
 .
@@ -579,7 +579,6 @@ secure computation with shares
 \emph default
 \bar default
 \noun default
-\color default
 
 \begin_inset Formula $y_{a}\oplus y_{b}=y$
 \end_inset

@@ -421,19 +421,7 @@ The
 \begin_inset Formula $k$
 \end_inset
 
--means algorithm\InsetSpace ~
-
-\begin_inset LatexCommand \cite{pattern-classification,Llyod-82}
-
-\end_inset
-
- is shown in Figure\InsetSpace ~
-
-\begin_inset LatexCommand \ref{fig:k-means}
-
-\end_inset
-
-.
+-means algorithm is a common clustering technique in data mining.
  Assume that we are given 
 \begin_inset Formula $n$
 \end_inset
