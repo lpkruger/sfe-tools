@@ -1,4 +1,4 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 245
 \begin_document
 \begin_header
@@ -40,8 +40,34 @@ Summer 2007
 Secure authentication in SSH
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+define protocol extension
+\end_layout
+
+\begin_layout Itemize
+implement classic SPAKA 
+\end_layout
+
+\begin_layout Itemize
+implement SFE SPAKA
+\end_layout
+
+\begin_layout Itemize
+benchmark and compare
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Target publication: Usenix Security 2008
+\end_layout
+
 \begin_layout Subsection
 Fall 2007
+\end_layout
+
+\begin_layout Itemize
+Begin work on optimizer
 \end_layout
 
 \begin_layout Itemize

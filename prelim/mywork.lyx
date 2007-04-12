@@ -74,6 +74,82 @@ Ordered Binary Decision Diagrams
 .
  OBDDs can be readily extended to represent functions with arbitrary domains
  and ranges.
+ An OBDD is similar to a decision tree, in that evaluation is performed
+ from a head node to leaves.
+ However, an OBDD is not ordinarily a tree, because internal nodes with
+ identical structure are shared.
+ Given a function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+, the OBDD for that function will have 
+\begin_inset Formula $n$
+\end_inset
+
+ levels, with the 
+\begin_inset Formula $i^{th}$
+\end_inset
+
+ level corresponding to 
+\begin_inset Formula $x_{l_{i}}$
+\end_inset
+
+, where 
+\begin_inset Formula $(l_{1},\cdots,l_{n})$
+\end_inset
+
+ is a permutation of 
+\begin_inset Formula $(1,\cdots,n)$
+\end_inset
+
+.
+ There is a unique canonical decision tree corresponding to any function
+ with respect to a given ordering 
+\begin_inset Formula $(l_{1},\cdots,l_{n})$
+\end_inset
+
+.
+ An example of an OBDD to compute the function 
+\begin_inset Formula $F(x)=\# x1\# x3>\# x2\# x4$
+\end_inset
+
+ (two-bit millionaires problem) is shown in 
+\begin_inset LatexCommand \ref{fig:OBDD-example}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename obdd1.png
+	lyxscale 5
+	scale 40
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:OBDD-example}
+
+\end_inset
+
+OBDD for two-bit millionaires problem
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -82,34 +158,247 @@ In
 
 \end_inset
 
-, I present an SFE algorithm that directly uses an OBDD representation of
- the function 
+, I presented an SFE protocol that directly uses an OBDD representation
+ of the function 
 \begin_inset Formula $f$
 \end_inset
 
  to be jointly computed.
- The advantage of using an OBDD representation over the gate-representation
- is that OBDDs are more succinct for certain classes of functions than the
- gate representation, including most linear functions.
- For example, among other functions, the results show the OBDD representation
- is more efficient than the Boolean gate representation for 8-bit AND, 8-bit
- addition, and the millionaire's and billionaire's problems
+ The advantage of using an OBDD representation over the Boolean gate-representat
+ion is that OBDDs are more succinct for certain classes of functions than
+ the Boolean gate representation, including most linear functions.
+ For example, the OBDD representation is more efficient than the Boolean
+ gate representation for 8-bit AND, 8-bit addition, and the millionaire's
+ and billionaire's problems
 \begin_inset LatexCommand \cite{Yao:86}
 
 \end_inset
 
- For other functions, such as multiplication, the OBDD can be far worse
- than the Boolean gate representation.
+ OBDDs are not a universal solution, however, for other functions, such
+ as multiplication, the OBDD can be far worse than the Boolean gate representati
+on.
+ For the classes of functions in which the OBDD representation is efficient,
+ the paper shows that the protocol described next can perform 2 to 4 times
+ better than the classical Yao protocol.
 \end_layout
 
 \begin_layout Standard
-The conclusion is that SFE optimization using OBDDs are a technique that
- is applicable to any function.
+The protocol is loosely designed in a similar fashion as Yao's protocol
+ 
+\begin_inset LatexCommand \cite{Yao86}
+
+\end_inset
+
+.
+ We present two variations of the protocol.
+ The steps of the protocol 1 are shown in 
+\begin_inset LatexCommand \ref{fig:OBDD-overview}
+
+\end_inset
+
+, using the example millionaire's problem pictured above.
  
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename obdd_proto_overview.png
+	lyxscale 5
+	scale 40
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:OBDD-overview}
+
+\end_inset
+
+OBDD secure evaluation protocol
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Include \input{bdd-proto.lyx}
+preview false
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Protocol 2 is nearly identical to protocol 1, except that Alice first reduces
+ the number of nodes to be sent to Bob using an operation called 
+\emph on
+restriction
+\emph default
+, which is a partial evaluation applied to OBDDs.
+ Restriction is defined as follows.
+ 
+\end_layout
+
+\begin_layout Standard
+Given an 
+\begin_inset Formula $n$
+\end_inset
+
+ variable Boolean function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+ and a Boolean value 
+\begin_inset Formula $b$
+\end_inset
+
+, the restriction 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b}$
+\end_inset
+
+ is a Boolean function of 
+\begin_inset Formula $n-1$
+\end_inset
+
+ variables 
+\begin_inset Formula $x_{1},\cdots,x_{i-1},x_{i+1},\cdots,x_{n}$
+\end_inset
+
+.
+ 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b}(x_{1},\cdots,x_{i-1},x_{i+1},\cdots,x_{n})$
+\end_inset
+
+ is equal to 
+\begin_inset Formula $f(x_{1},\cdots,x_{i-1},b,x_{i+1},\cdots,x_{n})$
+\end_inset
+
+.
+ Essentially 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b}$
+\end_inset
+
+ is the function obtained by substituting the value 
+\begin_inset Formula $b$
+\end_inset
+
+ for the variable 
+\begin_inset Formula $x_{i}$
+\end_inset
+
+ in the function 
+\begin_inset Formula $f$
+\end_inset
+
+.
+ The restriction operation can be performed over multiple variables by restricti
+ng each variable independently, e.g., 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b,x_{j}\leftarrow b'}=(f\mid_{x_{i}\leftarrow b})\mid_{x_{j}\leftarrow b'}$
+\end_inset
+
+.
+ The order in which the variables are restricted is unimportant.
+\end_layout
+
+\begin_layout Standard
+\align left
+For protocol 2, both parties' inputs include the 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ for the Boolean function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+ with the ordering 
+\begin_inset Formula $x_{1}<x_{2}<\cdots<x_{n}$
+\end_inset
+
+.
+ Furthermore, Alice holds the inputs for the variables in the set 
+\begin_inset Formula $X_{A}$
+\end_inset
+
+ and Bob holds the inputs for the variables in the set 
+\begin_inset Formula $X_{B}\;=\;\{ x_{1},\cdots,x_{n}\}-X_{A}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Alice performs the following steps: 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Alice computes the OBDD 
+\begin_inset Formula ${\cal O}_{A}$
+\end_inset
+
+ as the restriction of her inputs on the function 
+\begin_inset Formula $f\mid_{X_{A}}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Alice encrypts the 
+\begin_inset Formula $O_{A}$
+\end_inset
+
+ and sends it to Bob.
+ This step is exactly the same as in for Protocol 1.
+ Alice also sends the secret corresponding to the root of the OBDD 
+\begin_inset Formula ${\cal O}_{A}$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+The computation for Bob is exactly the same as that for Protocol 1.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+Present OBDDs, with pictures and running example
+\end_layout
+
+\begin_layout Standard
+Present protocol
+\end_layout
+
+\begin_layout Standard
+Use pictures from CCS talk.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
-Algorithm Class Specific: Protocol Optimization of Dynamic Programming
+Class of Algorithm Specific: Protocol Optimization of Dynamic Programming
 \end_layout
 
 \begin_layout Standard
@@ -412,6 +701,71 @@ Let
 \end_layout
 
 \end_deeper
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+Present protocols
+\end_layout
+
+\begin_layout Standard
+Picture of grid
+\end_layout
+
+\begin_layout Standard
+Discuss design rationale
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename grid.eps
+	lyxscale 50
+	scale 30
+	clip
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:DYN-grid}
+
+\end_inset
+
+Example grid
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Greyedout
+status open
+
+\begin_layout Standard
+NOTE: Expand this section
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Algorithm Specific: Protocol Optimization of K-Means Clustering
 \end_layout
@@ -422,7 +776,7 @@ The
 \end_inset
 
 -means algorithm is a common clustering technique in data mining.
- Assume that we are given 
+ Suppose that we are given 
 \begin_inset Formula $n$
 \end_inset
 
@@ -435,12 +789,13 @@ The
 \end_inset
 
 -dimensional vector of real numbers.
- The number of clusters is 
+ The problem is to assign the samples to 
 \begin_inset Formula $c$
 \end_inset
 
-.
- The algorithm maintains 
+ clusters such a manner that similar points are grouped together.
+ Similarity is defined using a distance metric.
+ The standard clusteringt algorithm maintains 
 \begin_inset Formula $c$
 \end_inset
 
@@ -471,7 +826,7 @@ The
 \end_inset
 
 .
- Distance between two 
+ In a Euclidean space, the distance between two 
 \begin_inset Formula $m$
 \end_inset
 
@@ -483,7 +838,7 @@ The
 \begin_inset Formula $y$
 \end_inset
 
- is given by 
+ is 
 \begin_inset Formula $\sum_{j=1}^{m}(x[j]-y[j])^{2}$
 \end_inset
 
@@ -513,25 +868,79 @@ The
 \end_inset
 
 -means algorithms recomputes the means and reclassifies the samples.
- The algorithm terminates when it detects 
-\begin_inset Quotes eld
+ The algorithm terminates when it detects no change in the means.
+ See 
+\begin_inset LatexCommand \ref{fig:clusters}
+
 \end_inset
 
-no change
-\begin_inset Quotes erd
+ for an illustration.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename clusters.png
+	lyxscale 5
+	scale 30
+	rotateAngle 270
+
 \end_inset
 
- in the means.
- The precise definition of 
-\begin_inset Quotes eld
+
+\end_layout
+
+\begin_layout Caption
+\begin_inset LatexCommand \label{fig:clusters}
+
 \end_inset
 
-no change
-\begin_inset Quotes erd
+Thirteen data points after clustering.
+ The small dots are cluster means.
+\end_layout
+
 \end_inset
 
- depends on the specific metric being used.
- 
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+Present K-means pictures
+\end_layout
+
+\begin_layout Standard
+Present protocol
+\end_layout
+
+\begin_layout Standard
+Use pictures from ESORICS talk.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Greyedout
+status open
+
+\begin_layout Standard
+NOTE: Expand this section
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard

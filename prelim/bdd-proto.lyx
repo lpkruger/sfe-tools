@@ -1,0 +1,379 @@
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\align left
+For protocol 1, assume that both parties' inputs include the 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ for the Boolean function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+ with the ordering 
+\begin_inset Formula $x_{1}<x_{2}<\cdots<x_{n}$
+\end_inset
+
+.
+ Furthermore, Alice holds the inputs 
+\begin_inset Formula $(i_{1},\ldots,i_{k})$
+\end_inset
+
+ corresponding to the first 
+\begin_inset Formula $k$
+\end_inset
+
+ variables 
+\begin_inset Formula $x_{1},\ldots,x_{k}$
+\end_inset
+
+, and Bob has the inputs 
+\begin_inset Formula $(i_{k+1},\ldots,i_{n})$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Alice performs the following steps: 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+She traverses the 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ using her input 
+\begin_inset Formula $(i_{1},\cdots,i_{k})$
+\end_inset
+
+, which results in a node 
+\begin_inset Formula $v_{init}$
+\end_inset
+
+ at level 
+\begin_inset Formula $k$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+She uniformly and independently at random creates 
+\begin_inset Formula $(n-k)$
+\end_inset
+
+ pairs of secrets 
+\begin_inset Formula $(s_{1}^{0},s_{1}^{1}),\cdots,(s_{n-k}^{0},s_{n-k}^{1})$
+\end_inset
+
+.
+ In addition, for each node 
+\begin_inset Formula $v$
+\end_inset
+
+ in the 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ whose level is between 
+\begin_inset Formula $k$
+\end_inset
+
+ and 
+\begin_inset Formula $n-1$
+\end_inset
+
+, Alice also creates a secret 
+\begin_inset Formula $s_{v}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+She assigns a uniformly random label to each node whose level is between
+ 
+\begin_inset Formula $k$
+\end_inset
+
+ and 
+\begin_inset Formula $n$
+\end_inset
+
+.
+ We refer to the randomly assigned label of node 
+\begin_inset Formula $v$
+\end_inset
+
+ using the notation 
+\begin_inset Formula $label(v)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Next, Alice augments 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ with some number of dummy nodes (to ensure that Bob always traverses 
+\begin_inset Formula $n-k$
+\end_inset
+
+ nodes in his phase of the protocol).
+\end_layout
+
+\begin_layout Enumerate
+Alice garbles all nodes whose level is between 
+\begin_inset Formula $k$
+\end_inset
+
+ and 
+\begin_inset Formula $n-1$
+\end_inset
+
+ in the following manner.
+ Let 
+\begin_inset Formula $v$
+\end_inset
+
+ be a node in 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ such 
+\begin_inset Formula $k\leq{\it level}(v)\leq n-1$
+\end_inset
+
+ and define 
+\begin_inset Formula ${\it level}(v)=\ell$
+\end_inset
+
+.
+ The encryption of node 
+\begin_inset Formula $v$
+\end_inset
+
+, denoted by 
+\begin_inset Formula $E^{(v)}$
+\end_inset
+
+, is a label and a randomly ordered ciphertext pair 
+\begin_inset Formula \[
+\left(label(v)\,\,,\,\, E_{s_{v}\oplus s_{\ell-k+1}^{0}}(label(low(v))\,\|\, s_{{\it low}(v)})\,\,\,,\,\,\, E_{s_{v}\oplus s_{\ell-k+1}^{1}}(label(high(v))\,\|\, s_{{\it high}(v)})\right)\,\,\,,\]
+
+\end_inset
+
+ where the labels are pre-pended to the secret with a separator symbol and
+ the order of the ciphertexts is determined by a fair coin flip.
+ Roughly speaking, the secrets corresponding to the 
+\begin_inset Formula $0$
+\end_inset
+
+-successor and 
+\begin_inset Formula $1$
+\end_inset
+
+-successor of node 
+\begin_inset Formula $v$
+\end_inset
+
+ are encrypted with the secret corresponding to 
+\begin_inset Formula $v$
+\end_inset
+
+ and its level.
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+Note that dummy nodes have the same structure as normal nodes, except that
+ the ciphertext pair contain encryptions of the same message since dummy
+ nodes have the same 
+\begin_inset Formula $0$
+\end_inset
+
+ and 
+\begin_inset Formula $1$
+\end_inset
+
+-successors.
+ Provided the encryption scheme is semantically secure, this poses no problem
+ since the keys are chosen uniformly at random.
+\end_layout
+
+\begin_layout Standard
+Lastly, there are two terminal nodes of the form 
+\begin_inset Formula $(b,label(t_{b}))$
+\end_inset
+
+ for 
+\begin_inset Formula $b=0$
+\end_inset
+
+ or 
+\begin_inset Formula $1$
+\end_inset
+
+.
+ Recall that 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ has two terminal nodes, denoted as 
+\begin_inset Formula $0$
+\end_inset
+
+ and 
+\begin_inset Formula $1$
+\end_inset
+
+, that are at level 
+\begin_inset Formula $n$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Once Alice is done encrypting, she sends to Bob the encryption of all nodes
+ whose level is between 
+\begin_inset Formula $k$
+\end_inset
+
+ and 
+\begin_inset Formula $n$
+\end_inset
+
+ and the secret 
+\begin_inset Formula $s_{v_{init}}$
+\end_inset
+
+ corresponding to node 
+\begin_inset Formula $v_{init}$
+\end_inset
+
+ at level 
+\begin_inset Formula $k$
+\end_inset
+
+.
+ We called this the garbled OBDD.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Bob performs the following steps: 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+He engages in 
+\begin_inset Formula $n-k$
+\end_inset
+
+ 1-out-of-2 oblivious transfers to obtain the secrets corresponding to his
+ input.
+ For example, if his input 
+\begin_inset Formula $i_{j}$
+\end_inset
+
+ is 
+\begin_inset Formula $0$
+\end_inset
+
+, then he obtains the (level) secret 
+\begin_inset Formula $s_{j-k}^{0}$
+\end_inset
+
+; otherwise, he obtains the secret 
+\begin_inset Formula $s_{j-k}^{1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Now Bob is ready to start his computation.
+ Suppose 
+\begin_inset Formula $i_{k+1}=0$
+\end_inset
+
+.
+ With 
+\begin_inset Formula $s_{1}^{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $s_{v_{init}}$
+\end_inset
+
+, he decrypts both ciphertexts in 
+\begin_inset Formula $E^{(v_{init})}$
+\end_inset
+
+ and decides which gives the correct result by using the verifiable range
+ property of the encryption scheme.
+ Bob now has both 
+\begin_inset Formula $s_{{\it low}(v)}$
+\end_inset
+
+ (the secret corresponding to the 
+\begin_inset Formula $0$
+\end_inset
+
+-successor of 
+\begin_inset Formula $v_{init}$
+\end_inset
+
+) and 
+\begin_inset Formula $label(low(v))$
+\end_inset
+
+ (which tells Bob which encrypted node is used to evaluate his next input).
+ Continuing this way, Bob eventually obtains a label corresponding to one
+ of the terminal nodes, which determines the result of the OBDD on the shared
+ inputs.
+ Bob sends this result to Alice.
+ 
+\end_layout
+
+\end_body
+\end_document
