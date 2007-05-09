@@ -62,43 +62,48 @@ As every man goes through life he fills in a number of forms for the record,
 \end_layout
 
 \begin_layout Standard
-Privacy is becoming an important concern as computers increase in power
+Privacy and security are important concerns as computers increase in power
  and the Internet continues to grow 
 \begin_inset LatexCommand \cite{cra99,tur03}
 
 \end_inset
 
 .
- More and more data is stored on machines that are connected to the Internet,
- directly or indirectly, and there are many examples in the newspapers today
- of privacy compromising activities such as phishing, data theft, and identity
- theft.
- There are also many other reasons why privacy should be protected, including
- business competition, respect of personal privacy, and government mandate,
- such as HIPPA laws 
+ Everyday activities dealing with sensitive data are moving onto to the
+ internet, such as credit card transactions, doctors accessing medical records,
+ and online banking.
+ As a result, more data is stored on machines that are connected to the
+ Internet, directly or indirectly, then ever before.
+ Sadly, there are many all-too-common examples in the newspapers of privacy
+ compromising activities such as phishing, data theft, and identity theft.
+ New techniques are needed to dead with the many threats to privacy.
+ In addition to the misuse of data, there can be other consequences of privacy
+ violations, such as stiff legal penalties for violation of HIPAA laws 
 \begin_inset LatexCommand \cite{hippa}
 
 \end_inset
 
- which mandate strict privacy among health-care professionals along with
- stiff penalties for violations.
+, which mandate strict privacy requirements among health-care professionals
+ along with stiff penalties for violations.
 \end_layout
 
 \begin_layout Standard
-Despite these many concerns, there is also a conflicting desire to perform
- useful computations with data.
+Despite these many privacy concerns, there is also a conflicting desire
+ to perform useful computations with such data.
  Data is not useful unless it can be accessed and manipulated.
  Sometimes various parties would like to collaborate on research involving
  sensitive data.
  For example, genetic data is the subject of much current research, but
- it is considered private.
+ it is considered private personal information.
  Researchers with access to different patients' data may want to combine
- their knowledge in the search for new cures for diseases, yet not reveal
- the sensitive data to collaborating parties.
- Competing businesses may want to perform joint market research for mutual
- benefit, without revealing sensitive customer data.
+ their information resources in the search for new cures for diseases, yet
+ not reveal the actual sensitive information to the collaborating parties.
+ Competing businesses may want to jointly perform market research for mutual
+ benefit, without exposing their sensitive business data.
  The challenge is how to balance these competing concerns, making data available
- for legitimate uses while preserving as much privacy as possible.
+ for desirable uses while preserving as much privacy as possible.
+ If this balance can be achieved, new uses of data may become possible which
+ would be otherwise impossible without strong privacy guarantees.
 \end_layout
 
 \begin_layout Standard
@@ -142,8 +147,8 @@ This
 \emph on
  
 \emph default
-is a technique which can address many of privacy concerns facing the modern
- age.
+is a technique which can address many of the privacy concerns facing the
+ modern age.
  The inputs to the function are partitioned among more than one party, and
  the function is computed collaboratively while preserving the privacy of
  each participant's individual inputs.
@@ -181,11 +186,13 @@ Needs clarification
 \begin_layout Standard
 Although SFE has provable privacy guarantees, its implementation tends to
  be very expensive for practical use in terms of time and space.
- The space expense manifests itself in network bandwidth used in the protocols.
+ The space expense manifests itself in the large consumption of network
+ bandwidth used in the protocols, and the time expense comes from repeated
+ use of expensive cryptographic primitives, such as modular exponentiation.
  These expenses explain why SFE has not been used very much outside of the
  academic literature, despite the fact that it was formally introduced many
- years ago
-\begin_inset LatexCommand \cite{Fairplay}
+ years ago, in the early 1980s 
+\begin_inset LatexCommand \cite{Y82}
 
 \end_inset
 
@@ -199,9 +206,18 @@ Although SFE has provable privacy guarantees, its implementation tends to
 
 \end_inset
 
- is a straightforward implementation of the Yao protocol, along with a supportin
-g compiler that allows secure functions to be written in a more familiar
- functional programming notation.
+ is a straightforward implementation of the Yao protocol 
+\begin_inset LatexCommand \cite{Yao86}
+
+\end_inset
+
+, presented in section 
+\begin_inset LatexCommand \ref{sub:Garbled-Circuit-Method}
+
+\end_inset
+
+, along with a supporting compiler that allows secure functions to be written
+ in a more familiar functional programming notation.
  Kruger 
 \emph on
 et al.
@@ -241,22 +257,22 @@ Ordered Binary Decision Diagrams
 .
  Also, the amount of time required for the computations has benefited greatly
  from Moore's law.
- I have shown that in some cases, the computation requirements of the most
- general protocols can be adequate for practical use when performed on today's
- fastest CPUs 
+ I have shown that in some simple cases, the computation requirements of
+ the most general protocols can be adequate for practical use when performed
+ on today's fastest CPUs 
 \begin_inset LatexCommand \cite{kruger06}
 
 \end_inset
 
 .
- 
 \end_layout
 
 \begin_layout Standard
-I propose to continue researching ways to improve the efficiency and practicalit
-y of privacy preserving protocols.
- My past work has looked at finding efficient protocols for specific classes
- of functions, in particular, one study analyzes several designs of a 
+I propose to research ways to improve the efficiency and practicality of
+ privacy preserving protocols.
+ My past work has investigated finding efficient protocols for specific
+ classes of functions, in particular, one study analyzes several designs
+ of a 
 \begin_inset Formula $k$
 \end_inset
 
@@ -265,8 +281,8 @@ y of privacy preserving protocols.
 
 \end_inset
 
-, and another discusses ways to design efficient protocols for many dynamic
- programming problems 
+, and another discusses ways to design efficient protocols for many kinds
+ of dynamic programming problems 
 \begin_inset LatexCommand \cite{kruger07}
 
 \end_inset
@@ -276,6 +292,12 @@ y of privacy preserving protocols.
  OBDDs to improve the performance of general purpose protocols and showed
  that they can be beneficial for certain functions 
 \begin_inset LatexCommand \cite{kruger06}
+
+\end_inset
+
+.
+ These works are discussed in section 
+\begin_inset LatexCommand \ref{sec:Techniques}
 
 \end_inset
 
@@ -302,11 +324,52 @@ Specifically, I propose that my work will create the following contributions:
 Protocols for other alternative representation of circuits
 \emph default
 .
- I will extend the previous work with OBDDs by creating hybrid circuits
- which compose sub-circuits represented as OBDDs with sub-circuits represented
- as Boolean circuits.
- I will also investigate whether extended OBDD models can be used to create
- additional efficiency improvements
+ Although my work with OBDDs showed improved performance with certain functions,
+ OBDDs exhibit exponential blowup in many circuits of practical interest
+ such as multiplication.
+ There have been many generalizations of OBDDs intended to address these
+ problems.
+ An arithmetic-focused approach has been to extend OBDDs from the Boolean
+ domain to the numeric domain, such as in 
+\emph on
+binary moment diagrams 
+\emph default
+
+\begin_inset LatexCommand \cite{bryant94verification}
+
+\end_inset
+
+ and 
+\emph on
+hybrid decision
+\emph default
+ 
+\emph on
+diagrams
+\emph default
+ 
+\begin_inset LatexCommand \cite{clarke95hybrid}
+
+\end_inset
+
+.
+
+\emph on
+ 
+\emph default
+Another approach, 
+\emph on
+binary expression diagrams
+\emph default
+ 
+\begin_inset LatexCommand \cite{BoolExprDiagram}
+
+\end_inset
+
+, have composed BDD-style decision nodes with Boolean gates in the same
+ circuit.
+ I will research whether these alternate circuit representations can yield
+ efficient protocols for general purpose secure function evaluation.
 \end_layout
 
 \begin_layout Itemize
@@ -315,30 +378,53 @@ Protocols for other alternative representation of circuits
 Protocols for evaluating functions with controlled leakage of information
 \emph default
 .
- The question being answered is whether performance improvements can be
- achieved by loosening the privacy guarantees in a controlled way, by specifying
- which data may and may not leak.
-\end_layout
-
-\begin_layout Itemize
-
+ The traditional definition of secure function evaluation allows the parties
+ to learn their designated outputs and no additional information.
+ In ordinary (non-secure) computation, the parties learn all information.
+ Intuitively, these are the extreme ends of a continuum of information learned.
+ Since the overhead of privacy protection is substantial, the question I
+ will research is how can secure protocols be designed at intermediate points
+ in the continuum, where some but not all privacy is guaranteed.
+ For example, if a Boolean circuit can be partitioned into 
 \emph on
-A framework for analyzing a specific protocol and creating an equivalent
- protocol which is more efficient
+sensitive
 \emph default
-.
- This is analogous to the role played by an optimizing compiler for program
- code.
+ and 
+\emph on
+non-sensitive
+\emph default
+ gates, what quantity of performance gain can be achieved by allowing the
+ non-sensitive information to be revealed?
 \end_layout
 
 \begin_layout Itemize
 
 \emph on
-An example showing that SFE can be useful in other aspects of security where
+A compiler for creating efficient secure evaluation protocols.
+
+\emph default
+ Fairplay 
+\begin_inset LatexCommand \cite{Fairplay}
+
+\end_inset
+
+ is the first attempt to create a general purpose secure protocol compiler.
+ It works in a straightforward way, by converting a functional language
+ into a Boolean circuit and executing a generic protocol to evaluate it.
+ However, this straightforward approach is not efficient enough for practical
+ use in all but the simplest circuits.
+ I plan to integrate the various techniques I have researched to create
+ the first optimizing protocol compiler for secure function evaluation.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Examples showing that SFE can be useful in other aspects of security where
  it has not previously been used
 \emph default
 .
- Specificaly, I will show how SFE can be used to implement a more secure
+ Specifically, I will show how SFE can be used to implement a more secure
  authentication protocol in SSH.
 \end_layout
 

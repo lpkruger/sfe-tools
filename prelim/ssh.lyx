@@ -38,7 +38,7 @@
 \begin_body
 
 \begin_layout Section
-Strengthening SSH Password Authentication
+Strengthening SSH Password Authentication with SFE
 \end_layout
 
 \begin_layout Subsection
@@ -83,12 +83,14 @@ The SSH protocol is defined in terms of layers, much like the OSI networking
 \end_layout
 
 \begin_layout Standard
+\align center
 \begin_inset Float figure
 wide false
 sideways false
 status open
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename ssh_overview.png
 	lyxscale 5
@@ -123,14 +125,14 @@ Session Initialization
 During the initial handshake, the hosts perform a key exchange and the client
  validates the server key, and there is negotiation for an initial set of
  cryptographic algorithms (cipher, HMAC) that will used for the session.
- An overview of the handshake messages are shown in 
+ An overview of the handshake messages are shown in figure 
 \begin_inset LatexCommand \ref{fig:ssh-init}
 
 \end_inset
 
 .
  The steps of the protocol are as follows.
- Refer to 
+ Refer to figure 
 \begin_inset LatexCommand \ref{fig:ssh2-init}
 
 \end_inset
@@ -178,7 +180,7 @@ SSH-1.99-OpenSSH_4.5
  If the client does not understand the protocol version, it disconnects,
  otherwise it sends a similar string to the server.
  After these strings are sent, all traffic uses the binary packet protocol
- shown in 
+ shown in figure  
 \begin_inset LatexCommand \ref{fig:ssh-packet}
 
 \end_inset
@@ -192,6 +194,7 @@ sideways false
 status open
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename ssh_packet.png
 	lyxscale 5
@@ -293,6 +296,7 @@ sideways false
 status open
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename ssh_init.png
 	lyxscale 5
@@ -326,6 +330,7 @@ sideways false
 status open
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename ssh2_p1.png
 	lyxscale 50
@@ -406,13 +411,13 @@ When the initial handshake is complete, the client has verified the server
 .
  The auth protocol is flexible.
  The SSH standard describes several standard methods of authentication,
- such as password and public-key, arbitrary additional vendor or site specific
+ such as password and public-key, arbitrary additional vendor or site-specific
  authentication methods can be added.
 \end_layout
 
 \begin_layout Standard
 To authenticate, the client chooses an authentication protocol.
- Here, we will consider two standard authentication types: 
+ Here, I will consider two standard authentication types: 
 \begin_inset Quotes eld
 \end_inset
 
@@ -461,7 +466,7 @@ keyboard-interactive
 \end_layout
 
 \begin_layout Standard
-The messages used in password authentication are shown in 
+The messages used in password authentication are shown in Figure 
 \begin_inset LatexCommand \ref{fig:ssh-auth}
 
 \end_inset
@@ -538,6 +543,7 @@ sideways false
 status open
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename ssh_auth.png
 	lyxscale 5
@@ -576,7 +582,12 @@ It is easy to see that the password is sent directly from the client to
 \end_layout
 
 \begin_layout Subsection
-Man in the Middle Attack
+Man in the Middle Attack 
+\begin_inset LatexCommand \label{sub:Man-in-the-Middle}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -590,7 +601,7 @@ man in the middle
  (MITM) attack.
  Although the protocol does provide some protection against MITM in the
  form of host key authentication, there are at least three ways in which
- an attacker can thrwart this protection:
+ an attacker can thwart this protection:
 \end_layout
 
 \begin_layout Enumerate
@@ -652,8 +663,8 @@ Practically speaking, it may be inconvenient for a user to authenticate
 \end_layout
 
 \begin_layout Enumerate
-Even if the client does know the server's key, the there is no guarantee
- that a user would refuse to connect even if the authentication fails.
+Even if the client does know the server's key, there is no guarantee that
+ a user would refuse to connect even if the authentication fails.
  For example, the user might think the server key changed for a non-malicious
  reason such as an operating system upgrade where the administrator forgot
  to backup the old key.
@@ -662,7 +673,8 @@ Even if the client does know the server's key, the there is no guarantee
 \begin_layout Standard
 This vulnerability can be mitigated by using additional secrets which are
  shared between the client and server.
- The password is convenient shared secret in common use today.
+ A password is a typical example of a convenient shared secret in common
+ use today.
  Typically, a password is considered only as a means of authenticating a
  client to a server, but with special protocols a password can also be used
  for simultaneous mutual authentication in a way that is secure, and does
@@ -706,7 +718,7 @@ Secure Password and Key Authentication
 \end_inset
 
 .
- SPAKA protocols are designed to guarentee confidentiality of secrets even
+ SPAKA protocols are designed to guarantee confidentiality of secrets even
  against active adversaries.
  There have been various SPAKA protocols proposed in the literature with
  varying properties.
@@ -734,7 +746,7 @@ Secure Password and Key Authentication
 \end_inset
 
  can not be derived from either of the two shares alone, and each share
- is stored on a seperate server.
+ is stored on a separate server.
  To perform the protocol, the client splits 
 \begin_inset Formula $P$
 \end_inset
@@ -755,8 +767,30 @@ Secure Password and Key Authentication
 .
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+How is mine different?
+\end_layout
+
+\begin_layout Standard
+How does it solve MITM?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 SPAKA using SFE
+\begin_inset LatexCommand \label{sub:SPAKA-using-SFE}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -875,6 +909,54 @@ If
  are guaranteed not to learn any information about the computation except
  for the single bit of output.
  
+\end_layout
+
+\begin_layout Standard
+This SPAKA protocol effectively solves the man-in-the-middle problem.
+ Suppose the adversary, Eve, poses as the server when communicating with
+ the client.
+ Eve will be unable to supply the correct value of 
+\begin_inset Formula $Y$
+\end_inset
+
+ as input to the function except with negligible probability.
+ As a result, the output of 
+\begin_inset Formula $F(X,Y)$
+\end_inset
+
+ will be 
+\begin_inset Formula $false$
+\end_inset
+
+, and the client will know the authentication has failed.
+ Due to the security properties of SFE, it is also guaranteed that Eve will
+ learn no other useful information from the evaluation.
+ Therefore, the MITM attack described in section 
+\begin_inset LatexCommand \ref{sub:Man-in-the-Middle}
+
+\end_inset
+
+ will not succeed.
+\end_layout
+
+\begin_layout Standard
+In addition, the use of secure function evaluation has practical advantages.
+ In comparison to multi-server protocols such as 
+\begin_inset LatexCommand \cite{brainard03}
+
+\end_inset
+
+, communication is limited only to the server and client.
+ Because any hash function 
+\begin_inset Formula $H$
+\end_inset
+
+ can be automatically compiled into a secure circuit, this technique can
+ be used as a drop-in replacement into any existing authentication system,
+ without rehashing or modifying the password database.
+ I propose to implement this protocol in the standard OpenSSH software,
+ measure the performance, and make the implementation available in hopes
+ this will lead to a more secure SSH becoming common use.
 \end_layout
 
 \begin_layout Standard

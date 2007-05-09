@@ -96,10 +96,24 @@ preview false
 \end_layout
 
 \begin_layout Standard
+\begin_inset Include \input{ot_quad.lyx}
+preview false
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Comment
 status open
 
 \begin_layout Standard
+\begin_inset Include \input{newidea.lyx}
+preview false
+
+\end_inset
+
 
 \end_layout
 
@@ -127,7 +141,7 @@ preview false
 \end_layout
 
 \begin_layout Standard
-\begin_inset LatexCommand \bibtex[plain]{privacy,somesh,ssh}
+\begin_inset LatexCommand \bibtex[plain]{privacy,somesh,ssh,crypto}
 
 \end_inset
 

@@ -29,11 +29,16 @@
 \begin_body
 
 \begin_layout Section
-Background
+Background and Related Work
 \end_layout
 
 \begin_layout Subsection
-Primitives
+Primitives 
+\begin_inset LatexCommand \label{sub:Primitives}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
@@ -52,12 +57,20 @@ Oblivious transfer is a protocol originally proposed by Rabin
 \end_inset
 
 , is a protocol between two parties, the Chooser and the Sender.
- The Sender's inputs into the protocol are n values 
+ The Sender's inputs into the protocol are 
+\begin_inset Formula $n$
+\end_inset
+
+ values 
 \begin_inset Formula $v_{1},...,v_{n}$
 \end_inset
 
 .
- The Chooser's input is an index i such that 
+ The Chooser's input is an index 
+\begin_inset Formula $i$
+\end_inset
+
+ such that 
 \begin_inset Formula $1\le i\le n$
 \end_inset
 
@@ -82,7 +95,8 @@ Homomorphic Encryption
 
 \begin_layout Standard
 Homomorphic Encryption is a class of public key encryption algorithms that
- satisfies the homomorphism property: 
+ satisfies a homomorphism property.
+ An additive homomorphic cipher satisfies 
 \begin_inset Formula $E(a+b)=E(a)\oplus E(b)$
 \end_inset
 
@@ -90,19 +104,89 @@ Homomorphic Encryption is a class of public key encryption algorithms that
 \begin_inset Formula $\oplus$
 \end_inset
 
- is an efficient and publically computable operator.
-\end_layout
+ is an efficiently computable operator that requires no secret information.
+ Similarly, a multiplicative homomorphic cipher satisfies 
+\begin_inset Formula $E(ab)=E(a)\otimes E(b)$
+\end_inset
+
+.
+ Some of the most famous public key ciphers have the multiplicative homomorphic
+ property, including the Elgamal cipher 
+\begin_inset LatexCommand \cite{elgamal85}
+
+\end_inset
+
+ and the RSA cipher 
+\begin_inset LatexCommand \cite{rivest83rsa}
+
+\end_inset
+
+.
+ The homomorphic properties have traditionally been considered undesirable
+ for general purpose cryptography 
+\begin_inset LatexCommand \cite{jmsw02}
+
+\end_inset
+
+.
+ 
+\begin_inset Note Comment
+status open
 
 \begin_layout Standard
-For general purpose cryptography, the homomorphism property are considered
- undesirable because it can make cryptanalysis easier.
- However, it has been found that homomorphic encryption can lead to efficient
- secure protocols for evaluating certain functions.
- It has found particular application in secure voting protocols.
+mention Cramer-Shoup?
 \end_layout
 
+\end_inset
+
+Specifically, the malleability of ciphertexts can allow the adversary to
+ violate integrity constraints, and also make such ciphers insecure against
+ 
+\begin_inset Note Comment
+status open
+
 \begin_layout Standard
-Additively homomorphic encryption.
+ because the homomorphic structure aids in cryptanalysis and allows encrypted
+ messages to be modified, violating integrity constraints.
+ 
+\begin_inset LatexCommand \cite{jmsw02}
+
+\end_inset
+
+.
+ This leads to insecurity against
+\end_layout
+
+\end_inset
+
+
+\emph on
+adaptive chosen ciphertext
+\emph default
+ (CCA2) attacks 
+\begin_inset LatexCommand \cite{bleichenbacher98chosen}
+
+\end_inset
+
+.
+ However, homomorphic encryption schemes have also found use in novel cryptograp
+hic applications such as secure voting 
+\begin_inset LatexCommand \cite{benaloh94}
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Description
+Semantically\InsetSpace ~
+secure\InsetSpace ~
+additive\InsetSpace ~
+homomorphic\InsetSpace ~
+encryption.
+ This is a cipher which satisfies certain properties that are useful in
+ SFE protocols.
  Let 
 \begin_inset Formula $(G,E,D,M)$
 \end_inset
@@ -124,7 +208,7 @@ Additively homomorphic encryption.
 \end_inset
 
  is the message space respectively.
- We will assume that:
+ 
 \end_layout
 
 \begin_layout Itemize
@@ -135,8 +219,56 @@ The encryption scheme is semantically secure
 
 .
  Informally, this means that the ciphertext leaks no useful information
- about the plaintext even after the adversary has previously observed many
- plaintext-ciphertext pairs on plaintexts of his choice.
+ about the plaintext even if the attacker has previously observed many plaintext
+-ciphertext pairs on plaintexts of his choice.
+ Formally, let 
+\begin_inset Formula $P(m)$
+\end_inset
+
+ be any efficently computable Boolean predicate 
+\begin_inset Formula $P(m)$
+\end_inset
+
+.
+ WLOG, assume that 
+\begin_inset Formula $Pr[P(m)\mbox{ is true}]=p\ge0.5$
+\end_inset
+
+ if 
+\begin_inset Formula $m$
+\end_inset
+
+ is chosen uniformly from 
+\begin_inset Formula $M$
+\end_inset
+
+.
+ For any 
+\begin_inset Formula $m$
+\end_inset
+
+, the adversary, given 
+\begin_inset Formula $E(m)$
+\end_inset
+
+ must not be able to correctly compute 
+\begin_inset Formula $P(m)$
+\end_inset
+
+ with probability 
+\begin_inset Formula $p+\epsilon$
+\end_inset
+
+, unless 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ is negligable.
+ This definition implies that 
+\begin_inset Formula $E$
+\end_inset
+
+ must be randomized.
 \end_layout
 
 \begin_layout Itemize
@@ -157,7 +289,7 @@ There exists a computable function
 \end_inset
 
  implies that 
-\begin_inset Formula $g(m_{1},\alpha)\in E(m)$
+\begin_inset Formula $g(m_{1},\alpha)\in E(m\alpha)$
 \end_inset
 
 .
@@ -198,14 +330,14 @@ There exists a computable function
 , the following property holds:
 \newline
 
-\begin_inset Formula $f\left(E(m_{1}),E(m_{2})\right)=E(m_{1}+m_{2})$
+\begin_inset Formula $f\left(E(m_{1}),E(m_{2})\right)\in E(m_{1}+m_{2})$
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
-There are several encryption scheme that satisfy these properties, of which
+There are several encryption schemes that satisfy these properties, of which
  Paillier's encryption scheme, based on composite residue classes, is the
  most widely used 
 \begin_inset LatexCommand \cite{Paillier99}
@@ -358,17 +490,26 @@ secure function evaluation (SFE)
 \end_inset
 
  that executes in polynomial time.
- Both proofs are constructive, and provide a method for transforming a boolean
+ Both proofs are constructive, and provide a method for transforming a Boolean
  circuit description of the function 
 \begin_inset Formula $f$
 \end_inset
 
- into a protocol for secure evaluation.
+ into a protocol for secure evaluation of 
+\begin_inset Formula $f$
+\end_inset
+
+.
  These protocols are summarized here.
 \end_layout
 
 \begin_layout Subsubsection
-Yao '86
+Garbled Circuit Method 
+\begin_inset LatexCommand \label{sub:Garbled-Circuit-Method}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -397,11 +538,19 @@ garbled circuits
 \begin_inset Quotes erd
 \end_inset
 
- method, originally proposed in [23], Alice securely transforms the circuit
- so that Bob can evaluate it obliviously, i.e., without learning Alice's inputs
- into the circuit or the values on any internal circuit wire except the
- output wires.
- Alice does this by generating two random keys 
+ method 
+\begin_inset LatexCommand \cite{Yao86}
+
+\end_inset
+
+, Alice securely transforms the circuit so that Bob can evaluate it obliviously,
+ i.e., without learning Alice's inputs or the values on any internal circuit
+ wire except the output wires.
+ The steps are as follows:
+\end_layout
+
+\begin_layout Enumerate
+Alice generates two random keys 
 \begin_inset Formula $k_{i,0}$
 \end_inset
 
@@ -423,7 +572,7 @@ garbled circuits
 
 .
  For all wires in the circuit except input wires, the truth table for the
- corresponding boolean gate is encrypted.
+ corresponding Boolean gate is encrypted.
  If 
 \begin_inset Formula $g(x,y)$
 \end_inset
@@ -470,15 +619,22 @@ garbled circuits
 \end_inset
 
 .
- The keys encoding Alice's own inputs into the circuit she simply sends
- to Bob.
- The keys encoding Bob's inputs are transferred to Bob via the 
+ Alice sends the garbled circuit to Bob.
+ Computation of the garbled circuit does not depend on input values and
+ can be performed in advance.
+ However, the same garbled circuit must not be used more than once.
+\end_layout
+
+\begin_layout Enumerate
+Alice sends the keys corresponding to her own input wires to Bob.
+ Bob obtains the keys corresponding to his input wires from Alice using
+ an 
 \begin_inset Formula $OT_{2}^{1}$
 \end_inset
 
  protocol.
- For each of Bob's input wires, where Bob acts as the chooser using his
- circuit input bit as his input into 
+ For each of Bob's input wires, Bob acts as the chooser using his circuit
+ input bit as his input into 
 \begin_inset Formula $OT_{2}^{1}$
 \end_inset
 
@@ -488,18 +644,13 @@ garbled circuits
 \end_inset
 
  .
- Alice produces the 
-\begin_inset Quotes eld
-\end_inset
+\end_layout
 
-garbled
-\begin_inset Quotes erd
-\end_inset
-
- truth table for each circuit gate in such a way that Bob, if he knows the
- wire keys encoding the values on the gate input wires, can decrypt exactly
- one row of the garbled truth table and obtain the key encoding the value
- of the output wire.
+\begin_layout Enumerate
+Bob evaluates the circuit.
+ Because of the way that the garbled circuit is constructed, Bob, having
+ one wire key for each gate input, can decrypt exactly one row of the garbled
+ truth table and obtain the key encoding the value of the output wire.
  Yao's protocol maintains the invariant that for every circuit wire, Bob
  learns exactly one wire key.
  Because wire keys are random and the mapping from wire keys to values is
@@ -516,7 +667,20 @@ garbled
 \end_layout
 
 \begin_layout Subsubsection
-Goldreich, Micali, and Wigderson '87
+Secure Computation With Random Shares
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+MUST review and fix, also itemize steps
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -584,36 +748,55 @@ secure computation with shares
 \end_inset
 
 .
- To evaluate the gate, Alice selects a random bit 
+ The following steps will securely evaluate the gate:
+\end_layout
+
+\begin_layout Enumerate
+
+\color none
+Alice selects a random bit 
 \begin_inset Formula $z_{a}$
 \end_inset
 
- and constructs a quadruple 
+ 
+\end_layout
+
+\begin_layout Enumerate
+
+\color none
+Alice constructs a quadruple 
 \begin_inset Formula $\left(g(x_{a},y_{a})\oplus z_{a},\, g(x_{a},1-y_{a})\oplus z_{a},\, g(1-x_{a},y_{a})\oplus z_{a},\, g(1-x_{a},1-y_{a})\oplus z_{a}\right)$
 \end_inset
 
 .
- The value in this quadruple with index 
-\begin_inset Formula $2x_{b}+y_{b}$
-\end_inset
+ 
+\end_layout
 
- will be the value 
-\begin_inset Formula $z_{b}=g(x,y)\oplus z_{a}$
-\end_inset
+\begin_layout Enumerate
 
-.
- Using an 
+\color none
+Using an 
 \begin_inset Formula $OT_{4}^{1}$
 \end_inset
 
- protocol, Bob can receive the value 
-\begin_inset Formula $z_{b}$
+ protocol, Bob selects the bit from Alice's quadruple with index 
+\begin_inset Formula $s=2x_{b}+y_{b}$
 \end_inset
 
- obliviously.
- By evaluating all gates in the circuits using this method, the function
- is securely evaluated.
- Further details and security proofs are presented in 
+.
+ The value received by Bob is 
+\begin_inset Formula $z_{b}=g(x_{a}\oplus x_{b},y_{a}\oplus y_{b})\oplus z_{a}=g(x,y)\oplus z_{a}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\color none
+Each gate is evaluated in this manner to yield the outputs of the circuit.
+  Further details and security proofs are presented in 
 \begin_inset LatexCommand \cite{Goldreich:vol2}
 
 \end_inset
@@ -631,8 +814,8 @@ s to design secure multiparty protocols.
  In the past, SFE was considered a theoretical topic too expensive for practical
  use, but the convergence of ubiquitous communication using the Internet,
  more efficient cryptographic primitives, and the exponentially increasing
- available of processing power and network bandwidth are making SFE an area
- of increasingly significant practical value.
+ availability of processing power and network bandwidth are making SFE an
+ area of increasingly significant practical value.
 \end_layout
 
 \begin_layout Subsubsection
@@ -657,7 +840,7 @@ Fairplay
 \emph on
 Secure Function Description Language
 \emph default
- (SFDL), and outputs a boolean circuit to evaluate 
+ (SFDL), and outputs a Boolean circuit to evaluate 
 \begin_inset Formula $f$
 \end_inset
 
@@ -668,8 +851,13 @@ Secure Hardware Description Language
  (SHDL).
  Fairplay also includes an implementation of the two party Yao protocol
  which securely evaluates an SHDL function.
- The paper provides the first empirical measurements from an implementation
- of the Yao protocol.
+ 
+\begin_inset LatexCommand \cite{Fairplay}
+
+\end_inset
+
+ provides the first empirical measurements from an implementation of the
+ Yao protocol.
 \end_layout
 
 \begin_layout Subsubsection
@@ -742,7 +930,7 @@ d data sets
 \end_inset
 
 .
- However, this approach suffers from a lack of formal guarentees of security,
+ However, this approach suffers from the lack of formal security guarantee,
  and has been shown to be vulnerable to data correlation attacks 
 \begin_inset LatexCommand \cite{Malin04}
 
@@ -750,7 +938,7 @@ d data sets
 
 .
  Secure multiparty computation is the basis of the other approach.
- A survey of such techniques iss presented in 
+ A survey of such techniques is presented in 
 \begin_inset LatexCommand \cite{PinkasCryptoPPDM02}
 
 \end_inset
@@ -760,6 +948,19 @@ d data sets
 
 \begin_layout Subsection
 Threat Models
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+Needs expansion
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -788,7 +989,7 @@ passive
 \end_inset
 
 , a party to the computation is assumed to behave correctly and follow the
- protocol as proscribed.
+ protocol as prescribed.
  However, the party also runs additional probabilistic polynomially bounded
  computation on the side in order to learn information to which he is not
  entitled.
@@ -837,7 +1038,7 @@ malicious
 status open
 
 \begin_layout Standard
-\begin_inset LatexCommand \bibtex[plain]{privacy,somesh}
+\begin_inset LatexCommand \bibtex[plain]{privacy,somesh,crypto}
 
 \end_inset
 

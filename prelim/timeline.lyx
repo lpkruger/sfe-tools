@@ -37,7 +37,12 @@ Summer 2007
 \end_layout
 
 \begin_layout Itemize
-Secure authentication in SSH
+Secure authentication in SSH (see section 
+\begin_inset LatexCommand \ref{sub:SPAKA-using-SFE}
+
+\end_inset
+
+)
 \end_layout
 
 \begin_deeper
@@ -67,23 +72,156 @@ Fall 2007
 \end_layout
 
 \begin_layout Itemize
-Begin work on optimizer
+Investigate optimizations of cryptographic primitives (see section 
+\begin_inset LatexCommand \ref{sub:Other-Optimizations}
+
+\end_inset
+
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+adapt standard oblivious transfer algorithms to use more efficient representatio
+ns, such as elliptic curve groups
 \end_layout
 
 \begin_layout Itemize
+evaluate modular square root oblivious transfer (see section 
+\begin_inset LatexCommand \ref{sec:OT-SquareRoots}
 
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Itemize
+investigate use of other kinds of functions for oblivious transfers and
+ homomorphic encryption
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Target publication: TBD
 \end_layout
 
 \begin_layout Subsection
-Winter 2008
+Winter/Spring 2008
+\end_layout
+
+\begin_layout Itemize
+Investigate use of other circuit representations (see section 
+\begin_inset LatexCommand \ref{OBDD-section}
+
+\end_inset
+
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+evaluate which OBDD extensions are good candidates for secure protocols
+\end_layout
+
+\begin_layout Itemize
+implement compiler and protocols
+\end_layout
+
+\begin_layout Itemize
+performance measurements
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Target publication: TBD
 \end_layout
 
 \begin_layout Subsection
-Spring 2008
+Spring/Summer 2008
 \end_layout
 
+\begin_layout Itemize
+Investigate optimizations resulting from controlled leakage of information.
+ (see section 
+\begin_inset LatexCommand \ref{sub:Other-Optimizations}
+
+\end_inset
+
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Develop specification language to tag intermediate values as sensitive or
+ non-sensitive
+\end_layout
+
+\begin_layout Itemize
+Develop hybrid evaluation protocols that protect sensitive data but avoid
+ the overhead when evaluating non-sensitive computations
+\end_layout
+
+\begin_layout Itemize
+Implement and measure performance gains
+\end_layout
+
+\end_deeper
 \begin_layout Subsection
-Summer 2008
+Fall/Winter 2008
+\end_layout
+
+\begin_layout Itemize
+Optimizing protocol compiler.
+ (see section 
+\begin_inset LatexCommand \ref{sub:An-Efficient-Framework}
+
+\end_inset
+
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Define programming language for expressing secure computations
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Language will include direct support for common SFE techniques, such as
+ homomorphic encryption, and metadata for privacy levels
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Implement compiler for this language into securely evaluable 
+\begin_inset Quotes eld
+\end_inset
+
+machine code
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Automatic optimizer will try different representations of the functions,
+ including OBDDs, Boolean circuits, and other ideas from my research, and
+ produce as efficient as a representation as possible
+\end_layout
+
+\begin_layout Itemize
+Implement protocol evaluation library, to make straightforward use in ordinary
+ applications.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Spring 2009
+\end_layout
+
+\begin_layout Itemize
+Write dissertation and graduate.
 \end_layout
 
 \end_body

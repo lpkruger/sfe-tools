@@ -1,0 +1,677 @@
+#LyX 1.4.4 created this file. For more info see http://www.lyx.org/
+\lyxformat 245
+\begin_document
+\begin_header
+\textclass article
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\end_header
+
+\begin_body
+
+\begin_layout Section
+Oblivious Transfer with Modular Square Roots 
+\begin_inset LatexCommand \label{sec:OT-SquareRoots}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A new 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+ protocol is presented, using the square root function in modular multiplicative
+ groups as a trapdoor function.
+ Here, I present a informal sketch of correctness, security, and efficiency.
+ I propose to complete the proofs and perform a thorough experimental evaluation
+ of its performance with respect to other oblivious transfer protocols.
+\end_layout
+
+\begin_layout Subsection
+Protocol
+\end_layout
+
+\begin_layout Enumerate
+The sender chooses large random prime numbers 
+\begin_inset Formula $p$
+\end_inset
+
+ and 
+\begin_inset Formula $q$
+\end_inset
+
+ such that 
+\begin_inset Formula $p\equiv q\equiv3\;(\mbox{mod }4)$
+\end_inset
+
+ and calculates 
+\begin_inset Formula $n=pq$
+\end_inset
+
+.
+ 
+\begin_inset Formula $n$
+\end_inset
+
+ is sent to the chooser.
+ This is a one time setup step that need not be repeated for subsequent
+ uses of the protocol.
+\end_layout
+
+\begin_layout Enumerate
+The chooser uniformly chooses a random value 
+\begin_inset Formula $x\in S\subset Z_{n}^{*}$
+\end_inset
+
+ where 
+\begin_inset Formula $S=\{ z\in Z_{n}^{*}:$
+\end_inset
+
+\InsetSpace ~
+
+\begin_inset Formula $z\le\frac{n-1}{2}\mbox{ and }$
+\end_inset
+
+ 
+\begin_inset Formula $\left(\frac{z}{n}\right)=-1$
+\end_inset
+
+ if 
+\begin_inset Formula $s=1$
+\end_inset
+
+ otherwise 
+\begin_inset Formula $\left(\frac{z}{n}\right)=+1\}$
+\end_inset
+
+.
+ The chooser computes 
+\begin_inset Formula $y\equiv x^{2}(\mbox{mod }n)$
+\end_inset
+
+ and sends 
+\begin_inset Formula $y$
+\end_inset
+
+ to the sender.
+ 
+\begin_inset Formula $\left(\frac{x}{n}\right)$
+\end_inset
+
+ denotes the Jacobi symbol of 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+The sender calculates the square roots 
+\begin_inset Formula $a^{2}\equiv b^{2}\equiv y\;(mod\, n)$
+\end_inset
+
+ such that 
+\begin_inset Formula $\left(\frac{a}{n}\right)=-1$
+\end_inset
+
+ and 
+\begin_inset Formula $\left(\frac{b}{n}\right)=+1$
+\end_inset
+
+ and 
+\begin_inset Formula $a,b\le\frac{n-1}{2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+The sender encrypts 
+\begin_inset Formula $E_{a}(m_{1})$
+\end_inset
+
+ and 
+\begin_inset Formula $E_{b}(m_{2})$
+\end_inset
+
+ and sends them to the chooser.
+\end_layout
+
+\begin_layout Enumerate
+The chooser computes 
+\begin_inset Formula $D_{x}(E_{x}(m_{s}))$
+\end_inset
+
+ to decrypt the output.
+\end_layout
+
+\begin_layout Subsection
+Correctness
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left(\frac{x}{n}\right)=-1$
+\end_inset
+
+ for half the elements 
+\begin_inset Formula $x\in Z_{n}^{*}$
+\end_inset
+
+ .
+ 
+\begin_inset Formula $\left(\frac{x}{n}\right)=+1$
+\end_inset
+
+ for the other half.
+ Thus the chooser can always successfully perform step 2.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a^{2}\equiv b^{2}\;(mod\; n)$
+\end_inset
+
+ and 
+\begin_inset Formula $a\neq-b\;(mod\; n)$
+\end_inset
+
+ then 
+\begin_inset Formula $\left(\frac{a}{n}\right)=-\left(\frac{b}{n}\right)$
+\end_inset
+
+.
+\begin_inset Foot
+status open
+
+\begin_layout Standard
+I have used experimental methods to convince myself these properties hold
+ when 
+\begin_inset Formula $p\equiv q\equiv3\ (\mbox{mod 4})$
+\end_inset
+
+.
+ I have not yet determined if this is a well known theorem.
+\end_layout
+
+\end_inset
+
+ Furthermore, the set 
+\begin_inset Formula $\{ a,b,n-a,n-b\}$
+\end_inset
+
+is the complete set of square roots of 
+\begin_inset Formula $y$
+\end_inset
+
+.
+ If 
+\begin_inset Formula $a>\frac{n-1}{2}$
+\end_inset
+
+ then 
+\begin_inset Formula $a$
+\end_inset
+
+ and 
+\begin_inset Formula $n-a$
+\end_inset
+
+ can be swapped, and similarly for 
+\begin_inset Formula $b$
+\end_inset
+
+.
+ Thus, the sender can always successfully complete step 3.
+ It is guaranteed that either 
+\begin_inset Formula $a=x$
+\end_inset
+
+ or 
+\begin_inset Formula $b=x$
+\end_inset
+
+ so the chooser will successfully learn 
+\begin_inset Formula $m_{s}$
+\end_inset
+
+ as intended.
+\end_layout
+
+\begin_layout Subsection
+Security
+\end_layout
+
+\begin_layout Standard
+Finding all square roots of any quadratic residue in 
+\begin_inset Formula $Z_{n}^{*}$
+\end_inset
+
+ can be reduced to factoring 
+\begin_inset Formula $n$
+\end_inset
+
+.
+ This is because given two principal square roots 
+\begin_inset Formula $a^{2}\equiv b^{2}$
+\end_inset
+
+, 
+\begin_inset Formula $a\neq-b$
+\end_inset
+
+, then 
+\begin_inset Formula $(a-b)(a+b)\equiv0$
+\end_inset
+
+ so 
+\begin_inset Formula $(a-b)(a+b)=kpq$
+\end_inset
+
+ Under the standard complexity assumption that factoring 
+\begin_inset Formula $n$
+\end_inset
+
+ is infeasable, then the chooser can not efficiently learn the other square
+ root of 
+\begin_inset Formula $x^{2}$
+\end_inset
+
+, which is the encryption key of 
+\begin_inset Formula $E(m_{3-s})$
+\end_inset
+
+ and the sender's privacy is preserved.
+ 
+\end_layout
+
+\begin_layout Standard
+The chooser's privacy is preserved because the sender does not know whether
+ the chooser calculated 
+\begin_inset Formula $y=a^{2}$
+\end_inset
+
+ or 
+\begin_inset Formula $y=b^{2}$
+\end_inset
+
+.
+ From the sender's perspective, the chooser has chosen 
+\begin_inset Formula $x$
+\end_inset
+
+ from a uniform random distribution 
+\begin_inset Formula $1\le x\le\frac{n-1}{2}$
+\end_inset
+
+, so there is no information that can be gained.
+ The chooser therefore enjoys unconditional security even without making
+ assumptions about the senders computation power.
+\end_layout
+
+\begin_layout Subsection
+Efficiency
+\end_layout
+
+\begin_layout Standard
+In the setup phase, the sender needs to calculate 
+\begin_inset Formula $n=pq$
+\end_inset
+
+ once and send the value of 
+\begin_inset Formula $n$
+\end_inset
+
+ to the chooser.
+ This requires one multiplication and transmission of 
+\begin_inset Formula $k=\log n$
+\end_inset
+
+ bits.
+ The same value of 
+\begin_inset Formula $n$
+\end_inset
+
+ can be reused for subsequent or batched OTs without loss of security.
+ 
+\begin_inset Formula $k$
+\end_inset
+
+ must be large enough to prevent efficient factoring of 
+\begin_inset Formula $n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+From then on, each OT requires the following: 
+\end_layout
+
+\begin_layout Enumerate
+Computation of Jacobi symbols 
+\begin_inset Formula $\left(\frac{x}{n}\right)$
+\end_inset
+
+ by the chooser.
+ If the chooser uses random trials to find an appropriate 
+\begin_inset Formula $x$
+\end_inset
+
+, then the expected number of trials is 
+\begin_inset Formula $2$
+\end_inset
+
+.
+ Computing Jacobi symbols can be performed in 
+\begin_inset Formula $O(k\log x)\le O(k^{2})$
+\end_inset
+
+ steps 
+\begin_inset LatexCommand \cite{1996-bach-book}
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+There is a potential optimization of step 1.
+ The chooser can pre-compute a single number 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ where 
+\begin_inset Formula $\left(\frac{\alpha}{n}\right)=-1$
+\end_inset
+
+.
+ From then on, the chooser can choose any random 
+\begin_inset Formula $\beta$
+\end_inset
+
+ and have 
+\begin_inset Formula $\left(\frac{\beta^{2}}{n}\right)=+1$
+\end_inset
+
+ and 
+\begin_inset Formula $\left(\frac{\alpha\beta^{2}}{n}\right)=-1$
+\end_inset
+
+.
+ This optimization as presented is insecure, because it breaks statistical
+ indistinguishability for the chooser
+\begin_inset Foot
+status open
+
+\begin_layout Standard
+The optimization will never produce a non-QR with 
+\begin_inset Formula $+1$
+\end_inset
+
+ Jacobi symbol
+\end_layout
+
+\end_inset
+
+.
+ However, I speculate that there may exist a variation which avoids this
+ flaw and thereby reduces the chooser's overall complexity to 
+\begin_inset Formula $O(k)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Transmission of a single 
+\begin_inset Formula $k$
+\end_inset
+
+ bit number from chooser to sender
+\end_layout
+
+\begin_layout Enumerate
+Computation by the sender of square roots of 
+\begin_inset Formula $y$
+\end_inset
+
+.
+ This can be performed using a randomized algorithm in expected time 
+\begin_inset Formula $O(k\ \log\, p^{2})\le O(k^{3})$
+\end_inset
+
+ steps for 
+\begin_inset Formula $p>q$
+\end_inset
+
+ 
+\begin_inset LatexCommand \cite{1996-bach-book}
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Encryption and transmission by the sender of the two messages.
+ If the sender does not need to hide the length of the unreceived message,
+ then this requires no more bandwidth than the actual size of the messages,
+ which is 
+\begin_inset Formula $O(\log m)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Decryption by the receiver of one of the messages, which is 
+\begin_inset Formula $O(\log m)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+If the sender and chooser wish to execute the protocol multiple times, the
+ chooser can simply send a vector 
+\begin_inset Formula $[y_{1},\cdots,y_{j}]$
+\end_inset
+
+ and the chooser will respond with a vector of tuples 
+\begin_inset Formula $[(E_{a_{1}}(m_{1_{1}}),(E_{b_{1}}(m_{1_{2}}))\cdots(E_{a_{j}}(m_{j_{1}}),(E_{b_{j}}(m_{j{}_{2}}))]$
+\end_inset
+
+ where 
+\begin_inset Formula $j$
+\end_inset
+
+ is the number of messages to be sent obliviously.
+ Each 
+\begin_inset Formula $x_{i}$
+\end_inset
+
+ is an independent random variable so the security is equivalent to the
+ single message case.
+ Thus, unlimited bits can be transferred with a single network round-trip.
+\end_layout
+
+\begin_layout Subsection
+Extensions
+\end_layout
+
+\begin_layout Standard
+It may be possible to extend the construction to cover the more general
+ 
+\begin_inset Formula $OT_{k}^{1}$
+\end_inset
+
+.
+ I have not investigated this yet, but one idea is to let 
+\begin_inset Formula $n=\prod_{i=1}^{k}p_{i}$
+\end_inset
+
+ where each 
+\begin_inset Formula $p_{i}$
+\end_inset
+
+ is a large prime number.
+ In 
+\begin_inset Formula $Z_{n}^{*}$
+\end_inset
+
+, each quadratic residue will have 
+\begin_inset Formula $2^{k}$
+\end_inset
+
+ square roots consisting of 
+\begin_inset Formula $2^{k-1}$
+\end_inset
+
+ pairs 
+\begin_inset Formula $(x,n-x)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
+\begin_inset LatexCommand \bibtex[plain]{crypto,privacy,somesh}
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout LyX-Code
+g^(p-1) mod p = 1
+\end_layout
+
+\begin_layout LyX-Code
+(g^((p-1)/2))^2 = g^(p-1)
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+A chooses N=p*q
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+chose x^2=y^2
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+if 0, choose t==1 mod 4?
+\end_layout
+
+\begin_layout LyX-Code
+B chooses t, sends t^2 to A
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+A finds x^2=y^2=t^2
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+101=2 mod 11
+\end_layout
+
+\begin_layout LyX-Code
+101=10 mod 13
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+101^2 = 48 mod (11*13)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

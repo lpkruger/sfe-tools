@@ -35,7 +35,7 @@
 
 \begin_layout Standard
 \align left
-For protocol 1, assume that both parties' inputs include the 
+Assume that both parties' inputs include the 
 \begin_inset Formula $OBDD(f)$
 \end_inset
 

@@ -31,42 +31,57 @@
 
 \begin_layout Section
 Techniques for Protocol Optimization
+\begin_inset LatexCommand \label{sec:Techniques}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 There are various ways to approach the problem of designing optimized secure
  function evaluation protocols.
- My prior work has focused on three general methodologies.
- From most specific to least specific, three approaches I have looked at
- are algorithm specific, algorithm 
+ My research to date has focused on three general methodologies.
+ From most specific to most general, three approaches I have looked at are
+ algorithm specific, algorithm 
 \emph on
 class
 \emph default
  specific, and a general approach that is applicable to all computable functions.
  The trade-off between these different approaches is a balance between performan
 ce and general applicability.
- This trade-off has an analogy in traditional programming: General code
- optimizations, such as loop unrolling or strength reduction can make all
- code faster to a limited degree (although this is not guarenteed), but
- tuning a specific algorithm by hand often yields superior results.
- Algorithm class methods fall in between, with ideas that apply to more
- than one related algorithm, but not to all algorithms in general.
+ This trade-off has an analogy in the literature of programming language
+ compiler optimizations.
+ General code optimizations, such as loop-unrolling or strength-reduction
+ can make all code faster to a limited degree (although this is not guaranteed),
+ but tuning a specific algorithm by hand often yields superior results.
+ Algorithm class methods fall in between, with conceptual ideas that apply
+ to classes of algorithms related by design methodology, such as dynamic
+ programming problems.
 \end_layout
 
 \begin_layout Subsection
-General: Protocol Optimization using Ordered Binary Decision Diagrams
+General: Protocol Optimization using Ordered Binary Decision Diagrams 
+\begin_inset LatexCommand \label{OBDD-section}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-
+In this work, we evaluated the use of alternate representation of Boolean
+ circuits as a way to create more efficient general purpose secure function
+ evaluation protocols.
+ An
 \emph on
-Ordered Binary Decision Diagrams
+ Ordered Binary Decision Diagram
 \emph default
- (OBDDS) are a graph-based representation of Boolean functions that have
- been used in a variety of applications in computer-aided design, including
- symbolic model checking (a technique for verifying designs), verification
- of combinational logic, and verification of finite-state concurrent systems
- 
+ (OBDD) is a directed acyclic graph-based representation of a Boolean function
+ that has been used in a variety of applications in computer-aided design,
+ including symbolic model checking (a technique for verifying designs),
+ verification of combinational logic, and verification of finite-state concurren
+t systems 
 \begin_inset LatexCommand \cite{Bryant:BDD,Clarke:book}
 
 \end_inset
@@ -90,7 +105,7 @@ Ordered Binary Decision Diagrams
 \begin_inset Formula $i^{th}$
 \end_inset
 
- level corresponding to 
+ level corresponding to variable 
 \begin_inset Formula $x_{l_{i}}$
 \end_inset
 
@@ -103,8 +118,8 @@ Ordered Binary Decision Diagrams
 \end_inset
 
 .
- There is a unique canonical decision tree corresponding to any function
- with respect to a given ordering 
+ There is a unique canonical OBDD corresponding to any function with respect
+ to a given ordering 
 \begin_inset Formula $(l_{1},\cdots,l_{n})$
 \end_inset
 
@@ -113,7 +128,7 @@ Ordered Binary Decision Diagrams
 \begin_inset Formula $F(x)=\# x1\# x3>\# x2\# x4$
 \end_inset
 
- (two-bit millionaires problem) is shown in 
+ (two-bit millionaires' problem) is shown in 
 \begin_inset LatexCommand \ref{fig:OBDD-example}
 
 \end_inset
@@ -144,7 +159,7 @@ status open
 
 \end_inset
 
-OBDD for two-bit millionaires problem
+OBDD for two-bit millionaires' problem
 \end_layout
 
 \end_inset
@@ -158,7 +173,7 @@ In
 
 \end_inset
 
-, I presented an SFE protocol that directly uses an OBDD representation
+, we presented an SFE protocol that directly uses an OBDD representation
  of the function 
 \begin_inset Formula $f$
 \end_inset
@@ -168,15 +183,20 @@ In
 ion is that OBDDs are more succinct for certain classes of functions than
  the Boolean gate representation, including most linear functions.
  For example, the OBDD representation is more efficient than the Boolean
- gate representation for 8-bit AND, 8-bit addition, and the millionaire's
- and billionaire's problems
+ gate representation for 8-bit AND, 8-bit addition, and the millionaires'
+ and billionaires' problems 
 \begin_inset LatexCommand \cite{Yao:86}
 
 \end_inset
 
  OBDDs are not a universal solution, however, for other functions, such
  as multiplication, the OBDD can be far worse than the Boolean gate representati
-on.
+on, due to exponential node explosion 
+\begin_inset LatexCommand \cite{Bryant:BDD}
+
+\end_inset
+
+.
  For the classes of functions in which the OBDD representation is efficient,
  the paper shows that the protocol described next can perform 2 to 4 times
  better than the classical Yao protocol.
@@ -191,12 +211,22 @@ The protocol is loosely designed in a similar fashion as Yao's protocol
 
 .
  We present two variations of the protocol.
- The steps of the protocol 1 are shown in 
+ An overview of the 3 main steps of the protocols are shown in figure 
 \begin_inset LatexCommand \ref{fig:OBDD-overview}
 
 \end_inset
 
-, using the example millionaire's problem pictured above.
+, using the example millionaires' problem pictured above.
+ In the first step, Alice's sends to Bob the encrypted OBDD.
+ The next step is Bob acquiring a subset of the encryption keys from Alice
+ using 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+.
+ In the final step, Bob uses the obtained keys to decrypt a single path
+ through the OBDD yielding the result of the computation.
+ A formal description follows.
  
 \end_layout
 
@@ -241,8 +271,9 @@ preview false
 \end_layout
 
 \begin_layout Standard
-Protocol 2 is nearly identical to protocol 1, except that Alice first reduces
- the number of nodes to be sent to Bob using an operation called 
+We then define an optimized variation which is identical to the protocol
+ just described, except that Alice first reduces the number of nodes to
+ be sent to Bob using an operation called 
 \emph on
 restriction
 \emph default
@@ -286,7 +317,7 @@ Given an
 \end_inset
 
 .
- Essentially 
+ Essentially, 
 \begin_inset Formula $f\mid_{x_{i}\leftarrow b}$
 \end_inset
 
@@ -392,13 +423,111 @@ Present protocol
 Use pictures from CCS talk.
 \end_layout
 
+\begin_layout Standard
+
+\emph on
+I did all that!
+\end_layout
+
+\begin_layout Standard
+Present extended variations
+\end_layout
+
 \end_inset
 
 
 \end_layout
 
+\begin_layout Standard
+The results of this work demonstrated that OBDDs showed improved performance
+ with secure evaluation of certain functions.
+ However, the exponential blowup properties curtailed its usefulness in
+ other functions tested, such as multiplication.
+ There have been many generalizations of OBDDs intended to address these
+ problems.
+ An arithmetic-focused approach has been to extend OBDDs from the Boolean
+ domain to the numeric domain, such as in 
+\emph on
+binary moment diagrams 
+\emph default
+
+\begin_inset LatexCommand \cite{bryant94verification}
+
+\end_inset
+
+ and 
+\emph on
+hybrid decision
+\emph default
+ 
+\emph on
+diagrams
+\emph default
+ 
+\begin_inset LatexCommand \cite{clarke95hybrid}
+
+\end_inset
+
+.
+
+\emph on
+ 
+\emph default
+Another approach, 
+\emph on
+binary expression diagrams
+\emph default
+ 
+\begin_inset LatexCommand \cite{BoolExprDiagram}
+
+\end_inset
+
+, have composed BDD-style decision nodes with Boolean gates in the same
+ circuit.
+ I am proposing to continue the line of research begun here, and investigate
+ whether these alternate circuit representations can yield efficient protocols
+ for general purpose secure function evaluation that overcome the limitations
+ of basic OBDDs.
+\end_layout
+
 \begin_layout Subsection
 Class of Algorithm Specific: Protocol Optimization of Dynamic Programming
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+MUST finish!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this work, we considered a design 
+\emph on
+methodology
+\emph default
+ for creating secure protocols based on typical dynamic programming algorithms.
+ Unlike the OBDD protocol discussed in the previous section, this is not
+ an automatic tool for generating secure protocols, but rather a set of
+ concepts that are applicable to designing secure protocols for evaluation
+ dynamic programming algorithms.
+ We illustrate these ideas with several example protocols for computing
+ the edit distance problem, which is the minimum number of character insertions,
+ deletions, and substitutions needed to change string 
+\begin_inset Formula $x$
+\end_inset
+
+ to string 
+\begin_inset Formula $y$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -414,16 +543,7 @@ Let
 \begin_inset Formula $y$
 \end_inset
 
-, e.g., for the problem of computing edit-distance between two strings the
- inputs 
-\begin_inset Formula $x$
-\end_inset
-
- and 
-\begin_inset Formula $y$
-\end_inset
-
- are the strings.
+.
  Typically, a dynamic-programming algorithm 
 \begin_inset Formula ${\cal A}_{{\cal P}}$
 \end_inset
@@ -678,35 +798,43 @@ Let
 \end_inset
 
 .
- The value for the base and non-base sub problems for the edit-distance
- problems was defined in equations\InsetSpace ~
+ 
+\end_layout
 
-\begin_inset LatexCommand \ref{eqn:base-case}
-
-\end_inset
-
- and\InsetSpace ~
-
-\begin_inset LatexCommand \ref{eqn:recursive}
+\end_deeper
+\begin_layout Standard
+We implemented three variations of the protocol in 
+\begin_inset LatexCommand \cite{kruger07}
 
 \end_inset
 
- in Section\InsetSpace ~
+, and showed that the techniques produce efficient ways to compute the edit
+ distance of two strings.
+ For example, the protocol is able to compute the edit distance of two strings
+ of length 
+\begin_inset Formula $200$
+\end_inset
 
-\begin_inset LatexCommand \ref{sec:edit-distance}
+ (which has 
+\begin_inset Formula $200^{2}=40000$
+\end_inset
 
+ sub-computations), in under 10 minutes.
+ In comparison, using the generic techniques to compile the edit distance
+ algorithms into a secure circuit produced circuits which were to too large
+ for evaluation beyond problems of size 
+\begin_inset Formula $(25,25)$
 \end_inset
 
 .
 \end_layout
 
-\end_deeper
 \begin_layout Standard
 \begin_inset Note Note
 status open
 
 \begin_layout Standard
-Present protocols
+MUST DO: Present protocols
 \end_layout
 
 \begin_layout Standard
@@ -722,52 +850,21 @@ Discuss design rationale
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Standard
-\begin_inset Graphics
-	filename grid.eps
-	lyxscale 50
-	scale 30
-	clip
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Caption
-\begin_inset LatexCommand \label{fig:DYN-grid}
-
-\end_inset
-
-Example grid
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Greyedout
-status open
-
-\begin_layout Standard
-NOTE: Expand this section
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsection
 Algorithm Specific: Protocol Optimization of K-Means Clustering
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Standard
+MUST finish!
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -795,7 +892,7 @@ The
 
  clusters such a manner that similar points are grouped together.
  Similarity is defined using a distance metric.
- The standard clusteringt algorithm maintains 
+ The standard clustering algorithm maintains 
 \begin_inset Formula $c$
 \end_inset
 
@@ -910,6 +1007,92 @@ Thirteen data points after clustering.
 \end_layout
 
 \begin_layout Standard
+We implemented protocols to securely evaluate this algorithm in 
+\begin_inset LatexCommand \cite{kruger05}
+
+\end_inset
+
+, and showed that a custom designed protocol based on homomorphic encryption
+ was able to classify partitioned data sets with tens of thousands of data
+ points in under two minutes, which was several orders of magnitude faster
+ than a the generic protocol based on Yao circuits.
+\end_layout
+
+\begin_layout Subsection
+Other Optimizations
+\begin_inset LatexCommand \label{sub:Other-Optimizations}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the usual formulation of secure function evaluation, there are designated
+ outputs for each party, and it is required that no extra information is
+ learned by any party.
+ This definition could be expanded to assign non-output values the labels
+ 
+\begin_inset Quotes eld
+\end_inset
+
+sensitive
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+non-sensitive
+\begin_inset Quotes erd
+\end_inset
+
+, where the protocol is considered secure if no sensitive information is
+ leaked.
+ Since the overhead of privacy protection is substantial, I propose to research
+ the of design secure protocols that use this relaxation of the problem
+ definition to improve efficiency.
+ 
+\end_layout
+
+\begin_layout Standard
+In section 
+\begin_inset LatexCommand \ref{sub:Primitives}
+
+\end_inset
+
+, I presented many basic cryptographic primitives that are used in SFE.
+ Improving the state of the art of any one of those primitives would automatical
+ly benefit all SFE protocols that make use of that primitive.
+ Based on my experience with real implementations of SFE protocols, the
+ oblivious transfer steps tend to be very expensive in terms of space and
+ communication.
+ Common oblivious transfer protocols are based on discrete logarithms, but
+ other trapdoor functions may be used as well.
+ One thing I propose to try is implementing Naor-Pinkas 
+\begin_inset LatexCommand \cite{Noar-Pinkas:2001}
+
+\end_inset
+
+ using more compact representations, for example, with elliptic curve groups.
+ I have recently developed a new 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+ protocol, presented in section 
+\begin_inset LatexCommand \ref{sec:OT-SquareRoots}
+
+\end_inset
+
+.
+ I also propose to prove its security and compare its performance with the
+ Naor-Pinkas protocol.
+ In particular, I conjecture that this protocol may require less communication
+ overhead than other OT protocols.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Note
 status open
 
@@ -918,7 +1101,7 @@ Present K-means pictures
 \end_layout
 
 \begin_layout Standard
-Present protocol
+MUST DO: Present protocol
 \end_layout
 
 \begin_layout Standard
@@ -930,17 +1113,96 @@ Use pictures from ESORICS talk.
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Greyedout
-status open
-
-\begin_layout Standard
-NOTE: Expand this section
-\end_layout
+\begin_layout Subsection
+An Efficient Protocol Design Framework
+\begin_inset LatexCommand \label{sub:An-Efficient-Framework}
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+Even with all these optimizations, protocols still must hand-coded.
+ Each protocol I have implemented has required brand new code to be written,
+ with only some common cryptographic primitives being shared between implementat
+ions.
+ Fairplay 
+\begin_inset LatexCommand \cite{Fairplay}
+
+\end_inset
+
+ suggested the idea of having a common framework for protocol design, but
+ because Fairplay is a straightforward implementation of Yao's garbled circuit
+ method 
+\begin_inset LatexCommand \cite{Yao86}
+
+\end_inset
+
+, it suffers from poor performance.
+ Fairplay's contribution is to create a compiler for expressing algorithms
+ functionally, and compiling them into a circuit representation suitable
+ for secure evaluation.
+ In this sense, it functions as a simple CAD design tool.
+\end_layout
+
+\begin_layout Standard
+I propose to take this concept much further, and create an 
+\emph on
+optimizing
+\emph default
+ protocol compiler, aggregating the techniques discussed here, and creating
+ a tool to greatly simplify the creation of efficient secure protocols for
+ SFE.
+ The compiler will include the following components:
+\end_layout
+
+\begin_layout Itemize
+Convenient programming language for expressing secure computations
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Language will include support as language primitives for common SFE and
+ cryptographic techniques, such as homomorphic encryption
+\end_layout
+
+\begin_layout Itemize
+Language will support metadata for designating inputs and outputs from specific
+ parties, and for classifying the required privacy of intermediate computations
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Compiler which translates this language into an abstract securely evaluable
+ 
+\begin_inset Quotes eld
+\end_inset
+
+machine code
+\begin_inset Quotes erd
+\end_inset
+
+, which consists of securely evaluable representations of the program.
+\end_layout
+
+\begin_layout Itemize
+An automated optimizer.
+ The optimizer will automatically try different representations of the functions
+, including OBDDs, Boolean circuits, and other ideas from my research, and
+ search for the most efficient representation as possible.
+\end_layout
+
+\begin_layout Itemize
+Manual optimization tools, making it convenient to apply and design techniques
+ that I have researched.
+ This includes a toolkit of cryptographic protocols, such as oblivious transfer,
+ which can be used in a black box way.
+\end_layout
+
+\begin_layout Itemize
+An embeddable protocol evaluator library, which will allow ordinary application
+ to make straightforward use of secure function evaluation.
 \end_layout
 
 \begin_layout Standard
