@@ -132,7 +132,7 @@ Although SFE has provable privacy guarantees, its implementation tends to
  be very expensive in terms of both computational and networking resources,
  and therefore has not been used very much outside of academic literature,
  despite the fact that was introduced 20 years ago in 
-\begin_inset LatexCommand \cite{Yao:86}
+\begin_inset LatexCommand \cite{Yao86}
 
 \end_inset
 

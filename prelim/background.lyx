@@ -263,7 +263,7 @@ The encryption scheme is semantically secure
 \begin_inset Formula $\epsilon$
 \end_inset
 
- is negligable.
+ is negligible.
  This definition implies that 
 \begin_inset Formula $E$
 \end_inset
@@ -293,6 +293,11 @@ There exists a computable function
 \end_inset
 
 .
+ In addition, 
+\begin_inset Formula $g$
+\end_inset
+
+ must be computable using only public information.
  With any semantically secure encryption scheme, encrypting the same message
  twice will yield different ciphertexts, so 
 \begin_inset Formula $E(m)$
@@ -319,7 +324,7 @@ There exists a computable function
 \begin_inset Formula $f$
 \end_inset
 
- such that for all messages 
+, computable with only public information, such that for all messages 
 \begin_inset Formula $m_{1}$
 \end_inset
 
@@ -472,7 +477,7 @@ secure function evaluation (SFE)
 
 .
  It was proved by Yao 
-\begin_inset LatexCommand \cite{Yao:86}
+\begin_inset LatexCommand \cite{Yao86}
 
 \end_inset
 
@@ -594,11 +599,40 @@ Alice generates two random keys
 \end_inset
 
  is encoded as 
-\begin_inset Formula $E_{k_{j,x}}\left(E_{k_{l,y}}\left(k_{g(x,y)}\right)\right)$
+\begin_inset Formula $E_{k_{j,x}}\left(E_{k_{l,y}}\left(k_{i,g(x,y)}\right)\right)$
 \end_inset
 
 .
- The four encrypted values 
+ Here, 
+\begin_inset Formula $k_{j,x}$
+\end_inset
+
+ is the encryption key for value 
+\begin_inset Formula $x$
+\end_inset
+
+ of wire 
+\begin_inset Formula $j$
+\end_inset
+
+, and similarly for 
+\begin_inset Formula $k_{l,j}$
+\end_inset
+
+.
+ 
+\begin_inset Formula $k_{i,g(x,y)}$
+\end_inset
+
+ is the encryption key for the output wire of 
+\begin_inset Formula $g$
+\end_inset
+
+ with value 
+\begin_inset Formula $g(x,y)$
+\end_inset
+
+ The four encrypted values representing 
 \begin_inset Formula $g(0,0)$
 \end_inset
 
@@ -622,7 +656,8 @@ Alice generates two random keys
  Alice sends the garbled circuit to Bob.
  Computation of the garbled circuit does not depend on input values and
  can be performed in advance.
- However, the same garbled circuit must not be used more than once.
+ However, the same garbled circuit must not be used more than once, or Alice's
+ privacy may be violated.
 \end_layout
 
 \begin_layout Enumerate
@@ -671,19 +706,6 @@ Secure Computation With Random Shares
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Standard
-MUST review and fix, also itemize steps
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset LatexCommand \cite{GMW87}
 
 \end_inset
@@ -722,7 +744,19 @@ secure computation with shares
 \begin_inset Formula $g(x,y)$
 \end_inset
 
- is a gate, and 
+ is a gate, 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ are the input wires to the 
+\begin_inset Formula $g$
+\end_inset
+
+ and 
 \family roman
 \series medium
 \shape up
@@ -745,6 +779,22 @@ secure computation with shares
 \noun default
 
 \begin_inset Formula $y_{a}\oplus y_{b}=y$
+\end_inset
+
+
+\color inherit
+ are Alice and Bob's shares of 
+\color none
+
+\begin_inset Formula $x$
+\end_inset
+
+
+\color inherit
+ and 
+\color none
+
+\begin_inset Formula $y$
 \end_inset
 
 .
@@ -793,15 +843,63 @@ Using an
 \end_layout
 
 \begin_layout Standard
+At the beginning of the evaluation, Alice sets her share of the input wires
+ to her input values, and her share of Bob's input wires to 
+\begin_inset Formula $0$
+\end_inset
+
+, and vice versa for Bob.
+ Each gate 
+\begin_inset Formula $g$
+\end_inset
+
+ may be evaluated after Alice and Bob have computed their shares of the
+ gate's input wires.
+ Thus, by repeated applying the above steps, the entire circuit can be evaluated
+ starting from the inputs, and progressing gate by gate until the output.
 
 \color none
-Each gate is evaluated in this manner to yield the outputs of the circuit.
-  Further details and security proofs are presented in 
+ Further details and security proofs are presented in 
 \begin_inset LatexCommand \cite{Goldreich:vol2}
 
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+In practice, the garbled circuit method is more commonly used, because it
+ is more efficient.
+ Then garbled circuit method requires only a single transfer of data from
+ Alice to Bob, followed by an 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+ for each the 
+\begin_inset Formula $|B|$
+\end_inset
+
+ values representing Bob's inputs.
+ These OTs can be combined into a single parallel OT.
+ Then Bob obliviously evaluates the entire circuit on his own, and sends
+ the output keys of Alice's outputs back to her.
+ In contrast, the SCWS method requires an 
+\begin_inset Formula $OT_{4}^{1}$
+\end_inset
+
+ for each gate.
+ It is easy to see that this will require at least 
+\begin_inset Formula $depth(C)$
+\end_inset
+
+ distinct rounds of the OT, where 
+\begin_inset Formula $depth(C)$
+\end_inset
+
+ is the maximum number of gates along any path from an input to an output.
+ The increased number of OTs, combined with the increased number of rounds
+ needed to execute them, makes the SCWS evaluation protocol primarily of
+ theoretical interest.
 \end_layout
 
 \begin_layout Subsection
@@ -944,6 +1042,7 @@ d data sets
 \end_inset
 
 .
+ This approach is the primary topic discussed here.
 \end_layout
 
 \begin_layout Subsection
@@ -951,15 +1050,6 @@ Threat Models
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Standard
-Needs expansion
-\end_layout
-
-\end_inset
-
 
 \end_layout
 

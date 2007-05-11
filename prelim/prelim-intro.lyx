@@ -70,21 +70,21 @@ Privacy and security are important concerns as computers increase in power
 
 .
  Everyday activities dealing with sensitive data are moving onto to the
- internet, such as credit card transactions, doctors accessing medical records,
+ Internet, such as credit card transactions, doctors accessing medical records,
  and online banking.
  As a result, more data is stored on machines that are connected to the
  Internet, directly or indirectly, then ever before.
  Sadly, there are many all-too-common examples in the newspapers of privacy
  compromising activities such as phishing, data theft, and identity theft.
- New techniques are needed to dead with the many threats to privacy.
+ New techniques are needed to deal with the many threats to privacy.
  In addition to the misuse of data, there can be other consequences of privacy
- violations, such as stiff legal penalties for violation of HIPAA laws 
+ violations, such as serious legal penalties for violation of HIPAA laws
+ 
 \begin_inset LatexCommand \cite{hippa}
 
 \end_inset
 
-, which mandate strict privacy requirements among health-care professionals
- along with stiff penalties for violations.
+, which mandate strict privacy requirements among health-care professionals.
 \end_layout
 
 \begin_layout Standard

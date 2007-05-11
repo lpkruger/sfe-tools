@@ -143,6 +143,7 @@ sideways false
 status open
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename obdd1.png
 	lyxscale 5
@@ -185,7 +186,7 @@ ion is that OBDDs are more succinct for certain classes of functions than
  For example, the OBDD representation is more efficient than the Boolean
  gate representation for 8-bit AND, 8-bit addition, and the millionaires'
  and billionaires' problems 
-\begin_inset LatexCommand \cite{Yao:86}
+\begin_inset LatexCommand \cite{Yao86}
 
 \end_inset
 
@@ -198,8 +199,13 @@ on, due to exponential node explosion
 
 .
  For the classes of functions in which the OBDD representation is efficient,
- the paper shows that the protocol described next can perform 2 to 4 times
- better than the classical Yao protocol.
+ our paper 
+\begin_inset LatexCommand \cite{kruger06}
+
+\end_inset
+
+ shows that the protocol described next can perform 2 to 4 times better
+ than the classical Yao protocol.
 \end_layout
 
 \begin_layout Standard
@@ -217,7 +223,7 @@ The protocol is loosely designed in a similar fashion as Yao's protocol
 \end_inset
 
 , using the example millionaires' problem pictured above.
- In the first step, Alice's sends to Bob the encrypted OBDD.
+ In the first step, Alice sends to Bob the encrypted OBDD.
  The next step is Bob acquiring a subset of the encryption keys from Alice
  using 
 \begin_inset Formula $OT_{2}^{1}$
@@ -237,6 +243,7 @@ sideways false
 status open
 
 \begin_layout Standard
+\align center
 \begin_inset Graphics
 	filename obdd_proto_overview.png
 	lyxscale 5
@@ -408,37 +415,6 @@ The computation for Bob is exactly the same as that for Protocol 1.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Standard
-Present OBDDs, with pictures and running example
-\end_layout
-
-\begin_layout Standard
-Present protocol
-\end_layout
-
-\begin_layout Standard
-Use pictures from CCS talk.
-\end_layout
-
-\begin_layout Standard
-
-\emph on
-I did all that!
-\end_layout
-
-\begin_layout Standard
-Present extended variations
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 The results of this work demonstrated that OBDDs showed improved performance
  with secure evaluation of certain functions.
  However, the exponential blowup properties curtailed its usefulness in
@@ -492,19 +468,6 @@ binary expression diagrams
 
 \begin_layout Subsection
 Class of Algorithm Specific: Protocol Optimization of Dynamic Programming
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Standard
-MUST finish!
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -829,42 +792,8 @@ We implemented three variations of the protocol in
 .
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Standard
-MUST DO: Present protocols
-\end_layout
-
-\begin_layout Standard
-Picture of grid
-\end_layout
-
-\begin_layout Standard
-Discuss design rationale
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsection
 Algorithm Specific: Protocol Optimization of K-Means Clustering
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Standard
-MUST finish!
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -1090,27 +1019,6 @@ ly benefit all SFE protocols that make use of that primitive.
  Naor-Pinkas protocol.
  In particular, I conjecture that this protocol may require less communication
  overhead than other OT protocols.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Standard
-Present K-means pictures
-\end_layout
-
-\begin_layout Standard
-MUST DO: Present protocol
-\end_layout
-
-\begin_layout Standard
-Use pictures from ESORICS talk.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection
