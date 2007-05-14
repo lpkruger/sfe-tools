@@ -79,10 +79,23 @@ Oblivious transfer is a protocol originally proposed by Rabin
 \begin_inset Formula $v_{i}$
 \end_inset
 
-, but does not learn anything about the rest of the Sender's values.
+, but does not learn any additional information about the rest of the Sender's
+ values.
  The Sender learns nothing.
- The most efficient OT algorithm to date is described in 
-\begin_inset LatexCommand \cite{Noar-Pinkas:2001}
+ 
+\end_layout
+
+\begin_layout Standard
+The Naor-Pinkas OT protocol 
+\begin_inset LatexCommand \cite{NaorPinkas99}
+
+\end_inset
+
+, based on discrete logarithms, is considered to be the most efficient OT
+ protocol for practical use today.
+ The performance characteristics of this protocol are discussed in section
+ 
+\begin_inset LatexCommand \ref{sub:Comparison-with-Naor-Pinkas}
 
 \end_inset
 
@@ -191,19 +204,37 @@ encryption.
 \begin_inset Formula $(G,E,D,M)$
 \end_inset
 
- be a public-key encryption scheme, where 
-\begin_inset Formula $G$
-\end_inset
-
- is the key generation function, 
-\begin_inset Formula $E$
+ be a public-key encryption scheme.
+ 
+\begin_inset Formula $E_{e}(m)$
 \end_inset
 
  and 
-\begin_inset Formula $D$
+\begin_inset Formula $D_{d}(c)$
 \end_inset
 
- are the encryption and decryption functions, and 
+ are the encryption and decryption functions for plaintext 
+\begin_inset Formula $m$
+\end_inset
+
+ and ciphertext 
+\begin_inset Formula $c$
+\end_inset
+
+, with respect to a public/private key pair (
+\begin_inset Formula $e,d)$
+\end_inset
+
+.
+ 
+\begin_inset Formula $G$
+\end_inset
+
+ is a key generation function that can be used to randomly generate 
+\begin_inset Formula $(e,d)$
+\end_inset
+
+ pairs, and 
 \begin_inset Formula $M$
 \end_inset
 
@@ -264,46 +295,13 @@ The encryption scheme is semantically secure
 \end_inset
 
  is negligible.
- This definition implies that 
-\begin_inset Formula $E$
-\end_inset
-
- must be randomized.
-\end_layout
-
-\begin_layout Itemize
-There exists a computable function 
-\begin_inset Formula $g$
-\end_inset
-
- such that for all 
-\begin_inset Formula $m\in M$
-\end_inset
-
- and 
-\begin_inset Formula $\alpha\in M$
-\end_inset
-
-, 
-\begin_inset Formula $m_{1}\in E(m)$
-\end_inset
-
- implies that 
-\begin_inset Formula $g(m_{1},\alpha)\in E(m\alpha)$
-\end_inset
-
-.
- In addition, 
-\begin_inset Formula $g$
-\end_inset
-
- must be computable using only public information.
  With any semantically secure encryption scheme, encrypting the same message
- twice will yield different ciphertexts, so 
+ twice will yield different ciphertexts with high probability, so 
 \begin_inset Formula $E(m)$
 \end_inset
 
- denotes the set of ciphertexts that can be obtained by encrypting 
+ must be a randomized one-to-many function representing a set of possible
+ ciphertexts that can be obtained by encrypting 
 \begin_inset Formula $m$
 \end_inset
 
@@ -324,21 +322,73 @@ There exists a computable function
 \begin_inset Formula $f$
 \end_inset
 
-, computable with only public information, such that for all messages 
+, computable without the private key or other secret information, such that
+ for all messages 
 \begin_inset Formula $m_{1}$
 \end_inset
 
- and 
+, 
 \begin_inset Formula $m_{2}$
+\end_inset
+
+, and 
+\begin_inset Formula $c_{1}\in E(m_{1})$
+\end_inset
+
+, 
+\begin_inset Formula $c_{2}\in E(m_{2})$
 \end_inset
 
 , the following property holds:
 \newline
 
-\begin_inset Formula $f\left(E(m_{1}),E(m_{2})\right)\in E(m_{1}+m_{2})$
+\begin_inset Formula $f\left(c_{1},c_{2}\right)\in E(m_{1}+m_{2})$
 \end_inset
 
 
+\end_layout
+
+\begin_layout Itemize
+There exists a computable function 
+\begin_inset Formula $g$
+\end_inset
+
+ such that for all 
+\begin_inset Formula $m_{1}\in M$
+\end_inset
+
+ and 
+\begin_inset Formula $\alpha\in M$
+\end_inset
+
+, 
+\begin_inset Formula $c_{1}\in E(m)$
+\end_inset
+
+ implies that 
+\begin_inset Formula $g(c_{1},\alpha)\in E(\alpha m_{1})$
+\end_inset
+
+.
+ In addition, 
+\begin_inset Formula $g$
+\end_inset
+
+ must be computable without using the private key or other secret information.
+ This property follows automatically from the previous requirement, because
+ it is always possible to define 
+\begin_inset Formula $g$
+\end_inset
+
+ in terms of 
+\begin_inset Formula $O(\log\alpha)$
+\end_inset
+
+ invocations of the function 
+\begin_inset Formula $f$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -419,6 +469,11 @@ There are several encryption schemes that satisfy these properties, of which
 \end_inset
 
 .
+ Notice that 
+\begin_inset Formula $E(m_{1})\cdot E(m_{2})=g^{m_{1}}r_{1}^{n}g^{m_{2}}r_{2}^{n}=g^{m_{1}+m_{2}}(r_{1}r_{2})^{n}\in E(m_{1}+m_{2})$
+\end_inset
+
+, which satisfies the additive homomorphic property.
  Further details can be found in 
 \begin_inset LatexCommand \cite{Paillier99}
 
@@ -888,7 +943,7 @@ In practice, the garbled circuit method is more commonly used, because it
 \end_inset
 
  for each gate.
- It is easy to see that this will require at least 
+ This will require at least 
 \begin_inset Formula $depth(C)$
 \end_inset
 
@@ -900,6 +955,9 @@ In practice, the garbled circuit method is more commonly used, because it
  The increased number of OTs, combined with the increased number of rounds
  needed to execute them, makes the SCWS evaluation protocol primarily of
  theoretical interest.
+ However, the SCWS principle can be emulated with the Yao protocol, by explicitl
+y including extra gates in the circuit to combine and split the share values.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -1047,10 +1105,30 @@ d data sets
 
 \begin_layout Subsection
 Threat Models
+\begin_inset LatexCommand \label{sub:Threat-Models}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
+In the 
+\begin_inset Quotes eld
+\end_inset
 
+malicious
+\begin_inset Quotes erd
+\end_inset
+
+ threat model, a badly behaving party is free to use any available methods
+ to thwart the computation , including sending false or inconsistent messages
+ at any step of the protocol.
+ The malicious threat model naturally characterizes the malicious behavior
+ that a secure protocol would need to protect against.
+ If a protocol is shown to be secure in the malicious threat model, then
+ we can reasonably assume that a malicious party or interloper will not
+ be able to learn any private information by attacking the protocol.
 \end_layout
 
 \begin_layout Standard
@@ -1093,34 +1171,31 @@ leak
 \end_inset
 
  information.
- For reasons that will be discussed shortly, security proofs in the semi-honest
- model are useful despite that fact that it is not a natural model of adversaria
-l behavior.
-\end_layout
-
-\begin_layout Standard
-In the 
+ The semi-honest model is an important theoretical tool despite the fact
+ that it is weaker and does not capture the full range of malicious behaviors
+ we would expect of an adversary.
+ This is because a protocol that has been proven secure in the semi-honest
+ model can be extended in an automated way, using a protocol 
 \begin_inset Quotes eld
 \end_inset
 
-malicious
+compiler
 \begin_inset Quotes erd
 \end_inset
 
- threat model, a badly behaving party is free to use any available methods
- to thwart the computation, including sending false or inconsistent messages
- at any step of the protocol.
- The malicious model is a stronger threat model, and naturally characterizes
- the malicious behavior that a secure protocol would need to protect against.
- These threat models were presented in 
+, to a more secure protocol that is secure in the malicious model 
 \begin_inset LatexCommand \cite{GMW87}
 
 \end_inset
 
-, along with a proof that it is possible to transform any protocol that
- is secure in the semi-honest model into an equivalent protocol that is
- secure in the malicious model.
- 
+.
+ Essentially, the protcol compiler inserts additional steps into the protocol
+ to force the parties to prove to one another their faithful adherence to
+ the protocol.
+ The semi-honest model may itself be a realistic model in certain cases,
+ for example, when the parties communicating need to preserve privacy of
+ data from one another, but also have a sufficient trust relationship not
+ to intentionally cheat.
 \end_layout
 
 \begin_layout Standard

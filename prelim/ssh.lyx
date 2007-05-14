@@ -732,39 +732,53 @@ Secure Password and Key Authentication
 \begin_inset Formula $P$
 \end_inset
 
+ is hashed using a hash function 
+\begin_inset Formula $Q=f(P)$
+\end_inset
+
+, and 
+\begin_inset Formula $Q$
+\end_inset
+
  is split into two shares: 
-\begin_inset Formula $P_{1}$
+\begin_inset Formula $Q_{1}$
 \end_inset
 
  and 
-\begin_inset Formula $P_{2}$
+\begin_inset Formula $Q_{2}$
 \end_inset
 
 .
  The value of 
+\begin_inset Formula $Q$
+\end_inset
+
+, and therefore 
 \begin_inset Formula $P$
 \end_inset
 
- can not be derived from either of the two shares alone, and each share
+, can not be derived from either of the two shares alone, and each share
  is stored on a separate server.
  To perform the protocol, the client splits 
-\begin_inset Formula $P$
+\begin_inset Formula $f(P)$
 \end_inset
 
  into different shares 
-\begin_inset Formula $P_{1}'$
+\begin_inset Formula $Q_{1}'$
 \end_inset
 
  and 
-\begin_inset Formula $P_{2}'$
+\begin_inset Formula $Q_{2}'$
 \end_inset
 
 , and sends these values to the servers.
  The servers then perform an evaluation protocol to determine if 
-\begin_inset Formula $P_{1}\oplus P_{2}=P_{1}'\oplus P_{2}'$
+\begin_inset Formula $Q_{1}\oplus Q_{1}'=Q_{2}\oplus Q_{2}'$
 \end_inset
 
 .
+ The equality test is obfuscated using a variant of a Diffie-Hellman key
+ exchange, designed to succeed if and only if the equality is true.
 \end_layout
 
 \begin_layout Standard
@@ -937,6 +951,13 @@ This SPAKA protocol effectively solves the man-in-the-middle problem.
 \end_inset
 
  will not succeed.
+ We will use a secure evaluation protocol that is secure under the malicious
+ threat model (see section 
+\begin_inset LatexCommand \ref{sub:Threat-Models}
+
+\end_inset
+
+) to ensure that Eve can not attack the protocol itself.
 \end_layout
 
 \begin_layout Standard

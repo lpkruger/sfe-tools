@@ -107,6 +107,33 @@ Despite these many privacy concerns, there is also a conflicting desire
 \end_layout
 
 \begin_layout Standard
+These concerns are not merely theoretical.
+ In 2000, Ford Motor Explorer SUVs had a well publicized problem with their
+ Firestone tires, in which the tire treads could fail under certain circumstance
+s.
+ At least 271 deaths resulted 
+\begin_inset LatexCommand \cite{NYTFordFirestone}
+
+\end_inset
+
+.
+ The problem resulted from the 
+\emph on
+combination 
+\emph default
+of products: There were no problems same tires in other vehicles, nor with
+ Ford Explorers using other tires.
+ It has been suggested that the crisis could have been averted using joint
+ data-mining, however, due to business secrecy concerns, such research could
+ only have been done using privacy preserving methods 
+\begin_inset LatexCommand \cite{VaidyaClifton:2002}
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
 There have been several methods developed so far for preserving personal
  privacy while permitting use of data.
  The most simple method, conceptually, is to replace identifying information,
@@ -156,6 +183,9 @@ is a technique which can address many of the privacy concerns facing the
 n that would affect their estimate of the probability distribution of another
  party's inputs, except for that which can be calculated by the parties'
  own inputs and the output of the joint function.
+ In comparison with other methods, only secure multiparty computation can
+ be used to guarantee privacy when parties collaborate on joint computation.
+ 
 \begin_inset Note Comment
 status open
 

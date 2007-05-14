@@ -39,6 +39,22 @@ Techniques for Protocol Optimization
 \end_layout
 
 \begin_layout Standard
+Asymtotically, the time required to perform secure function evaluation is
+ equivalent to the time required to execute the function itself.
+ For example, Yao's secure circuit evaluation protocol 
+\begin_inset LatexCommand \cite{Yao86}
+
+\end_inset
+
+ requires time and communication linear in the number of circuit gates.
+ However, the need to encrypt every gate with multiple keys, and to perform
+ oblivious transfer on every circuit input creates enormous slowdowns, on
+ the order of thousands compared to insecure evaluation.
+ These tremendous slowdowns in the generic constructions highlight the need
+ for optimizing SFE.
+\end_layout
+
+\begin_layout Standard
 There are various ways to approach the problem of designing optimized secure
  function evaluation protocols.
  My research to date has focused on three general methodologies.
@@ -783,6 +799,32 @@ We implemented three variations of the protocol in
 \end_inset
 
  sub-computations), in under 10 minutes.
+ Our most efficient protocol computes elements of the dynamic programming
+ matrix in large blocks during each round of the computation.
+ We experimentally determined than a block size of 
+\begin_inset Formula $(20,20)$
+\end_inset
+
+ yielded an optimum trade-off between a decreased number of rounds, and
+ larger block circuits.
+ Using a 
+\begin_inset Formula $(20,20)$
+\end_inset
+
+ circuit allows 
+\begin_inset Formula $20^{2}=400$
+\end_inset
+
+ elements of the matrix to be evaluated during each round of the protocol,
+ which allows the overall 
+\begin_inset Formula $(200,200)$
+\end_inset
+
+ problem to be evaluated in 
+\begin_inset Formula $100$
+\end_inset
+
+ rounds.
  In comparison, using the generic techniques to compile the edit distance
  algorithms into a secure circuit produced circuits which were to too large
  for evaluation beyond problems of size 
@@ -941,10 +983,11 @@ We implemented protocols to securely evaluate this algorithm in
 
 \end_inset
 
-, and showed that a custom designed protocol based on homomorphic encryption
- was able to classify partitioned data sets with tens of thousands of data
- points in under two minutes, which was several orders of magnitude faster
- than a the generic protocol based on Yao circuits.
+, and showed that a protocol based on homomorphic encryption was able to
+ classify partitioned data sets with tens of thousands of data points in
+ under two minutes, which is about 15 times slower than the protocol implemented
+ in a straightforward way without privacy protection, and over 100 times
+ faster than the same protocol built with Yao circuits.
 \end_layout
 
 \begin_layout Subsection
@@ -1031,10 +1074,12 @@ An Efficient Protocol Design Framework
 \end_layout
 
 \begin_layout Standard
-Even with all these optimizations, protocols still must hand-coded.
+Even with all these optimizations, protocols still must be hand-coded.
  Each protocol I have implemented has required brand new code to be written,
  with only some common cryptographic primitives being shared between implementat
 ions.
+ In this case, I define the term protocol to mean a structured sequence
+ of communications between parties which enables the computation to performed.
  Fairplay 
 \begin_inset LatexCommand \cite{Fairplay}
 
@@ -1111,6 +1156,17 @@ Manual optimization tools, making it convenient to apply and design techniques
 \begin_layout Itemize
 An embeddable protocol evaluator library, which will allow ordinary application
  to make straightforward use of secure function evaluation.
+\end_layout
+
+\begin_layout Standard
+The security of protocols produced by the compiler is based on the security
+ of each individual component of the protocol.
+ For example, when choosing optimal circuit representations, the compiler
+ will choose among several possible representations, each of which has a
+ corresponding secure evaluation protocol.
+ In cases where a computation is broken into multiple sub-protocols, I will
+ prove that composition of these sub-protocols maintains the overall security
+ of the protocol.
 \end_layout
 
 \begin_layout Standard

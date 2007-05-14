@@ -52,14 +52,18 @@ University of Wisconsin Madison
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Standard
 \begin_inset LatexCommand \tableofcontents{}
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Standard
 
 \end_layout
 

@@ -529,6 +529,60 @@ If the sender and chooser wish to execute the protocol multiple times, the
 \end_layout
 
 \begin_layout Subsection
+Comparison with Naor-Pinkas
+\begin_inset LatexCommand \label{sub:Comparison-with-Naor-Pinkas}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the Naor-Pinkas protocol 
+\begin_inset LatexCommand \cite{Noar-Pinkas:2001}
+
+\end_inset
+
+, the computational requirement for each party is 
+\begin_inset Formula $O((\log n)(\log\log n))$
+\end_inset
+
+ for both parties, where 
+\begin_inset Formula $n$
+\end_inset
+
+ is the size of a group sufficiently large such that calculating discrete
+ logarithms is infeasible.
+ The communication consists of a message of size 
+\begin_inset Formula $\log n$
+\end_inset
+
+ from sender to chooser, a message of size 
+\begin_inset Formula $\log n$
+\end_inset
+
+ from chooser to sender, and two messages of size 
+\begin_inset Formula $\log m+\log n$
+\end_inset
+
+ from sender to chooser, where 
+\begin_inset Formula $\log m$
+\end_inset
+
+ is the size of the chooser's outputs.
+ The protocol presented here cuts the final messages to 
+\begin_inset Formula $\log m$
+\end_inset
+
+, which effectively reduces the bandwidth with a tradeoff in computation
+ time.
+ My experimentation with running SFE algorithms using fast modern CPUs indicates
+ that this tradeoff may be worthwhile.
+ I plan to make empirical measurements with implementations of the to comparitiv
+ely measure the actual performance.
+\end_layout
+
+\begin_layout Subsection
 Extensions
 \end_layout
 
