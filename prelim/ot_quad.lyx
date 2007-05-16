@@ -203,7 +203,7 @@ If
 \end_inset
 
  and 
-\begin_inset Formula $a\neq-b\;(mod\; n)$
+\begin_inset Formula $a\neq\pm b\;(mod\; n)$
 \end_inset
 
  then 
@@ -215,13 +215,11 @@ If
 status open
 
 \begin_layout Standard
-I have used experimental methods to convince myself these properties hold
- when 
+This follows when 
 \begin_inset Formula $p\equiv q\equiv3\ (\mbox{mod 4})$
 \end_inset
 
-.
- I have not yet determined if this is a well known theorem.
+ from the properties of the Jacobi symbol and the Chinese Remainder Theorem.
 \end_layout
 
 \end_inset
@@ -431,7 +429,8 @@ There is a potential optimization of step 1.
 
 .
  This optimization as presented is insecure, because it breaks statistical
- indistinguishability for the chooser
+ indistinguishability for the chooser\InsetSpace ~
+
 \begin_inset Foot
 status open
 
