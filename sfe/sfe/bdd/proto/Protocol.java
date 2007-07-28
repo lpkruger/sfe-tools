@@ -11,8 +11,9 @@ import javax.crypto.*;
 
 import sfe.bdd.bdd.BDD;
 import sfe.bdd.bdd.BDDWriter;
-import sfe.crypto.OTFairPlay;
+// import sfe.crypto.OTFairPlay;
 import sfe.crypto.SFEKey;
+import sfe.crypto.OT;
 import sfe.util.ByteCountOutputStreamSFE;
 import sfe.util.VarDesc;
 
@@ -207,8 +208,8 @@ public class Protocol {
 			ByteCountOutputStreamSFE.WRITE_MODE =
 				ByteCountOutputStreamSFE.MODE_OT;
 			
-			OTFairPlay.Sender send = new OTFairPlay.Sender(otarray);
-			//OT.Sender send = new OT.Sender(otarray, QQQ, GGG);
+			//OTFairPlay.Sender send = new OTFairPlay.Sender(otarray);
+			OT.Sender send = new sfe.crypto.OT.Sender(otarray, OT.QQQ, OT.GGG);
 			send.setStreams(in, out);
 			send.go();
 			out.flush();
@@ -320,8 +321,9 @@ public class Protocol {
 				ByteCountOutputStreamSFE.MODE_OT;
 			
 			long timeOTStart = System.currentTimeMillis();
-			//OT.Chooser choose = new OT.Chooser(otarray, QQQ, GGG);
-			OTFairPlay.Chooser choose = new OTFairPlay.Chooser(otarray);
+			
+			// OTFairPlay.Chooser choose = new OTFairPlay.Chooser(otarray);
+			OT.Chooser choose = new OT.Chooser(otarray, OT.QQQ, OT.GGG);
 			choose.setStreams(in, out);
 			BigInteger[] bobLevSK1 = choose.go();
 			
