@@ -37,6 +37,7 @@ public class EDProto2 {
 	}
 	
 	static SFECipher C;
+	static boolean use_purdue = true;
 	
 	static {
 		try {

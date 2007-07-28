@@ -15,6 +15,7 @@ import sfe.shdl.*;
 import sfe.util.*;
 // import sfe.bdd.proto.Protocol;
 import sfe.crypto.*;
+import sfe.editdist2.BlindPermuteMin;
 
 /*
  * recurrence:
@@ -37,11 +38,18 @@ public class EDProto {
 	static BigInteger QQQ = TWO.pow(128).nextProbablePrime();
 	static BigInteger GGG = OT.findGenerator(QQQ);
 	
-	static final int N_BITS=80;
+	static int N_BITS=8;
+	static {
+		String nBitsStr = System.getProperty("NBITS");
+		if (nBitsStr != null) {
+			N_BITS = Integer.parseInt(nBitsStr);
+		}
+	}
 	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
 	
 	static final boolean use_fairplay = false;
-	static final boolean use_circuitonly = false;
+	static boolean use_circuitonly = (System.getProperty("CIRCUITONLY") != null);
+	static boolean use_purdue = true;
 	
 	public static void main(String[] args) throws Exception {
 		if (System.getProperty("BOB") != null) {
@@ -52,7 +60,7 @@ public class EDProto {
 	}
 	
 	public static BigInteger getRandom() {
-		return new BigInteger(N_BITS-8, new Random());
+		return new BigInteger(N_BITS, new Random());
 		// DEBUG:
 		//return BigInteger.ZERO;
 	}
@@ -103,6 +111,7 @@ public class EDProto {
 		}
 		
 		void go() throws Exception {
+			
 			int astrlen = str1.length();
 			out.writeInt(astrlen);
 			out.flush();
@@ -125,7 +134,10 @@ public class EDProto {
 			
 			for (int i=1; i<=astrlen; ++i) {
 				for (int j=1; j<=bstrlen; ++j) {
-					if (use_circuitonly) {
+					System.out.println("(" + i + "," + j + ")");
+					if (use_purdue) {
+						computeRecurrencePurdue(i, j);
+					} else if (use_circuitonly) {
 						computeRecurrenceCircuit(i,j);
 					} else {
 						computeRecurrence(i,j);
@@ -136,6 +148,8 @@ public class EDProto {
 			
 			System.out.println();
 			System.out.println("Alice result:" + aState[astrlen][bstrlen]);
+			
+			System.out.println("Alice wrote " + byteCount.cnt + " bytes");
 		}
 		
 		
@@ -184,7 +198,50 @@ public class EDProto {
 			System.out.println("result after stage: " + combined);
 		}
 		
-		
+		void computeRecurrencePurdue(int i, int j) throws Exception {
+			BigInteger NUM = BigInteger.valueOf(3).pow(64);
+			//HomomorphicCipher.DecKey prkey = DPE.genKey(NUM, NUM.bitLength());
+			//HomomorphicCipher.DecKey prkey = DPE.genKey(domain.dint, domain.dint.bitLength());
+			HomomorphicCipher.DecKey prkey = Paillier.genKey(256);
+			HomomorphicCipher.EncKey pubkey = prkey.encKey();
+			
+			ElGamal.DecKey egprkey = ElGamal.genKey(128);
+			ElGamal.EncKey egpubkey = egprkey.encKey();
+			out.writeObject(pubkey);
+			out.writeObject(egpubkey);
+			
+			out.flush();
+
+			HomomorphicCipher.EncKey bobkey = 
+				(HomomorphicCipher.EncKey) in.readObject();
+			
+			// do OT
+			byte thisbyte = (byte) str1.charAt(i-1);
+			OTN.Chooser chooser = new OTN.Chooser(thisbyte, QQQ, GGG);
+			chooser.setStreams(in, out);
+			D("Do OT, choose " + thisbyte);
+			BigInteger aa0 = chooser.go();
+
+			D("OT read: " + aa0);
+
+			BigInteger[] ary = { aa0, 
+					aState[i-1][j].add(BigInteger.ONE),
+					aState[i][j-1].add(BigInteger.ONE)};
+	
+			D("3vals: " + ary[0] + " " + ary[1] + " " + ary[2]);
+			
+			BlindPermuteMin.Alice malice = new BlindPermuteMin.Alice(in, out);
+			malice.setKeys(pubkey, prkey, bobkey, egpubkey, egprkey);
+			aState[i][j] = malice.go(ary);
+			
+
+			// for DEBUG
+			BigInteger bobVal = (BigInteger) in.readObject();
+			BigInteger combined = aState[i][j].add(bobVal).and(MAX_BIGINT);
+			System.out.println("result after stage: " + combined);
+			// end DEBUG
+		}
+
 		void computeRecurrence(int i, int j) throws Exception {
 			//  first, compute state[i-1][j-1] + t(i,j) - r with Bob
 			// create keypair
@@ -230,35 +287,35 @@ public class EDProto {
 			//r0 = BigInteger.ONE.add(BigInteger.ONE).add(BigInteger.ONE);
 			
 			aState[i][j] = r0;
-	
+
 			if (use_fairplay) {
 				AliceLib calice = new AliceLib("editdist/proto2b_" + N_BITS + ".txt.Opt.circuit", "SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.fmt", "123", in, out,
 						new String[] { String.valueOf(r0), String.valueOf(c0), String.valueOf(b0), String.valueOf(a0) },
-				false);		
+						false);		
 			} else {
 				D("prepare circuit");
 				// evaluate min circuit
 				Circuit circuit = CircuitParser.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.circuit");
-				
+
 				FmtFile fmt = FmtFile.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.fmt");
 				VarDesc bdv = fmt.getVarDesc();
 				VarDesc aliceVars = bdv.filter("A");
 				VarDesc bobVars = bdv.filter("B");
-				
+
 				TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
-				
+
 				fmt.mapBits(r0, vals, "input.alice.r");
 				fmt.mapBits(c0, vals, "input.alice.c");
 				fmt.mapBits(b0, vals, "input.alice.b");
 				fmt.mapBits(a0, vals, "input.alice.a");
-				
+
 				D("eval circuit");
 				sfe.shdl.Protocol.Alice calice = new sfe.shdl.Protocol.Alice(in, out, circuit);
 				calice.go(vals, 
 						new TreeSet<Integer>(aliceVars.who.keySet()),
 						new TreeSet<Integer>(bobVars.who.keySet()));
 			}
-			
+		
 			System.out.println("Alice Iteration wrote " + out.getCount() + " bytes");
 			
 			// for DEBUG
@@ -331,7 +388,9 @@ public class EDProto {
 			
 			for (int i=1; i<=astrlen; ++i) {
 				for (int j=1; j<=bstrlen; ++j) {
-					if (use_circuitonly) {
+					if (use_purdue) {
+						computeRecurrencePurdue(i, j);
+					} else if (use_circuitonly) {
 						computeRecurrenceCircuit(i,j);
 					} else {
 						computeRecurrence(i,j);
@@ -341,6 +400,8 @@ public class EDProto {
 			}
 			
 			System.out.println("Bob result:" + bState[astrlen][bstrlen]);
+			
+			System.out.println("Bob wrote " + byteCount.cnt + " bytes");
 		}
 		
 		void computeRecurrenceCircuit(int i, int j) throws Exception {
@@ -384,6 +445,70 @@ public class EDProto {
 			// end DEBUG
 			
 			
+		}
+		
+		void computeRecurrencePurdue(int i, int j) throws Exception {
+			int start_cnt = byteCount.cnt;
+			
+			BigInteger NUM = BigInteger.valueOf(3).pow(64);
+			//HomomorphicCipher.DecKey prkey = DPE.genKey(NUM, NUM.bitLength());
+			//HomomorphicCipher.DecKey prkey = DPE.genKey(domain.dint, domain.dint.bitLength());
+			HomomorphicCipher.DecKey prkey = Paillier.genKey(256);
+			HomomorphicCipher.EncKey pubkey = prkey.encKey();
+			out.writeObject(pubkey);
+			
+			out.flush();
+			D("read hkey");
+			HomomorphicCipher.EncKey alicekey = 
+				(HomomorphicCipher.EncKey) in.readObject();
+			D("read egkey");
+			ElGamal.EncKey egpubkey = 
+				(ElGamal.EncKey) in.readObject();
+
+			//  first, compute state[i-1][j-1] + t(i,j) - r with Alice
+
+			// choose random R
+			BigInteger r = getRandom();
+			BigInteger val = bState[i-1][j-1].subtract(r);
+			BigInteger val2 = val.add(BigInteger.ONE);
+			
+			D("val0 : " + val);
+			D("val1 : " + val2);
+			
+			// prepare the OT
+			byte thisbyte = (byte) str2.charAt(j-1);
+			BigInteger[] choose = new BigInteger[256];
+			for (int k=0; k<256; ++k) {
+				choose[k] = (k==thisbyte ? val : val2);
+			}
+			
+			// do OT
+			OTN.Sender sender = new OTN.Sender(choose, QQQ, GGG);
+			sender.setStreams(in, out);
+			sender.go();
+			
+		////////////
+			
+			BigInteger[] ary = {r,
+					bState[i-1][j],
+					bState[i][j-1]};
+			D("3vals: " + ary[0] + " " + ary[1] + " " + ary[2]);
+			
+			BlindPermuteMin.Bob mbob = new BlindPermuteMin.Bob(in, out);
+			mbob.setKeys(pubkey, prkey, alicekey, egpubkey);
+			BigInteger zz = mbob.go(ary);
+			
+		////////////
+			bState[i][j] = zz;
+			
+			System.out.println("Bob Iteration wrote " + 
+					(byteCount.cnt-start_cnt) + " bytes");
+			
+			// for DEBUG
+			System.out.println("state eval: " + zz);
+			out.writeObject(zz);
+			out.flush();
+			// end DEBUG
 		}
 		
 		void computeRecurrence(int i, int j) throws Exception {

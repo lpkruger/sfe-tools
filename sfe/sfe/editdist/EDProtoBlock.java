@@ -4,6 +4,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -44,10 +45,14 @@ public class EDProtoBlock {
 			BLOCK_SIZE=Integer.parseInt(blocksize);
 		}
 	}
-	
-	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
-	
-	static final boolean use_fairplay = false;
+
+	static boolean parallelize = false;
+	static {
+		String par = System.getProperty("OTBATCH");
+		if (par != null) {
+			parallelize = "true".equals(par);
+		}
+	}
 	
 	public static void main(String[] args) throws Exception {
 		if (System.getProperty("BOB") != null) {
@@ -134,16 +139,33 @@ public class EDProtoBlock {
 			aliceVars = bdv.filter("A");
 			bobVars = bdv.filter("B");
 			
-			
-			for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
-				for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
-					//Runtime.getRuntime().gc();
+			if (!parallelize) {
+				for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
+					for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
+						//Runtime.getRuntime().gc();
+						long free = Runtime.getRuntime().freeMemory();
+						long total = Runtime.getRuntime().totalMemory();
+						System.out.println("Used " + (total-free) + "  Free: " + free + "  out of " + total);
+						System.out.println("Iteration " + i + ", " + j);
+						computeRecurrence(i,j);
+						out.reset();
+					}
+				}
+			} else {
+				ArrayList<int[]> diagonal = new ArrayList();
+				for (int i=0; i<astrlen+bstrlen-1; i+=BLOCK_SIZE) {
+					diagonal.clear();
 					long free = Runtime.getRuntime().freeMemory();
 					long total = Runtime.getRuntime().totalMemory();
 					System.out.println("Used " + (total-free) + "  Free: " + free + "  out of " + total);
-					System.out.println("Iteration " + i + ", " + j);
-					computeRecurrence(i,j);
-					out.reset();
+					for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
+						if (i-j>=0 && i-j<astrlen) {
+							diagonal.add(new int[] {i-j, j});
+							System.out.println("(" + (i-j) + "," + j + ")");
+						}
+					}
+					int[][] pairs = diagonal.toArray(new int[0][]);
+					computeRecurrenceParallel(pairs);
 				}
 			}
 			
@@ -157,6 +179,51 @@ public class EDProtoBlock {
 			//BigInteger combined = r0.add(bobVal).and(MAX_BIGINT);
 			//System.out.println("result after stage: " + combined);
 		}
+		
+		public void computeRecurrenceParallel(int[][] pairs) throws Exception {
+			D("prepare circuit");
+
+			Circuit[] ccs = new Circuit[pairs.length];
+			
+			TreeMap<Integer,Boolean>[] vals = new TreeMap[pairs.length];
+			
+			for (int z=0; z<pairs.length; ++z) {
+				vals[z] = new TreeMap<Integer,Boolean>();
+				ccs[z] = CircuitParser.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.circuit");
+				int ibase = pairs[z][0];
+				int jbase = pairs[z][1];
+
+				for (int i=0; i<=BLOCK_SIZE; ++i) {
+					if (i<BLOCK_SIZE) {
+						byte c0 = (byte) str1.charAt(ibase + i);
+						fmt.mapBits(BigInteger.valueOf(c0), vals[z], "input.alice.x[" + i + "]");
+					}
+
+					fmt.mapBits(BigInteger.valueOf(matrix[ibase+i][jbase]), vals[z], 
+							"input.alice.dd_" + i + "_0_a");
+					fmt.mapBits(BigInteger.valueOf(matrix[ibase][jbase+i]), vals[z], 
+							"input.alice.dd_0_" + i + "_a");
+
+					if (i>0) {
+						matrix[ibase+i][jbase+BLOCK_SIZE] = rand.nextInt() & ((1<<N_BITS)-1);
+						matrix[ibase+BLOCK_SIZE][jbase+i] = rand.nextInt() & ((1<<N_BITS)-1);
+
+						fmt.mapBits(BigInteger.valueOf(matrix[ibase+i][jbase+BLOCK_SIZE]), vals[z], 
+								"input.alice.out_" + i + "_" + BLOCK_SIZE + "_a");
+						fmt.mapBits(BigInteger.valueOf(matrix[ibase+BLOCK_SIZE][jbase+i]), vals[z], 
+								"input.alice.out_" + BLOCK_SIZE + "_" + i + "_a");
+					}
+				}
+			}
+			
+			D("eval circuit");
+			
+			sfe.shdl.MultiProtocol.Alice calice = 
+				new sfe.shdl.MultiProtocol.Alice(in, out, ccs);
+			calice.go(vals, 
+					new TreeSet<Integer>(aliceVars.who.keySet()),
+					new TreeSet<Integer>(bobVars.who.keySet()));
+		}		
 	
 		public void computeRecurrence(int ibase, int jbase) throws Exception {
 			D("prepare circuit");
@@ -253,11 +320,24 @@ public class EDProtoBlock {
 			fmt = FmtFile.readFile("editdist/block_" + N_BITS + "_" + BLOCK_SIZE + "_" + BLOCK_SIZE + ".txt.Opt.fmt");
 			
 
-			
-			for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
-				for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
-					computeRecurrence(i,j);
-					out.reset();
+			if (!parallelize) {
+				for (int i=0; i<astrlen; i+=BLOCK_SIZE) {
+					for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
+						computeRecurrence(i,j);
+						out.reset();
+					}
+				}
+			} else {
+				ArrayList<int[]> diagonal = new ArrayList();
+				for (int i=0; i<astrlen+bstrlen-1; i+=BLOCK_SIZE) {
+					diagonal.clear();
+					for (int j=0; j<bstrlen; j+=BLOCK_SIZE) {
+						if (i-j>=0 && i-j<astrlen) {
+							diagonal.add(new int[] {i-j, j});
+						}
+					}
+					int[][] pairs = diagonal.toArray(new int[0][]);
+					computeRecurrenceParallel(pairs);
 				}
 			}
 			
@@ -277,6 +357,54 @@ public class EDProtoBlock {
 			//out.flush();
 			// end DEBUG
 			
+		}
+		
+		void computeRecurrenceParallel(int[][] pairs) throws Exception {
+			
+			TreeMap<Integer,Boolean>[] vals = new TreeMap[pairs.length];
+			boolean[][] vv = new boolean[pairs.length][];
+			
+			for (int z=0; z<pairs.length; ++z) {
+				vals[z] = new TreeMap<Integer,Boolean>();
+				int ibase = pairs[z][0];
+				int jbase = pairs[z][1];
+
+				for (int i=0; i<=BLOCK_SIZE; ++i) {
+					if (i<BLOCK_SIZE) {
+						byte c0 = (byte) str2.charAt(jbase + i);
+						fmt.mapBits(BigInteger.valueOf(c0), vals[z], "input.bob.x[" + i + "]");
+					}
+
+					fmt.mapBits(BigInteger.valueOf(matrix[ibase+i][jbase]), vals[z], 
+							"input.bob.dd_" + i + "_0_b");
+					fmt.mapBits(BigInteger.valueOf(matrix[ibase][jbase+i]), vals[z], 
+							"input.bob.dd_0_" + i + "_b");
+
+				}
+
+				vv[z] = new boolean[vals[z].size()];
+				int vi=0;
+				for (Boolean bb : vals[z].values()) {
+					vv[z][vi] = bb;
+					vi++;
+				}
+			}
+			
+			sfe.shdl.MultiProtocol.Bob cbob = new sfe.shdl.MultiProtocol.Bob(in, out, vv);
+			cbob.go();
+			
+			for (int z=0; z<pairs.length; ++z) {
+				int ibase = pairs[z][0];
+				int jbase = pairs[z][1];
+				for (int i=1; i<=BLOCK_SIZE; ++i) {
+					BigInteger zz;
+					zz = fmt.readBits(cbob.result[z], "output.bob.out_" + i + "_" + BLOCK_SIZE + "_b");
+					matrix[ibase+i][jbase+BLOCK_SIZE] = zz.intValue();
+
+					zz = fmt.readBits(cbob.result[z], "output.bob.out_" + BLOCK_SIZE + "_" + i + "_b");
+					matrix[ibase+BLOCK_SIZE][jbase+i] = zz.intValue();
+				}
+			}
 		}
 		
 		void computeRecurrence(int ibase, int jbase) throws Exception {
