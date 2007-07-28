@@ -28,7 +28,8 @@ public class CircuitCrypt {
 	}
 	
 	public static class AliceData {
-		GarbledCircuit gcc;
+		// TODO: unmake public
+		public GarbledCircuit gcc;
 		SecretKey[][] inputSecrets;
 	}
 	
@@ -36,6 +37,9 @@ public class CircuitCrypt {
 	Map<Circuit.Gate, GarbledCircuit.Gate> map;
 	Map<Integer, SecretKey[]> secrets;
 
+    // special hack for EDProto3
+	SecretKey[] injectKeysAtInputZero = null;
+	
 	AliceData encrypt(Circuit cc) {
 		AliceData data = new AliceData();
 		data.gcc = new GarbledCircuit();
@@ -47,6 +51,12 @@ public class CircuitCrypt {
 		gateid = new TreeMap<Integer, GarbledCircuit.Gate>();
 		map = new HashMap<Circuit.Gate, GarbledCircuit.Gate>();
 		secrets = new HashMap<Integer, SecretKey[]>();
+		
+		// TODO: get rid of special hack for EDProto3
+		// and figure out a nicer approach
+		if (injectKeysAtInputZero != null) {
+			secrets.put(0, injectKeysAtInputZero);
+		}
 		
 	    curId = cc.inputs.length;
 	    

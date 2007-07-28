@@ -38,6 +38,7 @@ public class GCircuitEval extends CircuitCrypt {
 					Base64.encodeBytes(gcc.outputSecrets[i][0].getEncoded()) + " " + 
 					Base64.encodeBytes(gcc.outputSecrets[i][1].getEncoded()));
 			*/
+			
 			if (gcc.outputSecrets[i][0].equals(retkey))
 				ret[i] = false;
 			else if (gcc.outputSecrets[i][1].equals(retkey))

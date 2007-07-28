@@ -45,6 +45,9 @@ public class Protocol {
 		Circuit cc;
 		ByteCountOutputStreamSFE byteCount;
 		
+		// special hack for EDProto3, April 2007 variation
+		public SecretKey[] injectKeysAtInputZero = null;
+		
 		public Alice(ObjectInputStream in, ObjectOutputStream out, Circuit cc) {
 			this.in = in;
 			this.out = out;
@@ -111,7 +114,15 @@ public class Protocol {
 			
 			//CircuitCrypt crypt = new CircuitCrypt();
 			CircuitCrypt crypt = new CircuitCryptPermute();
+			
+			// special hack for EDProto3
+			if (injectKeysAtInputZero != null) {
+				crypt.injectKeysAtInputZero = injectKeysAtInputZero;
+			}
 			CircuitCrypt.AliceData data = crypt.encrypt(cc);
+			
+			
+			
 			
 			/*for (int i : aliceVars) {
 				if (crypt.flip.get(cc.inputs[i]))
@@ -221,6 +232,10 @@ public class Protocol {
 		boolean[] vals;
 		public boolean[] result;
 		
+
+		// special hack for EDProto3, April 2007 variation
+		public SecretKey injectKeyAtInputZero = null;
+		
 		public Bob(ObjectInputStream in, ObjectOutputStream out, boolean[] vals) {
 			this.in = in;
 			this.out = out;
@@ -316,7 +331,7 @@ public class Protocol {
 			
 			int keySize = crypt.KG.generateKey().getEncoded().length;
 			TreeMap<Integer,SecretKey> inputSK = new TreeMap<Integer,SecretKey>();
-			
+
 			int j = 0;
 			for (int i : aliceVars) {
 				inputSK.put(i, SFEKey.bigIntToKey(aliceInputSK1[j], keySize, crypt.CIPHER));
@@ -326,6 +341,11 @@ public class Protocol {
 			for (int i : bobVars) {
 				inputSK.put(i, SFEKey.bigIntToKey(bobInpSK1[j], keySize, crypt.CIPHER));
 				j++;
+			}
+			
+			// special hack for EDProto3
+			if (injectKeyAtInputZero != null) {
+				inputSK.put(0, injectKeyAtInputZero);
 			}
 			
 			SecretKey[] insk = new SecretKey[1+inputSK.lastKey()];

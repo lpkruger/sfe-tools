@@ -10,7 +10,7 @@ import sfe.crypto.SFECipher;
 import sfe.crypto.SFEKey;
 import sfe.crypto.SFEKeyGenerator;
 
-class GarbledCircuit implements Serializable {
+public class GarbledCircuit implements Serializable {
 	
 	static class Gate implements Serializable {
 		int id;
@@ -22,10 +22,9 @@ class GarbledCircuit implements Serializable {
 	boolean use_permute;
 	int nInputs;
 	int[] outputs;
-	SecretKey[][] outputSecrets;
+	// TODO: unmake public
+	public SecretKey[][] outputSecrets;
 	Gate[] allGates;
-	
-	
 	
 	void writeCircuit(ObjectOutputStream out) throws IOException {
 		out.writeBoolean(use_permute);

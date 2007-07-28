@@ -17,6 +17,10 @@ public class FmtFile {
 	VarDesc vardesc = new VarDesc();
 	TreeMap<Integer, Integer> outputmap = new TreeMap<Integer, Integer>();
 	
+	public void mapBits(int n, TreeMap<Integer,Boolean> vals, String name) {
+		mapBits(BigInteger.valueOf(n), vals, name);
+	}
+	
 	public void mapBits(BigInteger n, TreeMap<Integer,Boolean> vals, String name) {
 		//System.out.println("set bits: " + name + " = " + n);
 		Obj obj = mapping.get(name);
