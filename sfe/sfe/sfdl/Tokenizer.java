@@ -94,7 +94,7 @@ public class Tokenizer {
 		line = oldline;
 		col = oldcol;
 	}
-
+	
 	public Token nextToken() {
 		if (savedToken != null) {
 			Token ret = savedToken;
@@ -102,7 +102,7 @@ public class Tokenizer {
 			return ret;
 		}
 		if (r == null)
-			return new Token(TOK_EOF, null);
+			return new Token(TOK_EOF, "");
 		char ch;
 		try {
 			while (Character.isWhitespace((ch = readChar())));
@@ -139,6 +139,10 @@ public class Tokenizer {
 						return new Token(TOK_LBRACKET, "[");
 					case ']' :
 						return new Token(TOK_RBRACKET, "]");
+					case '<' :
+						return new Token(TOK_LT, "<");
+					case '>' :
+						return new Token(TOK_GT, ">");
 					case '|' :
 						return new Token(TOK_PIPE, "|");
 					case ';' :
@@ -147,22 +151,43 @@ public class Tokenizer {
 						return new Token(TOK_COMMA, ",");
 					case '*' :
 						return new Token(TOK_ASTERISK, "*");
+					case '!' :
+						ch = readChar();
+						if (ch=='=') {
+							return new Token(TOK_NOTEQUAL, "!=");
+						}
+						pushBack(ch);
+						break;
 					case '=' :
+						ch = readChar();
+						if (ch=='=') {
+							return new Token(TOK_EQUALEQUAL, "==");
+						}
+						pushBack(ch);
 						return new Token(TOK_EQUAL, "=");
-					case '#' :
-						while ((ch = readChar()) != '\n');
-						return nextToken();
+					case '.' :
+						return new Token(TOK_PERIOD, ".");
 					case '"' :
 						return readString();
 					case '-' :
+						return new Token(TOK_DASH, "-");
+					case '+' :
+						return new Token(TOK_PLUS, "+");
+					case '^' :
+						return new Token(TOK_CARET, "^");
+					case '/' :
 						ch = readChar();
-						if (ch == '>')
-							return new Token(TOK_RARROW, "->");
-						break;
-					case '<' :
-						ch = readChar();
-						if (ch == '<')
-							return readCexpr();
+						switch(ch) {
+						case '/' :
+							while ((ch = readChar()) != '\n');
+							return nextToken();
+							//return new Token(TOK_SLASHSLASH, "//");
+						case '*' :
+							//return new Token(TOK_SLASHSTAR, "/*");
+						}
+						pushBack(ch);
+						return new Token(TOK_SLASH, "/");
+		
 				}
 
 				throw new TokenizerError(
@@ -173,7 +198,7 @@ public class Tokenizer {
 		}
 	}
 
-	Token readCexpr() {
+	Token readCexprZZZ() {
 		StringBuffer sb = new StringBuffer();
 		try {
 			while (true) {

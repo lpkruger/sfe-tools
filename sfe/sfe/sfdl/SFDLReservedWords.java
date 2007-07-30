@@ -14,8 +14,10 @@ interface SFDLReservedWords {
 	static final int TOK_BOOLEAN = 105;
 	static final int TOK_INT = 106;
 	static final int TOK_IF = 107;
-	static final int TOK_FOR = 108;
-	static final int TOK_FUNCTION = 109;
+	static final int TOK_ELSE = 108;
+	static final int TOK_FOR = 109;
+	static final int TOK_FUNCTION = 110;
 	
-	
+	// must be greater than all others
+	static final int TOK_LAST = 200;
 }

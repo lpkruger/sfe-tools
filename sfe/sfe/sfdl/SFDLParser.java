@@ -9,8 +9,12 @@ package sfe.sfdl;
 
 import java.util.*;
 import java.io.*;
+import java.math.BigInteger;
+
+import fairplay.Compiler.IntConstant;
 
 import sfe.sfdl.Tokenizer.Token;
+import sfe.util.VarDesc;
 import static sfe.sfdl.TokenizerConstants.*;
 import static sfe.sfdl.SFDLReservedWords.*;
 
@@ -34,11 +38,12 @@ public class SFDLParser extends Parser {
 		add("Boolean", TOK_BOOLEAN);
 		add("Int", TOK_INT);
 		add("if", TOK_IF);
+		add("else", TOK_ELSE);
 		add("for", TOK_FOR);
 		add("function", TOK_FUNCTION);
 	}
 	
-	SFDL sfdl;
+	SFDL sfdl = new SFDL();
 	String programname;
 	
 	MapList umes = new MapList(); // unprocessed events go here awaiting
@@ -46,20 +51,10 @@ public class SFDLParser extends Parser {
 
 	public SFDLParser(BufferedReader r) {
 		toker = new Tokenizer(r);
-		debug = true;
+		//debug = true;
 
 	}
 
-	/*
-	public void parse() {
-		expect(nextToken(), TOK_PROGRAM);
-		parseESL();
-		while (tok.type != TOK_EOF) {
-			parseStatement();
-		}
-	}
-    */
-	
 	void parse() {
 		switch (nextToken().type) {
 			case TOK_PROGRAM:
@@ -75,9 +70,10 @@ public class SFDLParser extends Parser {
 		expect(nextToken(), TOK_IDENT);
 		programname = tok.str;
 		expect(nextToken(), TOK_LBRACE);
+		nextToken();
 		mainloop:
 		for (;;) {
-			switch(nextToken().type) {
+			switch(tok.type) {
 			case TOK_RBRACE:
 				break mainloop;
 			case TOK_CONST:
@@ -89,6 +85,8 @@ public class SFDLParser extends Parser {
 			case TOK_FUNCTION:
 				parseFunctionDef();
 				break;
+			default:
+				throw new ParseError("Unexpected token ", tok);
 			}
 		}	
 	}
@@ -105,7 +103,8 @@ public class SFDLParser extends Parser {
 			throw new ParseError("non constant value " + expr, tok);
 		}
 		SFDL.ConstDef cdef = new SFDL.ConstDef(name, (SFDL.ConstValue) expr);
-		// TODO: add definition to scope
+		sfdl.addToScope(cdef);
+		nextToken();
 	}
 	
 	void parseTypeDef() {
@@ -115,39 +114,92 @@ public class SFDLParser extends Parser {
 		expect(nextToken(), TOK_EQUAL);
 		nextToken();
 		SFDL.Type type = parseTypeExpr();
+		SFDL.TypeDef typedef = new SFDL.TypeDef(name, type);
+		sfdl.addToScope(typedef);
+		nextToken();
 	}
 	
 	void parseFunctionDef() {
 		expect(tok, TOK_FUNCTION);
 		nextToken();
 		SFDL.Type type = parseTypeExpr();
-		expect(nextToken(), TOK_IDENT);
+		expect(tok, TOK_IDENT);
 		String name = tok.str;
 		expect(nextToken(), TOK_LPAREN);
 		
-		ArrayList<SFDL.Type> parmTypes = new ArrayList<SFDL.Type>();
-		ArrayList<String> parmNames = new ArrayList<String>(); 
+		sfdl.openScope();
+		
+		// function name is return variable
+		sfdl.addToScope(new SFDL.VarDef(name, type));
+		
+		ArrayList<SFDL.VarDef> parms = new ArrayList<SFDL.VarDef>();
+		
+		boolean expectComma = false;
 		for(;;) {
 			if(nextToken().type == TOK_RPAREN)
 				break;
 			
+			if (expectComma) {
+				expect(tok, TOK_COMMA);
+				nextToken();
+			}
+			
 			SFDL.Type paramType = parseTypeExpr();
-			expect(nextToken(), TOK_IDENT);
+			expect(tok, TOK_IDENT);
 			String paramName = tok.str;
-			parmTypes.add(paramType);
-			parmNames.add(paramName);
+			//parmTypes.add(paramType);
+			//parmNames.add(paramName);
+		
+			SFDL.VarDef vd = new SFDL.VarDef(paramName, paramType);
+			parms.add(vd);
+			sfdl.addToScope(vd);
+			
+			expectComma = true;
 		}
 		
 		expect(tok, TOK_RPAREN);
 		expect(nextToken(), TOK_LBRACE);
 		
+		SFDL.Block body = parseBlock();
+		
 		// parse function body
 		// parseExpr()
 		// check for TOK_RBRACE
 		
-		
-		
+		SFDL.FunctionDef fndef = new SFDL.FunctionDef(name, type, parms, body, sfdl.top);
+		sfdl.closeScope();
+		sfdl.addToScope(fndef);
 	}
+	
+	SFDL.Type parseStruct() {
+		expect(tok, TOK_STRUCT);
+		expect(nextToken(), TOK_LBRACE);
+		
+		ArrayList<SFDL.Type> structTypes = new ArrayList<SFDL.Type>();
+		ArrayList<String> structNames = new ArrayList<String>();
+		
+		boolean expectComma = false;
+		for(;;) {
+			if(nextToken().type == TOK_RBRACE)
+				break;
+			
+			if (expectComma) {
+				expect(tok, TOK_COMMA);
+				nextToken();
+			}
+			
+			SFDL.Type paramType = parseTypeExpr();
+			expect(tok, TOK_IDENT);
+			String paramName = tok.str;
+			structTypes.add(paramType);
+			structNames.add(paramName);
+			expectComma = true;
+		}
+		
+		nextToken();
+		return new SFDL.StructType(structNames, structTypes);
+	}
+	
 	SFDL.Type parseTypeExpr() {
 		switch(tok.type) {
 		case TOK_IDENT:
@@ -159,165 +211,254 @@ public class SFDLParser extends Parser {
 			return type;
 			
 		case TOK_STRUCT:
-			throw new ParseError("unimplemented compiler feature", tok);
+			return parseStruct();
 			
 		case TOK_INT:
-			expect(nextToken(), TOK_LBRACKET);
-			SFDL.Expr value = parseExpr();
-			if (!value.isConst())
-				throw new ParseError("Constant expression required", tok);
-			
-			// throw new ParseError("Integer constant expression required", tok);
-			SFDL.IntConst ival = (SFDL.IntConst) value;
-			return new SFDL.IntType(ival.number);
+			expect(nextToken(), TOK_LT);
+			nextToken();
+			SFDL.IntType inttype;
+			switch(tok.type) {
+			case TOK_NUM:
+				inttype = new SFDL.IntType(Integer.parseInt(tok.str));
+				break;
+			case TOK_IDENT:
+				SFDL.Expr value = sfdl.evalVar(tok.str);
+				if (!value.isConst())
+					throw new ParseError("Constant expression required", tok);
+
+				// throw new ParseError("Integer constant expression required", tok);
+				SFDL.IntConst ival = (SFDL.IntConst) value;
+				inttype = new SFDL.IntType(ival.number.intValue());
+				break;
+			default:
+				throw new ParseError("Unexpected int width ", tok);
+			}
+			expect(nextToken(), TOK_GT);
+			nextToken();
+			return inttype;
 		default:
 			throw new ParseError("not a type ", tok);
 			
 			
 		}
-		return null;
+	}
+	
+	SFDL.Expr parseVarDef() {
+		expect(tok, TOK_VAR);
+		nextToken();
+		SFDL.Type type = parseTypeExpr();
+		expect(tok, TOK_IDENT);
+		sfdl.addToScope(new SFDL.VarDef(tok.str, type));
+		nextToken();
+		return null;	
+	}
+	
+	SFDL.Block parseBlock() {
+		expect(tok, TOK_LBRACE);
+		ArrayList<SFDL.Expr> statements = new ArrayList<SFDL.Expr>(); 
+		nextToken();
+		while(tok.type != TOK_RBRACE) {
+			SFDL.Expr expr = parseStmt();
+			
+			if (expr != null) {
+				statements.add(expr);
+			}
+		}
+		nextToken();
+		return new SFDL.Block(statements);
+		
+	}
+	
+	SFDL.Expr parseStmt () {
+		SFDL.Expr expr = parseStmt0();
+		if(tok.type == TOK_SEMICOLON)
+			nextToken();
+		return expr;
+	}
+	
+	SFDL.Expr parseStmt0 () {
+		if (debug) System.out.println("parseStmt");
+		switch(tok.type) {
+		case TOK_VAR:
+			return parseVarDef();
+		case TOK_IF:
+			nextToken();
+			SFDL.Expr cond = parseExpr();
+			if (debug) System.out.println("if then");
+			SFDL.Block tblock = parseBlock();
+			if (debug) System.out.println("if then done");
+			SFDL.Block fblock = null;
+			if (tok.type == TOK_ELSE) {
+				if (debug) System.out.println("if else");
+				nextToken();
+				fblock = parseBlock();
+				if (debug) System.out.println("if else done");
+			}
+			return new SFDL.IfExpr(cond, tblock, fblock);
+		default:
+			return parseExpr();
+		}
 	}
 	
 	SFDL.Expr parseExpr() {
-		return null;		
+		return parseExpr(-1);
 	}
 	
-	void parseMatch() {
-		expect(tok, TOK_MATCH);
-
-		Tokenizer.Token nameTok;
-		expect((nameTok = nextToken()), TOK_IDENT);
-
-		EDL.Event event = edl.getEvent(nameTok.str);
-		if (event == null) {
-			throw new ParseError("Undefined event", nameTok);
+	SFDL.Expr parseExpr(int prio) {
+		if (debug) System.out.println("parseExpr prio=" + prio);
+		SFDL.Expr leftexpr;
+		switch(tok.type) {
+		case TOK_NUM:
+			leftexpr = new SFDL.IntConst(new BigInteger(tok.str));
+			break;
+		case TOK_IDENT:
+			leftexpr = sfdl.evalVar(tok.str);
+			if (leftexpr == null) {
+				throw new ParseError("Invalid variable reference ", tok);
+			}
+			break;
+		case TOK_LPAREN:
+			nextToken();
+			leftexpr = parseExpr();
+			expect(tok, TOK_RPAREN);
+			break;
+		default:
+			throw new ParseError("unknown expression ", tok);
 		}
-
-		expect(nextToken(), TOK_LPAREN);
+		
 		nextToken();
-		ArrayList<Token> args = new ArrayList<Token>();
-		ArrayList<Token> cexprs = new ArrayList<Token>();
-		// array of tokens, until we process the meaning
-
-		boolean expectcomma = false;
-		while (tok.type != TOK_RPAREN) {
-			if (expectcomma) {
-				expect(tok, TOK_COMMA);
+		do {
+			if(!greaterPrio(tok.type, prio)) {
+				if (debug) System.out.println("leave parseExpr, lower prio");
+				return leftexpr;
+			}
+			
+			SFDL.Expr rightexpr;
+			SFDL.Expr expr;
+			
+			switch(tok.type) {
+			case TOK_EQUAL:
+				if (!(leftexpr instanceof SFDL.LValExpr)) {
+					throw new ParseError("Illegal lval at assignment", tok);
+				}
+				SFDL.LValExpr lval = (SFDL.LValExpr) leftexpr; 
 				nextToken();
-			}
-			if (tok.type == TOK_CEXPR) {
-				cexprs.add(tok);
-			} else {
-				args.add(tok);
-			}
-			nextToken();
-			expectcomma = true;
-		}
-
-		// TODO: optional = rettype
-		// expect(nextToken(), TOK_EQUAL);
-		// nextToken();
-		// EDL.Type rettype = parseType();
-
-		// -> policy
-		expect(nextToken(), TOK_RARROW);
-		int policy;
-		switch (nextToken().type) {
-			case TOK_ALLOW :
-				// allow
-				policy = SFDL.POLICY_ALLOW;
+				rightexpr = parseExpr(TOK_EQUAL);
+				// TODO: type check
+				expr = new SFDL.AssignExpr(lval, rightexpr);
+				break;
+			case TOK_PERIOD:
+				//System.out.println(leftexpr.type);
+				if (!(leftexpr.type instanceof SFDL.StructType))
+					throw new ParseError("expression is not a struct", tok);
+				expect(nextToken(), TOK_IDENT);
+				SFDL.StructRefExpr srexpr = new SFDL.StructRefExpr(leftexpr, tok.str);
+				if (srexpr.type == null) {
+					throw new ParseError("field not found", tok);
+				}
+				expr = srexpr;
 				nextToken();
 				break;
-			case TOK_DENY :
-				// deny
-				policy = SFDL.POLICY_DENY;
+			case TOK_PLUS:
+				// TODO: type check
 				nextToken();
+				rightexpr = parseExpr(TOK_PLUS);
+				expr = new SFDL.AddExpr(leftexpr, rightexpr);
 				break;
-			default :
-				throw new ParseError("Expected policy", tok);
-		}
-
-		Tokenizer.Token ablock = null;
-		if (tok.type == TOK_CEXPR) {
-			// there's an action block here
-			ablock = tok;
-			nextToken();
-		}
-
-		UnprocessedMatchEvent ume =
-			new UnprocessedMatchEvent(args, event, policy, cexprs, ablock);
-
-		umes.add(ume.event.name, ume);
-
+			case TOK_DASH:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_DASH);
+				expr = new SFDL.SubExpr(leftexpr, rightexpr);
+				break;
+			case TOK_CARET:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_CARET);
+				expr = new SFDL.XorExpr(leftexpr, rightexpr);
+				break;
+			case TOK_EQUALEQUAL:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_EQUALEQUAL);
+				expr = new SFDL.EqExpr(leftexpr, rightexpr);
+				break;
+			case TOK_NOTEQUAL:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_NOTEQUAL);
+				expr = new SFDL.NotEqExpr(leftexpr, rightexpr);
+				break;
+			case TOK_GT:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_GT);
+				expr = new SFDL.GreaterThanExpr(leftexpr, rightexpr);
+				break;
+			case TOK_LT:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_LT);
+				expr = new SFDL.LessThanExpr(leftexpr, rightexpr);
+				break;
+			default:
+				System.out.println("leave parseExpr, unknown symbol");
+				return leftexpr;
+			}
+			
+			if (debug) System.out.println("post-op expr: " + expr);
+			leftexpr = expr;
+		} while (true);
 	}
-
-	void parseVarDecl() {
-		EDL.Type typ = edl.getType(tok.str);
-		if (typ == null) {
-			throw new ParseError("Unknown type", tok);
+	
+	static final int tok_prios[] = new int[TOK_LAST];
+	static {
+		tok_prios[TOK_EQUAL] = 10;
+		tok_prios[TOK_EQUALEQUAL] = 12;
+		tok_prios[TOK_NOTEQUAL] = 12;
+		tok_prios[TOK_GT] = 12;
+		tok_prios[TOK_LT] = 12;
+		tok_prios[TOK_PLUS] = 20;
+		tok_prios[TOK_DASH] = 20;
+		tok_prios[TOK_CARET] = 20;
+		tok_prios[TOK_ASTERISK] = 30;
+		tok_prios[TOK_PERIOD] = 100;
+		tok_prios[TOK_LBRACKET] = 110;
+		tok_prios[TOK_LPAREN] = 200;
+		//tok_prios[TOK_RPAREN] = 200;
+	}
+	
+	// return true if right binds tighter than left
+	boolean greaterPrio(int right, int left) {
+		
+		if (right==TOK_SEMICOLON || right==TOK_LBRACE || right==TOK_RPAREN)
+			return false;
+		
+		// -1 is always top level
+		if (left==-1)
+			return true;
+		
+		if (tok_prios[right]==0) {
+			throw new ParseError("Unknown post-expr ", tok);
 		}
-		expect(nextToken(), TOK_IDENT);
-		SFDL.VarDecl var = esl.vars.get(tok.str);
-		if (var != null) {
-			throw new ParseError("Variable already declared", tok);
+		if (tok_prios[right]==0) {
+			throw new ParseError("compiler error: Unknown post-expr " + left, tok);
 		}
-		var = new SFDL.VarDecl();
-		var.name = tok.str;
-		var.type = typ;
-		esl.vars.put(var.name, var);
-		nextToken();
-		if (tok.type != TOK_EQUAL)
-			return;
-		// there's an initial value
-		nextToken();
-		switch (tok.type) {
-			case TOK_STRING :
-				var.initialValue = tok.str;
-				break;
+		
+		return tok_prios[right] > tok_prios[left];
+	}
+/*
 			case TOK_NUM :
 				var.initialValue = IntPool.create(Integer.parseInt(tok.str));
-				break;
-		}
-		nextToken();
-
+*/
+	
+	public static void main(String[] args) throws Exception {
+		BufferedReader r = new BufferedReader(new FileReader(args[0]));
+		SFDLParser p = new SFDLParser(r);
+		p.parse();
+		System.out.println("\n\n\n");
+		SFDL.printScope(p.sfdl.top);
+		r.close();
 	}
-
-	static class UnprocessedMatchEvent {
-		ArrayList<Token> args;
-		ArrayList<Token> cexprs;
-		EDL.Event event;
-		int policy;
-		Tokenizer.Token ablock;
-
-		UnprocessedMatchEvent(
-			ArrayList<Token> args,
-			EDL.Event event,
-			int policy,
-			ArrayList<Token> cexprs,
-			Tokenizer.Token ablock) {
-			this.args = args;
-			this.event = event;
-			this.policy = policy;
-			this.cexprs = cexprs;
-			this.ablock = ablock;
-		}
-	}
-
-	public void parseESL() {
-		expect(tok, TOK_EDL);
-		expect(nextToken(), TOK_STRING);
-		try {
-			FileReader fr = new FileReader(tok.str);
-			EDLParser edlp = new EDLParser(new BufferedReader(fr), tok.str);
-			edlp.parse();
-			edl = edlp.edl;
-			fr.close();
-		} catch (IOException ex) {
-			throw new ParseError("EDL file not found", tok);
-		}
-		nextToken();
-
-		esl = new SFDL(edl);
-		esl.eslname = this.eslname;
-	}
+	
 }
