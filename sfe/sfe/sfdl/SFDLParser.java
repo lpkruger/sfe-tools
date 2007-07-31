@@ -13,6 +13,7 @@ import java.math.BigInteger;
 
 import fairplay.Compiler.IntConstant;
 
+import sfe.sfdl.SFDL.LValExpr;
 import sfe.sfdl.Tokenizer.Token;
 import sfe.util.VarDesc;
 import static sfe.sfdl.TokenizerConstants.*;
@@ -166,8 +167,9 @@ public class SFDLParser extends Parser {
 		// parseExpr()
 		// check for TOK_RBRACE
 		
-		SFDL.FunctionDef fndef = new SFDL.FunctionDef(name, type, parms, body, sfdl.top);
+		SFDL.FunctionDef fndef = new SFDL.FunctionDef(name, type, parms, body, sfdl.current);
 		sfdl.closeScope();
+		
 		sfdl.addToScope(fndef);
 	}
 	
@@ -352,10 +354,16 @@ public class SFDLParser extends Parser {
 				if (!(leftexpr.type instanceof SFDL.StructType))
 					throw new ParseError("expression is not a struct", tok);
 				expect(nextToken(), TOK_IDENT);
-				SFDL.StructRefExpr srexpr = new SFDL.StructRefExpr(leftexpr, tok.str);
+				SFDL.StructRef srexpr;
+				if (leftexpr instanceof SFDL.LValExpr) {
+					srexpr = new SFDL.LStructRef((LValExpr) leftexpr, tok.str);
+				} else {
+					srexpr = new SFDL.StructRef(leftexpr, tok.str);
+				}
 				if (srexpr.type == null) {
 					throw new ParseError("field not found", tok);
 				}
+				System.out.println("structref: " + srexpr);
 				expr = srexpr;
 				nextToken();
 				break;
@@ -457,7 +465,7 @@ public class SFDLParser extends Parser {
 		SFDLParser p = new SFDLParser(r);
 		p.parse();
 		System.out.println("\n\n\n");
-		SFDL.printScope(p.sfdl.top);
+		SFDL.printScope(p.sfdl.current);
 		r.close();
 	}
 	

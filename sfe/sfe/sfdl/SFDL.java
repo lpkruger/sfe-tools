@@ -32,21 +32,40 @@ public class SFDL {
 
 	static abstract class Type extends Obj {
 		abstract String toShortString();
+		boolean isCompoundType() {
+			return false;
+		}
+		abstract int bitWidth();
+		void typeCheck(Expr other) {
+			//if (!this.getClass().isInstance(other.type)) {
+			if (this != other.type) {
+				throw new RuntimeException(other.type.toShortString() + 
+						" is not instance of " + toShortString());
+			}
+		}
+		
 	}
 
 	static class VoidType extends Type {
+		int bitWidth() {
+			return 0;
+		}
 		public String toString() {
 			return "[type void ]";
 		}
 		public String toShortString() {
 			return "void";
 		}
+		
 	}
 	
 	static class IntType extends Type {
 		int bits;
 		IntType(int n) {
 			this.bits = n;
+		}
+		int bitWidth() {
+			return bits;
 		}
 		public String toString() {
 			return "[type int<" + bits + "> ]";
@@ -55,13 +74,44 @@ public class SFDL {
 			return "int<" + bits + ">";
 		}
 	}
-	static class StructType extends Type {
+	
+	static abstract class CompoundType extends Type {
+		abstract LValExpr[] createLValExprs(LValExpr expr);
+		boolean isCompoundType() {
+			return true;
+		}
+	}
+	
+	static class StructType extends CompoundType {
 		String[] fieldnames;
 		Type[] fieldtypes;
 		// TODO: replace with VarDefs
 		StructType(ArrayList<String> fn, ArrayList<Type> ft) {
 			this.fieldnames = fn.toArray(new String[fn.size()]);
 			this.fieldtypes = ft.toArray(new Type[fn.size()]);
+		}
+		LValExpr[] createLValExprs(LValExpr expr) {
+			typeCheck((Expr)expr);
+			ArrayList<LValExpr> ret = new ArrayList<LValExpr>();
+			this.typeCheck((Expr)expr);
+			for (int i=0; i<fieldnames.length; ++i) {
+				LStructRef lsr = new LStructRef(expr, fieldnames[i]);
+				if (fieldtypes[i].isCompoundType()) {
+					ret.addAll(Arrays.asList(lsr.createLValExprs()));
+				} else {
+					ret.add(lsr);
+					//System.out.println("I AM HERE: " + fieldnames[i]);
+					//System.out.println("    " + lsr.field + " @ " + lsr.fieldPos + " of " + lsr.type);
+				}
+			}
+			return ret.toArray(new LValExpr[ret.size()]);
+		}
+		int bitWidth() {
+			int sum=0;
+			for (Type type : fieldtypes) {
+				sum += type.bitWidth();
+			}
+			return sum;
 		}
 		public String toString() {
 			StringBuffer sb = new StringBuffer("[type struct ");
@@ -97,7 +147,12 @@ public class SFDL {
 		boolean isConst() {
 			return false;
 		}
+		public Type getType() {
+			return type;
+		}
+		abstract CompilerOutput compile(Compile compile);
 	}
+	
 	static abstract class ConstValue extends Expr {
 		boolean isConst() {
 			return true;
@@ -120,28 +175,88 @@ public class SFDL {
 			this.number = n;
 			this.type = new IntType(Math.max(1, n.bitLength()));
 		}
-		
+		CompilerOutput compile(Compile comp) {
+			return comp.compileIntConst(this);
+		}
 		public String toString() {
 			return "[const " + type.toShortString() + " " + number + " ]";
 		}
 	}
 
-	static abstract class LValExpr extends Expr {
-		LValExpr(Type type) {
-			super(type);
-		}
+	static interface LValExpr {
+		String uniqueStr();
+		Type getType();
+		LValExpr[] createLValExprs();
 	}
 	
-	static class VarRef extends LValExpr {
+	static class VarRef extends Expr implements LValExpr {
 		VarDef var;
 		VarRef(VarDef var) {
 			super(var.type);
 			this.var = var;
 		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compilerVarRef(this);
+		}
+		public LValExpr[] createLValExprs() {
+			if (type.isCompoundType()) {
+				return ((CompoundType)type).createLValExprs(this);
+			} else { 
+				return new LValExpr[] { this };
+			}
+		}
+		public String uniqueStr() {
+			return var.name;
+		}
 		public String toString() {
 			return "[varref " + type.toShortString() + " " + var + " ]";
+		}	
+	}
+	
+	// LVal struct reference
+	static class LStructRef extends StructRef implements LValExpr {
+		LStructRef(LValExpr left, String field) {
+			super((Expr) left, field);
+		}
+		
+		public String uniqueStr() {
+			return ((LValExpr)left).uniqueStr() + "." + field;
+		}
+		
+		public LValExpr[] createLValExprs() {
+			return ((StructType) type).createLValExprs(this);
 		}
 	}
+	
+	static class StructRef extends Expr  {
+		Expr left;
+		String field;
+		int fieldPos = -1;
+		StructRef(Expr left, String field) {
+			super(null);
+			this.left = left;
+			this.field = field;
+			StructType st = (StructType) left.type;
+			for (int i=0; i<st.fieldnames.length; ++i) {
+				//System.out.println("search " + field + " -- check " + st.fieldnames[i] + " of " + st.fieldtypes[i].toShortString());
+				if (st.fieldnames[i].equals(field)) {
+					
+					this.type = st.fieldtypes[i];
+					this.fieldPos = i;
+					break;
+				}
+			}
+		}
+		
+		CompilerOutput compile(Compile compile) {
+			return compile.compileStructRef(this);
+		}
+		
+		public String toString() {
+			return "[structref " + type.toShortString() + " " + left + " . " + field + " ]";
+		}
+	}
+	
 
 	static abstract class BinaryOpExpr extends Expr {
 		Expr left;
@@ -161,10 +276,14 @@ public class SFDL {
 			int z = Math.max(lt.bits, rt.bits) + 1;
 			this.type = new IntType(z);
 		}
-		
+		CompilerOutput compile(Compile compile) {
+			return compile.compileAddExpr(this);
+		}
+			
 		public String toString() {
 			return "[add+ " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
+
 	}
 	
 	static class SubExpr extends BinaryOpExpr {
@@ -175,10 +294,14 @@ public class SFDL {
 			int z = Math.max(lt.bits, rt.bits);
 			this.type = new IntType(z);
 		}
-		
+		CompilerOutput compile(Compile compile) {
+			return compile.compileSubExpr(this);
+		}
 		public String toString() {
 			return "[sub- " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
+
+		
 	}
 
 	static class XorExpr extends BinaryOpExpr {
@@ -189,16 +312,24 @@ public class SFDL {
 			int z = Math.max(lt.bits, rt.bits);
 			this.type = new IntType(z);
 		}
-		
+		CompilerOutput compile(Compile compile) {
+			return compile.compileXorExpr(this);
+		}
 		public String toString() {
 			return "[xor^ " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
+
+		
 	}
 	
 	static class EqExpr extends BinaryOpExpr {
 		EqExpr(Expr left, Expr right) {
 			super(left, right);
 			this.type = type_Boolean;
+		}
+
+		CompilerOutput compile(Compile compile) {
+			return compile.compileEqExpr(this);
 		}
 		
 		public String toString() {
@@ -210,6 +341,10 @@ public class SFDL {
 		NotEqExpr(Expr left, Expr right) {
 			super(left, right);
 			this.type = type_Boolean;
+		}
+		
+		CompilerOutput compile(Compile compile) {
+			return compile.compilerNotEqExpr(this);
 		}
 		public String toString() {
 			return "[neq== " + type.toShortString() + " " + left + " , " + right + " ]";
@@ -224,12 +359,18 @@ public class SFDL {
 		public String toString() {
 			return "[lt< " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileLessThanExpr(this);
+		}
 	}
 	
 	static class GreaterThanExpr extends BinaryOpExpr {
 		GreaterThanExpr(Expr left, Expr right) {
 			super(left, right);
 			this.type = type_Boolean;
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileGreaterThanExpr(this);
 		}
 		public String toString() {
 			return "[gt< " + type + " " + left + " , " + right + " ]";
@@ -240,13 +381,17 @@ public class SFDL {
 		LValExpr lval;
 		Expr value;
 		AssignExpr(LValExpr lval, Expr expr) {
-			super(lval.type);
+			super(lval.getType());
 			this.lval = lval;
 			this.value = expr;
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileAssignExpr(this);
 		}
 		public String toString() {
 			return "[assn= " + type.toShortString() + " " + lval + " := " + value + " ]";
 		}
+		
 	}
 	
 	static class IfExpr extends Expr {
@@ -267,6 +412,9 @@ public class SFDL {
 		public String toString() {
 			return "[if " + type.toShortString() + " (cond " + cond + ") then " + tblock + " else " + fblock + " ]";
 		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileIfExpr(this);
+		}
 	}
 	
 	static class Block extends Expr {
@@ -275,6 +423,9 @@ public class SFDL {
 			super(type_Void);
 			this.stmts = stmts.toArray(new Expr[stmts.size()]);
 		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileBlock(this);
+		}
 		public String toString() {
 			StringBuffer sb = new StringBuffer("[block{\n");
 			for (int i=0; i<stmts.length; ++i) {
@@ -282,29 +433,6 @@ public class SFDL {
 			}
 			sb.append("}]");
 			return sb.toString();
-		}
-	}
-	
-	static class StructRefExpr extends LValExpr {
-		Expr left;
-		String field;
-		int fieldPos = -1;
-		StructRefExpr(Expr left, String field) {
-			super(null);
-			this.left = left;
-			this.field = field;
-			StructType st = (StructType) left.type;
-			for (int i=0; i<st.fieldnames.length; ++i) {
-				if (st.fieldnames[i].equals(field)) {
-					this.type = st.fieldtypes[i];
-					this.fieldPos = i;
-					break;
-				}
-			}
-		}
-		
-		public String toString() {
-			return "[structref " + type.toShortString() + " " + left + " . " + field + " ]";
 		}
 	}
 	
@@ -333,7 +461,10 @@ public class SFDL {
 			super(name);
 			this.type = type;
 		}
-
+		// get all unique strings from elements
+		public LValExpr[] getAllSubLVals() {
+			return new VarRef(this).createLValExprs();
+		}
 		public String toString() {
 			return "[def var " + name + " of " + type.toShortString() + " ]";
 		}
@@ -375,6 +506,14 @@ public class SFDL {
 			sb.append(" = " + body + " ]");
 			return sb.toString();
 		}
+		
+		boolean isParam(VarDef vd) {
+			for (VarDef v : args) {
+				if (v == vd)
+					return true;
+			}
+			return false;
+		}
 	}
 
 	static class Scope extends Obj {
@@ -399,8 +538,17 @@ public class SFDL {
 		}
 	}
 
+
+	public FunctionDef getFn(String str) {
+		NamedObj z = root.get(str);
+		if (z instanceof FunctionDef) {
+			return ((FunctionDef) z);
+		}
+		return null;
+	}
+	
 	Type getType(String str) {
-		NamedObj z = top.get(str);
+		NamedObj z = current.get(str);
 		if (z instanceof TypeDef) {
 			return ((TypeDef) z).type;
 		}
@@ -409,7 +557,7 @@ public class SFDL {
 
 
 	public Expr evalVar(String str) {
-		NamedObj z = top.get(str);
+		NamedObj z = current.get(str);
 		if (z instanceof VarDef) {
 			return new VarRef((VarDef)z);
 		}
@@ -419,13 +567,17 @@ public class SFDL {
 		return null;
 	}
 	
+	public void addToScope(NamedObj obj) {
+		current.add(obj);	
+	}
+	
 	void openScope() {
-		Scope newscope = new Scope(top);
-		top = newscope;
+		Scope newscope = new Scope(current);
+		current = newscope;
 	}
 	
 	void closeScope() {
-		top = top.parent;
+		current = current.parent;
 	}
 	
 	static void printScope(Scope scope) {
@@ -436,20 +588,15 @@ public class SFDL {
 	}
 	
 	String progname;
-	Scope top;
+	Scope root;
 	Scope current;
 
 	//MapList evmap = new MapList();
 
 
 	SFDL() {
-		top = new Scope(null);
-		current = top;
-	}
-
-	public void addToScope(NamedObj obj) {
-		current.add(obj);
-		
+		root = new Scope(null);
+		current = root;
 	}
 
 }
