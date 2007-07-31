@@ -116,7 +116,7 @@ public class Circuit {
 			super(id);
 		}
 		
-		Output(Gate g) {
+		public Output(Gate g) {
 			super(g.id);
 			arity = g.arity;
 			truthtab = g.truthtab;
