@@ -10,8 +10,6 @@ import java.util.*;
 import java.io.*;
 import java.math.BigInteger;
 
-import javax.lang.model.element.VariableElement;
-
 import static java.math.BigInteger.ZERO;
 import static java.math.BigInteger.ONE;
 
