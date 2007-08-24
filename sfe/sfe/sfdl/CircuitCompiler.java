@@ -1,11 +1,14 @@
 package sfe.sfdl;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import sfe.sfdl.Parser.ParseError;
 import sfe.sfdl.SFDL.*;
 import sfe.shdl.*;
 import sfe.shdl.Circuit.Gate;
@@ -649,20 +652,55 @@ public class CircuitCompiler implements Compile {
 	}
 	
 	
-
+	static class NullOutputStream extends java.io.OutputStream {
+		public void write(int x) { }
+		public void write(byte[] b) { }
+        public void write(byte[] b, int off, int len) { } 
+	}
 
 	public static void main(String[] args) throws Exception {
-		BufferedReader r = new BufferedReader(new FileReader(args[0]));
-		SFDLParser p = new SFDLParser(r);
-		p.parse();
-		r.close();
-		
-		Circuit circ = compile(p.sfdl, p.programname);
-		if (true) {
-			Optimizer opt = new Optimizer();
-			opt.optimize(circ);
-			opt.renumber(circ);
+		boolean debug = (System.getProperty("D") != null);
+		if (!debug) {
+			System.setOut(new PrintStream(new NullOutputStream()));
 		}
+		boolean noopt = (System.getProperty("O0") != null);
+		Circuit circ = null;
+		try {
+			BufferedReader r = new BufferedReader(new FileReader(args[0]));
+			System.err.println("parsing...");
+			SFDLParser p = new SFDLParser(r);
+			p.parse();
+			r.close();
+
+			System.err.println("compiling...");
+			circ = compile(p.sfdl, p.programname);
+			if (!noopt) {
+				System.err.println("optimizing...");
+				Optimizer opt = new Optimizer();
+				opt.optimize(circ);
+				opt.renumber(circ);
+			}
+		} catch (ParseError err) {
+			System.err.println("Error: " + err.getMessage());
+			System.exit(1);
+		} catch (CompilerError err) {
+			System.err.println("Error: " + err.getMessage());
+			System.exit(1);
+		} catch (Exception err) {
+			System.err.println("Internal Compiler Error:");
+			err.printStackTrace(System.err);
+			System.exit(2);
+		}
+		String outfile = args[0];
+		if (outfile.endsWith(".txt")) {
+			outfile = outfile.substring(0, outfile.length()-4);
+			outfile += ".circ";
+		}
+		PrintStream cout = new PrintStream(new FileOutputStream(outfile));
+		System.setOut(cout);
 		CircuitWriter.write(circ);
+		System.setOut(new PrintStream(new NullOutputStream()));
+		cout.close();
+		System.err.println("done!");
 	}
 }

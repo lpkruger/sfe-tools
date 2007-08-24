@@ -96,7 +96,7 @@ public class SFDL {
 			ArrayList<LValExpr> ret = new ArrayList<LValExpr>();
 			this.typeCheck((Expr)expr);
 			for (int i=0; i<len; ++i) {
-				LArrayRef lar = new LArrayRef(expr, i);
+				LArrayRef lar = new LArrayRef(expr, new IntConst(i));
 				if (basetype.isCompoundType()) {
 					ret.addAll(Arrays.asList(lar.createLValExprs()));
 				} else {
@@ -209,7 +209,9 @@ public class SFDL {
 			super(type);
 			this.number = n;
 		}
-		
+		IntConst(int n) {
+			this(BigInteger.valueOf(n));
+		}
 		IntConst(BigInteger n) {
 			super(null);
 			this.number = n;
@@ -275,8 +277,8 @@ public class SFDL {
 	}
 	
 	static class LArrayRef extends ArrayRef implements LValExpr {
-		LArrayRef(Expr left, Expr el) {
-			super(left, el);
+		LArrayRef(LValExpr left, Expr el) {
+			super((Expr) left, el);
 		}
 
 		public LValExpr[] createLValExprs() {
