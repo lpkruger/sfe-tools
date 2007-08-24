@@ -10,6 +10,10 @@ import java.util.*;
 import java.io.*;
 import java.math.BigInteger;
 
+import javax.swing.UIDefaults.LazyValue;
+
+import com.sun.org.apache.xalan.internal.xsltc.compiler.CompilerException;
+
 import static java.math.BigInteger.ZERO;
 import static java.math.BigInteger.ONE;
 
@@ -34,12 +38,15 @@ public class SFDL {
 			return false;
 		}
 		abstract int bitWidth();
+		boolean isSigned() {
+			return false;
+		}
 		void typeCheck(Expr other) {
 			//if (!this.getClass().isInstance(other.type)) {
 			if (this != other.type) {
-				throw new RuntimeException(other.type.toShortString() + 
+				throw new CompilerError(other.type.toShortString() + 
 						" is not instance of " + toShortString());
-			}
+			} 
 		}
 		
 	}
@@ -77,6 +84,41 @@ public class SFDL {
 		abstract LValExpr[] createLValExprs(LValExpr expr);
 		boolean isCompoundType() {
 			return true;
+		}
+	}
+	
+
+	static class ArrayType extends CompoundType {
+		Type basetype;
+		int len;
+		LValExpr[] createLValExprs(LValExpr expr) {
+			typeCheck((Expr)expr);
+			ArrayList<LValExpr> ret = new ArrayList<LValExpr>();
+			this.typeCheck((Expr)expr);
+			for (int i=0; i<len; ++i) {
+				LArrayRef lar = new LArrayRef(expr, i);
+				if (basetype.isCompoundType()) {
+					ret.addAll(Arrays.asList(lar.createLValExprs()));
+				} else {
+					ret.add(lar);
+					//System.out.println("I AM HERE: " + fieldnames[i]);
+					//System.out.println("    " + lsr.field + " @ " + lsr.fieldPos + " of " + lsr.type);
+				}
+			}
+			return ret.toArray(new LValExpr[ret.size()]);
+		}
+		int bitWidth() {
+			return basetype.bitWidth() * len;
+		}
+		String toShortString() {
+			return basetype.toShortString() + "[" + len + "]";
+		}
+		public String toString() {
+			return "[type array " + basetype.toString() + " len " + len + " ]";
+		}
+		ArrayType(Type basetype, int len) {
+			this.basetype = basetype;
+			this.len = len;
 		}
 	}
 	
@@ -171,7 +213,8 @@ public class SFDL {
 		IntConst(BigInteger n) {
 			super(null);
 			this.number = n;
-			this.type = new IntType(Math.max(1, n.bitLength()));
+			// 1+ for sign bit
+			this.type = new IntType(1+Math.max(1, n.bitLength()));
 		}
 		CompilerOutput compile(Compile comp) {
 			return comp.compileIntConst(this);
@@ -222,7 +265,40 @@ public class SFDL {
 		}
 		
 		public LValExpr[] createLValExprs() {
-			return ((StructType) type).createLValExprs(this);
+			if (type.isCompoundType()) {
+				// TODO: put createLValExprs in base Type and remove if/cast
+				return ((CompoundType) type).createLValExprs(this);
+			}
+			// this should not be reached until above change is made
+			return new LValExpr[] { this };
+		}
+	}
+	
+	static class LArrayRef extends ArrayRef implements LValExpr {
+		LArrayRef(Expr left, Expr el) {
+			super(left, el);
+		}
+
+		public LValExpr[] createLValExprs() {
+			return null;
+		}
+
+		public String uniqueStr() {
+			return ((LValExpr) left).uniqueStr();
+		}
+		
+	}
+	static class ArrayRef extends Expr {
+		Expr left;
+		Expr el;
+		ArrayRef(Expr left, Expr el) {
+			super(null);
+			this.left = left;
+			this.el = el;
+			this.type = ((ArrayType) left.type).basetype;
+		}
+		CompilerOutput compile(Compile compile) {
+			throw new InternalCompilerError("ArrayRef not yet implemented");
 		}
 	}
 	
@@ -289,7 +365,7 @@ public class SFDL {
 			super(left, right);
 			IntType lt = (IntType) left.type;
 			IntType rt = (IntType) right.type;
-			int z = Math.max(lt.bits, rt.bits);
+			int z = Math.max(lt.bits, rt.bits) + 1;
 			this.type = new IntType(z);
 		}
 		CompilerOutput compile(Compile compile) {
@@ -298,10 +374,72 @@ public class SFDL {
 		public String toString() {
 			return "[sub- " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
-
-		
 	}
 
+	static class MulExpr extends BinaryOpExpr {
+		MulExpr(Expr left, Expr right) {
+			super(left, right);
+			IntType lt = (IntType) left.type;
+			IntType rt = (IntType) right.type;
+			int z = lt.bits + rt.bits;
+			this.type = new IntType(z);
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileMulExpr(this);
+		}
+			
+		public String toString() {
+			return "[mul* " + type.toShortString() + " " + left + " , " + right + " ]";
+		}
+
+	}
+	
+	static class DivExpr extends BinaryOpExpr {
+		DivExpr(Expr left, Expr right) {
+			super(left, right);
+			IntType lt = (IntType) left.type;
+			IntType rt = (IntType) right.type;
+			int z = lt.bits;
+			this.type = new IntType(z);
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileDivExpr(this);
+		}
+			
+		public String toString() {
+			return "[div/ " + type.toShortString() + " " + left + " , " + right + " ]";
+		}
+
+	}
+	
+	static class LeftShiftExpr extends BinaryOpExpr {
+		LeftShiftExpr(Expr left, Expr right) {
+			super(left, right);
+			this.type = left.type;
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileLeftShiftExpr(this);
+		}
+			
+		public String toString() {
+			return "[lshft<< " + type.toShortString() + " " + left + " , " + right + " ]";
+		}
+	}
+	
+	static class RightShiftExpr extends BinaryOpExpr {
+		RightShiftExpr(Expr left, Expr right) {
+			super(left, right);
+			this.type = left.type;
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileRightShiftExpr(this);
+		}
+			
+		public String toString() {
+			return "[rshft>> " + type.toShortString() + " " + left + " , " + right + " ]";
+		}
+	}
+	
 	static class XorExpr extends BinaryOpExpr {
 		XorExpr(Expr left, Expr right) {
 			super(left, right);

@@ -202,49 +202,71 @@ public class SFDLParser extends Parser {
 		return new SFDL.StructType(structNames, structTypes);
 	}
 	
-	SFDL.Type parseTypeExpr() {
+	int parseIntConst() {
+		int num;
 		switch(tok.type) {
+		case TOK_NUM:
+			num = Integer.parseInt(tok.str);
+			break;
 		case TOK_IDENT:
-			SFDL.Type type = sfdl.getType(tok.str);
-			if (type == null)
-				throw new ParseError("Undefined type", tok);
+			SFDL.Expr value = sfdl.evalVar(tok.str);
+			if (!value.isConst())
+				throw new ParseError("Constant expression required", tok);
 
-			nextToken();
-			return type;
-			
-		case TOK_STRUCT:
-			return parseStruct();
-			
-		case TOK_INT:
-			expect(nextToken(), TOK_LT);
-			nextToken();
-			SFDL.IntType inttype;
-			switch(tok.type) {
-			case TOK_NUM:
-				inttype = new SFDL.IntType(Integer.parseInt(tok.str));
-				break;
-			case TOK_IDENT:
-				SFDL.Expr value = sfdl.evalVar(tok.str);
-				if (!value.isConst())
-					throw new ParseError("Constant expression required", tok);
-
-				// throw new ParseError("Integer constant expression required", tok);
-				SFDL.IntConst ival = (SFDL.IntConst) value;
-				inttype = new SFDL.IntType(ival.number.intValue());
-				break;
-			default:
-				throw new ParseError("Unexpected int width ", tok);
-			}
-			expect(nextToken(), TOK_GT);
-			nextToken();
-			return inttype;
+			// throw new ParseError("Integer constant expression required", tok);
+			SFDL.IntConst ival = (SFDL.IntConst) value;
+			num = ival.number.intValue();
+			break;
 		default:
-			throw new ParseError("not a type ", tok);
-			
-			
+			throw new ParseError("Unexpected int width ", tok);
 		}
+		nextToken();
+		return num;
 	}
 	
+	SFDL.Type parseTypeExpr() {
+		SFDL.Type type;
+		maintype:
+			switch(tok.type) {
+			case TOK_IDENT:
+				type = sfdl.getType(tok.str);
+				if (type == null)
+					throw new ParseError("Undefined type", tok);
+
+				nextToken();
+				break maintype;
+
+			case TOK_STRUCT:
+				type = parseStruct();
+				break maintype;
+
+			case TOK_INT:
+				expect(nextToken(), TOK_LT);
+				nextToken();
+				int intlen = parseIntConst();
+
+				expect(tok, TOK_GT);
+				nextToken();
+				
+				type = new SFDL.IntType(intlen);
+				break maintype;
+				
+			default:
+				throw new ParseError("not a type ", tok);
+			}
+		
+		// is it an array type?
+		while (tok.type == TOK_LBRACKET) {
+			nextToken();
+			int arraylen = parseIntConst();
+			expect(tok, TOK_RBRACKET);
+			nextToken();
+			type = new SFDL.ArrayType(type, arraylen);
+		}
+		
+		return type;
+	}
+
 	SFDL.Expr parseVarDef() {
 		expect(tok, TOK_VAR);
 		nextToken();
@@ -349,7 +371,14 @@ public class SFDLParser extends Parser {
 				// TODO: type check
 				expr = new SFDL.AssignExpr(lval, rightexpr);
 				break;
-			case TOK_PERIOD:
+			case TOK_LBRACKET:	// array reference
+				if (!(leftexpr.type instanceof SFDL.ArrayType))
+					throw new ParseError("expression is not an array", tok);
+				nextToken();
+				SFDL.Expr ind = parseExpr();
+				expect(tok, TOK_RBRACKET);
+				
+			case TOK_PERIOD:	// struct reference
 				//System.out.println(leftexpr.type);
 				if (!(leftexpr.type instanceof SFDL.StructType))
 					throw new ParseError("expression is not a struct", tok);
@@ -373,11 +402,35 @@ public class SFDLParser extends Parser {
 				rightexpr = parseExpr(TOK_PLUS);
 				expr = new SFDL.AddExpr(leftexpr, rightexpr);
 				break;
+			case TOK_ASTERISK:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_ASTERISK);
+				expr = new SFDL.MulExpr(leftexpr, rightexpr);
+				break;
 			case TOK_DASH:
 				// TODO: type check
 				nextToken();
 				rightexpr = parseExpr(TOK_DASH);
 				expr = new SFDL.SubExpr(leftexpr, rightexpr);
+				break;
+			case TOK_SLASH:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_SLASH);
+				expr = new SFDL.DivExpr(leftexpr, rightexpr);
+				break;
+			case TOK_LLT:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_LLT);
+				expr = new SFDL.LeftShiftExpr(leftexpr, rightexpr);
+				break;
+			case TOK_GGT:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_GGT);
+				expr = new SFDL.RightShiftExpr(leftexpr, rightexpr);
 				break;
 			case TOK_CARET:
 				// TODO: type check
@@ -430,6 +483,9 @@ public class SFDLParser extends Parser {
 		tok_prios[TOK_DASH] = 20;
 		tok_prios[TOK_CARET] = 20;
 		tok_prios[TOK_ASTERISK] = 30;
+		tok_prios[TOK_SLASH] = 30;
+		tok_prios[TOK_LLT] = 31;
+		tok_prios[TOK_GGT] = 31;
 		tok_prios[TOK_PERIOD] = 100;
 		tok_prios[TOK_LBRACKET] = 110;
 		tok_prios[TOK_LPAREN] = 200;

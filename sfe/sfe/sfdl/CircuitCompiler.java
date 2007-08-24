@@ -35,15 +35,20 @@ public class CircuitCompiler implements Compile {
 		return tt;
 	}
 	static boolean[] TT_ANDNOT() {
-		boolean[] tt = { false, true, false, false };
+		//boolean[] tt = { false, true, false, false };
+		boolean[] tt = { false, false, true, false };
 		return tt;
 	}
 	static boolean[] TT_AND3() {
 		boolean[] tt = { false, false, false, false, false, false, false, true };
 		return tt;
 	}
-	static boolean[] TT_CARRY3() {
+	static boolean[] TT_ADDCARRY3() {
 		boolean[] tt = { false, false, false, true, false, true, true, true };
+		return tt;
+	}
+	static boolean[] TT_SUBCARRY3() {
+		boolean[] tt = { false, true, true, true, false, false, false, false };
 		return tt;
 	}
 	static boolean[] TT_EQ3() {
@@ -111,7 +116,7 @@ public class CircuitCompiler implements Compile {
 		g.inputs = new GateBase[] {in1, in2};
 		g.truthtab = tt;
 		if (tt.length != 4) 
-			throw new RuntimeException("truthtab must have 4 entries");
+			throw new InternalCompilerError("truthtab must have 4 entries");
 		return g;
 	}
 	Gate newGate(GateBase in1, GateBase in2, GateBase in3, boolean[] tt) {
@@ -120,14 +125,8 @@ public class CircuitCompiler implements Compile {
 		g.inputs = new GateBase[] {in1, in2, in3};
 		g.truthtab = tt;
 		if (tt.length != 8) 
-			throw new RuntimeException("truthtab must have 8 entries");
+			throw new InternalCompilerError("truthtab must have 8 entries");
 		return g;
-	}
-	
-	static class CompilerError extends RuntimeException {
-		CompilerError(String msg) {
-			super(msg);
-		}
 	}
 	
 	IntType castToInt(Type type) {
@@ -144,7 +143,7 @@ public class CircuitCompiler implements Compile {
 	}
 	
 	// 0-extend to desired width
-	GateBase[] bitExtend(GateBase[] cc, int len) {
+	GateBase[] bitExtend(GateBase[] cc, int len, boolean signExtend) {
 		if (cc.length > len) {
 			throw new CompilerError("gate too long " + cc.length + " " + len);
 		}
@@ -153,7 +152,7 @@ public class CircuitCompiler implements Compile {
 		GateBase[] newcc = new GateBase[len];
 		System.arraycopy(cc, 0, newcc, 0, cc.length);
 		for (int i=cc.length; i<len; ++i) {
-			newcc[i] = FALSE_GATE;
+			newcc[i] = signExtend ? newIdentityGate(cc[cc.length-1]) : FALSE_GATE;
 		}
 		return newcc;
 	}
@@ -189,6 +188,9 @@ public class CircuitCompiler implements Compile {
 	}
 	
 	GateBase[] assignToVar(LValExpr lval, GateBase[] cc) {
+		if (lval.getType().bitWidth() != cc.length) {
+			throw new CompilerError("assigning to variable of wrong length");
+		}
 		D("assignToVar " + lval.uniqueStr() + " := " + circ2str(cc));
 		String id = lval.uniqueStr();
 		current.varMap.put(id, cc);
@@ -215,7 +217,15 @@ public class CircuitCompiler implements Compile {
 	}
 	
 	CircuitCompilerOutput compileExpr(Expr ex) {
-		return (CircuitCompilerOutput) ex.compile(this);
+		CircuitCompilerOutput out = (CircuitCompilerOutput) ex.compile(this);
+		if (out.cc.length != ex.getType().bitWidth()) {
+			System.err.println("Expr " + ex.toString());
+			throw new InternalCompilerError("Compiler error: Expr " + ex.getClass() + " of type " + 
+					ex.getType().toShortString() + " compiled to " + 
+					out.cc.length + " bits");
+			
+		}
+		return out;
 	}
 
 	CircuitCompilerOutput.FunctionOutput compileFunction(FunctionDef fun) {
@@ -224,8 +234,9 @@ public class CircuitCompiler implements Compile {
 		ArrayList<Input> fnInputs = new ArrayList<Input>();
 		for (NamedObj obj : fun.scope.entities.values()) {
 			if (obj instanceof VarDef) {
+				D("param: " + obj);
 				for (LValExpr lv : ((VarDef) obj).getAllSubLVals()) {
-					D("param: " + lv.uniqueStr());
+					D("param0: " + lv.uniqueStr());
 					GateBase[] incc = new GateBase[lv.getType().bitWidth()];
 
 					for (int i=0; i<incc.length; ++i) {
@@ -234,6 +245,7 @@ public class CircuitCompiler implements Compile {
 							incc[i] = new Input(varno, varno);
 							System.out.println("Add input gate " + incc[i]);
 							fnInputs.add((Input) incc[i]);
+							incc[i].setComment(lv.uniqueStr() + "$" + i);
 						} else {
 							incc[i] = FALSE_GATE;
 						}
@@ -277,11 +289,7 @@ public class CircuitCompiler implements Compile {
 		if (rc.length>=cc.length) {
 			System.arraycopy(rc, 0, cc, 0, cc.length);
 		} else {
-			System.arraycopy(rc, 0, cc, 0, rc.length);
-			// TODO: consider signed/unsigned for sign extension
-			for (int i=rc.length; i<cc.length; ++i) {
-				cc[i] = FALSE_GATE;
-			}
+			cc = bitExtend(rc, cc.length, expr.type.isSigned());
 		}
 		
 		if (conditionBit != TRUE_GATE) {
@@ -295,23 +303,33 @@ public class CircuitCompiler implements Compile {
 		return new CircuitCompilerOutput(cc);
 	}
 	
+	Gate[] createAdder(GateBase[] lc, GateBase[] rc) {
+		if (lc.length != rc.length) {
+			throw new InternalCompilerError("Internal compiler error: " + 
+					lc.length + " != " + rc.length);
+		}
+		int len = lc.length;
+		
+		Gate[] cc = new Gate[len];
+		Gate[] carry = new Gate[len];
+		cc[0] = newGate(lc[0], rc[0], TT_XOR());
+		carry[0] = newGate(lc[0], rc[0], TT_AND());
+		for(int i=1; i<len; ++i) {
+			cc[i] = newGate(lc[i], rc[i], carry[i-1], TT_XOR3());
+			carry[i] = newGate(lc[i], rc[i], carry[i-1], TT_ADDCARRY3());
+		}
+		return cc;
+	}
 	public CompilerOutput compileAddExpr(AddExpr expr) {
 		GateBase[] lc = compileExpr(expr.left).cc;
 		GateBase[] rc = compileExpr(expr.right).cc;
 		
-		lc = bitExtend(lc, expr.type.bitWidth());
-		rc = bitExtend(rc, expr.type.bitWidth());
+		lc = bitExtend(lc, expr.type.bitWidth(), expr.left.type.isSigned());
+		rc = bitExtend(rc, expr.type.bitWidth(), expr.right.type.isSigned());
 		
 		IntType type = castToInt(expr.type);
 		
-		Gate[] cc = new Gate[type.bits];
-		Gate[] carry = new Gate[type.bits];
-		cc[0] = newGate(lc[0], rc[0], TT_XOR());
-		carry[0] = newGate(lc[0], rc[0], TT_AND());
-		for(int i=1; i<type.bits; ++i) {
-			cc[i] = newGate(lc[i], rc[i], carry[i-1], TT_XOR3());
-			carry[i] = newGate(lc[i], rc[i], carry[i-1], TT_CARRY3());
-		}
+		Gate[] cc = createAdder(lc, rc);
 		
 		return new CircuitCompilerOutput(cc);
 	}
@@ -322,9 +340,11 @@ public class CircuitCompiler implements Compile {
 		if (n==0) {
 			return new CircuitCompilerOutput(FALSE_GATE);
 		}
+		++n;
 		GateBase[] cc = new GateBase[n];
 		for (int i=0; i<n; ++i) {
 			cc[i] = intConst.number.testBit(i) ? TRUE_GATE : FALSE_GATE;
+			System.out.println("cc " + i + " + " + cc[i]);
 		}
 		return new CircuitCompilerOutput(cc);
 	}
@@ -345,15 +365,161 @@ public class CircuitCompiler implements Compile {
 		// TODO: must resolve substructs ???
 		return new CircuitCompilerOutput(cc);	
 	}
-	public CompilerOutput compileSubExpr(SubExpr expr) {
-		throw new CompilerError("not yet implemented: subExpr");
+	
+	Gate[] createSubCircuit(GateBase[] left, GateBase[] right, boolean extraSignBit) {
+		if (left.length != right.length) {
+			throw new InternalCompilerError("Internal compiler error: " + 
+					left.length + " != " + right.length);
+		}
+		int len = left.length;
+		if (extraSignBit)
+			++len;
+		Gate[] cc = new Gate[len];
+		Gate[] carry = new Gate[len];
+		if (extraSignBit)
+			--len;
+		cc[0] = newGate(left[0], right[0], TT_XOR());
+		carry[0] = newGate(right[0], left[0], TT_ANDNOT());
+		for(int i=1; i<len; ++i) {
+			cc[i] = newGate(left[i], right[i], carry[i-1], TT_XOR3());
+			carry[i] = newGate(left[i], right[i], carry[i-1], TT_SUBCARRY3());
+		}
+		if (extraSignBit) {
+			cc[len] = carry[len-1];
+		}
+		return cc;
 	}
+	
+	public CompilerOutput compileSubExpr(SubExpr expr) {
+		GateBase[] lc = compileExpr(expr.left).cc;
+		GateBase[] rc = compileExpr(expr.right).cc;
+		
+		lc = bitExtend(lc, expr.type.bitWidth()-1, expr.left.type.isSigned());
+		rc = bitExtend(rc, expr.type.bitWidth()-1, expr.right.type.isSigned());
+		
+		Gate[] result = createSubCircuit(lc, rc, true);
+		System.out.println("sub result.len = " + result.length + " type width = " + expr.type.bitWidth());
+		return new CircuitCompilerOutput(result);
+		
+	}
+	
+	public CompilerOutput compileDivExpr(DivExpr expr) {
+		//throw new CompilerError("not yet implemented: divExpr");
+		GateBase[] lc = compileExpr(expr.left).cc;
+		GateBase[] rc = compileExpr(expr.right).cc;
+		
+		lc = bitExtend(lc, expr.type.bitWidth(), expr.left.type.isSigned());
+		rc = bitExtend(rc, expr.type.bitWidth(), expr.left.type.isSigned());
+		
+		Gate[] result = new Gate[expr.type.bitWidth()];
+
+		int leftsize =  expr.left.type.bitWidth();
+		int rightsize = expr.right.type.bitWidth();
+		int circsize = leftsize < rightsize ? leftsize : rightsize;
+
+		GateBase[] curP = null;
+		GateBase[] lastP;
+
+		//System.out.println("DIV right " + right.size() + "  left " + left.size() + "  lhs " + lhs.size());
+
+		// one iteration for each bit in divisor (or output)
+		for (int i=0; i<circsize; ++i) {
+			//System.out.println("DIV iteration: " + i);
+			lastP = curP;
+			curP = new GateBase[rightsize];
+			// left shift P register and bring down next bit
+			curP[0] = lc[circsize-i-1];
+
+			if (i == 0) {
+				for (int j=1; j<leftsize; ++j) {
+					curP[j] = FALSE_GATE;
+				}		
+			} else {
+				for (int j=1; j<leftsize; ++j) {
+					curP[j] = lastP[j-1];
+				}
+			}
+
+			// subtract 
+			GateBase[] subQ = new GateBase[rightsize];
+			subQ = createSubCircuit(curP, rc, false);
+			
+			// output bit
+			result[circsize-i-1] = newNotGate(subQ[rightsize-1]);
+				
+			// update curP if necessary, using muxes
+			GateBase[] curP2 = new GateBase[rightsize];
+					
+			for (int j=0; j<rightsize; ++j) {
+				// TODO: check order of MUX arguments
+				curP2[j] = newGate(subQ[rightsize-1], curP[j], subQ[j], TT_MUX());
+			}
+
+			curP = curP2;
+		}
+
+
+		return new CircuitCompilerOutput(result);
+	}
+
+	/*
+	GateBase[] createMultiplier(GateBase[] left, GateBase[] right) {
+		int len = left.length + right.length;
+		Gate[] result = new Gate[left.length];
+		for (int j=0; j<left.length; ++j) {
+			result[j] = newGate(right[0], left[j], FALSE_GATE, TT_MUX());
+		}
+		for (int i=1; i<right.length; ++i) {
+			Gate[] term = new Gate[left.length + i];
+			for (int j=0; j<left.length; ++j) {
+				term[j] = newGate(right[i], left[i+j], FALSE_GATE, TT_MUX());
+			}
+			Gate[] resnew = new Gate[result.length + 1];
+			System.arraycopy(result, 0, resnew, 0, result.length);
+			resnew[result.length] = FALSE_GATE;
+			result = createAdder(resnew, term);
+		}
+		
+		return result;
+	}
+	*/
+	
+	public CompilerOutput compileMulExpr(MulExpr expr) {
+		GateBase[] lc = compileExpr(expr.left).cc;
+		GateBase[] rc = compileExpr(expr.right).cc;
+		//throw new CompilerError("not yet implemented: mulExpr");
+		Gate[] lastrow;
+		Gate[] thisrow = new Gate[lc.length+rc.length];
+		for (int j=0; j<lc.length; ++j) {
+			thisrow[j] = newGate(rc[0], lc[j], TT_AND());
+		}
+		for (int j=lc.length; j<lc.length+rc.length; ++j) {
+			thisrow[j] = FALSE_GATE;
+		}
+		for (int i=1; i<rc.length; ++i) {
+			lastrow = thisrow;
+			thisrow = new Gate[lc.length+rc.length];
+			for (int j=0; j<i; ++j) {
+				thisrow[j] = FALSE_GATE;
+			}
+			for (int j=0; j<lc.length; ++j) {
+				thisrow[i+j] = newGate(rc[i], lc[j], TT_AND());
+			}
+			for (int j=i+lc.length; j<rc.length+lc.length; ++j) {
+				thisrow[j] = FALSE_GATE;
+			}
+			thisrow = createAdder(lastrow, thisrow);
+		}
+		
+		return new CircuitCompilerOutput(thisrow);
+	}
+	
 	public CompilerOutput compileXorExpr(XorExpr expr) {
 		GateBase[] lc = compileExpr(expr.left).cc;
 		GateBase[] rc = compileExpr(expr.right).cc;	
 		
-		lc = bitExtend(lc, expr.type.bitWidth());
-		rc = bitExtend(rc, expr.type.bitWidth());
+		lc = bitExtend(lc, expr.type.bitWidth(), expr.left.type.isSigned());
+		rc = bitExtend(rc, expr.type.bitWidth(), expr.right.type.isSigned());
 		
 		IntType type = castToInt(expr.type);
 		
@@ -369,8 +535,8 @@ public class CircuitCompiler implements Compile {
 		GateBase[] rc = compileExpr(expr.right).cc;
 
 		int eqLen = Math.max(lc.length, rc.length);
-		lc = bitExtend(lc, eqLen);
-		rc = bitExtend(rc, eqLen);
+		lc = bitExtend(lc, eqLen, expr.left.type.isSigned());
+		rc = bitExtend(rc, eqLen, expr.right.type.isSigned());
 
 		Gate[] cc = new Gate[eqLen];
 		cc[0] = newGate(lc[0], rc[0], TT_XNOR());
@@ -385,8 +551,8 @@ public class CircuitCompiler implements Compile {
 		GateBase[] rc = compileExpr(expr.right).cc;
 
 		int eqLen = Math.max(lc.length, rc.length);
-		lc = bitExtend(lc, eqLen);
-		rc = bitExtend(rc, eqLen);
+		lc = bitExtend(lc, eqLen, expr.left.type.isSigned());
+		rc = bitExtend(rc, eqLen, expr.right.type.isSigned());
 
 		Gate[] cc = new Gate[eqLen];
 		cc[0] = newGate(lc[0], rc[0], TT_XOR());
@@ -401,8 +567,8 @@ public class CircuitCompiler implements Compile {
 		GateBase[] rc = compileExpr(expr.right).cc;
 
 		int eqLen = Math.max(lc.length, rc.length);
-		lc = bitExtend(lc, eqLen);
-		rc = bitExtend(rc, eqLen);
+		lc = bitExtend(lc, eqLen, expr.left.type.isSigned());
+		rc = bitExtend(rc, eqLen, expr.right.type.isSigned());
 
 		Gate[] cc = new Gate[eqLen];
 		cc[eqLen-1] = newGate(rc[eqLen-1], lc[eqLen-1], TT_ANDNOT());
@@ -418,7 +584,7 @@ public class CircuitCompiler implements Compile {
 		
 	}
 	public CompilerOutput compileGreaterThanExpr(GreaterThanExpr expr) {
-		throw new CompilerError("not yet implemented: GreaterThanExpr");
+		throw new InternalCompilerError("not yet implemented: GreaterThanExpr");
 	}
 	public CompilerOutput compileIfExpr(IfExpr ife) {
 		CircuitCompilerOutput out = compileExpr(ife.cond);
@@ -430,6 +596,60 @@ public class CircuitCompiler implements Compile {
 		this.conditionBit = oldCondBit;
 		return new CircuitCompilerOutput(new Gate[0]);
 	}
+	
+	GateBase[] createLeftBarrelShifter(GateBase[] in, GateBase[] amt) {
+		GateBase[] cc = in;
+		GateBase[] mux1;
+		GateBase[] mux2;
+		
+		int ipow = 1;	// TODO: use BigInteger here?
+		int j;
+		for (int i=0; i<amt.length; ++i) {
+			mux1 = new GateBase[in.length];
+			mux2 = cc;
+			for (j=0; j<ipow; ++j) {
+				mux1[j] = FALSE_GATE;
+			}
+			for (; j<in.length; ++j) {
+				mux1[j] = cc[j-ipow];
+			}
+			
+			cc = new GateBase[in.length];
+			for (j=0; j<in.length; ++j) {
+				cc[j] = newGate(amt[i], mux1[j], mux2[j], TT_MUX());
+			}
+			
+			ipow += ipow;
+		}
+		return cc;
+	}
+	
+	public CompilerOutput compileLeftShiftExpr(LeftShiftExpr expr) {
+		GateBase[] lc = compileExpr(expr.left).cc;
+		GateBase[] rc = compileExpr(expr.right).cc;	
+		GateBase[] cc = createLeftBarrelShifter(lc, rc);
+		return new CircuitCompilerOutput(cc);
+	}
+
+	static GateBase[] reverse(GateBase[] in) {
+		GateBase[] ret = new GateBase[in.length];
+		for (int i=0; i<in.length; ++i) {
+			ret[in.length-1-i] = in[i];
+		}
+		return ret;
+	}
+	
+	public CompilerOutput compileRightShiftExpr(RightShiftExpr expr) {
+		GateBase[] lc = compileExpr(expr.left).cc;
+		GateBase[] rc = compileExpr(expr.right).cc;
+		lc = reverse(lc);
+		GateBase[] cc = createLeftBarrelShifter(lc, rc);	
+		cc = reverse(cc);
+		return new CircuitCompilerOutput(cc);
+	}
+	
+	
+
 
 	public static void main(String[] args) throws Exception {
 		BufferedReader r = new BufferedReader(new FileReader(args[0]));

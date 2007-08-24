@@ -12,6 +12,14 @@ public class Circuit {
 		}
 		public abstract boolean eval(EvalState state);
 		public abstract void write(PrintStream out);
+		
+		String comment;
+		public void setComment(String s) {
+			this.comment = s;
+		}
+		public String getComment() {
+			return comment;
+		}
 	}
 	
     class EvalState {
@@ -42,7 +50,11 @@ public class Circuit {
 		}
 		
 		public void write(PrintStream out) {
-			out.println(id + " input  // " + var);
+			if (comment != null) {
+				out.println(id + " input  // " + comment);
+			} else {
+				out.println(id + " input  // " + var);
+			}
 		}
 	}
 	
@@ -76,7 +88,11 @@ public class Circuit {
 			for (int i=0; i<inputs.length; ++i) {
 				out.print(inputs[inputs.length-1-i].id + " ");
 			}
-			out.println("]");
+			out.print("]");
+			if (comment != null) {
+				out.print(" // " + comment);
+			}
+			out.println();
 			
 		}
 		public void write(PrintStream out) {

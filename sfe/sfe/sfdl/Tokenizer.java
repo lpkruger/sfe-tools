@@ -140,8 +140,30 @@ public class Tokenizer {
 					case ']' :
 						return new Token(TOK_RBRACKET, "]");
 					case '<' :
+						ch = readChar();
+						if (ch=='=') {
+							return new Token(TOK_LTE, "<=");
+						} else if (ch == '<') {
+							ch = readChar();
+							if (ch=='<')
+								return new Token(TOK_LLLT, "<<<");
+							pushBack(ch);
+							return new Token(TOK_LLT, "<<");
+						}
+						pushBack(ch);
 						return new Token(TOK_LT, "<");
 					case '>' :
+						ch = readChar();
+						if (ch=='=') {
+							return new Token(TOK_GTE, ">=");
+						} else if (ch == '>') {
+							ch = readChar();
+							if (ch=='>')
+								return new Token(TOK_GGGT, ">>>");
+							pushBack(ch);
+							return new Token(TOK_GGT, ">>");
+						}
+						pushBack(ch);
 						return new Token(TOK_GT, ">");
 					case '|' :
 						return new Token(TOK_PIPE, "|");

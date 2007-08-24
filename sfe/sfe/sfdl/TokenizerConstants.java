@@ -22,7 +22,7 @@ public interface TokenizerConstants {
 	static final int TOK_RBRACE = 11;
 	static final int TOK_LPAREN = 12;
 	static final int TOK_RPAREN = 13;
-	static final int TOK_PIPE = 14;
+	// static final int TOK_COLON = 14;
 	static final int TOK_SEMICOLON = 15;
 	static final int TOK_COMMA = 16;
 	static final int TOK_EQUAL = 17;
@@ -30,18 +30,26 @@ public interface TokenizerConstants {
 	static final int TOK_LBRACKET = 19;
 	static final int TOK_RBRACKET = 20;
 	
-	static final int TOK_LT = 21;
-	static final int TOK_GT = 22;
-	static final int TOK_PERIOD = 23;
+	static final int TOK_LT = 21;	// <
+	static final int TOK_GT = 22;	// >
+	static final int TOK_LTE = 23;	// <=
+	static final int TOK_GTE = 24;	// >=
+	static final int TOK_LLT = 25;	// <<
+	static final int TOK_GGT = 26;	// >>
+	static final int TOK_LLLT = 27;	// <<<
+	static final int TOK_GGGT = 28;	// >>>
+	static final int TOK_PERIOD = 29;
 	
-	static final int TOK_NOTEQUAL = 30;
-	static final int TOK_EQUALEQUAL = 31;
-	// static final int TOK_RARROW = 30; // ->
+	static final int TOK_NOTEQUAL = 30;		// !=
+	static final int TOK_EQUALEQUAL = 31;	// ==
+	// static final int TOK_RARROW = 32; 	// ->
 	
 	static final int TOK_PLUS = 40;
 	static final int TOK_DASH = 41;
-	static final int TOK_SLASH = 43;
-	static final int TOK_CARET = 44;
+	static final int TOK_SLASH = 42;
+	static final int TOK_CARET = 43;		// ^
+	static final int TOK_PIPE = 44;			// |
+	static final int TOK_AMPERSAND = 45;	// &
 	
 	static final int TOK_SLASHSLASH = 90;
 	static final int TOK_SLASHSTAR = 91;

@@ -34,12 +34,12 @@ public class Optimizer {
 		vv[y] = tmp;
 	}
 	
-	GateBase optimizeGate(Gate g, Set<Gate> seen) {
+	Gate optimizeGate(Gate g, Set<Gate> seen) {
 		if (seen.contains(g))
 			return g;
 		
 		boolean delta = false;
-		boolean again = false;
+		//boolean again = false;
 		for (int pass = 1; pass<=2; ++pass) {
 			for (int i=0; i<g.arity; ++i) {
 				int con = isConst(g.inputs[i]);
@@ -57,13 +57,17 @@ public class Optimizer {
 					}
 					g.inputs = newinputs;
 					--i;
+					delta=true;
 					continue;
 				}
 				
+				// optimize case where input has arity 1 (and is not constant)
 				if ((g.inputs[i] instanceof Gate) && ((Gate)g.inputs[i]).arity == 1) {
 					Gate g2 = (Gate) g.inputs[i];
 					//System.out.println("1child: " + g + " <- " + g2);
-					// already know not constant
+					// already know not constant, so is [0 1] or [1 0]
+					if (g2.truthtab[0] == g2.truthtab[1])
+						throw new RuntimeException("should not have constant gate");
 					boolean inv = g2.truthtab[0];
 					GateBase g3 = g2.inputs[0];
 					g.inputs[i] = g3;
@@ -81,9 +85,11 @@ public class Optimizer {
 						//System.out.println(pr(g.truthtab));
 					}
 					--i;
+					delta=true;
 					continue;	
 				}
 				
+				// optimize duplicate inputs
 				for (int l=0; l<i; ++l) {
 					if (g.inputs[i] == g.inputs[l]) {
 						delta = true;
@@ -98,8 +104,35 @@ public class Optimizer {
 						}
 						g.inputs = newinputs;
 						--i;
+						delta=true;
 						continue;
 					}
+				}
+				
+				// optimize irrelevant inputs
+				boolean[] tt0 = slice(g.truthtab, i, false);
+				boolean[] tt1 = slice(g.truthtab, i, true);
+				boolean same = true;
+				for (int l=0; l<tt0.length; ++l) {
+					if (tt0[l] != tt1[l]) {
+						same = false;
+						break;
+					}
+				}
+				if (same) {
+					//System.out.println("same");
+					--g.arity;
+					g.truthtab = tt0;
+					GateBase[] newinputs = new GateBase[g.arity];
+					int k=0;
+					for (int j=0; j<=g.arity; ++j) {
+						if (j != i)
+							newinputs[k++] = g.inputs[j];
+					}
+					g.inputs = newinputs;
+					--i;
+					delta=true;
+					continue;
 				}
 			}
 			
@@ -119,6 +152,7 @@ public class Optimizer {
 							g2.truthtab[2] ? g.truthtab[3] : g.truthtab[2],
 							g2.truthtab[3] ? g.truthtab[3] : g.truthtab[2]};
 						g.arity = 3;
+						delta=true;
 						break;
 					}
 				}
@@ -131,6 +165,7 @@ public class Optimizer {
 				System.arraycopy(g2.inputs, 0, g.inputs, 0, g2.arity);
 				g.truthtab = new boolean[g2.truthtab.length];
 				System.arraycopy(g2.truthtab, 0, g.truthtab, 0, g2.truthtab.length);
+				delta=true;
 			}
 			
 			/*
@@ -159,6 +194,11 @@ public class Optimizer {
 			}
             */
 			
+			if (delta) {
+				delta = false;
+				--pass;
+				continue;
+			}
 			if (pass == 2) break;
 			
 			for (int i=0; i<g.arity; ++i) {
@@ -188,6 +228,7 @@ public class Optimizer {
 	
 	boolean[] slice(boolean[] tt, int pos, int pos2) {
 		// "partial evaluation" of a single truth table
+		// if pos and pos2 are same variable
 		boolean[] ntt = new boolean[tt.length >> 1];
 		
 		int l = 0;
