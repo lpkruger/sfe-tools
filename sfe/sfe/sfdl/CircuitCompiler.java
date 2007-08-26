@@ -659,6 +659,10 @@ public class CircuitCompiler implements Compile {
 	}
 
 	public static void main(String[] args) throws Exception {
+		if (args.length==0) {
+			System.out.println("Usage: compile circuit.txt");
+			System.exit(1);
+		}
 		boolean debug = (System.getProperty("D") != null);
 		if (!debug) {
 			System.setOut(new PrintStream(new NullOutputStream()));
