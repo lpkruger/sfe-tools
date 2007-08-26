@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -36,6 +37,8 @@ public class EDProto2 {
 		System.out.println(s);
 	}
 	
+	static SecureRandom rand = new SecureRandom();
+	
 	static SFECipher C;
 	static boolean use_purdue = true;
 	
@@ -64,7 +67,7 @@ public class EDProto2 {
 	}
 	
 	public static BigInteger getRandom() {
-		return new BigInteger(N_BITS-8, new Random());
+		return new BigInteger(N_BITS-20, rand).add(BigInteger.ONE);
 		// DEBUG:
 		//return BigInteger.ZERO;
 	}
@@ -144,6 +147,7 @@ public class EDProto2 {
 			
 			System.out.println();
 			System.out.println("Alice result:" + aState[astrlen][bstrlen]);
+			System.out.println("Alice circuit wrote " + byteCount.cnt + " bytes");
 		}
 		
 		
@@ -330,6 +334,7 @@ public class EDProto2 {
 			}
 			
 			System.out.println("Bob result:" + bState[astrlen][bstrlen]);
+			System.out.println("Bob circuit wrote " + byteCount.cnt + " bytes");
 		}
 		
 		

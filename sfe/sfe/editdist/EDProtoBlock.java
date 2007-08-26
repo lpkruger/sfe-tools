@@ -9,9 +9,6 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import fairplay.BOAL.AliceLib;
-import fairplay.BOAL.BobLib;
-
 import sfe.shdl.*;
 import sfe.util.*;
 // import sfe.bdd.proto.Protocol;
