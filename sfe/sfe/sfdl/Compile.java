@@ -5,6 +5,7 @@ import sfe.sfdl.SFDL.AssignExpr;
 import sfe.sfdl.SFDL.Block;
 import sfe.sfdl.SFDL.DivExpr;
 import sfe.sfdl.SFDL.EqExpr;
+import sfe.sfdl.SFDL.ForExpr;
 import sfe.sfdl.SFDL.GreaterThanExpr;
 import sfe.sfdl.SFDL.IfExpr;
 import sfe.sfdl.SFDL.IntConst;
@@ -52,5 +53,7 @@ public interface Compile {
 
 	CompilerOutput compileLeftShiftExpr(LeftShiftExpr leftShiftExpr);
 
-	CompilerOutput compileRightShiftExpr(RightShiftExpr rightShiftExpr);	
+	CompilerOutput compileRightShiftExpr(RightShiftExpr rightShiftExpr);
+
+	CompilerOutput compileForExpr(ForExpr forExpr);	
 }

@@ -13,6 +13,7 @@ import java.math.BigInteger;
 
 import fairplay.Compiler.IntConstant;
 
+import sfe.sfdl.SFDL.ArrayRef;
 import sfe.sfdl.SFDL.LValExpr;
 import sfe.sfdl.Tokenizer.Token;
 import sfe.util.VarDesc;
@@ -41,6 +42,8 @@ public class SFDLParser extends Parser {
 		add("if", TOK_IF);
 		add("else", TOK_ELSE);
 		add("for", TOK_FOR);
+		add("to", TOK_TO);
+		add("by", TOK_BY);
 		add("function", TOK_FUNCTION);
 	}
 	
@@ -319,6 +322,23 @@ public class SFDLParser extends Parser {
 				if (debug) System.out.println("if else done");
 			}
 			return new SFDL.IfExpr(cond, tblock, fblock);
+		case TOK_FOR:
+			nextToken();
+			SFDL.Expr left = parseExpr(TOK_EQUAL);
+			System.out.println(left);
+			if (!(left instanceof SFDL.LValExpr)) {
+				throw new ParseError("for loop requires lval", tok);
+			}
+			expect(tok, TOK_EQUAL);
+			expect(nextToken(), TOK_NUM);			// TODO should allow consts
+			int begin = Integer.parseInt(tok.str);
+			expect(nextToken(), TOK_TO);
+			expect(nextToken(), TOK_NUM);			// TODO should allow consts
+			int end = Integer.parseInt(tok.str);
+			nextToken();
+			SFDL.Block loopblock = parseBlock();
+			return new SFDL.ForExpr((SFDL.LValExpr)left, begin, end, 1, loopblock);
+			
 		default:
 			return parseExpr();
 		}
@@ -377,6 +397,14 @@ public class SFDLParser extends Parser {
 				nextToken();
 				SFDL.Expr ind = parseExpr();
 				expect(tok, TOK_RBRACKET);
+				if (leftexpr instanceof SFDL.LValExpr) {
+					expr = new SFDL.LArrayRef((LValExpr)leftexpr, ind);
+				} else {
+					expr = new SFDL.ArrayRef(leftexpr, ind);
+				}
+				
+				nextToken();
+				break;
 				
 			case TOK_PERIOD:	// struct reference
 				//System.out.println(leftexpr.type);
@@ -495,7 +523,8 @@ public class SFDLParser extends Parser {
 	// return true if right binds tighter than left
 	boolean greaterPrio(int right, int left) {
 		
-		if (right==TOK_SEMICOLON || right==TOK_LBRACE || right==TOK_RPAREN)
+		if (right==TOK_SEMICOLON || right==TOK_LBRACE || right==TOK_RPAREN 
+				|| right==TOK_TO || right==TOK_BY)
 			return false;
 		
 		// -1 is always top level

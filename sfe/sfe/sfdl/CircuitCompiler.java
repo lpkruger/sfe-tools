@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 import sfe.sfdl.Parser.ParseError;
 import sfe.sfdl.SFDL.*;
@@ -138,13 +139,7 @@ public class CircuitCompiler implements Compile {
 		}
 		return (IntType) type;
 	}
-	
-	static Circuit compile(SFDL sfdl, String name) {
-		CircuitCompiler comp = new CircuitCompiler();
-		FunctionDef mainfn = sfdl.getFn("output");
-		return comp.compileFunction(mainfn).circuit;
-	}
-	
+
 	// 0-extend to desired width
 	GateBase[] bitExtend(GateBase[] cc, int len, boolean signExtend) {
 		if (cc.length > len) {
@@ -181,6 +176,8 @@ public class CircuitCompiler implements Compile {
 	void closeScope() {
 		current = current.parent;
 	}
+
+	Map<String,GateBase[]> formatMap = new HashMap<String,GateBase[]>();
 	
 	String circ2str(GateBase[] cc) {
 		StringBuffer sb = new StringBuffer("circ[" + cc.length + "]\n");
@@ -200,18 +197,40 @@ public class CircuitCompiler implements Compile {
 		return cc;
 	}
 	
-	GateBase[] retrieveFromVar(LValExpr lval) {
+	GateBase[] retrieveFromVar(LValExpr lval, boolean isOutput) {
 		String id = lval.uniqueStr();
 		GateBase[] cc = current.varMap.get(id);
+		if (cc != null && isOutput) {
+			Output[] out = new Output[cc.length];
+			for (int i=0; i<cc.length; ++i) {
+				out[i] = new Output(newIdentityGate(cc[i]));
+				out[i].setComment(id + "$" + i);
+			}
+			formatMap.put(id, out);
+			cc = out;
+		}
 		if (cc == null && lval.getType() instanceof CompoundType) {
 			LValExpr[] alllvals = lval.createLValExprs();
 			ArrayList<GateBase> allgates = new ArrayList<GateBase>();
 			for (LValExpr sublval : alllvals) {
 				//D("sublval :" + sublval.uniqueStr());
 				//D("sublval :" + current.varMap.get(sublval.uniqueStr()));
-				allgates.addAll(Arrays.asList(current.varMap.get(sublval.uniqueStr())));
+				String uniqueStr = sublval.uniqueStr();
+				GateBase[] gates = current.varMap.get(uniqueStr);
+				if (isOutput) {
+					for (int i=0; i<gates.length; ++i) {
+						gates[i] = new Output(newIdentityGate(gates[i]));
+						gates[i].setComment(uniqueStr + "$" + i);
+					}
+					formatMap.put(uniqueStr, gates);
+				}
+				allgates.addAll(Arrays.asList(gates));
+			
 			}
-			cc = allgates.toArray(new GateBase[allgates.size()]);
+			if (isOutput)
+				cc = allgates.toArray(new Output[allgates.size()]);
+			else
+				cc = allgates.toArray(new GateBase[allgates.size()]);
 		}
 		if (cc == null) {
 			throw new CompilerError("Not found in scope " + id);
@@ -264,18 +283,20 @@ public class CircuitCompiler implements Compile {
 		Circuit circ = new Circuit();
 		circ.inputs = fnInputs.toArray(new Input[fnInputs.size()]);
 		//GateBase[] cc = top.varMap.get(fun.name);
-		GateBase[] cc = retrieveFromVar(new VarRef((VarDef)fun.scope.get(fun.name)));
+		VarRef outputVar = new VarRef((VarDef)fun.scope.get(fun.name));
+		Output[] cc = (Output[]) retrieveFromVar(outputVar, true);
 		if (cc == null) {
 			D("return value not in scope: " + fun.name);
 		}
 		circ.outputs = new Output[cc.length];
 		for (int i=0; i<cc.length; ++i) {
-			circ.outputs[i] = new Output(newIdentityGate(cc[i]));
+			circ.outputs[i] = cc[i];
 		}
 		
+		CircuitCompilerOutput.FunctionOutput ret = 
+			new CircuitCompilerOutput.FunctionOutput(circ);
 		closeScope();
-		
-		return new CircuitCompilerOutput.FunctionOutput(circ);
+		return ret;
 
 	}
 	
@@ -296,7 +317,7 @@ public class CircuitCompiler implements Compile {
 		}
 		
 		if (conditionBit != TRUE_GATE) {
-			GateBase[] oldcc = retrieveFromVar(expr.lval);
+			GateBase[] oldcc = retrieveFromVar(expr.lval, false);
 			for (int i=0; i<cc.length; ++i) {
 				cc[i] = newGate(conditionBit, cc[i], oldcc[i], TT_MUX());
 			}
@@ -589,6 +610,14 @@ public class CircuitCompiler implements Compile {
 	public CompilerOutput compileGreaterThanExpr(GreaterThanExpr expr) {
 		throw new InternalCompilerError("not yet implemented: GreaterThanExpr");
 	}
+
+	public CompilerOutput compileForExpr(ForExpr fore) {
+		for (int loopctr = fore.begin; loopctr<fore.end; loopctr += fore.by) {
+			compileAssignExpr(new SFDL.AssignExpr(fore.var, new SFDL.IntConst(loopctr)));
+			compileBlock(fore.body);
+		}
+		return new CircuitCompilerOutput(new Gate[0]);
+	}
 	public CompilerOutput compileIfExpr(IfExpr ife) {
 		CircuitCompilerOutput out = compileExpr(ife.cond);
 		GateBase oldCondBit = conditionBit;
@@ -658,26 +687,54 @@ public class CircuitCompiler implements Compile {
         public void write(byte[] b, int off, int len) { } 
 	}
 
+	void printFmtFile() {
+		for (Map.Entry<String, GateBase[]> ent : formatMap.entrySet()) {
+			System.out.print("Bob input integer \"");
+			System.out.print(ent.getKey());
+			System.out.print("\" [");
+			for (GateBase g : ent.getValue()) {
+				System.out.print(" " + g.id);
+			}
+			System.out.println(" ]");
+		}
+	}
+
+	CircuitCompilerOutput.FunctionOutput lastout;
+	Circuit compile(SFDL sfdl, String name) {
+		FunctionDef mainfn = sfdl.getFn("output");
+		CircuitCompilerOutput.FunctionOutput out = compileFunction(mainfn);
+		lastout = out;
+		return out.circuit;
+	}
+
 	public static void main(String[] args) throws Exception {
 		if (args.length==0) {
 			System.out.println("Usage: compile circuit.txt");
 			System.exit(1);
 		}
 		boolean debug = (System.getProperty("D") != null);
-		if (!debug) {
+		boolean debug2 = (System.getProperty("DD") != null);
+		if (!(debug || debug2)) {
 			System.setOut(new PrintStream(new NullOutputStream()));
 		}
+	
 		boolean noopt = (System.getProperty("O0") != null);
+		
+		CircuitCompiler comp = new CircuitCompiler();
 		Circuit circ = null;
+		
 		try {
 			BufferedReader r = new BufferedReader(new FileReader(args[0]));
 			System.err.println("parsing...");
 			SFDLParser p = new SFDLParser(r);
+			if (debug2) {
+				p.debug = true;
+			}
 			p.parse();
 			r.close();
 
 			System.err.println("compiling...");
-			circ = compile(p.sfdl, p.programname);
+			circ = comp.compile(p.sfdl, p.programname);
 			if (!noopt) {
 				System.err.println("optimizing...");
 				Optimizer opt = new Optimizer();
@@ -685,10 +742,12 @@ public class CircuitCompiler implements Compile {
 				opt.renumber(circ);
 			}
 		} catch (ParseError err) {
-			System.err.println("Error: " + err.getMessage());
+			if (debug) err.printStackTrace(System.err);
+			else System.err.println("Error: " + err.getMessage());
 			System.exit(1);
 		} catch (CompilerError err) {
-			System.err.println("Error: " + err.getMessage());
+			if (debug) err.printStackTrace(System.err);
+			else System.err.println("Error: " + err.getMessage());
 			System.exit(1);
 		} catch (Exception err) {
 			System.err.println("Internal Compiler Error:");
@@ -698,13 +757,26 @@ public class CircuitCompiler implements Compile {
 		String outfile = args[0];
 		if (outfile.endsWith(".txt")) {
 			outfile = outfile.substring(0, outfile.length()-4);
-			outfile += ".circ";
 		}
+		outfile += ".circ";
 		PrintStream cout = new PrintStream(new FileOutputStream(outfile));
 		System.setOut(cout);
 		CircuitWriter.write(circ);
 		System.setOut(new PrintStream(new NullOutputStream()));
 		cout.close();
+		
+		outfile = args[0];
+		if (outfile.endsWith(".txt")) {
+			outfile = outfile.substring(0, outfile.length()-4);
+		}
+		outfile += ".fmt";
+		cout = new PrintStream(new FileOutputStream(outfile));
+		System.setOut(cout);
+		comp.printFmtFile();
+		System.setOut(new PrintStream(new NullOutputStream()));
+		cout.close();
+		
 		System.err.println("done!");
 	}
+
 }

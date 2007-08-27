@@ -532,6 +532,24 @@ public class SFDL {
 		
 	}
 	
+	static class ForExpr extends Expr {
+		LValExpr var;
+		int begin;
+		int end;
+		int by;
+		Block body;
+		ForExpr(LValExpr var, int begin, int end, int by, Block body) {
+			super(type_Void);
+			this.var = var;
+			this.begin = begin;
+			this.end = end;
+			this.by = by;
+			this.body = body;
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileForExpr(this);
+		}
+	}
 	static class IfExpr extends Expr {
 		Expr cond;
 		Block tblock;
