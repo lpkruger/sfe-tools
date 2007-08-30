@@ -7,8 +7,15 @@ import sfe.shdl.Circuit.*;
 
 
 public class Optimizer {
+	private int optimize_duplicate = 0;
+	private int optimize_irrelevant = 0;
+	private int optimize_arity1 = 0;
+	private int optimize_const_propagate = 0;
+	private int optimize_2to3 = 0;
+	private boolean optimize_dontrepeatpass = false; 
+	
 	int curId;
-
+	
 	int getID() {
 		return curId++;
 	}
@@ -40,62 +47,18 @@ public class Optimizer {
 		
 		boolean delta = false;
 		//boolean again = false;
+		passloop:
 		for (int pass = 1; pass<=2; ++pass) {
+
 			for (int i=0; i<g.arity; ++i) {
-				int con = isConst(g.inputs[i]);
-				if (con != 0) { 
-					// constant propagation
-					delta = true;
-					--g.arity;
-					g.truthtab = slice(g.truthtab, i, con==1);
-					
-					GateBase[] newinputs = new GateBase[g.arity];
-					int k=0;
-					for (int j=0; j<=g.arity; ++j) {
-						if (j != i)
-							newinputs[k++] = g.inputs[j];
-					}
-					g.inputs = newinputs;
-					--i;
-					delta=true;
-					continue;
-				}
-				
-				// optimize case where input has arity 1 (and is not constant)
-				if ((g.inputs[i] instanceof Gate) && ((Gate)g.inputs[i]).arity == 1) {
-					Gate g2 = (Gate) g.inputs[i];
-					//System.out.println("1child: " + g + " <- " + g2);
-					// already know not constant, so is [0 1] or [1 0]
-					if (g2.truthtab[0] == g2.truthtab[1])
-						throw new RuntimeException("should not have constant gate");
-					boolean inv = g2.truthtab[0];
-					GateBase g3 = g2.inputs[0];
-					g.inputs[i] = g3;
-					if (inv) {
-						int i2 = 1;
-						for (int j=0; j<g.arity-i-1; ++j)
-							i2 <<= 1;
-						int i3 = i2<<1;
-						//System.out.println("i=" + i + "  i2="+i2 + "  i3="+i3);
-						//System.out.println(pr(g.truthtab));
-						for (int j=0; j<g.truthtab.length; ++j) {
-							if (j%i3 < i2)
-								swap(g.truthtab, j, j+i2);
-						}
-						//System.out.println(pr(g.truthtab));
-					}
-					--i;
-					delta=true;
-					continue;	
-				}
-				
-				// optimize duplicate inputs
-				for (int l=0; l<i; ++l) {
-					if (g.inputs[i] == g.inputs[l]) {
+				if (optimize_const_propagate==0 || optimize_const_propagate==pass) {
+					int con = isConst(g.inputs[i]);
+					if (con != 0) { 
+						// constant propagation
 						delta = true;
 						--g.arity;
-						g.truthtab = slice(g.truthtab, i, l);
-						
+						g.truthtab = slice(g.truthtab, i, con==1);
+
 						GateBase[] newinputs = new GateBase[g.arity];
 						int k=0;
 						for (int j=0; j<=g.arity; ++j) {
@@ -108,96 +71,182 @@ public class Optimizer {
 						continue;
 					}
 				}
-				
-				// optimize irrelevant inputs
-				boolean[] tt0 = slice(g.truthtab, i, false);
-				boolean[] tt1 = slice(g.truthtab, i, true);
-				boolean same = true;
-				for (int l=0; l<tt0.length; ++l) {
-					if (tt0[l] != tt1[l]) {
-						same = false;
-						break;
-					}
-				}
-				if (same) {
-					//System.out.println("same");
-					--g.arity;
-					g.truthtab = tt0;
-					GateBase[] newinputs = new GateBase[g.arity];
-					int k=0;
-					for (int j=0; j<=g.arity; ++j) {
-						if (j != i)
-							newinputs[k++] = g.inputs[j];
-					}
-					g.inputs = newinputs;
-					--i;
-					delta=true;
-					continue;
-				}
-			}
-			
-			if (g.arity == 2) {
-				for (int i=0; i<g.arity; ++i) {
-					if (g.inputs[i] instanceof Gate && ((Gate)g.inputs[i]).arity == 2) {
-						// combine 2+2 -> 3
-						Gate g2 = (Gate)g.inputs[i];
-						g.inputs = new GateBase[] { g.inputs[1-i], g2.inputs[0], g2.inputs[1] };
-						g.truthtab = new boolean[] {
-							g2.truthtab[0] ? g.truthtab[1] : g.truthtab[0],
-							g2.truthtab[1] ? g.truthtab[1] : g.truthtab[0],
-						    g2.truthtab[2] ? g.truthtab[1] : g.truthtab[0],
-						    g2.truthtab[3] ? g.truthtab[1] : g.truthtab[0],
-						    g2.truthtab[0] ? g.truthtab[3] : g.truthtab[2],
-						    g2.truthtab[1] ? g.truthtab[3] : g.truthtab[2],
-							g2.truthtab[2] ? g.truthtab[3] : g.truthtab[2],
-							g2.truthtab[3] ? g.truthtab[3] : g.truthtab[2]};
-						g.arity = 3;
+				if (optimize_arity1==0 || optimize_arity1==pass) {
+					// optimize case where input has arity 1 (and is not constant)
+					if ((g.inputs[i] instanceof Gate) && ((Gate)g.inputs[i]).arity == 1) {
+						Gate g2 = (Gate) g.inputs[i];
+						//System.out.println("1child: " + g + " <- " + g2);
+						// already know not constant, so is [0 1] or [1 0]
+						if (g2.truthtab[0] == g2.truthtab[1])
+							throw new RuntimeException("should not have constant gate");
+						boolean inv = g2.truthtab[0];
+						GateBase g3 = g2.inputs[0];
+						g.inputs[i] = g3;
+						if (inv) {
+							int i2 = 1;
+							for (int j=0; j<g.arity-i-1; ++j)
+								i2 <<= 1;
+							int i3 = i2<<1;
+							//System.out.println("i=" + i + "  i2="+i2 + "  i3="+i3);
+							//System.out.println(pr(g.truthtab));
+							for (int j=0; j<g.truthtab.length; ++j) {
+								if (j%i3 < i2)
+									swap(g.truthtab, j, j+i2);
+							}
+							//System.out.println(pr(g.truthtab));
+						}
+						--i;
 						delta=true;
-						break;
+						continue;	
 					}
 				}
-			}
-			
-			if (g.arity == 1 && !g.truthtab[0] && g.truthtab[1] && g.inputs[0] instanceof Gate) {
-				Gate g2 = (Gate) g.inputs[0];	
-				g.arity = g2.arity;
-				g.inputs = new GateBase[g2.arity];
-				System.arraycopy(g2.inputs, 0, g.inputs, 0, g2.arity);
-				g.truthtab = new boolean[g2.truthtab.length];
-				System.arraycopy(g2.truthtab, 0, g.truthtab, 0, g2.truthtab.length);
-				delta=true;
-			}
-			
-			/*
-			if (g.arity == 1) {
-				// eliminate arity 1 nodes when possible
-				if (g.truthtab[0] != g.truthtab[1]) {
-					boolean inv = g.truthtab[0];
-					if (g.inputs[0] instanceof Gate) {
-						Gate g2 = (Gate) g.inputs[0];	
-						g.arity = g2.arity;
-						g.inputs = g2.inputs;
-						g.truthtab = g2.truthtab;
-						if (inv)
-							for (int i=0; i<g.truthtab.length; ++i)
-								g.truthtab[i] = !g.truthtab[i];
-						
-						--pass;
+				
+				if (optimize_duplicate==0 || optimize_duplicate==pass) {
+					// optimize duplicate inputs
+					for (int l=0; l<i; ++l) {
+						if (g.inputs[i] == g.inputs[l]) {
+							delta = true;
+							--g.arity;
+							g.truthtab = slice(g.truthtab, i, l);
+
+							GateBase[] newinputs = new GateBase[g.arity];
+							int k=0;
+							for (int j=0; j<=g.arity; ++j) {
+								if (j != i)
+									newinputs[k++] = g.inputs[j];
+							}
+							g.inputs = newinputs;
+							--i;
+							delta=true;
+							continue;
+						}
+					}
+				}
+
+				if (optimize_irrelevant==0 || optimize_irrelevant==pass) {
+					// optimize irrelevant inputs
+					boolean[] tt0 = slice(g.truthtab, i, false);
+					boolean[] tt1 = slice(g.truthtab, i, true);
+					boolean same = true;
+					for (int l=0; l<tt0.length; ++l) {
+						if (tt0[l] != tt1[l]) {
+							same = false;
+							break;
+						}
+					}
+					if (same) {
+						//System.out.println("same");
+						--g.arity;
+						g.truthtab = tt0;
+						GateBase[] newinputs = new GateBase[g.arity];
+						int k=0;
+						for (int j=0; j<=g.arity; ++j) {
+							if (j != i)
+								newinputs[k++] = g.inputs[j];
+						}
+						g.inputs = newinputs;
+						--i;
+						delta=true;
 						continue;
-					} else {
-						if (!(g instanceof Output) && g.truthtab[0] == true)
-							return g.inputs[0];
 					}
-				} else {
-					return g;
+				}
+
+			}
+
+			if (optimize_2to3==0 || optimize_2to3==pass) {
+				if (g.arity == 2) {
+					for (int i=0; i<g.arity; ++i) {
+						if (g.inputs[i] instanceof Gate && ((Gate)g.inputs[i]).arity == 2) {
+							// combine 2+2 -> 3
+							Gate g2 = (Gate)g.inputs[i];
+							
+							System.out.println("Orig: ");
+							System.out.print("  ");
+							g.write(System.out);
+							System.out.print("  ");
+							g2.write(System.out);
+							
+							if (i==1) {
+								g.inputs = new GateBase[] { g.inputs[1-i], g2.inputs[0], g2.inputs[1] };
+								g.truthtab = new boolean[] {
+										g2.truthtab[0] ? g.truthtab[1] : g.truthtab[0],
+												g2.truthtab[1] ? g.truthtab[1] : g.truthtab[0],
+														g2.truthtab[2] ? g.truthtab[1] : g.truthtab[0],
+																g2.truthtab[3] ? g.truthtab[1] : g.truthtab[0],
+																		g2.truthtab[0] ? g.truthtab[3] : g.truthtab[2],
+																				g2.truthtab[1] ? g.truthtab[3] : g.truthtab[2],
+																						g2.truthtab[2] ? g.truthtab[3] : g.truthtab[2],
+																								g2.truthtab[3] ? g.truthtab[3] : g.truthtab[2]};
+							} else {
+								g.inputs = new GateBase[] { g2.inputs[0], g2.inputs[1], g.inputs[1-i] };
+								g.truthtab = new boolean[] {
+										g2.truthtab[0] ? g.truthtab[2] : g.truthtab[0],
+												g2.truthtab[0] ? g.truthtab[3] : g.truthtab[1],
+														g2.truthtab[1] ? g.truthtab[2] : g.truthtab[0],
+																g2.truthtab[1] ? g.truthtab[3] : g.truthtab[1],
+																		g2.truthtab[2] ? g.truthtab[2] : g.truthtab[0],
+																				g2.truthtab[2] ? g.truthtab[3] : g.truthtab[1],
+																						g2.truthtab[3] ? g.truthtab[2] : g.truthtab[0],
+																								g2.truthtab[3] ? g.truthtab[3] : g.truthtab[1]};
+							}
+							
+							g.arity = 3;
+							
+							System.out.println("New: ");
+							System.out.print("  ");
+							g.write(System.out);
+							
+							delta=true;
+							break;
+						}
+					}
 				}
 			}
-            */
-			
+
+			if (optimize_arity1==0 || optimize_arity1==pass) {
+				if (g.arity == 1 && !g.truthtab[0] && g.truthtab[1] && g.inputs[0] instanceof Gate) {
+					Gate g2 = (Gate) g.inputs[0];	
+					g.arity = g2.arity;
+					g.inputs = new GateBase[g2.arity];
+					System.arraycopy(g2.inputs, 0, g.inputs, 0, g2.arity);
+					g.truthtab = new boolean[g2.truthtab.length];
+					System.arraycopy(g2.truthtab, 0, g.truthtab, 0, g2.truthtab.length);
+					delta=true;
+				}
+			}
+
+			/*
+				if (false) { // old dead optimization
+					if (g.arity == 1) {
+						// eliminate arity 1 nodes when possible
+						if (g.truthtab[0] != g.truthtab[1]) {
+							boolean inv = g.truthtab[0];
+							if (g.inputs[0] instanceof Gate) {
+								Gate g2 = (Gate) g.inputs[0];	
+								g.arity = g2.arity;
+								g.inputs = g2.inputs;
+								g.truthtab = g2.truthtab;
+								if (inv)
+									for (int i=0; i<g.truthtab.length; ++i)
+										g.truthtab[i] = !g.truthtab[i];
+
+								--pass;
+								continue;
+							} else {
+								if (!(g instanceof Output) && g.truthtab[0] == true) {
+									//return g.inputs[0];
+								}
+							}
+						} else {
+							return g;
+						}
+					}
+				}*/
+
 			if (delta) {
 				delta = false;
-				--pass;
-				continue;
+				if (!optimize_dontrepeatpass) --pass;
+				continue passloop;
 			}
 			if (pass == 2) break;
 			
