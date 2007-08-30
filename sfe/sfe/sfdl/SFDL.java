@@ -81,7 +81,6 @@ public class SFDL {
 	}
 	
 	static abstract class CompoundType extends Type {
-		abstract LValExpr[] createLValExprs(LValExpr expr);
 		boolean isCompoundType() {
 			return true;
 		}
@@ -91,22 +90,7 @@ public class SFDL {
 	static class ArrayType extends CompoundType {
 		Type basetype;
 		int len;
-		LValExpr[] createLValExprs(LValExpr expr) {
-			typeCheck((Expr)expr);
-			ArrayList<LValExpr> ret = new ArrayList<LValExpr>();
-			this.typeCheck((Expr)expr);
-			for (int i=0; i<len; ++i) {
-				LArrayRef lar = new LArrayRef(expr, new IntConst(i));
-				if (basetype.isCompoundType()) {
-					ret.addAll(Arrays.asList(lar.createLValExprs()));
-				} else {
-					ret.add(lar);
-					//System.out.println("I AM HERE: " + fieldnames[i]);
-					//System.out.println("    " + lsr.field + " @ " + lsr.fieldPos + " of " + lsr.type);
-				}
-			}
-			return ret.toArray(new LValExpr[ret.size()]);
-		}
+	
 		int bitWidth() {
 			return basetype.bitWidth() * len;
 		}
@@ -130,22 +114,7 @@ public class SFDL {
 			this.fieldnames = fn.toArray(new String[fn.size()]);
 			this.fieldtypes = ft.toArray(new Type[fn.size()]);
 		}
-		LValExpr[] createLValExprs(LValExpr expr) {
-			typeCheck((Expr)expr);
-			ArrayList<LValExpr> ret = new ArrayList<LValExpr>();
-			this.typeCheck((Expr)expr);
-			for (int i=0; i<fieldnames.length; ++i) {
-				LStructRef lsr = new LStructRef(expr, fieldnames[i]);
-				if (fieldtypes[i].isCompoundType()) {
-					ret.addAll(Arrays.asList(lsr.createLValExprs()));
-				} else {
-					ret.add(lsr);
-					//System.out.println("I AM HERE: " + fieldnames[i]);
-					//System.out.println("    " + lsr.field + " @ " + lsr.fieldPos + " of " + lsr.type);
-				}
-			}
-			return ret.toArray(new LValExpr[ret.size()]);
-		}
+
 		int bitWidth() {
 			int sum=0;
 			for (Type type : fieldtypes) {
@@ -197,6 +166,7 @@ public class SFDL {
 		boolean isConst() {
 			return true;
 		}
+		
 
 		ConstValue(Type type) {
 			super(type);
@@ -205,18 +175,18 @@ public class SFDL {
 
 	static class IntConst extends ConstValue {
 		BigInteger number;
-		IntConst(BigInteger n, Type type) {
-			super(type);
-			this.number = n;
-		}
 		IntConst(int n) {
 			this(BigInteger.valueOf(n));
 		}
 		IntConst(BigInteger n) {
 			super(null);
 			this.number = n;
-			// 1+ for sign bit
-			this.type = new IntType(1+Math.max(1, n.bitLength()));
+			if (n.equals(ZERO)) {
+				this.type = new IntType(1);
+			} else {
+				// 1+ for sign bit
+				this.type = new IntType(1+Math.max(1, n.bitLength()));
+			}
 		}
 		CompilerOutput compile(Compile comp) {
 			return comp.compileIntConst(this);
@@ -227,11 +197,10 @@ public class SFDL {
 	}
 
 	static interface LValExpr {
-		String uniqueStr();
 		Type getType();
-		LValExpr[] createLValExprs();
+		void compileAssign(Compile comp, CompilerOutput val);
 	}
-	
+
 	static class VarRef extends Expr implements LValExpr {
 		VarDef var;
 		VarRef(VarDef var) {
@@ -239,21 +208,14 @@ public class SFDL {
 			this.var = var;
 		}
 		CompilerOutput compile(Compile compile) {
-			return compile.compilerVarRef(this);
+			return compile.compileVarRef(this);
 		}
-		public LValExpr[] createLValExprs() {
-			if (type.isCompoundType()) {
-				return ((CompoundType)type).createLValExprs(this);
-			} else { 
-				return new LValExpr[] { this };
-			}
-		}
-		public String uniqueStr() {
-			return var.name;
+		public void compileAssign(Compile comp, CompilerOutput val) {
+			comp.compileAssignVarRef(this, val);
 		}
 		public String toString() {
 			return "[varref " + type.toShortString() + " " + var + " ]";
-		}	
+		}
 	}
 	
 	// LVal struct reference
@@ -261,18 +223,11 @@ public class SFDL {
 		LStructRef(LValExpr left, String field) {
 			super((Expr) left, field);
 		}
-		
-		public String uniqueStr() {
-			return ((LValExpr)left).uniqueStr() + "." + field;
+		public void compileAssign(Compile comp, CompilerOutput val) {
+			comp.compileAssignStructRef(this, val);
 		}
-		
-		public LValExpr[] createLValExprs() {
-			if (type.isCompoundType()) {
-				// TODO: put createLValExprs in base Type and remove if/cast
-				return ((CompoundType) type).createLValExprs(this);
-			}
-			// this should not be reached until above change is made
-			return new LValExpr[] { this };
+		public String toString() {
+			return "L" + super.toString();
 		}
 	}
 	
@@ -280,16 +235,14 @@ public class SFDL {
 		LArrayRef(LValExpr left, Expr el) {
 			super((Expr) left, el);
 		}
-
-		public LValExpr[] createLValExprs() {
-			return null;
+		public void compileAssign(Compile comp, CompilerOutput val) {
+			comp.compileAssignArrayRef(this, val);
 		}
-
-		public String uniqueStr() {
-			return ((LValExpr) left).uniqueStr();
+		public String toString() {
+			return "L" + super.toString();
 		}
-		
 	}
+	
 	static class ArrayRef extends Expr {
 		Expr left;
 		Expr el;
@@ -300,7 +253,10 @@ public class SFDL {
 			this.type = ((ArrayType) left.type).basetype;
 		}
 		CompilerOutput compile(Compile compile) {
-			throw new InternalCompilerError("ArrayRef not yet implemented");
+			return compile.compileArrayRef(this);
+		}
+		public String toString() {
+			return "[arrayref " + type.toShortString() + " " + left + " . " + el + " ]";
 		}
 	}
 	
@@ -617,10 +573,11 @@ public class SFDL {
 			super(name);
 			this.type = type;
 		}
+		/*
 		// get all unique strings from elements
 		public LValExpr[] getAllSubLVals() {
 			return new VarRef(this).createLValExprs();
-		}
+		}*/
 		public String toString() {
 			return "[def var " + name + " of " + type.toShortString() + " ]";
 		}
@@ -663,6 +620,7 @@ public class SFDL {
 			return sb.toString();
 		}
 		
+		// is it a formal parameter
 		boolean isParam(VarDef vd) {
 			for (VarDef v : args) {
 				if (v == vd)

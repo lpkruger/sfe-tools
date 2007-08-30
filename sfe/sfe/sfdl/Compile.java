@@ -1,6 +1,7 @@
 package sfe.sfdl;
 
 import sfe.sfdl.SFDL.AddExpr;
+import sfe.sfdl.SFDL.ArrayRef;
 import sfe.sfdl.SFDL.AssignExpr;
 import sfe.sfdl.SFDL.Block;
 import sfe.sfdl.SFDL.DivExpr;
@@ -9,6 +10,8 @@ import sfe.sfdl.SFDL.ForExpr;
 import sfe.sfdl.SFDL.GreaterThanExpr;
 import sfe.sfdl.SFDL.IfExpr;
 import sfe.sfdl.SFDL.IntConst;
+import sfe.sfdl.SFDL.LArrayRef;
+import sfe.sfdl.SFDL.LStructRef;
 import sfe.sfdl.SFDL.LeftShiftExpr;
 import sfe.sfdl.SFDL.LessThanExpr;
 import sfe.sfdl.SFDL.MulExpr;
@@ -23,7 +26,7 @@ public interface Compile {
 
 	CompilerOutput compileIntConst(IntConst intConst);
 
-	CompilerOutput compilerVarRef(VarRef varRef);
+	CompilerOutput compileVarRef(VarRef varRef);
 
 	CompilerOutput compileStructRef(StructRef structRef);
 
@@ -55,5 +58,14 @@ public interface Compile {
 
 	CompilerOutput compileRightShiftExpr(RightShiftExpr rightShiftExpr);
 
-	CompilerOutput compileForExpr(ForExpr forExpr);	
+	CompilerOutput compileForExpr(ForExpr forExpr);
+
+	CompilerOutput compileArrayRef(ArrayRef arrayRef);
+
+	void compileAssignVarRef(VarRef varRef, CompilerOutput val);
+
+	void compileAssignStructRef(LStructRef structRef,
+			CompilerOutput val);
+
+	void compileAssignArrayRef(LArrayRef arrayRef, CompilerOutput val);	
 }

@@ -4,10 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import sfe.sfdl.Parser.ParseError;
 import sfe.sfdl.SFDL.*;
@@ -156,7 +153,7 @@ public class CircuitCompiler implements Compile {
 	}
 	
 	static class Scope {
-		HashMap<String, GateBase[]> varMap = new HashMap<String, GateBase[]>();
+		HashMap<String, CircuitVar> varMap = new HashMap<String, CircuitVar>();
 		Scope parent;
 		Scope(Scope parent) {
 			this.parent = parent;
@@ -187,61 +184,22 @@ public class CircuitCompiler implements Compile {
 		return sb.toString();
 	}
 	
+	/*
 	GateBase[] assignToVar(LValExpr lval, GateBase[] cc) {
-		if (lval.getType().bitWidth() != cc.length) {
-			throw new CompilerError("assigning to variable of wrong length");
-		}
-		D("assignToVar " + lval.uniqueStr() + " := " + circ2str(cc));
-		String id = lval.uniqueStr();
-		current.varMap.put(id, cc);
-		return cc;
-	}
+	}*/
 	
-	GateBase[] retrieveFromVar(LValExpr lval, boolean isOutput) {
-		String id = lval.uniqueStr();
-		GateBase[] cc = current.varMap.get(id);
-		if (cc != null && isOutput) {
-			Output[] out = new Output[cc.length];
-			for (int i=0; i<cc.length; ++i) {
-				out[i] = new Output(newIdentityGate(cc[i]));
-				out[i].setComment(id + "$" + i);
-			}
-			formatMap.put(id, out);
-			cc = out;
-		}
-		if (cc == null && lval.getType() instanceof CompoundType) {
-			LValExpr[] alllvals = lval.createLValExprs();
-			ArrayList<GateBase> allgates = new ArrayList<GateBase>();
-			for (LValExpr sublval : alllvals) {
-				//D("sublval :" + sublval.uniqueStr());
-				//D("sublval :" + current.varMap.get(sublval.uniqueStr()));
-				String uniqueStr = sublval.uniqueStr();
-				GateBase[] gates = current.varMap.get(uniqueStr);
-				if (isOutput) {
-					for (int i=0; i<gates.length; ++i) {
-						gates[i] = new Output(newIdentityGate(gates[i]));
-						gates[i].setComment(uniqueStr + "$" + i);
-					}
-					formatMap.put(uniqueStr, gates);
-				}
-				allgates.addAll(Arrays.asList(gates));
-			
-			}
-			if (isOutput)
-				cc = allgates.toArray(new Output[allgates.size()]);
-			else
-				cc = allgates.toArray(new GateBase[allgates.size()]);
-		}
-		if (cc == null) {
-			throw new CompilerError("Not found in scope " + id);
-		}
-		return cc;
-	}
+	/*
+	GateBase[] retrieveFromVar(VarRef lval, boolean isOutput) {
+	*/
 	
 	CircuitCompilerOutput compileExpr(Expr ex) {
+		D("Expr " + ex.toString());
 		CircuitCompilerOutput out = (CircuitCompilerOutput) ex.compile(this);
-		if (out.cc.length != ex.getType().bitWidth()) {
-			System.err.println("Expr " + ex.toString());
+		if (out.cc == null) {
+			// TODO:
+			// if (out.cv.bitWidth() != ex.getType().bitWidth())
+		} else if (out.cc.length != ex.getType().bitWidth()) {
+			D("Expr " + ex.toString());
 			throw new InternalCompilerError("Compiler error: Expr " + ex.getClass() + " of type " + 
 					ex.getType().toShortString() + " compiled to " + 
 					out.cc.length + " bits");
@@ -253,44 +211,42 @@ public class CircuitCompiler implements Compile {
 	CircuitCompilerOutput.FunctionOutput compileFunction(FunctionDef fun) {
 		openScope();
 		
-		ArrayList<Input> fnInputs = new ArrayList<Input>();
+		List<Input> fnInputs = new ArrayList<Input>();
 		for (NamedObj obj : fun.scope.entities.values()) {
+			String name = obj.name;
 			if (obj instanceof VarDef) {
+				VarDef var = (VarDef) obj;
+				
 				D("param: " + obj);
-				for (LValExpr lv : ((VarDef) obj).getAllSubLVals()) {
-					D("param0: " + lv.uniqueStr());
-					GateBase[] incc = new GateBase[lv.getType().bitWidth()];
+				CircuitVar cvar = CircuitVar.createVars(var.type, name);
 
-					for (int i=0; i<incc.length; ++i) {
-						if (fun.isParam(((VarDef)obj))) {
-							int varno = newId();
-							incc[i] = new Input(varno, varno);
-							System.out.println("Add input gate " + incc[i]);
-							fnInputs.add((Input) incc[i]);
-							incc[i].setComment(lv.uniqueStr() + "$" + i);
-						} else {
-							incc[i] = FALSE_GATE;
-						}
-					}
-					
-					assignToVar(lv, incc);
+				if (fun.isParam(var)) {
+					fnInputs = cvar.assignInputs(this);
+				} else {
+					cvar.assignGate(FALSE_GATE);
 				}
+
+				current.varMap.put(var.name, cvar);
+
 			}
 		}
-		
+
 		compileBlock(fun.body); 
 		
 		Circuit circ = new Circuit();
 		circ.inputs = fnInputs.toArray(new Input[fnInputs.size()]);
 		//GateBase[] cc = top.varMap.get(fun.name);
-		VarRef outputVar = new VarRef((VarDef)fun.scope.get(fun.name));
-		Output[] cc = (Output[]) retrieveFromVar(outputVar, true);
+		VarDef outputVar = (VarDef)fun.scope.get(fun.name);
+		CircuitVar cv = current.varMap.get(outputVar.name);
+		cv.setAsOutputs(this);
+		GateBase[] cc = cv.getAllGates().toArray(new GateBase[0]);
 		if (cc == null) {
 			D("return value not in scope: " + fun.name);
 		}
+
 		circ.outputs = new Output[cc.length];
 		for (int i=0; i<cc.length; ++i) {
-			circ.outputs[i] = cc[i];
+			circ.outputs[i] = (Output) cc[i];
 		}
 		
 		CircuitCompilerOutput.FunctionOutput ret = 
@@ -307,24 +263,41 @@ public class CircuitCompiler implements Compile {
 		return new CircuitCompilerOutput(new GateBase[0]);
 	}
 	
+	LinkedList<LValExpr> lvalStack = new LinkedList<LValExpr>(); 
+
+	public void compileAssignArrayRef(LArrayRef arrayRef,
+			CompilerOutput val) {
+		lvalStack.push(arrayRef);
+		((LValExpr)arrayRef.left).compileAssign(this, val);
+	}
+
+	public void compileAssignStructRef(LStructRef structRef,
+			CompilerOutput val) {
+		lvalStack.push(structRef);
+		((LValExpr)structRef.left).compileAssign(this, val);
+	}
+
+	public void compileAssignVarRef(VarRef varRef, CompilerOutput val) {
+		GateBase[] cc = ((CircuitCompilerOutput) val).cc;
+		CircuitVar cv = current.varMap.get(varRef.var.name);
+		cv.assign(this, cc);
+		lvalStack.clear();
+	}
+	
 	public CompilerOutput compileAssignExpr(AssignExpr expr) {
-		GateBase[] cc = new Gate[expr.type.bitWidth()];
-		GateBase[] rc = compileExpr(expr.value).cc;
+		//typeCheck(expr.value.type, expr.vardef.type);
+		GateBase[] cc = new GateBase[expr.type.bitWidth()];
+		CircuitCompilerOutput cout = compileExpr(expr.value); 
+		GateBase[] rc = cout.cc;
 		if (rc.length>=cc.length) {
 			System.arraycopy(rc, 0, cc, 0, cc.length);
 		} else {
 			cc = bitExtend(rc, cc.length, expr.type.isSigned());
 		}
 		
-		if (conditionBit != TRUE_GATE) {
-			GateBase[] oldcc = retrieveFromVar(expr.lval, false);
-			for (int i=0; i<cc.length; ++i) {
-				cc[i] = newGate(conditionBit, cc[i], oldcc[i], TT_MUX());
-			}
-		}
-		
-		assignToVar(expr.lval, cc);
-		return new CircuitCompilerOutput(cc);
+		cout = new CircuitCompilerOutput(cc);
+		expr.lval.compileAssign(this, cout);
+		return cout;
 	}
 	
 	Gate[] createAdder(GateBase[] lc, GateBase[] rc) {
@@ -372,24 +345,27 @@ public class CircuitCompiler implements Compile {
 		}
 		return new CircuitCompilerOutput(cc);
 	}
-	public CompilerOutput compilerVarRef(VarRef varRef) {
-		GateBase[] cc = current.varMap.get(varRef.uniqueStr());
-		System.out.println(varRef.uniqueStr() + " -> " + cc);
-		// TODO: must resolve substructs ???
-		return new CircuitCompilerOutput(cc);
+	
+	public CompilerOutput compileVarRef(VarRef varRef) {
+		CircuitVar cv = current.varMap.get(varRef.var.name);
+		return new CircuitCompilerOutput(cv);
 	}
-	
-	
 
 	public CompilerOutput compileStructRef(StructRef structRef) {
-		// assume all structrefs are lstructrefs
-		LStructRef sRef = (LStructRef) structRef;
-		GateBase[] cc = current.varMap.get(sRef.uniqueStr());
-		System.out.println(sRef.uniqueStr() + " -> " + cc);
-		// TODO: must resolve substructs ???
-		return new CircuitCompilerOutput(cc);	
+		CircuitVar.Struct s = (CircuitVar.Struct) compileExpr(structRef.left).cv;
+		return new CircuitCompilerOutput(s.fields.get(structRef.field));
 	}
 	
+	public CompilerOutput compileArrayRef(ArrayRef arrayRef) {
+		CircuitVar.Array a = (CircuitVar.Array) compileExpr(arrayRef.left).cv;
+		if (arrayRef.el instanceof IntConst) {
+			IntConst ind = (IntConst) arrayRef.el;
+			D("retrieve array val " + ind.number.intValue());
+			return new CircuitCompilerOutput(a.els[ind.number.intValue()]);
+		}
+		throw new InternalCompilerError("variable array indexes not supported");
+	}
+
 	Gate[] createSubCircuit(GateBase[] left, GateBase[] right, boolean extraSignBit) {
 		if (left.length != right.length) {
 			throw new InternalCompilerError("Internal compiler error: " + 
@@ -778,5 +754,4 @@ public class CircuitCompiler implements Compile {
 		
 		System.err.println("done!");
 	}
-
 }

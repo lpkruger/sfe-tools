@@ -17,7 +17,9 @@ public class CircuitCompilerOutput implements CompilerOutput {
 		}
 	}
 	
-	GateBase[] cc;
+	GateBase[] cc;  // can be null if circuitvar is non=null
+	CircuitVar cv;  // is null if not a variable reference
+	
 	CircuitCompilerOutput(GateBase[] cc) {
 		this.cc = cc;
 		//Thread.dumpStack();
@@ -26,7 +28,13 @@ public class CircuitCompilerOutput implements CompilerOutput {
 	CircuitCompilerOutput(GateBase g) {
 		this.cc = new GateBase[] { g };
 	}
-	
+	CircuitCompilerOutput(CircuitVar var) {
+		if (var instanceof CircuitVar.Leaf) {
+			this.cc = ((CircuitVar.Leaf) var).cc;
+		} else {
+			this.cv = var;
+		}
+	}
 	static class FunctionOutput extends CircuitCompilerOutput {
 		Circuit circuit;
 		FunctionOutput(Circuit circ) {
