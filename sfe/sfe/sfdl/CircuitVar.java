@@ -14,6 +14,7 @@ public abstract class CircuitVar {
 	abstract void assignGate(Gate gate);
 	abstract void assign(CircuitCompiler comp, GateBase[] cc);
 	abstract ArrayList<GateBase> getAllGates();
+	abstract GateBase[] evalVar(CircuitCompiler comp);
 	abstract void setAsOutputs(CircuitCompiler comp);
 	
 	
@@ -79,6 +80,10 @@ public abstract class CircuitVar {
 			
 		}
 		
+		GateBase[] evalVar(CircuitCompiler comp) {
+			return cc;
+		}
+		
 		ArrayList<GateBase> getAllGates() {
 			return new ArrayList<GateBase>(Arrays.asList(cc));
 		}
@@ -114,6 +119,12 @@ public abstract class CircuitVar {
 			fields.get(ref.field).assign(comp, newcc);
 			comp.lvalStack.push(ref);
 		}
+		GateBase[] evalVar(CircuitCompiler comp) {
+			StructRef ref = (StructRef) comp.refStack.pop();
+			GateBase[] cc = fields.get(ref.field).evalVar(comp);
+			comp.refStack.push(ref);
+			return cc;
+		}
 		void setAsOutputs(CircuitCompiler comp) {
 			for (CircuitVar cv : fields.values()) {
 				cv.setAsOutputs(comp);
@@ -122,9 +133,10 @@ public abstract class CircuitVar {
 	}
 	static class Array extends CircuitVar {
 		CircuitVar[] els;
+	
 		Array(String name, ArrayType type) {
 			super(name);
-			els = new CircuitVar[type.len];
+			els = new CircuitVar[type.len]; 
 		}
 		ArrayList<Input> assignInputs(CircuitCompiler comp) {
 			ArrayList<Input> inps = new ArrayList<Input>();
@@ -148,7 +160,8 @@ public abstract class CircuitVar {
 		void assign(CircuitCompiler comp, GateBase[] newcc) {
 			LArrayRef ref = (LArrayRef) comp.lvalStack.pop();
 
-			if (false && ref.el instanceof SFDL.IntConst) {
+			if (ref.el instanceof SFDL.IntConst) {
+				// optimization for constant index value
 				IntConst ind = (IntConst) ref.el;
 				els[ind.number.intValue()].assign(comp, newcc);
 			} else {
@@ -167,6 +180,35 @@ public abstract class CircuitVar {
 			}
 			
 			comp.lvalStack.push(ref);
+		}
+		GateBase[] evalVar(CircuitCompiler comp) {
+			ArrayRef ref = (ArrayRef) comp.refStack.pop();
+			GateBase[] cc;
+			
+			if (ref.el instanceof SFDL.IntConst) {
+				// optimization for constant index value
+				IntConst ind = (IntConst) ref.el;
+				cc = els[ind.number.intValue()].evalVar(comp);
+			} else {
+				// early evaluation of element 0 to figure out width
+				GateBase[] cc_0 = els[0].evalVar(comp);
+				cc = new GateBase[cc_0.length];
+				for (int j=0; j<cc.length; ++j) {
+					cc[j] = comp.TRUE_GATE;
+				}
+				for (int i=0; i<els.length; ++i) {
+					SFDL.EqExpr eqex = new SFDL.EqExpr(ref.el, new SFDL.IntConst(i));
+					CircuitCompilerOutput out = comp.compileExpr(eqex);
+					GateBase[] newcc = (i==0) ? cc_0 : els[i].evalVar(comp);
+					for (int j=0; j<cc.length; ++j) {
+						cc[j] = comp.newGate(out.cc[0], newcc[j], cc[j], 
+								CircuitCompiler.TT_MUX());
+					}
+				}
+			}
+			
+			comp.refStack.push(ref);
+			return cc;
 		}
 		void setAsOutputs(CircuitCompiler comp) {
 			for (CircuitVar cv : els) {

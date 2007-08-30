@@ -412,8 +412,38 @@ public class SFDL {
 		public String toString() {
 			return "[xor^ " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
-
-		
+	}
+	
+	static class AndExpr extends BinaryOpExpr {
+		AndExpr(Expr left, Expr right) {
+			super(left, right);
+			IntType lt = (IntType) left.type;
+			IntType rt = (IntType) right.type;
+			int z = Math.max(lt.bits, rt.bits);
+			this.type = new IntType(z);
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileAndExpr(this);
+		}
+		public String toString() {
+			return "[xor^ " + type.toShortString() + " " + left + " , " + right + " ]";
+		}
+	}
+	
+	static class OrExpr extends BinaryOpExpr {
+		OrExpr(Expr left, Expr right) {
+			super(left, right);
+			IntType lt = (IntType) left.type;
+			IntType rt = (IntType) right.type;
+			int z = Math.max(lt.bits, rt.bits);
+			this.type = new IntType(z);
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileOrExpr(this);
+		}
+		public String toString() {
+			return "[xor^ " + type.toShortString() + " " + left + " , " + right + " ]";
+		}
 	}
 	
 	static class EqExpr extends BinaryOpExpr {
@@ -457,6 +487,18 @@ public class SFDL {
 			return compile.compileLessThanExpr(this);
 		}
 	}
+	static class LessThanOrEqExpr extends BinaryOpExpr {
+		LessThanOrEqExpr(Expr left, Expr right) {
+			super(left, right);
+			this.type = type_Boolean;
+		}
+		public String toString() {
+			return "[lt< " + type.toShortString() + " " + left + " , " + right + " ]";
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileLessThanOrEqExpr(this);
+		}
+	}
 	
 	static class GreaterThanExpr extends BinaryOpExpr {
 		GreaterThanExpr(Expr left, Expr right) {
@@ -465,6 +507,18 @@ public class SFDL {
 		}
 		CompilerOutput compile(Compile compile) {
 			return compile.compileGreaterThanExpr(this);
+		}
+		public String toString() {
+			return "[gt< " + type + " " + left + " , " + right + " ]";
+		}
+	}
+	static class GreaterThanOrEqExpr extends BinaryOpExpr {
+		GreaterThanOrEqExpr(Expr left, Expr right) {
+			super(left, right);
+			this.type = type_Boolean;
+		}
+		CompilerOutput compile(Compile compile) {
+			return compile.compileGreaterThanOrEqExpr(this);
 		}
 		public String toString() {
 			return "[gt< " + type + " " + left + " , " + right + " ]";

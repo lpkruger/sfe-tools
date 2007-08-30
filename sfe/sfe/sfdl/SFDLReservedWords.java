@@ -3,8 +3,6 @@
  */
 package sfe.sfdl;
 
-import java.lang.reflect.Field;
-
 interface SFDLReservedWords {
 	static final int TOK_PROGRAM = 100;
 	static final int TOK_TYPE = 101;

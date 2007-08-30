@@ -11,12 +11,6 @@ import java.util.*;
 import java.io.*;
 import java.math.BigInteger;
 
-import fairplay.Compiler.IntConstant;
-
-import sfe.sfdl.SFDL.ArrayRef;
-import sfe.sfdl.SFDL.LValExpr;
-import sfe.sfdl.Tokenizer.Token;
-import sfe.util.VarDesc;
 import static sfe.sfdl.TokenizerConstants.*;
 import static sfe.sfdl.SFDLReservedWords.*;
 
@@ -27,7 +21,6 @@ import static sfe.sfdl.SFDLReservedWords.*;
  * representation of the program
  */
 
-import static sfe.sfdl.SFDLReservedWords.*;
 
 public class SFDLParser extends Parser {
 
@@ -50,9 +43,6 @@ public class SFDLParser extends Parser {
 	SFDL sfdl = new SFDL();
 	String programname;
 	
-	MapList umes = new MapList(); // unprocessed events go here awaiting
-	// 2nd pass
-
 	public SFDLParser(BufferedReader r) {
 		toker = new Tokenizer(r);
 		//debug = true;
@@ -243,6 +233,11 @@ public class SFDLParser extends Parser {
 				type = parseStruct();
 				break maintype;
 
+			case TOK_BOOLEAN:
+				type = SFDL.type_Boolean;
+				nextToken();
+				break maintype;
+				
 			case TOK_INT:
 				expect(nextToken(), TOK_LT);
 				nextToken();
@@ -398,7 +393,7 @@ public class SFDLParser extends Parser {
 				SFDL.Expr ind = parseExpr();
 				expect(tok, TOK_RBRACKET);
 				if (leftexpr instanceof SFDL.LValExpr) {
-					expr = new SFDL.LArrayRef((LValExpr)leftexpr, ind);
+					expr = new SFDL.LArrayRef((SFDL.LValExpr)leftexpr, ind);
 				} else {
 					expr = new SFDL.ArrayRef(leftexpr, ind);
 				}
@@ -413,7 +408,7 @@ public class SFDLParser extends Parser {
 				expect(nextToken(), TOK_IDENT);
 				SFDL.StructRef srexpr;
 				if (leftexpr instanceof SFDL.LValExpr) {
-					srexpr = new SFDL.LStructRef((LValExpr) leftexpr, tok.str);
+					srexpr = new SFDL.LStructRef((SFDL.LValExpr) leftexpr, tok.str);
 				} else {
 					srexpr = new SFDL.StructRef(leftexpr, tok.str);
 				}
@@ -466,6 +461,18 @@ public class SFDLParser extends Parser {
 				rightexpr = parseExpr(TOK_CARET);
 				expr = new SFDL.XorExpr(leftexpr, rightexpr);
 				break;
+			case TOK_AMPERSAND:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_CARET);
+				expr = new SFDL.AndExpr(leftexpr, rightexpr);
+				break;
+			case TOK_PIPE:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_CARET);
+				expr = new SFDL.OrExpr(leftexpr, rightexpr);
+				break;
 			case TOK_EQUALEQUAL:
 				// TODO: type check
 				nextToken();
@@ -490,6 +497,18 @@ public class SFDLParser extends Parser {
 				rightexpr = parseExpr(TOK_LT);
 				expr = new SFDL.LessThanExpr(leftexpr, rightexpr);
 				break;
+			case TOK_GTE:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_GT);
+				expr = new SFDL.GreaterThanOrEqExpr(leftexpr, rightexpr);
+				break;
+			case TOK_LTE:
+				// TODO: type check
+				nextToken();
+				rightexpr = parseExpr(TOK_LT);
+				expr = new SFDL.LessThanOrEqExpr(leftexpr, rightexpr);
+				break;
 			default:
 				System.out.println("leave parseExpr, unknown symbol");
 				return leftexpr;
@@ -507,9 +526,13 @@ public class SFDLParser extends Parser {
 		tok_prios[TOK_NOTEQUAL] = 12;
 		tok_prios[TOK_GT] = 12;
 		tok_prios[TOK_LT] = 12;
+		tok_prios[TOK_GTE] = 12;
+		tok_prios[TOK_LTE] = 12;
 		tok_prios[TOK_PLUS] = 20;
 		tok_prios[TOK_DASH] = 20;
 		tok_prios[TOK_CARET] = 20;
+		tok_prios[TOK_AMPERSAND] = 20;
+		tok_prios[TOK_PIPE] = 20;
 		tok_prios[TOK_ASTERISK] = 30;
 		tok_prios[TOK_SLASH] = 30;
 		tok_prios[TOK_LLT] = 31;

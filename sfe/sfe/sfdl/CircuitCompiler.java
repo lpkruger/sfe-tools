@@ -15,8 +15,10 @@ import sfe.shdl.Circuit.Input;
 import sfe.shdl.Circuit.Output;
 
 public class CircuitCompiler implements Compile {
-	static void D(Object o) {
-		System.out.println(o);
+	boolean debug = false;
+	
+	void D(Object o) {
+		if (debug) System.out.println(o);
 	}
 	
 	static boolean[] TT_XOR() {
@@ -33,6 +35,10 @@ public class CircuitCompiler implements Compile {
 	}
 	static boolean[] TT_AND() {
 		boolean[] tt = { false, false, false, true };
+		return tt;
+	}
+	static boolean[] TT_OR() {
+		boolean[] tt = { false, true, true, true };
 		return tt;
 	}
 	static boolean[] TT_ANDNOT() {
@@ -195,8 +201,8 @@ public class CircuitCompiler implements Compile {
 	CircuitCompilerOutput compileExpr(Expr ex) {
 		D("Expr " + ex.toString());
 		CircuitCompilerOutput out = (CircuitCompilerOutput) ex.compile(this);
-		if (out.cc == null) {
-			// TODO:
+		if (ex.getType().isCompoundType()) {
+			// TODO: something
 			// if (out.cv.bitWidth() != ex.getType().bitWidth())
 		} else if (out.cc.length != ex.getType().bitWidth()) {
 			D("Expr " + ex.toString());
@@ -348,22 +354,24 @@ public class CircuitCompiler implements Compile {
 	
 	public CompilerOutput compileVarRef(VarRef varRef) {
 		CircuitVar cv = current.varMap.get(varRef.var.name);
-		return new CircuitCompilerOutput(cv);
+		return new CircuitCompilerOutput(cv.evalVar(this));
 	}
 
+
+	LinkedList<Expr> refStack = new LinkedList<Expr>();
+	
 	public CompilerOutput compileStructRef(StructRef structRef) {
-		CircuitVar.Struct s = (CircuitVar.Struct) compileExpr(structRef.left).cv;
-		return new CircuitCompilerOutput(s.fields.get(structRef.field));
+		refStack.push(structRef);
+		CompilerOutput cout = compileExpr(structRef.left);
+		refStack.pop();
+		return cout;
 	}
 	
 	public CompilerOutput compileArrayRef(ArrayRef arrayRef) {
-		CircuitVar.Array a = (CircuitVar.Array) compileExpr(arrayRef.left).cv;
-		if (arrayRef.el instanceof IntConst) {
-			IntConst ind = (IntConst) arrayRef.el;
-			D("retrieve array val " + ind.number.intValue());
-			return new CircuitCompilerOutput(a.els[ind.number.intValue()]);
-		}
-		throw new InternalCompilerError("variable array indexes not supported");
+		refStack.push(arrayRef);
+		CompilerOutput cout = compileExpr(arrayRef.left);
+		refStack.pop();
+		return cout;
 	}
 
 	Gate[] createSubCircuit(GateBase[] left, GateBase[] right, boolean extraSignBit) {
@@ -530,6 +538,39 @@ public class CircuitCompiler implements Compile {
 		
 		return new CircuitCompilerOutput(cc);
 	}
+	public CompilerOutput compileAndExpr(AndExpr expr) {
+		GateBase[] lc = compileExpr(expr.left).cc;
+		GateBase[] rc = compileExpr(expr.right).cc;	
+		
+		lc = bitExtend(lc, expr.type.bitWidth(), expr.left.type.isSigned());
+		rc = bitExtend(rc, expr.type.bitWidth(), expr.right.type.isSigned());
+		
+		IntType type = castToInt(expr.type);
+		
+		Gate[] cc = new Gate[type.bits];
+		for(int i=0; i<type.bits; ++i) {
+			cc[i] = newGate(lc[i], rc[i], TT_AND());
+		}
+		
+		return new CircuitCompilerOutput(cc);
+	}
+	public CompilerOutput compileOrExpr(OrExpr expr) {
+		GateBase[] lc = compileExpr(expr.left).cc;
+		GateBase[] rc = compileExpr(expr.right).cc;	
+		
+		lc = bitExtend(lc, expr.type.bitWidth(), expr.left.type.isSigned());
+		rc = bitExtend(rc, expr.type.bitWidth(), expr.right.type.isSigned());
+		
+		IntType type = castToInt(expr.type);
+		
+		Gate[] cc = new Gate[type.bits];
+		for(int i=0; i<type.bits; ++i) {
+			cc[i] = newGate(lc[i], rc[i], TT_OR());
+		}
+		
+		return new CircuitCompilerOutput(cc);
+	}
+	
 	public CompilerOutput compileEqExpr(EqExpr expr) {
 		GateBase[] lc = compileExpr(expr.left).cc;
 		GateBase[] rc = compileExpr(expr.right).cc;
@@ -571,24 +612,35 @@ public class CircuitCompiler implements Compile {
 		rc = bitExtend(rc, eqLen, expr.right.type.isSigned());
 
 		Gate[] cc = new Gate[eqLen];
-		cc[eqLen-1] = newGate(rc[eqLen-1], lc[eqLen-1], TT_ANDNOT());
-		for(int i=eqLen-2; i>=0; --i) {
-			// a or (b and ~c)
-			cc[i] = newGate(cc[i+1], rc[i], lc[i], new boolean[] {
-					false, true, false, false, true, true, true, true
+		cc[0] = newGate(rc[0], lc[0], TT_ANDNOT());
+		for(int i=1; i<eqLen; ++i) {
+			// (b and ~c) or (a and (b xnor c))
+			cc[i] = newGate(cc[i-1], rc[i], lc[i], new boolean[] {
+					false, false, true, false, true, false, true, true
 			});
 		}
 		
-		return new CircuitCompilerOutput(cc[0]);
-
-		
+		return new CircuitCompilerOutput(cc[eqLen-1]);
 	}
 	public CompilerOutput compileGreaterThanExpr(GreaterThanExpr expr) {
-		throw new InternalCompilerError("not yet implemented: GreaterThanExpr");
+		LessThanExpr ltex = new LessThanExpr(expr.right, expr.left);
+		return compileLessThanExpr(ltex);
 	}
-
+	public CompilerOutput compileLessThanOrEqExpr(LessThanOrEqExpr expr) {
+		// same as not greater than
+		LessThanExpr ltex = new LessThanExpr(expr.right, expr.left);
+		CircuitCompilerOutput cout = (CircuitCompilerOutput) compileLessThanExpr(ltex);
+		return new CircuitCompilerOutput(new Gate[] { newNotGate(cout.cc[0]) });
+	}
+	public CompilerOutput compileGreaterThanOrEqExpr(GreaterThanOrEqExpr expr) {
+		// same as not less than
+		LessThanExpr ltex = new LessThanExpr(expr.left, expr.right);
+		CircuitCompilerOutput cout = (CircuitCompilerOutput) compileLessThanExpr(ltex);
+		return new CircuitCompilerOutput(new Gate[] { newNotGate(cout.cc[0]) });
+	}
+	
 	public CompilerOutput compileForExpr(ForExpr fore) {
-		for (int loopctr = fore.begin; loopctr<fore.end; loopctr += fore.by) {
+		for (int loopctr = fore.begin; loopctr<=fore.end; loopctr += fore.by) {
 			compileAssignExpr(new SFDL.AssignExpr(fore.var, new SFDL.IntConst(loopctr)));
 			compileBlock(fore.body);
 		}
@@ -690,7 +742,10 @@ public class CircuitCompiler implements Compile {
 		}
 		boolean debug = (System.getProperty("D") != null);
 		boolean debug2 = (System.getProperty("DD") != null);
-		if (!(debug || debug2)) {
+		
+		debug |= debug2;
+		
+		if (debug) {
 			System.setOut(new PrintStream(new NullOutputStream()));
 		}
 	
@@ -705,6 +760,7 @@ public class CircuitCompiler implements Compile {
 			SFDLParser p = new SFDLParser(r);
 			if (debug2) {
 				p.debug = true;
+				comp.debug = true;
 			}
 			p.parse();
 			r.close();

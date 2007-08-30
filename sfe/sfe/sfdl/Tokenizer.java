@@ -167,6 +167,8 @@ public class Tokenizer {
 						return new Token(TOK_GT, ">");
 					case '|' :
 						return new Token(TOK_PIPE, "|");
+					case '&' :
+						return new Token(TOK_AMPERSAND, "&");
 					case ';' :
 						return new Token(TOK_SEMICOLON, ";");
 					case ',' :
@@ -205,6 +207,16 @@ public class Tokenizer {
 							return nextToken();
 							//return new Token(TOK_SLASHSLASH, "//");
 						case '*' :
+							for(;;) {
+								ch=readChar();
+								if (ch=='*') {
+									ch=readChar();
+									if (ch=='/')
+										break;
+									pushBack(ch);
+								}
+							}
+							return nextToken();
 							//return new Token(TOK_SLASHSTAR, "/*");
 						}
 						pushBack(ch);
