@@ -160,11 +160,13 @@ public class Optimizer {
 							// combine 2+2 -> 3
 							Gate g2 = (Gate)g.inputs[i];
 							
+							/*
 							System.out.println("Orig: ");
 							System.out.print("  ");
 							g.write(System.out);
 							System.out.print("  ");
 							g2.write(System.out);
+							*/
 							
 							if (i==1) {
 								g.inputs = new GateBase[] { g.inputs[1-i], g2.inputs[0], g2.inputs[1] };
@@ -192,9 +194,11 @@ public class Optimizer {
 							
 							g.arity = 3;
 							
+							/*
 							System.out.println("New: ");
 							System.out.print("  ");
 							g.write(System.out);
+							*/
 							
 							delta=true;
 							break;

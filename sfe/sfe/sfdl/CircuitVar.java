@@ -38,6 +38,7 @@ public abstract class CircuitVar {
 				cc[i] = new Input(varNo, varNo);
 				cc[i].setComment(name + "$" + i);
 			}
+			comp.formatMap.put(name, cc);
 			ArrayList<Input> inps = new ArrayList<Input>(cc.length);
 			for (GateBase g : cc) {
 				inps.add((Input) g);

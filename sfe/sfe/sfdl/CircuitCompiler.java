@@ -13,6 +13,7 @@ import sfe.shdl.Circuit.Gate;
 import sfe.shdl.Circuit.GateBase;
 import sfe.shdl.Circuit.Input;
 import sfe.shdl.Circuit.Output;
+import sfe.util.ListMap;
 
 public class CircuitCompiler implements Compile {
 	boolean debug = false;
@@ -180,7 +181,7 @@ public class CircuitCompiler implements Compile {
 		current = current.parent;
 	}
 
-	Map<String,GateBase[]> formatMap = new HashMap<String,GateBase[]>();
+	Map<String,GateBase[]> formatMap = new ListMap<String,GateBase[]>();
 	
 	String circ2str(GateBase[] cc) {
 		StringBuffer sb = new StringBuffer("circ[" + cc.length + "]\n");
@@ -717,7 +718,17 @@ public class CircuitCompiler implements Compile {
 
 	void printFmtFile() {
 		for (Map.Entry<String, GateBase[]> ent : formatMap.entrySet()) {
-			System.out.print("Bob input integer \"");
+			String who = "Unknown";
+			String key = ent.getKey();
+			if (key.contains("alice")) {
+				who = "Alice";
+			} else if (key.contains("bob")) {
+				who = "Bob";
+			} else {
+				System.err.println("Warning: unknown owner of i/o variable " + key);
+				System.err.println("  (should contain \"alice\" or \"bob\" as substring)");
+			}
+			System.out.print(who + " input integer \"");
 			System.out.print(ent.getKey());
 			System.out.print("\" [");
 			for (GateBase g : ent.getValue()) {
