@@ -7,6 +7,7 @@ import sfe.shdl.Circuit.*;
 
 
 public class Optimizer {
+	// for full optimization, set everything to 0 or false
 	private int optimize_duplicate = 0;
 	private int optimize_irrelevant = 0;
 	private int optimize_arity1 = 0;
@@ -20,6 +21,7 @@ public class Optimizer {
 		return curId++;
 	}
 
+	final boolean DEBUG=false;
 	
 	public void optimize(Circuit cc) {
 		Set<Gate> seen = new HashSet<Gate>();
@@ -105,6 +107,10 @@ public class Optimizer {
 					// optimize duplicate inputs
 					for (int l=0; l<i; ++l) {
 						if (g.inputs[i] == g.inputs[l]) {
+							if (DEBUG) {
+								System.out.print("OPTIMIZE_DUPLICATE0 ");
+								g.write(System.out);
+							}
 							delta = true;
 							--g.arity;
 							g.truthtab = slice(g.truthtab, i, l);
@@ -118,6 +124,10 @@ public class Optimizer {
 							g.inputs = newinputs;
 							--i;
 							delta=true;
+							if (DEBUG) {
+								System.out.print("OPTIMIZE_DUPLICATE1 ");
+								g.write(System.out);
+							}
 							continue;
 						}
 					}
@@ -285,14 +295,17 @@ public class Optimizer {
 		boolean[] ntt = new boolean[tt.length >> 1];
 		
 		int l = 0;
-		// TODO: should this be <= or < ???
-		for (int i=1; i<=tt.length; i<<=2)
+		// l is the number of inputs
+		for (int i=1; i<tt.length; i<<=1)
 			++l;
-		int q = l - pos;
-		int q2 = l - pos2;
+		
+		int q = l - pos - 1;
+		int q2 = l - pos2 - 1;
+		//System.out.println(l + " " + pos + " " + pos2 + " " + q + " " + q2);
 		
 		int j=0;
 		for (int i=0; i<tt.length; ++i) {
+			// condition will be true when pos1==pos2 in the truth table
 			if (((i>>q)&1) == ((i>>q2)&1)) {
 				ntt[j++] = tt[i];
 			}
