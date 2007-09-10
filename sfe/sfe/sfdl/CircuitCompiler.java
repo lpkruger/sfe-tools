@@ -14,6 +14,7 @@ import sfe.shdl.Circuit.GateBase;
 import sfe.shdl.Circuit.Input;
 import sfe.shdl.Circuit.Output;
 import sfe.util.ListMap;
+import sfe.util.NullOutputStream;
 
 public class CircuitCompiler implements Compile {
 	boolean debug = false;
@@ -52,11 +53,14 @@ public class CircuitCompiler implements Compile {
 		return tt;
 	}
 	static boolean[] TT_ADDCARRY3() {
+		// carry, left, right -> next carry
 		boolean[] tt = { false, false, false, true, false, true, true, true };
 		return tt;
 	}
 	static boolean[] TT_SUBCARRY3() {
-		boolean[] tt = { false, true, true, true, false, false, false, false };
+		//boolean[] tt = { false, true, true, true, false, false, false, false };
+		// carry, left, right -> next carry
+		boolean[] tt = { false, true, false, false, true, true, false, true };
 		return tt;
 	}
 	static boolean[] TT_EQ3() {
@@ -270,7 +274,7 @@ public class CircuitCompiler implements Compile {
 		return new CircuitCompilerOutput(new GateBase[0]);
 	}
 	
-	LinkedList<LValExpr> lvalStack = new LinkedList<LValExpr>(); 
+	Stack<LValExpr> lvalStack = new Stack<LValExpr>(); 
 
 	public void compileAssignArrayRef(LArrayRef arrayRef,
 			CompilerOutput val) {
@@ -359,7 +363,7 @@ public class CircuitCompiler implements Compile {
 	}
 
 
-	LinkedList<Expr> refStack = new LinkedList<Expr>();
+	Stack<Expr> refStack = new Stack<Expr>();
 	
 	public CompilerOutput compileStructRef(StructRef structRef) {
 		refStack.push(structRef);
@@ -391,7 +395,8 @@ public class CircuitCompiler implements Compile {
 		carry[0] = newGate(right[0], left[0], TT_ANDNOT());
 		for(int i=1; i<len; ++i) {
 			cc[i] = newGate(left[i], right[i], carry[i-1], TT_XOR3());
-			carry[i] = newGate(left[i], right[i], carry[i-1], TT_SUBCARRY3());
+			//carry[i] = newGate(left[i], right[i], carry[i-1], TT_SUBCARRY3());
+			carry[i] = newGate(carry[i-1], left[i], right[i], TT_SUBCARRY3());
 		}
 		if (extraSignBit) {
 			cc[len] = carry[len-1];
@@ -417,14 +422,15 @@ public class CircuitCompiler implements Compile {
 		GateBase[] lc = compileExpr(expr.left).cc;
 		GateBase[] rc = compileExpr(expr.right).cc;
 		
-		lc = bitExtend(lc, expr.type.bitWidth(), expr.left.type.isSigned());
-		rc = bitExtend(rc, expr.type.bitWidth(), expr.left.type.isSigned());
+		//lc = bitExtend(lc, expr.type.bitWidth(), expr.left.type.isSigned());
+		//rc = bitExtend(rc, expr.type.bitWidth(), expr.left.type.isSigned());
 		
 		Gate[] result = new Gate[expr.type.bitWidth()];
 
 		int leftsize =  expr.left.type.bitWidth();
 		int rightsize = expr.right.type.bitWidth();
-		int circsize = leftsize < rightsize ? leftsize : rightsize;
+		//int circsize = leftsize < rightsize ? leftsize : rightsize;
+		int circsize = leftsize;
 
 		GateBase[] curP = null;
 		GateBase[] lastP;
@@ -440,28 +446,28 @@ public class CircuitCompiler implements Compile {
 			curP[0] = lc[circsize-i-1];
 
 			if (i == 0) {
-				for (int j=1; j<leftsize; ++j) {
+				for (int j=1; j<rightsize; ++j) {
 					curP[j] = FALSE_GATE;
 				}		
 			} else {
-				for (int j=1; j<leftsize; ++j) {
+				for (int j=1; j<rightsize; ++j) {
 					curP[j] = lastP[j-1];
 				}
 			}
 
 			// subtract 
 			GateBase[] subQ = new GateBase[rightsize];
-			subQ = createSubCircuit(curP, rc, false);
+			subQ = createSubCircuit(curP, rc, true);
 			
 			// output bit
-			result[circsize-i-1] = newNotGate(subQ[rightsize-1]);
+			result[circsize-i-1] = newNotGate(subQ[rightsize]);
 				
 			// update curP if necessary, using muxes
 			GateBase[] curP2 = new GateBase[rightsize];
 					
 			for (int j=0; j<rightsize; ++j) {
 				// TODO: check order of MUX arguments
-				curP2[j] = newGate(subQ[rightsize-1], curP[j], subQ[j], TT_MUX());
+				curP2[j] = newGate(subQ[rightsize], curP[j], subQ[j], TT_MUX());
 			}
 
 			curP = curP2;
@@ -710,12 +716,6 @@ public class CircuitCompiler implements Compile {
 	}
 	
 	
-	static class NullOutputStream extends java.io.OutputStream {
-		public void write(int x) { }
-		public void write(byte[] b) { }
-        public void write(byte[] b, int off, int len) { } 
-	}
-
 	void printFmtFile() {
 		for (Map.Entry<String, GateBase[]> ent : formatMap.entrySet()) {
 			String who = "Unknown";
@@ -728,7 +728,14 @@ public class CircuitCompiler implements Compile {
 				System.err.println("Warning: unknown owner of i/o variable " + key);
 				System.err.println("  (should contain \"alice\" or \"bob\" as substring)");
 			}
-			System.out.print(who + " input integer \"");
+			String what;
+			if (ent.getValue()[0] instanceof Input) {
+				what = "input";
+			} else {
+				what = "output";
+			}
+			
+			System.out.print(who + " " + what + " integer \"");
 			System.out.print(ent.getKey());
 			System.out.print("\" [");
 			for (GateBase g : ent.getValue()) {
