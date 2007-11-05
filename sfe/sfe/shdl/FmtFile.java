@@ -31,6 +31,20 @@ public class FmtFile {
 		}
 	}
 	
+	public void mapBits(long nn, TreeMap<Integer,Boolean> vals, String name) {
+		BigInteger n = BigInteger.valueOf(nn);
+		mapBits(n, vals, name);
+	}
+	
+	public void mapBits(boolean[] n, TreeMap<Integer,Boolean> vals, String name) {
+		Obj obj = mapping.get(name);
+		for (int j=0; j<obj.bits.length; ++j) {
+			int i = obj.bits[j];
+			//System.out.println("set bit " + j + " of " + name + " (" + i + ") = " + n.testBit(j));
+            vals.put(i, n[j]);
+		}
+	}
+	
 	// BUG: outputmap is wrong if format file is not monotonic
 	
 	public BigInteger readBits(boolean[] vals, String name) {
