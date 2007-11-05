@@ -11,6 +11,8 @@ import java.util.*;
 import java.io.*;
 import java.math.BigInteger;
 
+import sfe.sfdl.SFDL.NotConstantException;
+
 import static sfe.sfdl.TokenizerConstants.*;
 import static sfe.sfdl.SFDLReservedWords.*;
 
@@ -195,20 +197,23 @@ public class SFDLParser extends Parser {
 		return new SFDL.StructType(structNames, structTypes);
 	}
 	
-	int parseIntConst() {
-		int num;
+	BigInteger parseIntConst() {
+		BigInteger num;
 		switch(tok.type) {
 		case TOK_NUM:
-			num = Integer.parseInt(tok.str);
+			num = new BigInteger(tok.str);
 			break;
 		case TOK_IDENT:
 			SFDL.Expr value = sfdl.evalVar(tok.str);
-			if (!value.isConst())
+			try {
+				value.evalAsConst();
+			} catch (NotConstantException ex) {
 				throw new ParseError("Constant expression required", tok);
-
-			// throw new ParseError("Integer constant expression required", tok);
+			}
+			// TODO: convert to new constant evaluation system
+			
 			SFDL.IntConst ival = (SFDL.IntConst) value;
-			num = ival.number.intValue();
+			num = ival.number;
 			break;
 		default:
 			throw new ParseError("Unexpected int width ", tok);
@@ -241,7 +246,7 @@ public class SFDLParser extends Parser {
 			case TOK_INT:
 				expect(nextToken(), TOK_LT);
 				nextToken();
-				int intlen = parseIntConst();
+				int intlen = parseIntConst().intValue();
 
 				expect(tok, TOK_GT);
 				nextToken();
@@ -256,7 +261,7 @@ public class SFDLParser extends Parser {
 		// is it an array type?
 		while (tok.type == TOK_LBRACKET) {
 			nextToken();
-			int arraylen = parseIntConst();
+			int arraylen = parseIntConst().intValue();
 			expect(tok, TOK_RBRACKET);
 			nextToken();
 			type = new SFDL.ArrayType(type, arraylen);
@@ -325,14 +330,16 @@ public class SFDLParser extends Parser {
 				throw new ParseError("for loop requires lval", tok);
 			}
 			expect(tok, TOK_EQUAL);
-			expect(nextToken(), TOK_NUM);			// TODO should allow consts
-			int begin = Integer.parseInt(tok.str);
-			expect(nextToken(), TOK_TO);
-			expect(nextToken(), TOK_NUM);			// TODO should allow consts
-			int end = Integer.parseInt(tok.str);
 			nextToken();
+			BigInteger begin = parseIntConst();
+			
+			expect(tok, TOK_TO);
+			nextToken();
+	
+			BigInteger end = parseIntConst();
 			SFDL.Block loopblock = parseBlock();
-			return new SFDL.ForExpr((SFDL.LValExpr)left, begin, end, 1, loopblock);
+			return new SFDL.ForExpr((SFDL.LValExpr)left, begin.intValue(), 
+					end.intValue(), 1, loopblock);
 			
 		default:
 			return parseExpr();
@@ -349,23 +356,33 @@ public class SFDLParser extends Parser {
 		switch(tok.type) {
 		case TOK_NUM:
 			leftexpr = new SFDL.IntConst(new BigInteger(tok.str));
+			nextToken();
 			break;
 		case TOK_IDENT:
 			leftexpr = sfdl.evalVar(tok.str);
 			if (leftexpr == null) {
 				throw new ParseError("Invalid variable reference ", tok);
 			}
+			nextToken();
 			break;
 		case TOK_LPAREN:
 			nextToken();
 			leftexpr = parseExpr();
 			expect(tok, TOK_RPAREN);
+			nextToken();
+			break;
+		case TOK_DASH:
+			// TODO: type check
+			leftexpr = new SFDL.IntConst(0);
+			nextToken();
+			// TODO: XXX TOK_GGT is a hack because it seems like the right priority
+			// fixme later
+			leftexpr = new SFDL.SubExpr(leftexpr, parseExpr(TOK_GGT));
 			break;
 		default:
 			throw new ParseError("unknown expression ", tok);
 		}
 		
-		nextToken();
 		do {
 			if(!greaterPrio(tok.type, prio)) {
 				if (debug) System.out.println("leave parseExpr, lower prio");
@@ -415,7 +432,7 @@ public class SFDLParser extends Parser {
 				if (srexpr.type == null) {
 					throw new ParseError("field not found", tok);
 				}
-				System.out.println("structref: " + srexpr);
+				//System.out.println("structref: " + srexpr);
 				expr = srexpr;
 				nextToken();
 				break;
@@ -546,7 +563,7 @@ public class SFDLParser extends Parser {
 	// return true if right binds tighter than left
 	boolean greaterPrio(int right, int left) {
 		
-		if (right==TOK_SEMICOLON || right==TOK_LBRACE || right==TOK_RPAREN 
+		if (right==TOK_SEMICOLON || right==TOK_LBRACE || right==TOK_RPAREN || right==TOK_RBRACKET
 				|| right==TOK_TO || right==TOK_BY)
 			return false;
 		

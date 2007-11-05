@@ -352,7 +352,7 @@ public class CircuitCompiler implements Compile {
 		GateBase[] cc = new GateBase[n];
 		for (int i=0; i<n; ++i) {
 			cc[i] = intConst.number.testBit(i) ? TRUE_GATE : FALSE_GATE;
-			System.out.println("cc " + i + " + " + cc[i]);
+			//System.out.println("cc " + i + " + " + cc[i]);
 		}
 		return new CircuitCompilerOutput(cc);
 	}
@@ -412,7 +412,7 @@ public class CircuitCompiler implements Compile {
 		rc = bitExtend(rc, expr.type.bitWidth()-1, expr.right.type.isSigned());
 		
 		Gate[] result = createSubCircuit(lc, rc, true);
-		System.out.println("sub result.len = " + result.length + " type width = " + expr.type.bitWidth());
+		//System.out.println("sub result.len = " + result.length + " type width = " + expr.type.bitWidth());
 		return new CircuitCompilerOutput(result);
 		
 	}
@@ -620,6 +620,7 @@ public class CircuitCompiler implements Compile {
 
 		Gate[] cc = new Gate[eqLen];
 		cc[0] = newGate(rc[0], lc[0], TT_ANDNOT());
+
 		for(int i=1; i<eqLen; ++i) {
 			// (b and ~c) or (a and (b xnor c))
 			cc[i] = newGate(cc[i-1], rc[i], lc[i], new boolean[] {
@@ -627,7 +628,21 @@ public class CircuitCompiler implements Compile {
 			});
 		}
 		
-		return new CircuitCompilerOutput(cc[eqLen-1]);
+		Gate result = cc[eqLen-1];
+		if (expr.left.type.isSigned()) {
+			if (expr.right.type.isSigned()) {
+				// TODO: can optimize more, use cc[eqLen-2] instead of result
+				result = newGate(result, lc[eqLen-1], rc[eqLen-1],	
+						new boolean[] 
+						            { false, false, true, false, true, false, true, true});
+			} else {
+				result = newGate(result, lc[eqLen-1], TT_OR());
+			}
+		} else if (expr.right.type.isSigned()) {
+			// right signed, left not
+			result = newGate(result, rc[eqLen-1], TT_ANDNOT());
+		}
+		return new CircuitCompilerOutput(result);
 	}
 	public CompilerOutput compileGreaterThanExpr(GreaterThanExpr expr) {
 		LessThanExpr ltex = new LessThanExpr(expr.right, expr.left);
@@ -809,7 +824,8 @@ public class CircuitCompiler implements Compile {
 			outfile = outfile.substring(0, outfile.length()-4);
 		}
 		outfile += ".circ";
-		PrintStream cout = new PrintStream(new FileOutputStream(outfile));
+		FileOutputStream outfilestream = new FileOutputStream(outfile);
+		PrintStream cout = new PrintStream(outfilestream);
 		System.setOut(cout);
 		CircuitWriter.write(circ);
 		System.setOut(new PrintStream(new NullOutputStream()));
@@ -824,7 +840,8 @@ public class CircuitCompiler implements Compile {
 		System.setOut(cout);
 		comp.printFmtFile();
 		System.setOut(new PrintStream(new NullOutputStream()));
-		cout.close();
+		cout.flush();
+		outfilestream.close();
 		
 		System.err.println("done!");
 	}

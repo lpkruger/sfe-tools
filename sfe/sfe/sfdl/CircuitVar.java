@@ -173,7 +173,7 @@ public abstract class CircuitVar {
 					GateBase oldCondBit = comp.conditionBit;
 					comp.conditionBit = comp.newGate(oldCondBit, out.cc[0], 
 							CircuitCompiler.TT_AND());
-					System.out.println("i="+i+" set " + comp.gateId + "...");
+					//System.out.println("i="+i+" set " + comp.gateId + "...");
 					els[i].assign(comp, newcc);
 					comp.conditionBit = oldCondBit;
 					

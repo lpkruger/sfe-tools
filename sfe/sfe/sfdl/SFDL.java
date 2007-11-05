@@ -39,7 +39,7 @@ public class SFDL {
 		}
 		abstract int bitWidth();
 		boolean isSigned() {
-			return false;
+			return true;
 		}
 		void typeCheck(Expr other) {
 			//if (!this.getClass().isInstance(other.type)) {
@@ -148,14 +148,19 @@ public class SFDL {
 		}
 	}
 
+	static class NotConstantException extends Exception {
+	}
+	
 	static abstract class Expr extends Obj {
 		Type type;
 		Expr(Type type) {
 			this.type = type;
 		}
-		boolean isConst() {
-			return false;
+		ConstValue evalAsConst() throws NotConstantException {
+			throw new NotConstantException();
 		}
+		//abstract ConstValue evalAsConst() throws NotConstantException;
+		
 		public Type getType() {
 			return type;
 		}
@@ -163,13 +168,15 @@ public class SFDL {
 	}
 	
 	static abstract class ConstValue extends Expr {
-		boolean isConst() {
-			return true;
+		ConstValue evalAsConst() {
+			return this;
 		}
-		
-
 		ConstValue(Type type) {
 			super(type);
+		}
+		// why does this class even exist?
+		BigInteger intValue() {
+			return ((IntConst)this).number;
 		}
 	}
 
@@ -312,10 +319,15 @@ public class SFDL {
 			return compile.compileAddExpr(this);
 		}
 			
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().add(rr.intValue()));
+		}
+		
 		public String toString() {
 			return "[add+ " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
-
 	}
 	
 	static class SubExpr extends BinaryOpExpr {
@@ -328,6 +340,11 @@ public class SFDL {
 		}
 		CompilerOutput compile(Compile compile) {
 			return compile.compileSubExpr(this);
+		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().subtract(rr.intValue()));
 		}
 		public String toString() {
 			return "[sub- " + type.toShortString() + " " + left + " , " + right + " ]";
@@ -345,7 +362,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileMulExpr(this);
 		}
-			
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().multiply(rr.intValue()));
+		}
 		public String toString() {
 			return "[mul* " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -363,7 +384,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileDivExpr(this);
 		}
-			
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().divide(rr.intValue()));
+		}
 		public String toString() {
 			return "[div/ " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -378,7 +403,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileLeftShiftExpr(this);
 		}
-			
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().shiftLeft(rr.intValue().intValue()));
+		}	
 		public String toString() {
 			return "[lshft<< " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -392,7 +421,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileRightShiftExpr(this);
 		}
-			
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().shiftRight(rr.intValue().intValue()));
+		}	
 		public String toString() {
 			return "[rshft>> " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -408,6 +441,11 @@ public class SFDL {
 		}
 		CompilerOutput compile(Compile compile) {
 			return compile.compileXorExpr(this);
+		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().xor(rr.intValue()));
 		}
 		public String toString() {
 			return "[xor^ " + type.toShortString() + " " + left + " , " + right + " ]";
@@ -425,6 +463,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileAndExpr(this);
 		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().and(rr.intValue()));
+		}
 		public String toString() {
 			return "[xor^ " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -441,6 +484,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileOrExpr(this);
 		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().or(rr.intValue()));
+		}
 		public String toString() {
 			return "[xor^ " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -455,7 +503,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileEqExpr(this);
 		}
-		
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().equals(rr.intValue()) ? 1 : 0);
+		} 
 		public String toString() {
 			return "[eq== " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -470,6 +522,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compilerNotEqExpr(this);
 		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst(ll.intValue().equals(rr.intValue()) ? 0 : 1);
+		} 
 		public String toString() {
 			return "[neq== " + type.toShortString() + " " + left + " , " + right + " ]";
 		}
@@ -486,6 +543,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileLessThanExpr(this);
 		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst((ll.intValue().compareTo(rr.intValue())<0) ? 1 : 0);
+		} 
 	}
 	static class LessThanOrEqExpr extends BinaryOpExpr {
 		LessThanOrEqExpr(Expr left, Expr right) {
@@ -498,6 +560,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileLessThanOrEqExpr(this);
 		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst((ll.intValue().compareTo(rr.intValue())<=0) ? 1 : 0);
+		} 
 	}
 	
 	static class GreaterThanExpr extends BinaryOpExpr {
@@ -508,6 +575,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileGreaterThanExpr(this);
 		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst((ll.intValue().compareTo(rr.intValue())>0) ? 1 : 0);
+		} 
 		public String toString() {
 			return "[gt< " + type + " " + left + " , " + right + " ]";
 		}
@@ -520,6 +592,11 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileGreaterThanOrEqExpr(this);
 		}
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue ll = left.evalAsConst();
+			ConstValue rr = right.evalAsConst();
+			return new IntConst((ll.intValue().compareTo(rr.intValue())>=0) ? 1 : 0);
+		} 
 		public String toString() {
 			return "[gt< " + type + " " + left + " , " + right + " ]";
 		}
@@ -539,8 +616,13 @@ public class SFDL {
 		public String toString() {
 			return "[assn= " + type.toShortString() + " " + lval + " := " + value + " ]";
 		}
-		
-	}
+
+		ConstValue evalAsConst() throws NotConstantException {
+			ConstValue v = value.evalAsConst();
+			//return v;
+			throw new InternalCompilerError("TODO: need do update state");
+		} 
+	} 
 	
 	static class ForExpr extends Expr {
 		LValExpr var;
@@ -558,6 +640,10 @@ public class SFDL {
 		}
 		CompilerOutput compile(Compile compile) {
 			return compile.compileForExpr(this);
+		}
+		public String toString() {
+			return "[for " + type.toShortString() + " var " + var + " " + " begin " + begin + " end " + end + 
+			" by " + by + " body " + body + " ]";
 		}
 	}
 	static class IfExpr extends Expr {
