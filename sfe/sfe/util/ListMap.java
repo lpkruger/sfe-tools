@@ -76,4 +76,8 @@ public class ListMap<K,V> implements Map<K,V> {
 		}
 		return vv;
 	}
+	
+	int indexOfKey(K key) {
+		return list.indexOf(key);
+	}
 }
