@@ -1,0 +1,18 @@
+program eq {
+        const N=160;
+        type Key = Int<N>;
+        type Char = Int<8>;
+        type AliceInput = struct { Char x };
+        type BobInput = struct { Char y };
+        type BobOutput = struct { Boolean eq };
+        type Input = struct {AliceInput alice,  BobInput bob};
+        type Output = struct { BobOutput bob };
+
+        function Output output(Input input) {
+	if (0 == (input.alice.x ^ input.bob.y)) {
+	  output.bob.eq = 0;
+	} else {
+	  output.bob.eq = 1;
+	}
+	}
+}

@@ -1,0 +1,42 @@
+/*
+ */
+program splitmin3 {
+	const N=8;
+	type Num = Int<N>;
+	type Char = Int<8>;
+	type AliceInput = struct { Num a, Num b, Num c, Num r, Char x };
+	type BobInput = struct { Num a, Num b, Num c, Char x };
+	type BobOutput = Num; 
+	type Input = struct {AliceInput alice,	BobInput bob};
+	type Output = struct {BobOutput bob};
+
+	function Output output(Input input) {
+	   var Num aa;
+	   var Num bb;
+	   var Num cc;
+	   var Num xx;
+	   var Num yy;
+
+	   aa = input.alice.a + input.bob.a;
+	   bb = input.alice.b + input.bob.b;
+	   cc = input.alice.c + input.bob.c;
+
+           if (0 != (input.alice.x ^ input.bob.x)) {
+	     cc = cc+1;
+	   }
+
+	   if (aa<bb) {
+	     xx=aa;
+	   } else {
+	     xx=bb;
+	   }
+
+	   if (xx<cc) {
+	     yy=xx;
+	   } else {
+	     yy=cc;
+	   }
+	   
+           output.bob = yy - input.alice.r;
+	}
+}
