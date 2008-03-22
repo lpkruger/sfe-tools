@@ -1,0 +1,11 @@
+#!/bin/sh
+
+base=/home/louis/sfe
+
+echo
+path=$base/jars/js.jar:$base/build
+if [ -x `which cygpath.exe` ] ; then 
+  path=`cygpath -dp $path`
+fi
+java -cp $path sfe.js.JS1 "$@"
+echo
