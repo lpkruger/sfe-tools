@@ -80,7 +80,7 @@ public class Paillier {
 			q = new BigInteger(nBits, 100, rand);
 		} while (q.equals(p));
 		
-		System.out.println("p=" + p + "  q=" + q);
+		//System.out.println("p=" + p + "  q=" + q);
 		
 		// computer LCM(p-1, q-1)
 		BigInteger pm1 = p.subtract(ONE);
