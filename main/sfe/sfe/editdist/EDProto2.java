@@ -12,9 +12,6 @@ import java.util.TreeSet;
 
 import javax.crypto.BadPaddingException;
 
-import fairplay.BOAL.AliceLib;
-import fairplay.BOAL.BobLib;
-
 import sfe.shdl.*;
 import sfe.util.*;
 // import sfe.bdd.proto.Protocol;

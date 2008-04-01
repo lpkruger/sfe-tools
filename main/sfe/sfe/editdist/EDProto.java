@@ -8,9 +8,6 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import fairplay.BOAL.AliceLib;
-import fairplay.BOAL.BobLib;
-
 import sfe.shdl.*;
 import sfe.util.*;
 // import sfe.bdd.proto.Protocol;
@@ -47,7 +44,7 @@ public class EDProto {
 	}
 	static final BigInteger MAX_BIGINT = TWO.pow(N_BITS).subtract(BigInteger.ONE);
 	
-	static final boolean use_fairplay = false;
+	//static final boolean use_fairplay = false;
 	static boolean use_circuitonly = (System.getProperty("CIRCUITONLY") != null);
 	static boolean use_purdue = true;
 	
@@ -288,11 +285,11 @@ public class EDProto {
 			
 			aState[i][j] = r0;
 
-			if (use_fairplay) {
+			/*if (use_fairplay) {
 				AliceLib calice = new AliceLib("editdist/proto2b_" + N_BITS + ".txt.Opt.circuit", "SPLIT_" + N_BITS + "bit/splitmin3.txt.Opt.fmt", "123", in, out,
 						new String[] { String.valueOf(r0), String.valueOf(c0), String.valueOf(b0), String.valueOf(a0) },
 						false);		
-			} else {
+			} else */{
 				D("prepare circuit");
 				// evaluate min circuit
 				Circuit circuit = CircuitParser.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.circuit");
@@ -563,13 +560,13 @@ public class EDProto {
 			
 			BigInteger zz = BigInteger.ZERO;
 			
-			if (use_fairplay) {
+			/*if (use_fairplay) {
 				BobLib cbob = new BobLib("splitmin3.txt.Opt.circuit", "splitmin3.txt.Opt.fmt", "234", in, out,
 						new String[] {String.valueOf(c1), String.valueOf(b1), String.valueOf(a1) },
 				"4");		
 				D("res len " + cbob.outputs);
 				zz = BigInteger.valueOf(cbob.outputs[0]);
-			} else {
+			} else */{
 				FmtFile fmt = FmtFile.readFile("editdist/proto2b_" + N_BITS + ".txt.Opt.fmt");
 				TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
 				
