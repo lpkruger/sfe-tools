@@ -1,0 +1,3 @@
+#!/bin/sh
+java -cp sfe.jar -DBOB sfe.shdl.Protocol "$@"
+
