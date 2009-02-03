@@ -88,4 +88,18 @@ public class JS1 {
 		r.close();
 		return ret;
 	}
+	
+	static class MyFactory extends ContextFactory {
+	    public boolean hasFeature(Context cx, int featureIndex)
+	    {
+	        // Turn on maximim compatibility with MSIE scripts
+	        switch (featureIndex) {
+	            //case Context.FEATURE_INTERPRETER_CONTINUATIONS:
+	                //return true;
+	        case Context.FEATURE_E4X:
+	        	return true;
+	        }
+	        return super.hasFeature(cx, featureIndex);
+	    }
+	}
 }
