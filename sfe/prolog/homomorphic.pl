@@ -10,6 +10,10 @@ belongs(n, bob).
 belongs(r1, alice).
 belongs(r2, bob).
 
+%mayUse(reEnc).
+%mayUse(sfe).
+
+
 %canLearn(_,_) :- fail.
 %canLearn(mul(add(x,y),r1), alice).
 %canLearn(add(x,y), alice).
@@ -38,6 +42,9 @@ writeCalcTerm(addEnc(enc(X,EE),enc(Y,EE))) :-
 	Args = [ enc(X,EE), enc(Y,EE) ], writeCalcTermList(Args), writeln(');').
 writeCalcTerm(subEnc(enc(X,EE),enc(Y,EE))) :-
 	Z = enc(sub(X,Y),EE), writeProtoTerm(Z), write(' = subEnc('),
+	Args = [ enc(X,EE), enc(Y,EE) ], writeCalcTermList(Args), writeln(');').
+writeCalcTerm(mulEnc(enc(X,EE),enc(Y,EE))) :- EE=pubKey(E,eujin1), !,
+	Z = enc(mul(X,Y),pubKey(E,eujin2)), writeProtoTerm(Z), write(' = mulEnc('),
 	Args = [ enc(X,EE), enc(Y,EE) ], writeCalcTermList(Args), writeln(');').
 writeCalcTerm(mulEnc(enc(X,EE),enc(Y,EE))) :-
 	Z = enc(mul(X,Y),EE), writeProtoTerm(Z), write(' = mulEnc('),
@@ -128,10 +135,13 @@ calc(X,W) :- isParty(W), appendGlobal(calc(X, W)).
 
 isntEnc(X) :- not(X = enc(_,_)), not(X = pubKey(_,_)).
 
-isEncMode(additive).
-isEncMode(multiplicative).
+%isAdditive(paillier).
+isAdditive(eujin1).
+isAdditive(eujin2).
+%isMultiplicative(elgamal).
+isMultiplicative(_) :- fail.
 
-isPubKey(EE) :- EE=pubKey(X, W), isParty(X), isEncMode(W).
+isPubKey(EE) :- EE=pubKey(X, M), isParty(X), ( isAdditive(M) ; isMultiplicative(M) ).
 
 % reuse computations
 %has(X,W) :- hasLearned(X,W), !.
@@ -168,36 +178,51 @@ has(X,W) :- D=W, EE=pubKey(D, M), isPubKey(EE), isntEnc(X), has(enc(X,EE), W),
 
 %%% additive homomorphic rules
 % can add two values encrypted with E's key
-has(enc(add(X,Y),EE), W) :- EE=pubKey(_,additive), isPubKey(EE),
+has(enc(add(X,Y),EE), W) :- EE=pubKey(_,M), isAdditive(M), isPubKey(EE),
 	has(enc(X,EE),W), has(enc(Y,EE),W),
   	calc(addEnc(enc(X,EE),enc(Y,EE)), W).  
-has(enc(sub(X,Y),EE), W) :- EE=pubKey(_,additive), isPubKey(EE),
+has(enc(sub(X,Y),EE), W) :- EE=pubKey(_,M), isAdditive(M), isPubKey(EE),
 	has(enc(X,EE),W), has(enc(Y,EE),W),
   	calc(subEnc(enc(X,EE),enc(Y,EE)), W).  
 
 % can multiply an encrypted value by a non-encrypted value
-has(enc(mul(X,Y),EE), W) :- EE=pubKey(_,additive), isPubKey(EE),
+has(enc(mul(X,Y),EE), W) :- EE=pubKey(_,M), isAdditive(M), isPubKey(EE),
 	has(enc(X,EE),W), has(Y,W), calc(mulEnc(enc(X,EE),Y), W).
-%has(enc(mul(Y,X),EE), W) :- EE=pubKey(_,additive), isPubKey(EE), 
+%has(enc(mul(Y,X),EE), W) :- EE=pubKey(_,M), isAdditive(m), isPubKey(EE), 
 %	has(enc(X,EE),W), has(Y,W), calc(mulEnc(enc(X,EE),Y), W).
 
 has(enc(mul(Y,X),EE), W) :- has(enc(mul(X,Y), EE), W).
 	
 %%% multiplicative homomorphic rule
-has(enc(mul(X,Y),EE), W) :- EE=pubKey(_,multiplicative), isPubKey(EE),
+has(enc(mul(X,Y),EE), W) :- EE=pubKey(_,M), isMultiplicative(M), isPubKey(EE),
 	has(enc(X,EE),W), has(enc(Y,EE),W),
   	calc(mulEnc(enc(X,EE),enc(Y,EE)), W).  
-has(enc(exp(X,Y),EE), W) :- EE=pubKey(_,multiplicative), isPubKey(EE),
+has(enc(exp(X,Y),EE), W) :- EE=pubKey(_,M), isMultiplicative(M), isPubKey(EE),
 	has(enc(X,EE),W), has(Y,W), calc(expEnc(enc(X,EE),Y), W).
+%
+%%% special Eu-Jin version
+has(enc(mul(X,Y),E2), W) :- E2=pubKey(E,eujin2), isParty(E), E1=pubKey(E,eujin1),
+	has(enc(X,E1),W), has(enc(Y,E1),W),
+  	calc(mulEnc(enc(X,E1),enc(Y,E1)), W).  
+%
+
+% can create random blinding value
+has(mul(X,R), W) :- has(X, W), isNewBlind(R), calc(random(R)).
+
+% can send blinded value to another party
+has(mul(X,R), W) :- isBlind(R), has(mul(X,R), A), sendTo(R, A, W).
+
+% division can cancel multiplication
+has(div(X,Y), W) :- has(mul(X,R), W), has(mul(Y,R), W), calc(div(mul(X,R),mul(Y,R))).
 
 % catch all using reencryption
 %has(enc(add(x,y), pubKey(_, multiplicative)), _) :- trace, fail.
-has(enc(X, E2), W) :- E2=pubKey(E, M2), isPubKey(E2),
+has(enc(X, E2), W) :- mayUse(reEnc), E2=pubKey(E, M2), isPubKey(E2),
 	E1=pubKey(E, M1), isPubKey(E1), M1\=M2, has(enc(X, E1), W),
 	has(E2, W), has(E1, W),
 	calc(reEnc(enc(X, E2), E1), W).
 % catch all using SFE
-%has(X,W) :- canLearn(X,W), appendGlobal(sfe(X,W)), true.
+has(X,W) :- mayUse(sfe), canLearn(X,W), appendGlobal(sfe(X,W)), true.
 
 % For YAP
 %call_with_depth_limit(A,B,_) :- depth_bound_call(A,B).
