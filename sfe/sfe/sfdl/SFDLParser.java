@@ -95,7 +95,10 @@ public class SFDLParser extends Parser {
 		nextToken();
 		SFDL.Expr expr = parseExpr();
 		
-		if (!(expr instanceof SFDL.ConstValue)) {
+		try {
+			SFDL.ConstValue cv = expr.evalAsConst();
+			expr = cv;
+		} catch (NotConstantException ex) {
 			throw new ParseError("non constant value " + expr, tok);
 		}
 		SFDL.ConstDef cdef = new SFDL.ConstDef(name, (SFDL.ConstValue) expr);

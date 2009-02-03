@@ -205,7 +205,7 @@ public class SFDL {
 
 	static interface LValExpr {
 		Type getType();
-		void compileAssign(Compile comp, CompilerOutput val);
+		void compileAssign(Compile comp, CompilerOutput val, Expr ex);
 	}
 
 	static class VarRef extends Expr implements LValExpr {
@@ -217,8 +217,8 @@ public class SFDL {
 		CompilerOutput compile(Compile compile) {
 			return compile.compileVarRef(this);
 		}
-		public void compileAssign(Compile comp, CompilerOutput val) {
-			comp.compileAssignVarRef(this, val);
+		public void compileAssign(Compile comp, CompilerOutput val, Expr ex) {
+			comp.compileAssignVarRef(this, val, ex);
 		}
 		public String toString() {
 			return "[varref " + type.toShortString() + " " + var + " ]";
@@ -230,8 +230,8 @@ public class SFDL {
 		LStructRef(LValExpr left, String field) {
 			super((Expr) left, field);
 		}
-		public void compileAssign(Compile comp, CompilerOutput val) {
-			comp.compileAssignStructRef(this, val);
+		public void compileAssign(Compile comp, CompilerOutput val, Expr ex) {
+			comp.compileAssignStructRef(this, val, ex);
 		}
 		public String toString() {
 			return "L" + super.toString();
@@ -242,8 +242,8 @@ public class SFDL {
 		LArrayRef(LValExpr left, Expr el) {
 			super((Expr) left, el);
 		}
-		public void compileAssign(Compile comp, CompilerOutput val) {
-			comp.compileAssignArrayRef(this, val);
+		public void compileAssign(Compile comp, CompilerOutput val, Expr ex) {
+			comp.compileAssignArrayRef(this, val, ex);
 		}
 		public String toString() {
 			return "L" + super.toString();
@@ -263,7 +263,7 @@ public class SFDL {
 			return compile.compileArrayRef(this);
 		}
 		public String toString() {
-			return "[arrayref " + type.toShortString() + " " + left + " . " + el + " ]";
+			return "[arrayref " + type.toShortString() + " " + left + " index " + el + " ]";
 		}
 	}
 	
@@ -295,7 +295,6 @@ public class SFDL {
 			return "[structref " + type.toShortString() + " " + left + " . " + field + " ]";
 		}
 	}
-	
 
 	static abstract class BinaryOpExpr extends Expr {
 		Expr left;
@@ -307,8 +306,8 @@ public class SFDL {
 		}
 	}
 	
-	static class AddExpr extends BinaryOpExpr {
-		AddExpr(Expr left, Expr right) {
+	public static class AddExpr extends BinaryOpExpr {
+		public AddExpr(Expr left, Expr right) {
 			super(left, right);
 			IntType lt = (IntType) left.type;
 			IntType rt = (IntType) right.type;
@@ -619,8 +618,9 @@ public class SFDL {
 
 		ConstValue evalAsConst() throws NotConstantException {
 			ConstValue v = value.evalAsConst();
+			throw new NotConstantException();
 			//return v;
-			throw new InternalCompilerError("TODO: need do update state");
+			//throw new InternalCompilerError("TODO: need do update state");
 		} 
 	} 
 	

@@ -86,7 +86,11 @@ public class Circuit {
 			}
 			out.print("] inputs [ ");
 			for (int i=0; i<inputs.length; ++i) {
-				out.print(inputs[inputs.length-1-i].id + " ");
+				//try {
+					out.print(inputs[inputs.length-1-i].id + " ");
+				//} catch (NullPointerException ex) {
+				//	out.print("null ");
+				//}
 			}
 			out.print("]");
 			if (comment != null) {

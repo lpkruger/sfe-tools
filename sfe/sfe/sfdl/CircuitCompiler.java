@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.util.*;
 
 import sfe.sfdl.Parser.ParseError;
@@ -80,7 +81,7 @@ public class CircuitCompiler implements Compile {
 
 	
 	int gateId;
-	int newId() {
+	public int newId() {
 		return gateId++;
 	}
 	
@@ -119,7 +120,7 @@ public class CircuitCompiler implements Compile {
 		return g;
 	}
 	
-	Gate newGate() {
+	public Gate newGate() {
 		return new Gate(newId());
 	}
 	Gate newGate(GateBase in1, GateBase in2, boolean[] tt) {
@@ -158,7 +159,8 @@ public class CircuitCompiler implements Compile {
 		GateBase[] newcc = new GateBase[len];
 		System.arraycopy(cc, 0, newcc, 0, cc.length);
 		for (int i=cc.length; i<len; ++i) {
-			newcc[i] = signExtend ? newIdentityGate(cc[cc.length-1]) : FALSE_GATE;
+			//newcc[i] = signExtend ? newIdentityGate(cc[cc.length-1]) : FALSE_GATE;
+			newcc[i] = signExtend ? cc[cc.length-1] : FALSE_GATE;
 		}
 		return newcc;
 	}
@@ -187,7 +189,7 @@ public class CircuitCompiler implements Compile {
 
 	Map<String,GateBase[]> formatMap = new ListMap<String,GateBase[]>();
 	
-	String circ2str(GateBase[] cc) {
+	static String circ2str(GateBase[] cc) {
 		StringBuffer sb = new StringBuffer("circ[" + cc.length + "]\n");
 		for (int i=0; i<cc.length; ++i) {
 			sb.append(cc[i]).append("\n");
@@ -203,12 +205,63 @@ public class CircuitCompiler implements Compile {
 	GateBase[] retrieveFromVar(VarRef lval, boolean isOutput) {
 	*/
 	
+	static class GateExpr extends SFDL.Expr {
+		GateBase[] cc;
+		GateExpr(Type type, GateBase[] cc) {
+			super(type);
+			this.cc = cc;
+		}
+		
+		CompilerOutput compile(Compile compile) {
+			return new CircuitCompilerOutput(cc);
+		}
+		
+		SFDL.ConstValue evalAsConst() throws NotConstantException {
+			BigInteger bigint = BigInteger.ZERO;
+			for (int i=0; i<cc.length; ++i) {
+				if (!(cc[i] instanceof Gate)) {
+					//System.out.println("wasn't a gate : not const");
+					throw new NotConstantException();
+
+				}
+				Gate g = (Gate) cc[i];
+				if (g.arity != 0) {
+					//System.out.println("arity=" + g.arity + " : not const");
+					//System.out.println(circ2str(cc));
+					throw new NotConstantException();
+
+				}
+				if (g.truthtab[0])
+					bigint = bigint.setBit(i);
+			}
+			//System.out.println("is const " + bigint);
+			//System.out.println(circ2str(cc));
+			return new SFDL.IntConst(bigint);
+		}
+	}
+	
 	CircuitCompilerOutput compileExpr(Expr ex) {
 		D("Expr " + ex.toString());
+		
+		try {
+			SFDL.ConstValue cv = ex.evalAsConst();
+			ex = cv;
+		} catch (NotConstantException e) {
+			// it wasn't constant, move on
+		}
+		
 		CircuitCompilerOutput out = (CircuitCompilerOutput) ex.compile(this);
+		
 		if (ex.getType().isCompoundType()) {
+			
 			// TODO: something
-			// if (out.cv.bitWidth() != ex.getType().bitWidth())
+			/*
+			if (out.cc.length != ex.getType().bitWidth()) {	
+			}
+			throw new InternalCompilerError(
+					"compound type expressions, expecting width " + ex.getType().bitWidth()
+					+ " got " + out.cc.length);
+			*/
 		} else if (out.cc.length != ex.getType().bitWidth()) {
 			D("Expr " + ex.toString());
 			throw new InternalCompilerError("Compiler error: Expr " + ex.getClass() + " of type " + 
@@ -277,21 +330,21 @@ public class CircuitCompiler implements Compile {
 	Stack<LValExpr> lvalStack = new Stack<LValExpr>(); 
 
 	public void compileAssignArrayRef(LArrayRef arrayRef,
-			CompilerOutput val) {
+			CompilerOutput val, Expr ex) {
 		lvalStack.push(arrayRef);
-		((LValExpr)arrayRef.left).compileAssign(this, val);
+		((LValExpr)arrayRef.left).compileAssign(this, val, ex);
 	}
 
 	public void compileAssignStructRef(LStructRef structRef,
-			CompilerOutput val) {
+			CompilerOutput val, Expr ex) {
 		lvalStack.push(structRef);
-		((LValExpr)structRef.left).compileAssign(this, val);
+		((LValExpr)structRef.left).compileAssign(this, val, ex);
 	}
 
-	public void compileAssignVarRef(VarRef varRef, CompilerOutput val) {
+	public void compileAssignVarRef(VarRef varRef, CompilerOutput val, Expr ex) {
 		GateBase[] cc = ((CircuitCompilerOutput) val).cc;
 		CircuitVar cv = current.varMap.get(varRef.var.name);
-		cv.assign(this, cc);
+		cv.assign(this, cc, ex);
 		lvalStack.clear();
 	}
 	
@@ -299,6 +352,7 @@ public class CircuitCompiler implements Compile {
 		//typeCheck(expr.value.type, expr.vardef.type);
 		GateBase[] cc = new GateBase[expr.type.bitWidth()];
 		CircuitCompilerOutput cout = compileExpr(expr.value); 
+		
 		GateBase[] rc = cout.cc;
 		if (rc.length>=cc.length) {
 			System.arraycopy(rc, 0, cc, 0, cc.length);
@@ -307,11 +361,11 @@ public class CircuitCompiler implements Compile {
 		}
 		
 		cout = new CircuitCompilerOutput(cc);
-		expr.lval.compileAssign(this, cout);
+		expr.lval.compileAssign(this, cout, expr.value);
 		return cout;
 	}
 	
-	Gate[] createAdder(GateBase[] lc, GateBase[] rc) {
+	public Gate[] createAdder(GateBase[] lc, GateBase[] rc) {
 		if (lc.length != rc.length) {
 			throw new InternalCompilerError("Internal compiler error: " + 
 					lc.length + " != " + rc.length);
@@ -408,6 +462,17 @@ public class CircuitCompiler implements Compile {
 		GateBase[] lc = compileExpr(expr.left).cc;
 		GateBase[] rc = compileExpr(expr.right).cc;
 		
+		try {
+			GateExpr gex1 = new GateExpr(expr.left.type, lc);
+			GateExpr gex2 = new GateExpr(expr.right.type, rc);
+			SFDL.SubExpr cex = new SFDL.SubExpr(gex1, gex2);
+			CircuitCompilerOutput cout = compileExpr(cex.evalAsConst());
+			//System.out.println("sub constant: " + cex.evalAsConst());
+			cout.cc = bitExtend(cout.cc, expr.type.bitWidth(), expr.type.isSigned());
+		} catch (NotConstantException ex) {
+			System.out.println("not constant subtraction expr:" + expr);
+			// wasn't a constant
+		}
 		lc = bitExtend(lc, expr.type.bitWidth()-1, expr.left.type.isSigned());
 		rc = bitExtend(rc, expr.type.bitWidth()-1, expr.right.type.isSigned());
 		
@@ -663,6 +728,7 @@ public class CircuitCompiler implements Compile {
 	
 	public CompilerOutput compileForExpr(ForExpr fore) {
 		for (int loopctr = fore.begin; loopctr<=fore.end; loopctr += fore.by) {
+			System.out.println("loopctr " + loopctr);
 			compileAssignExpr(new SFDL.AssignExpr(fore.var, new SFDL.IntConst(loopctr)));
 			compileBlock(fore.body);
 		}
@@ -778,13 +844,14 @@ public class CircuitCompiler implements Compile {
 		
 		debug |= debug2;
 		
-		if (debug) {
+		if (!debug) {
 			System.setOut(new PrintStream(new NullOutputStream()));
 		}
 	
 		boolean noopt = (System.getProperty("O0") != null);
 		
 		CircuitCompiler comp = new CircuitCompiler();
+		
 		Circuit circ = null;
 		
 		try {

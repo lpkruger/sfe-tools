@@ -17,7 +17,7 @@ public class CircuitCompilerOutput implements CompilerOutput {
 		}
 	}
 	
-	GateBase[] cc; 
+	public GateBase[] cc; 
 	
 	CircuitCompilerOutput(GateBase[] cc) {
 		this.cc = cc;

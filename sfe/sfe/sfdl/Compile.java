@@ -7,6 +7,7 @@ import sfe.sfdl.SFDL.AssignExpr;
 import sfe.sfdl.SFDL.Block;
 import sfe.sfdl.SFDL.DivExpr;
 import sfe.sfdl.SFDL.EqExpr;
+import sfe.sfdl.SFDL.Expr;
 import sfe.sfdl.SFDL.ForExpr;
 import sfe.sfdl.SFDL.GreaterThanExpr;
 import sfe.sfdl.SFDL.GreaterThanOrEqExpr;
@@ -74,10 +75,10 @@ public interface Compile {
 
 	CompilerOutput compileArrayRef(ArrayRef arrayRef);
 
-	void compileAssignVarRef(VarRef varRef, CompilerOutput val);
+	void compileAssignVarRef(VarRef varRef, CompilerOutput val, Expr ex);
 
 	void compileAssignStructRef(LStructRef structRef,
-			CompilerOutput val);
+			CompilerOutput val, Expr ex);
 
-	void compileAssignArrayRef(LArrayRef arrayRef, CompilerOutput val);
+	void compileAssignArrayRef(LArrayRef arrayRef, CompilerOutput val, Expr ex);
 }
