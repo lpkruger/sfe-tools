@@ -32,7 +32,7 @@ public class CircuitCompiler implements Compile {
 		boolean[] tt = { false, true, true, false, true, false, false, true};
 		return tt;
 	}
-	static boolean[] TT_XNOR() {
+	public static boolean[] TT_XNOR() {
 		boolean[] tt = { true, false, false, true };
 		return tt;
 	}
@@ -64,7 +64,7 @@ public class CircuitCompiler implements Compile {
 		boolean[] tt = { false, true, false, false, true, true, false, true };
 		return tt;
 	}
-	static boolean[] TT_EQ3() {
+	public static boolean[] TT_EQ3() {
 		boolean[] tt = { false, false, false, false, true, false, false, true };
 		return tt;
 	}
@@ -104,7 +104,7 @@ public class CircuitCompiler implements Compile {
 		return g;
 	}
 	
-	Gate newIdentityGate(GateBase in) {
+	public Gate newIdentityGate(GateBase in) {
 		Gate g = new Gate(newId());
 		g.arity = 1;
 		g.inputs = new GateBase[] { in };
@@ -123,7 +123,7 @@ public class CircuitCompiler implements Compile {
 	public Gate newGate() {
 		return new Gate(newId());
 	}
-	Gate newGate(GateBase in1, GateBase in2, boolean[] tt) {
+	public Gate newGate(GateBase in1, GateBase in2, boolean[] tt) {
 		Gate g = new Gate(newId());
 		g.arity = 2;
 		g.inputs = new GateBase[] {in1, in2};
@@ -132,7 +132,7 @@ public class CircuitCompiler implements Compile {
 			throw new InternalCompilerError("truthtab must have 4 entries");
 		return g;
 	}
-	Gate newGate(GateBase in1, GateBase in2, GateBase in3, boolean[] tt) {
+	public Gate newGate(GateBase in1, GateBase in2, GateBase in3, boolean[] tt) {
 		Gate g = new Gate(newId());
 		g.arity = 3;
 		g.inputs = new GateBase[] {in1, in2, in3};
