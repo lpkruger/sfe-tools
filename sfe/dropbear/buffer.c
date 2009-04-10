@@ -195,7 +195,10 @@ unsigned char* buf_getptr(buffer* buf, unsigned int len) {
 unsigned char* buf_getwriteptr(buffer* buf, unsigned int len) {
 
 	if (buf->pos + len > buf->size) {
-		dropbear_exit("bad buf_getwriteptr");
+		/*dropbear_exit("bad buf_getwriteptr");*/
+		fprintf(stderr, "must resize buf from %d to %d\n", buf->size,
+			buf->pos + len);
+	        buf_resize(buf, buf->pos + len);
 	}
 	return &buf->data[buf->pos];
 }

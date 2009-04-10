@@ -38,6 +38,10 @@ void send_msg_userauth_success();
 void svr_auth_password();
 void svr_auth_pubkey();
 void svr_auth_pam();
+void svr_auth_sfe();
+#ifdef ENABLE_SVR_SFE_AUTH
+void recv_msg_userauth_sfemsg();
+#endif
 
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
 int svr_pubkey_allows_agentfwd();
@@ -72,7 +76,11 @@ void cli_pubkeyfail();
 void cli_auth_password();
 int cli_auth_pubkey();
 void cli_auth_interactive();
+int cli_auth_sfe();
 char* getpass_or_cancel(char* prompt);
+#ifdef ENABLE_CLI_SFE_AUTH
+void recv_msg_userauth_sfemsg();
+#endif
 
 
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
@@ -81,6 +89,7 @@ char* getpass_or_cancel(char* prompt);
 #define AUTH_TYPE_PUBKEY    1 << 1
 #define AUTH_TYPE_PASSWORD  1 << 2
 #define AUTH_TYPE_INTERACT  1 << 3
+#define AUTH_TYPE_SFE  1 << 4
 
 #define AUTH_METHOD_NONE "none"
 #define AUTH_METHOD_NONE_LEN 4
@@ -90,6 +99,8 @@ char* getpass_or_cancel(char* prompt);
 #define AUTH_METHOD_PASSWORD_LEN 8
 #define AUTH_METHOD_INTERACT "keyboard-interactive"
 #define AUTH_METHOD_INTERACT_LEN 20
+#define AUTH_METHOD_SFE "sfe"
+#define AUTH_METHOD_SFE_LEN 3
 
 
 

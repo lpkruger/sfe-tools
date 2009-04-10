@@ -1,0 +1,6 @@
+make clean
+make
+./m
+make
+./m
+make

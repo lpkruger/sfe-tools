@@ -64,6 +64,11 @@ static void authclear() {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
 #endif
+#ifdef ENABLE_SVR_SFE_AUTH
+	if (!svr_opts.noauthpass) {
+		ses.authstate.authtypes |= AUTH_TYPE_SFE;
+	}
+#endif
 	if (ses.authstate.pw_name) {
 		m_free(ses.authstate.pw_name);
 	}
@@ -165,6 +170,18 @@ void recv_msg_userauth_request() {
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
 					AUTH_METHOD_PASSWORD_LEN) == 0) {
 			svr_auth_password();
+			goto out;
+		}
+	}
+#endif
+#ifdef ENABLE_SVR_SFE_AUTH
+	if (!svr_opts.noauthpass &&
+			!(svr_opts.norootpass && ses.authstate.pw_uid == 0) ) {
+		/* user wants to try SFE password auth */
+		if (methodlen == AUTH_METHOD_SFE_LEN &&
+				strncmp(methodname, AUTH_METHOD_SFE,
+					AUTH_METHOD_SFE_LEN) == 0) {
+			svr_auth_sfe();
 			goto out;
 		}
 	}
@@ -303,6 +320,7 @@ goodshell:
 void send_msg_userauth_failure(int partial, int incrfail) {
 
 	buffer *typebuf = NULL;
+ 	int need_comma=0;	// flag that "," is needed
 
 	TRACE(("enter send_msg_userauth_failure"))
 
@@ -313,15 +331,26 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	/* put a list of allowed types */
 	typebuf = buf_new(30); /* long enough for PUBKEY and PASSWORD */
 
+#if 0
 	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
 		buf_putbytes(typebuf, AUTH_METHOD_PUBKEY, AUTH_METHOD_PUBKEY_LEN);
-		if (ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
-			buf_putbyte(typebuf, ',');
-		}
+		need_comma=1;
 	}
 	
 	if (ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
+		if (need_comma) {
+			buf_putbyte(typebuf, ',');
+		}
 		buf_putbytes(typebuf, AUTH_METHOD_PASSWORD, AUTH_METHOD_PASSWORD_LEN);
+		need_comma=1;
+	}
+#endif
+	if (ses.authstate.authtypes & AUTH_TYPE_SFE) {
+		if (need_comma) {
+			buf_putbyte(typebuf, ',');
+		}
+		buf_putbytes(typebuf, AUTH_METHOD_SFE, AUTH_METHOD_SFE_LEN);
+		need_comma=1;
 	}
 
 	buf_setpos(typebuf, 0);

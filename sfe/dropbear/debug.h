@@ -39,7 +39,7 @@
  * Caution: Don't use this in an unfriendly environment (ie unfirewalled),
  * since the printing may not sanitise strings etc. This will add a reasonable
  * amount to your executable size. */
-/*#define DEBUG_TRACE*/
+#define DEBUG_TRACE
 
 /* All functions writing to the cleartext payload buffer call
  * CHECKCLEARTOWRITE() before writing. This is only really useful if you're
@@ -78,4 +78,6 @@
  * disable some of the chown pty code etc*/
 /* #define DEBUG_HACKCRYPT "hL8nrFDt0aJ3E" */ /* this is crypt("password") */
 
+/* this is crypt("q") with MD5-crypt */
+//#define DEBUG_HACKCRYPT "$1$QyenZBsY$w92OuQyOOk02pRUjZTjr20" 
 #endif

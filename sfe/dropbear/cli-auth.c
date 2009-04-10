@@ -243,8 +243,15 @@ void cli_auth_try() {
 
 	CHECKCLEARTOWRITE();
 	
-	/* Order to try is pubkey, interactive, password.
+	/* Order to try is sfe, pubkey, interactive, password.
 	 * As soon as "finished" is set for one, we don't do any more. */
+#ifdef ENABLE_CLI_SFE_AUTH
+	if (1 || ses.authstate.authtypes & AUTH_TYPE_SFE) {
+		finished = cli_auth_sfe();
+		cli_ses.lastauthtype = AUTH_TYPE_SFE;
+	}
+#endif
+
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
 		finished = cli_auth_pubkey();

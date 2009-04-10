@@ -35,7 +35,7 @@
 #include "auth.h"
 #include "channel.h"
 
-#define MAX_UNAUTH_PACKET_TYPE SSH_MSG_USERAUTH_PK_OK
+#define MAX_UNAUTH_PACKET_TYPE SSH_MSG_USERAUTH_SFEMSG
 
 static void recv_unimplemented();
 

@@ -54,6 +54,8 @@
 #define SSH_MSG_USERAUTH_INFO_REQUEST           60
 #define SSH_MSG_USERAUTH_INFO_RESPONSE          61
 
+/* SFE auth n*/
+#define SSH_MSG_USERAUTH_SFEMSG    62
 
 /* If adding numbers here, check MAX_UNAUTH_PACKET_TYPE in process-packet.c
  * is still valid */

@@ -64,6 +64,9 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, /* client */
 	{SSH_MSG_USERAUTH_SPECIFIC_60, recv_msg_userauth_specific_60}, /* client */
+#ifdef  ENABLE_CLI_SFE_AUTH
+	{SSH_MSG_USERAUTH_SFEMSG, recv_msg_userauth_sfemsg},
+#endif
 #ifdef  ENABLE_CLI_REMOTETCPFWD
 	{SSH_MSG_REQUEST_SUCCESS, cli_recv_msg_request_success}, /* client */
 	{SSH_MSG_REQUEST_FAILURE, cli_recv_msg_request_failure}, /* client */
