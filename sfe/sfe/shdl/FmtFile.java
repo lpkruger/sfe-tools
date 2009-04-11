@@ -30,7 +30,14 @@ public class FmtFile {
             vals.put(i, n.testBit(j));
 		}
 	}
-	
+
+/*
+	public void mapBits(byte[] bytes, TreeMap<Integer, Boolean> vals, String name) {
+		mapBits(new BigInteger(1, bytes), vals, name);
+	}
+*/
+		
+		
 	public void mapBits(long nn, TreeMap<Integer,Boolean> vals, String name) {
 		BigInteger n = BigInteger.valueOf(nn);
 		mapBits(n, vals, name);
@@ -144,4 +151,5 @@ public class FmtFile {
 		readFile(args[0]);
 		
 	}
+
 }

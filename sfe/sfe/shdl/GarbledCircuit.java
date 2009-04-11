@@ -26,7 +26,7 @@ public class GarbledCircuit implements Serializable {
 	public SecretKey[][] outputSecrets;
 	Gate[] allGates;
 	
-	void writeCircuit(ObjectOutputStream out) throws IOException {
+	public void writeCircuit(DataOutput out) throws IOException {
 		out.writeBoolean(use_permute);
 		out.writeInt(nInputs);
 		out.writeInt(outputs.length);
@@ -58,7 +58,7 @@ public class GarbledCircuit implements Serializable {
 		
 	
 	
-	static GarbledCircuit readCircuit(ObjectInputStream in) throws IOException {
+	public static GarbledCircuit readCircuit(DataInput in) throws IOException {
 		GarbledCircuit gcc = new GarbledCircuit();
 		gcc.use_permute = in.readBoolean();
 		gcc.nInputs = in.readInt();

@@ -14,7 +14,7 @@ import sfe.crypto.*;
 import sfe.util.*;
 
 /**
- * Protocol to securely evaluate BDD
+ * Protocol to securely evaluate Yao circuit
  * Alice and Bob routines are included
  * 
  * @author lpkruger
@@ -27,6 +27,7 @@ public class Protocol {
 	//static BigInteger GGG = OT.findGenerator(QQQ);
 	
 	static boolean useGZIP = false;  // TODO: buggy if true, fix
+	static boolean useCutChoose = true;
 	
 	public static void main(String[] args) throws Exception {
 		if (System.getProperty("BOB") != null) {
@@ -109,7 +110,126 @@ public class Protocol {
 					new TreeSet<Integer>(bobVars.who.keySet()));
 		}
 		
+		public void goWithCutChoose(TreeMap<Integer,Boolean> vals, TreeSet<Integer> aliceVars, TreeSet<Integer> bobVars) throws Exception {
+			long timeCryptStart = System.currentTimeMillis();
+			
+			// special hack for EDProto3
+			if (injectKeysAtInputZero != null || usePartialEval) {
+				throw new RuntimeException("not implemented");
+			}
+			
+			CircuitCrypt.AliceData[] data = new CircuitCrypt.AliceData[10]; 
+			
+			
+			GZIPOutputStream gzout = useGZIP ? new GZIPOutputStream(out) : null; 
+			ObjectOutputStream zout = useGZIP ? 
+					new ObjectOutputStream(gzout) : out;
+			
+			//zout.writeObject(data.gcc);
+			zout.writeInt(data.length);  // protocol change : write num
+			//zout.flush();
+			
+			long timeCCStart = System.currentTimeMillis();
+			ByteCountOutputStreamSFE.WRITE_MODE =
+				ByteCountOutputStreamSFE.MODE_CIRCUIT;
+		
+			//CircuitCrypt crypt = new CircuitCrypt();
+			CircuitCrypt crypt = new CircuitCryptPermute();
+			
+			for (int i=0; i<data.length; ++i) {
+				//System.out.println("encrypt copy "+i);
+				data[i] = crypt.encrypt(cc);
+				System.out.println("sending copy "+i);
+				// protocol change : write all circuits
+				data[i].gcc.writeCircuit(zout);
+			}
+					
+			zout.flush();
+			
+			// protocol change : read selected
+			int selected = in.readInt();
+			//System.out.println("read selected circuit "+selected);
+			// protocol change : send secrets for all non-selected
+			for (int i=0; i<data.length; ++i) {
+				if (i != selected)
+					zout.writeObject(data[i].inputSecrets);
+			}
+			
+			//zout.writeObject(data.rootsk);
+			zout.writeObject(aliceVars);
+			zout.writeObject(bobVars);
+
+			BigInteger[] aliceVarsSK = new BigInteger[aliceVars.size()];
+			int jj = 0;
+			for (int i=0; i<data[selected].inputSecrets.length; ++i) {
+				if (aliceVars.contains(i)) {
+					//System.out.println("alice[" + j + "] = vals[" + i + "] = " + vals.get(i));
+					aliceVarsSK[jj] = 
+						SFEKey.keyToBigInt(vals.get(i) ? data[selected].inputSecrets[i][1] 
+						                                                      : data[selected].inputSecrets[i][0]);
+					jj++;
+				}
+			}
+			zout.writeObject(aliceVarsSK);
+			
+			
+			if (useGZIP)
+				gzout.finish();
+			
+			out.flush();
+			
+			long timeOTStart = System.currentTimeMillis();
+			
+			BigInteger[][] otarray = new BigInteger[bobVars.size()][2];
+			int j = 0;
+			for (int i=0; i<data[selected].inputSecrets.length; ++i) {
+				if (bobVars.contains(i)) {
+					//System.out.println("secrets " + i);
+					//System.out.println(data.inputSecrets[i]);
+					
+					otarray[j][0] = SFEKey.keyToBigInt(data[selected].inputSecrets[i][0]);
+					otarray[j][1] = SFEKey.keyToBigInt(data[selected].inputSecrets[i][1]);
+					j++;
+				}
+			}
+			
+			ByteCountOutputStreamSFE.WRITE_MODE =
+				ByteCountOutputStreamSFE.MODE_OT;
+			
+			//OTFairPlay.Sender send = new OTFairPlay.Sender(otarray);
+			OT.Sender send = new OT.Sender(otarray, OT.QQQ, OT.GGG);
+			send.setStreams(in, out);
+			send.go();
+			out.flush();
+			long timeEnd = System.currentTimeMillis();
+			
+			System.out.println("Alice done");
+			
+			/*
+			System.out.println("BDD orig size: " + bddOrigSize);
+			System.out.println("BDD full size: " + bddFullSize);
+			System.out.println("BDD eval size: " + bddEvalSize);
+			System.out.println("BDD totl size: " + bddTotlSize);
+			System.out.println("BDD send size: " + data.obdd.nodes.size());
+			*/
+		
+			if (byteCount != null) {
+				System.out.println("Alice sent " + byteCount.cnt + " bytes");
+				byteCount.printStats();
+			}
+			
+			if (false) {
+				System.out.println("Crypt time: " + (timeCCStart - timeCryptStart) / 1000.0);
+				System.out.println("CC    time: " + (timeOTStart - timeCCStart) / 1000.0);
+				System.out.println("OT    time: " + (timeEnd - timeOTStart) / 1000.0);
+			}	
+		}
+		
 		public void go(TreeMap<Integer,Boolean> vals, TreeSet<Integer> aliceVars, TreeSet<Integer> bobVars) throws Exception {
+			if (useCutChoose) {
+				goWithCutChoose(vals, aliceVars, bobVars);
+				return;
+			}
 			long timeCryptStart = System.currentTimeMillis();
 			
 			//CircuitCrypt crypt = new CircuitCrypt();
@@ -120,9 +240,6 @@ public class Protocol {
 				crypt.injectKeysAtInputZero = injectKeysAtInputZero;
 			}
 			CircuitCrypt.AliceData data = crypt.encrypt(cc);
-			
-			
-			
 			
 			/*for (int i : aliceVars) {
 				if (crypt.flip.get(cc.inputs[i]))
@@ -284,7 +401,119 @@ public class Protocol {
 			}
 		}
 		
+		public void goWithCutChoose() throws Exception {
+			GCircuitEval crypt = new GCircuitEval();
+			
+			ObjectInputStream zin = useGZIP ? new ObjectInputStream(
+					new GZIPInputStream(in)) : in;
+			//GarbledCircuit gcc = (GarbledCircuit) zin.readObject();
+					
+			int numCircs = zin.readInt();
+			
+			GarbledCircuit[] gcc = new GarbledCircuit[numCircs];
+			for (int i=0; i<gcc.length; ++i) {
+				gcc[i] = GarbledCircuit.readCircuit(zin);
+				System.out.println("read copy "+i);
+			}
+			
+			// TODO: should use a cryptographic RNG
+			int selected = (int) (Math.random()*numCircs);
+			selected = 0;
+			out.writeInt(selected);
+			out.flush();
+			
+			SecretKey[][][] inputSecrets = new SecretKey[numCircs][][];
+			// read secrets for non-chosen circuits
+			for (int i=0; i<gcc.length; ++i) {
+				if (i != selected)
+					inputSecrets[i] = (SecretKey[][]) in.readObject();
+			}
+				
+			TreeSet<Integer> aliceVars = (TreeSet<Integer>) zin.readObject();
+			if (aliceVars == null) {
+				aliceVars = new TreeSet<Integer>();
+			}
+			TreeSet<Integer> bobVars = (TreeSet<Integer>) zin.readObject();
+			BigInteger[] aliceInputSK1 = (BigInteger[]) zin.readObject();
+			
+			int[] otarray;
+			
+			if (vals == null) { // use random arguments
+				System.out.println("Using random arguments for testing");
+				Random rand = new Random();
+				otarray = new int[bobVars.size()];
+				for (int i=0; i<otarray.length; ++i) {
+					otarray[i] = rand.nextInt(2);
+				}
+			} else {
+				otarray = new int[vals.length];
+				if (otarray.length != bobVars.size()) {
+					throw new RuntimeException(otarray.length + " != " + bobVars.size());
+				}
+				for (int i=0; i<otarray.length; ++i) {
+					otarray[i] = vals[i] ? 1 : 0;
+				}
+			}
+			
+			ByteCountOutputStreamSFE.WRITE_MODE =
+				ByteCountOutputStreamSFE.MODE_OT;
+			
+			long timeOTStart = System.currentTimeMillis();
+			OT.Chooser choose = new OT.Chooser(otarray, OT.QQQ, OT.GGG);
+			//OTFairPlay.Chooser choose = new OTFairPlay.Chooser(otarray);
+			choose.setStreams(in, out);
+			BigInteger[] bobInpSK1 = choose.go();
+			
+			long timeEvalStart = System.currentTimeMillis();
+			
+			int keySize = crypt.KG.generateKey().getEncoded().length;
+			TreeMap<Integer,SecretKey> inputSK = new TreeMap<Integer,SecretKey>();
+
+			int j = 0;
+			for (int i : aliceVars) {
+				inputSK.put(i, SFEKey.bigIntToKey(aliceInputSK1[j], keySize, crypt.CIPHER));
+				j++;
+			}
+			j = 0;
+			for (int i : bobVars) {
+				inputSK.put(i, SFEKey.bigIntToKey(bobInpSK1[j], keySize, crypt.CIPHER));
+				j++;
+			}
+			
+			// special hack for EDProto3
+			if (injectKeyAtInputZero != null) {
+				//inputSK.put(0, injectKeyAtInputZero);
+				throw new RuntimeException("not supported");
+			}
+			
+			SecretKey[] insk = new SecretKey[1+inputSK.lastKey()];
+			for (Map.Entry<Integer,SecretKey> ent : inputSK.entrySet()) {
+				insk[ent.getKey()] = ent.getValue();
+			}
+			//SecretKey[] levsk = levsk1.values().toArray(new SecretKey[0]);
+			
+			System.out.println("Eval Circuit");
+			GCircuitEval eval = new GCircuitEval();
+			result = eval.eval(gcc[selected], insk);
+			long timeEnd = System.currentTimeMillis();
+			
+			for (int i=0; i<result.length; ++i) {
+				//System.out.println("val" + i + " = " + result[i]);
+			}
+			
+			if (byteCount != null) {
+				System.out.println();
+				System.out.println("Bob sent " + byteCount.cnt + " bytes");
+				byteCount.printStats();
+			}
+			System.out.println("OT   time: " + (timeEvalStart - timeOTStart) / 1000.0);
+			System.out.println("Eval time: " + (timeEnd - timeEvalStart) / 1000.0);
+		}	
 		public void go() throws Exception {
+			if (useCutChoose) {
+				goWithCutChoose();
+				return;
+			}
 			GCircuitEval crypt = new GCircuitEval();
 			
 			ObjectInputStream zin = useGZIP ? new ObjectInputStream(

@@ -19,7 +19,7 @@ public class CircuitCryptPermute extends CircuitCrypt {
 	Map<Circuit.GateBase, Boolean> flip;
 	SecureRandom rand = new SecureRandom();
 	
-	AliceData encrypt(Circuit cc) {
+	public AliceData encrypt(Circuit cc) {
 		String NOPADDING = "//NoPadding";
 		try {
 			C = SFECipher.getInstance(CIPHER + NOPADDING);
