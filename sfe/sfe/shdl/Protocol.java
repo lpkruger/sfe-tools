@@ -7,6 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.zip.*;
 
 import javax.crypto.*;
@@ -154,21 +155,55 @@ public class Protocol {
 				}
 			}
 			
+			int nProcs = Runtime.getRuntime().availableProcessors();
+			System.out.println("use "+nProcs+" threads");
+			ExecutorService pool = Executors.newFixedThreadPool(nProcs);
+			Future<Boolean>[] results = new Future[num_copies];
 			for (int i=0; i<data.length; ++i) {
-				System.out.println("encrypt copy "+i);
-				if (useHashOpt) {
-					random.nextBytes(rngseeds[i]);
-					SecureRandom rng = DeterministicRandom.getRandom(rngseeds[i]);
-					crypt = new CircuitCryptPermute(rng);
-				}
-				
-				Circuit ccc = cc.copy();	// the permutation scrambles the truth tables
-				data[i] = crypt.encrypt(ccc);	
-				
-				if (useHashOpt) {
-					hash.reset();
-					data[i].gcc.hashCircuit(hash);
-					hashes[i] = hash.digest();
+				final int num = i;
+				results[i] = pool.submit(new Callable<Boolean>() {
+					public Boolean call() {
+						MessageDigest hash;
+						try {
+							hash = MessageDigest.getInstance("SHA-1");
+						} catch (NoSuchAlgorithmException e) {
+							e.printStackTrace();
+							return false;
+						}
+						CircuitCryptPermute crypt;
+						System.out.println("encrypt copy "+num);
+						if (useHashOpt) {
+							random.nextBytes(rngseeds[num]);
+							SecureRandom rng = DeterministicRandom.getRandom(rngseeds[num]);
+							crypt = new CircuitCryptPermute(rng);
+						}
+
+						Circuit ccc = cc.copy();	// the permutation scrambles the truth tables
+						data[num] = crypt.encrypt(ccc);	
+
+						if (useHashOpt) {
+							hash.reset();
+							data[num].gcc.hashCircuit(hash);
+							hashes[num] = hash.digest();
+						}
+						return true;
+					}
+				});
+			}
+			
+			for (int i=0; i<results.length; ++i) {
+				try {
+					if (!results[i].get()) {
+						System.out.println("failed crypt copy  "+i);
+						throw new RuntimeException("failed crypt copy "+i);
+					}
+					System.out.println("done crypt copy "+i);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 			
@@ -536,28 +571,66 @@ public class Protocol {
 			
 			long timeVrfyStart = System.currentTimeMillis();
 			
-			byte[][] rngseeds;
+			
 			if (useHashOpt) {
 				// read the selected circuit, and the RNG seed for the others
 				gcc[selected] = GarbledCircuit.readCircuit(zin);				
-				rngseeds = (byte[][]) zin.readObject();
+				final byte[][] rngseeds = (byte[][]) zin.readObject();
 				// verify non-selected circuits
-				MessageDigest hash = MessageDigest.getInstance("SHA-1");
+				
+				int nProcs = Runtime.getRuntime().availableProcessors();
+				ExecutorService pool = Executors.newFixedThreadPool(nProcs);
+				Future<Boolean>[] results = new Future[num_copies];
+				final Circuit circ = cc;
+				final byte[][] hashes0 = hashes;
 				for (int i=0; i<gcc.length; ++i) {
 					if (i != selected) {
-						SecureRandom rng = DeterministicRandom.getRandom(rngseeds[i]);
-						CircuitCryptPermute crypt = new CircuitCryptPermute(rng);
-						hash.reset();
-						crypt.encrypt(cc.copy()).gcc.hashCircuit(hash);
-						byte[] hashval = hash.digest();
-						
-						if (!Arrays.equals(hashes[i], hashval)) {
-							throw new RuntimeException("hash mismatch  "+
-									Arrays.toString(hashes[i])+" != "+
-									Arrays.toString(hashval));
+						final int num = i;
+						results[i] = pool.submit(new Callable<Boolean>() {
+							public Boolean call() {
+								MessageDigest hash;
+								try {
+									hash = MessageDigest.getInstance("SHA-1");
+								} catch (NoSuchAlgorithmException e) {
+									e.printStackTrace();
+									return false;
+								}
+								System.out.println("verify hash "+num);
+								SecureRandom rng = DeterministicRandom.getRandom(rngseeds[num]);
+								CircuitCryptPermute crypt = new CircuitCryptPermute(rng);
+								hash.reset();
+								crypt.encrypt(circ.copy()).gcc.hashCircuit(hash);
+								byte[] hashval = hash.digest();
+
+								if (!Arrays.equals(hashes0[num], hashval)) {
+									System.out.println("hash mismatch  "+
+											Arrays.toString(hashes0[num])+" != "+
+											Arrays.toString(hashval));
+									return false;
+								}
+								return true;
+							}
+						});
+					}
+				}
+				for (int i=0; i<results.length; ++i) {
+					if (i != selected) {
+						try {
+							if (!results[i].get()) {
+								System.out.println("failed verify copy  "+i);
+								throw new RuntimeException("failed crypt copy "+i);
+							}
+							System.out.println("done verify copy "+i);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+							throw new RuntimeException(e);
+						} catch (ExecutionException e) {
+							e.printStackTrace();
+							throw new RuntimeException(e);
 						}
 					}
 				}
+				pool.shutdown();
 			} else {
 				SecretKey[][][] inputSecrets = new SecretKey[numCircs][][];
 				// read secrets for non-chosen circuits

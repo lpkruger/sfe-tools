@@ -49,14 +49,13 @@ JNIEXPORT jboolean JNICALL Java_sfe_sfauth_DropbearAuthStreams_writePacket
 
 static int cli_auth_sfe_init() {
     JavaVMInitArgs vm_args; /* JDK/JRE 6 VM initialization arguments */
-    JavaVMOption* options = new JavaVMOption[2];
-    //options[0].optionString = "-Djava.class.path=/usr/lib/java";
-    options[0].optionString = "-Xmx900m";
-    //options[1].optionString = "-Djava.class.path=/usr/lib/jvm/sun-jdk-1.6/jre/lib/:/home/louis/sfe/build/:.";
-    options[1].optionString = "-Djava.class.path=/etc/dropbear/sfe.jar";
+    JavaVMOption* options = new JavaVMOption[3];
+    options[0].optionString = "-Xms800m";
+    options[1].optionString = "-Xmx800m";
+    options[2].optionString = "-Djava.class.path=/etc/dropbear/sfe.jar";
 
     vm_args.version = JNI_VERSION_1_6;
-    vm_args.nOptions = 2;
+    vm_args.nOptions = 3;
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
     /* load and initialize a Java VM, return a JNI interface

@@ -8,7 +8,7 @@ public abstract class DropbearAuthStreams implements Runnable {
 	static final boolean useMD5 = true;
 	static final boolean use_R = true;
 	static final boolean useSeperateSocket = false;
-	static final int num_circuits = 2;
+	static final int num_circuits = 10;
 	
 	final static void D(Object s) {
 		System.err.println(s);
