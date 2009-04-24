@@ -3,11 +3,9 @@ package sfe.sfauth;
 import java.security.MessageDigest;
 
 import sfe.sfdl.*;
-import sfe.shdl.Circuit;
-import sfe.shdl.CircuitWriter;
-import sfe.shdl.Optimizer;
+import sfe.shdl.*;
 import sfe.shdl.Circuit.Gate;
-import sfe.util.Base64;
+import sfe.util.*;
 
 public class MD5 {
 
@@ -42,7 +40,7 @@ public class MD5 {
 		}
 	}
 	
-	CircuitCompiler comp;
+	public CircuitCompiler comp;
 	
 	Circuit.GateBase[] debug_output = null;	// for debugging
 	
@@ -83,19 +81,26 @@ public class MD5 {
 		h2 = new Circuit.Gate[32];
 		h3 = new Circuit.Gate[32];
 		
-		const2Gates(h0, 0x67452301);
-		const2Gates(h1, 0xefcdab89);
-		const2Gates(h2, 0x98badcfe);
-		const2Gates(h3, 0x10325476);
+		comp.const2Gates(h0, 0x67452301);
+		comp.const2Gates(h1, 0xefcdab89);
+		comp.const2Gates(h2, 0x98badcfe);
+		comp.const2Gates(h3, 0x10325476);
 	}
 	
-	Circuit generateWithPrivEq() {
-		initialize(512 + 128);
+	Circuit generateWithPrivEq(boolean include_R) {
+		int r_bits = include_R ? 128 : 0;
+		
+		initialize(512 + r_bits + 128);
 		for (int i=0; i<512; ++i) {
 			cc.inputs[i].setComment("input.alice.x$"+i);
 		}
+		if (include_R) {
+			for (int i=0; i<r_bits; ++i) {
+				cc.inputs[512+i].setComment("input.alice.r$"+i);
+			}
+		}
 		for (int i=0; i<128; ++i) {
-			cc.inputs[512+i].setComment("input.bob.y$"+i);
+			cc.inputs[512+r_bits+i].setComment("input.bob.y$"+i);
 		}
 		update(0);
 		
@@ -104,25 +109,26 @@ public class MD5 {
 		System.arraycopy(h1, 0, lc, 32, 32);
 		System.arraycopy(h2, 0, lc, 64, 32);
 		System.arraycopy(h3, 0, lc, 96, 32);
-		endian_swap(lc);
+		BitUtils.endian_swap(lc);
 		//bit_reverse(lc);
 		
 		Circuit.GateBase[] rc = new Circuit.GateBase[128];
-		System.arraycopy(cc.inputs, 512, rc, 0, 128);
+		System.arraycopy(cc.inputs, 512+r_bits, rc, 0, 128);
 		
-		Gate[] eqz = new Gate[128];
-		eqz[0] = comp.newGate(lc[0], rc[0], comp.TT_XNOR());
-		for(int i=1; i<128; ++i) {
-			eqz[i] = comp.newGate(eqz[i-1], lc[i], rc[i], comp.TT_EQ3());
+		Gate eq = comp.createEqTest(128, lc, rc);
+		
+		if (!include_R) {
+			cc.outputs = new Circuit.Output[] { new Circuit.Output(eq) };
+		} else {
+			cc.outputs = new Circuit.Output[r_bits];
+			for (int i=0; i<r_bits; ++i) {
+				cc.outputs[i] = new Circuit.Output(comp.newGate(eq, cc.inputs[512+i], comp.TT_AND()));
+			}
 		}
-		
-		Gate eq = (eqz[eqz.length-1]);
-		cc.outputs = new Circuit.Output[] { new Circuit.Output(eq) };
 		Optimizer opt = new Optimizer();
 		opt.optimize(cc);
 		opt.renumber(cc);
 		return cc;
-		
 	}
 	Circuit generate() {
 		initialize(512);
@@ -135,10 +141,10 @@ public class MD5 {
 		Circuit.GateBase[] b = h1.clone();
 		Circuit.GateBase[] c = h2.clone();
 		Circuit.GateBase[] d = h3.clone();
-		endian_swap(a);
-		endian_swap(b);
-		endian_swap(c);
-		endian_swap(d);
+		BitUtils.endian_swap(a);
+		BitUtils.endian_swap(b);
+		BitUtils.endian_swap(c);
+		BitUtils.endian_swap(d);
 		
 		for (int i=0; i<32; ++i) {
 			cc.outputs[i] = new Circuit.Output((Circuit.Gate) d[i]);
@@ -213,11 +219,11 @@ public class MD5 {
 			// b = ((a + f + k[i] + w(g)) leftrotate r[i]) + b
 			
 			Circuit.Gate[] kk = new Circuit.Gate[32];
-			const2Gates(kk, k[i]);
+			comp.const2Gates(kk, k[i]);
 			Circuit.GateBase[] ww = new Circuit.GateBase[32];
 			System.arraycopy(cc.inputs, input_offset+32*g, ww, 0, 32);
-			bit_reverse(ww);
-			endian_swap(ww);
+			BitUtils.bit_reverse(ww);
+			BitUtils.endian_swap(ww);
 			Circuit.Gate[] aplusf = comp.createAdder(a, ff);
 			Circuit.Gate[] kplusw = comp.createAdder(kk, ww);
 			for (int j=0; j<32; ++j) {
@@ -272,49 +278,6 @@ public class MD5 {
 	
 	//01234567 89012345 67890123 45678901
 	
-	static void endian_swap(Circuit.GateBase[] g) {  
-		// convert big-endian to little-endian by reversing groups of 8
-		int j = g.length-8;
-		for (int i=0; i<g.length/2; ++i) {
-			Circuit.GateBase tmp = g[i];
-			g[i] = g[j];
-			g[j] = tmp;
-			++j;
-			if(j%8 == 0)
-				j-=16;
-		}
-	}
-	
-	
-	static Circuit.GateBase[] bit_reverse(Circuit.GateBase[] g) {
-		for (int i=0; i<g.length/2; ++i) {
-			Circuit.GateBase tmp = g[i];
-			g[i] = g[g.length-1-i];
-			g[g.length-1-i] = tmp;
-		}
-		return g;
-	}
-	static boolean[] bit_reverse(boolean[] g) {
-		for (int i=0; i<g.length/2; ++i) {
-			boolean tmp = g[i];
-			g[i] = g[g.length-1-i];
-			g[g.length-1-i] = tmp;
-		}
-		return g;
-	}
-	
-	void const2Gates(Circuit.Gate[] g, long k) {
-		for (int i=0; i<32; ++i) {
-			g[i] = comp.newGate();
-			g[i].arity = 0;
-			g[i].inputs = new Circuit.GateBase[0];
-			g[i].truthtab = new boolean[1];
-			if (0 != (k & (1<<i))) {
-				g[i].truthtab[0] = true;
-			}
-		}
-	}
-	
 	public static boolean[] prepare_md5_input(boolean[] inputs) {
 		boolean[] inputs2 = new boolean[512];
 		int pad = (511 - inputs.length) + 448;
@@ -329,7 +292,7 @@ public class MD5 {
 		len[2] = (byte) ((inputs.length>>16) & 0xff);
 		len[3] = (byte) ((inputs.length>>24) & 0xff);
 		// should do 4 more...
-		System.arraycopy(bytes2bool(len), 0, inputs2, 448, 64);
+		System.arraycopy(BitUtils.bytes2bool(len), 0, inputs2, 448, 64);
 		return inputs2;
 	}
 	public static boolean[] compute_md5(Circuit cc, boolean[] inputs) {
@@ -347,33 +310,8 @@ public class MD5 {
 		//System.out.println(Base64.encodeBytes(bool2bytes(inputs2)));
 		//bit_reverse(inputs2);
 		boolean[] out = cc.eval(inputs3);
-		bit_reverse(out);
+		BitUtils.bit_reverse(out);
 		return out;
-	}
-	
-	public static byte[] bool2bytes(boolean[] inputs) {
-		byte[] bb = new byte[inputs.length / 8];
-		for (int i=0; i<inputs.length; ++i) {
-			if (inputs[i]) {
-				bb[i/8] |= (byte)(1<<(7-i%8));
-			}
-		}
-		return bb;
-	}
-	public static boolean[] bytes2bool(byte[] inputs) {
-		boolean[] bb = new boolean[inputs.length * 8];
-		for (int i=0; i<inputs.length; ++i) {
-			int b = inputs[i] & 0xff;
-			bb[0+8*i] = (b & 0x80)!=0;
-			bb[1+8*i] = (b & 0x40)!=0;
-			bb[2+8*i] = (b & 0x20)!=0;
-			bb[3+8*i] = (b & 0x10)!=0;
-			bb[4+8*i] = (b & 0x08)!=0;
-			bb[5+8*i] = (b & 0x04)!=0;
-			bb[6+8*i] = (b & 0x02)!=0;
-			bb[7+8*i] = (b & 0x01)!=0;
-		}
-		return bb;
 	}
 	
 	public static void main(String[] args) throws Exception {
@@ -384,8 +322,8 @@ public class MD5 {
 		md5t.Update(args[0].getBytes());
 		System.out.println(Base64.encodeBytes(md5t.Final()));
 		Circuit cc = new MD5().generate();
-		boolean[][] inputs = { bytes2bool(args[0].getBytes()) };
-		byte[] out = bool2bytes(compute_md5(cc, inputs));
+		boolean[][] inputs = { BitUtils.bytes2bool(args[0].getBytes()) };
+		byte[] out = BitUtils.bool2bytes(compute_md5(cc, inputs));
 		//for (int i=0; i<out.length; ++i) {
 			//System.out.printf("%02x%s",out[i], (((i+1)%4)==0?" ":""));
 		//}

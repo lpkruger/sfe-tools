@@ -11,6 +11,7 @@ import static java.math.BigInteger.ONE;
  * oblivious transfer primitives
  *
  *  Basic Algorithm:
+ *  due to Pinkas-Naor
  * chooser - chooses 0 or 1
  * sender - provides 2 strings
  *
@@ -68,15 +69,35 @@ public class OT {
 			this.out = out;
 		}
 		
+		BigInteger[] C;
+		BigInteger[][] PK;
+		BigInteger[][][] E; 
+		BigInteger[] rr;
+		
 		public void go() throws Exception {
-			BigInteger[] C = new BigInteger[M.length];
+			precalc();
+			online();
+		}
+		
+		public void precalc() {
+			C = new BigInteger[M.length];
+			rr = new BigInteger[M.length];
+			E = new BigInteger[M.length][2][2];
 			for (int i=0; i<M.length; ++i) {
 				C[i] = new BigInteger(q.bitLength()+16, rand).mod(q);
+				rr[i] = new BigInteger(q.bitLength()+16, rand).mod(q);
+				E[i][0][0] = g.modPow(rr[i], q);
+				E[i][1][0] = E[i][0][0];
 			}
+			PK = new BigInteger[M.length][2];
+			
+		}
+		public void online() throws Exception {
+			
 			D("send C");
 			out.writeObject(C);
 			out.flush();
-			BigInteger[][] PK = new BigInteger[M.length][2];
+			
 			D("read PK0");
 			BigInteger[] PKM0 = (BigInteger[]) in.readObject();
 			// CHECK PKM0.length == M.length
@@ -84,13 +105,11 @@ public class OT {
 				PK[i][0] = PKM0[i];
 				PK[i][1] = C[i].multiply(PK[i][0].modInverse(q)).mod(q);
 			}
-			BigInteger[][][] E = new BigInteger[M.length][2][2];
+			
 			for (int i=0; i<M.length; ++i) {
 				for (int j=0; j<=1; ++j) {
-					BigInteger r = new BigInteger(q.bitLength()+16, rand).mod(q);
-					E[i][j][0] = g.modPow(r, q);
-					E[i][j][1] = hash(PK[i][j].modPow(r, q)).xor(M[i][j]);
-					D("PK[" + i + "," + j + "] = " + PK[i][j].modPow(r, q));
+					E[i][j][1] = hash(PK[i][j].modPow(rr[i], q)).xor(M[i][j]);
+					//D("PK[" + i + "," + j + "] = " + PK[i][j].modPow(r, q));
 				}
 			}
 			D("send E");
@@ -119,19 +138,36 @@ public class OT {
 			this.out = out;
 		}
 		
+		BigInteger[] k;
+		BigInteger[][] PK;
+		BigInteger[] PKS0;
+		
 		public BigInteger[] go() throws Exception {
-			D("read C");
-			BigInteger[] C = (BigInteger[]) in.readObject();
-			// CHECK C.length = s.length
-			BigInteger[] k = new BigInteger[s.length];
-			BigInteger[][] PK = new BigInteger[s.length][2];
-			BigInteger[] PKS0 = new BigInteger[s.length];
+			precalc();
+			return online();
+		}
+		
+		public void precalc() {
+			k = new BigInteger[s.length];
+			PK = new BigInteger[s.length][2];
+			PKS0 = new BigInteger[s.length];
 			for (int i=0; i<s.length; ++i) {
 				do {
 					k[i] = new BigInteger(q.bitLength()+16, rand).mod(q);
 				} while (k[i].equals(ZERO));
 				PK[i][s[i]] = g.modPow(k[i], q);
-				PK[i][1-s[i]] = C[i].multiply(PK[i][s[i]].modInverse(q)).mod(q);
+				PK[i][1-s[i]] = PK[i][s[i]].modInverse(q);
+			}
+		}
+		public BigInteger[] online() throws Exception {
+			D("read C");
+			BigInteger[] C = (BigInteger[]) in.readObject();
+			// CHECK C.length = s.length
+			if (C.length != s.length)
+				throw new RuntimeException("C.length "+C.length+" != s.length "+s.length);
+			
+			for (int i=0; i<s.length; ++i) {
+				PK[i][1-s[i]] = C[i].multiply(PK[i][1-s[i]]).mod(q);
 				PKS0[i] = PK[i][0];
 			}
 			D("send PK0");

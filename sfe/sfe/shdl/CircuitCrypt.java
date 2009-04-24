@@ -1,6 +1,7 @@
 package sfe.shdl;
 
 import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
 
 import sfe.crypto.SFECipher;
 import sfe.crypto.SFEKey;
@@ -13,19 +14,23 @@ public class CircuitCrypt {
 
 	//public String CIPHER = "AES";
 	public String CIPHER = "SHA-1";
-	
+	protected SecureRandom random;
 	SFECipher C;
 	public SFEKeyGenerator KG;
-	{
+	
+	public CircuitCrypt(SecureRandom rand) {
+		this.random = rand;
 		try {
 			C = SFECipher.getInstance(CIPHER);
-			KG = SFEKeyGenerator.getInstance(CIPHER);
+			KG = SFEKeyGenerator.getInstance(CIPHER, random);
 			//KG.init(128);
 		} catch (GeneralSecurityException ex) {
 			ex.printStackTrace();
 			throw new RuntimeException("Can't initialize cipher");
 		}
 	}
+	
+	
 	
 	public static class AliceData {
 		// TODO: unmake public
@@ -36,7 +41,12 @@ public class CircuitCrypt {
 	TreeMap<Integer, GarbledCircuit.Gate> gateid;
 	Map<Circuit.Gate, GarbledCircuit.Gate> map;
 	Map<Integer, SecretKey[]> secrets;
-
+	int curId;
+	
+	int getId() {
+		return curId++;
+	}
+	
     // special hack for EDProto3
 	SecretKey[] injectKeysAtInputZero = null;
 	
@@ -146,16 +156,10 @@ public class CircuitCrypt {
 				throw new RuntimeException("encryption error");
 			}
 			
-			// TODO: randomly permute the truth table
+			// variation: randomly permute the truth table
+			// see CircuitCryptPermute
 		}
 		
 		return egate.id;
 	}
-
-	int curId;
-	
-	int getId() {
-		return curId++;
-	}
-
 }

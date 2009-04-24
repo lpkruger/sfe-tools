@@ -6,12 +6,15 @@ import java.security.SecureRandom;
 import javax.crypto.SecretKey;
 
 public class SFEKeyGenerator {
-	public static SFEKeyGenerator getInstance(String cipher)
-	throws GeneralSecurityException {
-		return new SFEKeyGenerator();
+	public static SFEKeyGenerator getInstance(String cipher, SecureRandom rand) {
+		return new SFEKeyGenerator(rand);
 	}
 	
-	SecureRandom random = new SecureRandom();
+	private SFEKeyGenerator(SecureRandom rand) {
+		this.random = rand;
+		
+	}
+	SecureRandom random;
 	
 	int length = 80;
 	

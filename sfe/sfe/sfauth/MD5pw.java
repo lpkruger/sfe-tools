@@ -4,11 +4,9 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
-import sfe.shdl.Circuit;
-import sfe.shdl.CircuitWriter;
-import sfe.util.Base64;
+import sfe.shdl.*;
+import sfe.util.*;
 
 public class MD5pw {
 	static byte[] testsalt = "QyenZBsY" .getBytes();
@@ -57,46 +55,72 @@ public class MD5pw {
 		Circuit cc = md5gen.generate();
 		PrintStream stdout = System.out;
 		
-		FileOutputStream circout1 = new FileOutputStream("md5_std.circ");
-		System.setOut(new PrintStream(circout1));
-		CircuitWriter.write(cc);
-		circout1.close();
-		System.setOut(stdout);
+		if (args[0].equals("generate")) {
+			System.out.println("Writing md5_std.circ");
+			FileOutputStream circout1 = new FileOutputStream("md5_std.circ");
+			System.setOut(new PrintStream(circout1));
+			CircuitWriter.write(cc);
+			circout1.close();
+			System.setOut(stdout);
+		}
 		
-		boolean[] in1 = MD5.bytes2bool(args[0].getBytes());
-		boolean[] in2 = MD5.bytes2bool(args[0].getBytes());
-		boolean[] in3 = MD5.bytes2bool(fin);
+		boolean[] in1 = BitUtils.bytes2bool(args[0].getBytes());
+		boolean[] in2 = BitUtils.bytes2bool(args[0].getBytes());
+		boolean[] in3 = BitUtils.bytes2bool(fin);
 		boolean[][] inputs = { in1, in2, in3 };
-		fin = MD5.bool2bytes(MD5.compute_md5(cc, concat(inputs)));
+		fin = BitUtils.bool2bytes(MD5.compute_md5(cc, concat(inputs)));
 		System.out.println(new String(magic)+new String(testsalt)+"$"+toB64(fin));
 		
-		cc = md5gen.generateWithPrivEq();
+		boolean use_R = true;
+		cc = md5gen.generateWithPrivEq(use_R);
 		cc.outputs[0].setComment("output.bob$0");
-		boolean[] in4 = MD5.bytes2bool(fin);
-		//boolean[] in4 = new boolean[128];
-		boolean[][] eqinputs = { MD5.prepare_md5_input(concat(inputs)), in4 };
-		boolean[] out = cc.eval(concat(eqinputs));
-		System.out.println("eq: " + out[0]);
-		
-		FileOutputStream circout = new FileOutputStream("md5_pw_cmp.circ");
-		System.setOut(new PrintStream(circout));
-		CircuitWriter.write(cc);
-		circout.close();
-		FileOutputStream fmtout = new FileOutputStream("md5_pw_cmp.fmt");
-		System.setOut(new PrintStream(fmtout));
-		System.out.print("Alice input integer \"input.alice.x\" [");
-		for (int i=0; i<512; ++i) {
-			System.out.print(" "+i);
+		if (!use_R) {
+			boolean[] in4 = BitUtils.bytes2bool(fin);
+			//boolean[] in4 = new boolean[128];
+			boolean[][] eqinputs = { MD5.prepare_md5_input(concat(inputs)), in4 };
+			boolean[] out = cc.eval(concat(eqinputs));
+			System.out.println("eq: " + out[0]);
 		}
-		System.out.println(" ]");
-		System.out.print("Bob input integer \"input.bob.y\" [");
-		for (int i=0; i<128; ++i) {
-			System.out.print(" "+(512+i));
-		}
-		System.out.println(" ]");
-		System.out.println("Bob output integer \"output.bob\" [ "+
-				cc.outputs[0].id + " ]");
+		String rstr = use_R ? "_r" : "";
 		
+		if (args[0].equals("generate")) {
+			System.out.println("Writing md5_pw_cmp.circ");
+			FileOutputStream circout = new FileOutputStream("md5_pw_cmp"+rstr+".circ");
+			System.setOut(new PrintStream(circout));
+			CircuitWriter.write(cc);
+			circout.close();
+			System.out.println("Writing md5_pw_cmp.fmt");
+			FileOutputStream fmtout = new FileOutputStream("md5_pw_cmp"+rstr+".fmt");
+			System.setOut(new PrintStream(fmtout));
+			System.out.print("Alice input integer \"input.alice.x\" [");
+			for (int i=0; i<512; ++i) {
+				System.out.print(" "+i);
+			}
+			System.out.println(" ]");
+			
+			int r_bits = 0;
+			if (cc.outputs.length > 1) {
+				r_bits = cc.outputs.length;
+				System.out.print("Alice input integer \"input.alice.r\" [");
+				for (int i=0; i<r_bits; ++i) {
+					System.out.print(" "+(512+i));
+				}
+				System.out.println(" ]");
+			}
+	
+			
+			System.out.print("Bob input integer \"input.bob.y\" [");
+			for (int i=0; i<128; ++i) {
+				System.out.print(" "+(512+r_bits+i));
+			}
+			System.out.println(" ]");
+			
+			System.out.print("Bob output integer \"output.bob\" [");
+			for (int i=0; i<cc.outputs.length; ++i) {
+				System.out.print(" "+ cc.outputs[i].id);
+			}
+			System.out.println(" ]");
+		}
 	}
 	
 	/*

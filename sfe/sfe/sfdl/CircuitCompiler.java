@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.*;
 
+import sfe.sfauth.MD5;
 import sfe.sfdl.Parser.ParseError;
 import sfe.sfdl.SFDL.*;
 import sfe.shdl.*;
@@ -36,7 +37,7 @@ public class CircuitCompiler implements Compile {
 		boolean[] tt = { true, false, false, true };
 		return tt;
 	}
-	static boolean[] TT_AND() {
+	public static boolean[] TT_AND() {
 		boolean[] tt = { false, false, false, true };
 		return tt;
 	}
@@ -74,7 +75,7 @@ public class CircuitCompiler implements Compile {
 	}
 	
 	// if arg1 true: arg2, false: arg3
-	static boolean[] TT_MUX() {
+	public static boolean[] TT_MUX() {
 		boolean[] tt = { false, true, false, true, false, false, true, true};
 		return tt;
 	}
@@ -96,7 +97,7 @@ public class CircuitCompiler implements Compile {
 		return g;
 	}
 	
-	Gate newFalseGate() {
+	public Gate newFalseGate() {
 		Gate g = new Gate(-2);
 		g.arity = 0;
 		g.inputs = new GateBase[0];
@@ -643,6 +644,14 @@ public class CircuitCompiler implements Compile {
 		return new CircuitCompilerOutput(cc);
 	}
 	
+	public Gate createEqTest(int eqLen, GateBase[] lc, GateBase[] rc) {
+		Gate[] cc = new Gate[eqLen];
+		cc[0] = newGate(lc[0], rc[0], TT_XNOR());
+		for(int i=1; i<eqLen; ++i) {
+			cc[i] = newGate(cc[i-1], lc[i], rc[i], TT_EQ3());
+		}
+		return cc[cc.length-1];
+	}
 	public CompilerOutput compileEqExpr(EqExpr expr) {
 		GateBase[] lc = compileExpr(expr.left).cc;
 		GateBase[] rc = compileExpr(expr.right).cc;
@@ -650,14 +659,8 @@ public class CircuitCompiler implements Compile {
 		int eqLen = Math.max(lc.length, rc.length);
 		lc = bitExtend(lc, eqLen, expr.left.type.isSigned());
 		rc = bitExtend(rc, eqLen, expr.right.type.isSigned());
-
-		Gate[] cc = new Gate[eqLen];
-		cc[0] = newGate(lc[0], rc[0], TT_XNOR());
-		for(int i=1; i<eqLen; ++i) {
-			cc[i] = newGate(cc[i-1], lc[i], rc[i], TT_EQ3());
-		}
-		
-		return new CircuitCompilerOutput(cc[cc.length-1]);
+		Gate cc = createEqTest(eqLen, lc, rc);
+		return new CircuitCompilerOutput(cc);
 	}
 	public CompilerOutput compilerNotEqExpr(NotEqExpr expr) {
 		GateBase[] lc = compileExpr(expr.left).cc;
@@ -779,6 +782,18 @@ public class CircuitCompiler implements Compile {
 		return new CircuitCompilerOutput(cc);
 	}
 
+	public void const2Gates(Gate[] g, long k) {
+		for (int i=0; i<32; ++i) {
+			g[i] = newGate();
+			g[i].arity = 0;
+			g[i].inputs = new GateBase[0];
+			g[i].truthtab = new boolean[1];
+			if (0 != (k & (1<<i))) {
+				g[i].truthtab[0] = true;
+			}
+		}
+	}
+	
 	static GateBase[] reverse(GateBase[] in) {
 		GateBase[] ret = new GateBase[in.length];
 		for (int i=0; i<in.length; ++i) {

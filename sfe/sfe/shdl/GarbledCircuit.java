@@ -2,6 +2,7 @@ package sfe.shdl;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.util.*;
 
 import javax.crypto.SecretKey;
@@ -26,6 +27,15 @@ public class GarbledCircuit implements Serializable {
 	public SecretKey[][] outputSecrets;
 	Gate[] allGates;
 	
+	void hashCircuit(MessageDigest hash) {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		try {
+			writeCircuit(new DataOutputStream(bos));
+			hash.update(bos.toByteArray());
+		} catch (IOException ex) {
+			throw new RuntimeException("shouldn't happen");
+		}
+	}
 	public void writeCircuit(DataOutput out) throws IOException {
 		out.writeBoolean(use_permute);
 		out.writeInt(nInputs);

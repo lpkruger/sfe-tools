@@ -1,19 +1,15 @@
 package sfe.sfauth;
 
 import java.io.*;
-
-import sfe.crypto.SFEKey;
-import sfe.editdistsw.SWProtoBlock.Bob;
-import sfe.shdl.*;
-import sfe.util.ByteCountOutputStreamSFE;
-
-import java.io.*;
 import java.math.BigInteger;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.*;
+import java.net.*;
+import java.util.TreeMap;
 
-import sfe.util.Base64;
+import sfe.shdl.Circuit;
+import sfe.shdl.CircuitParser;
+import sfe.shdl.FmtFile;
+import sfe.util.BitUtils;
+import sfe.util.ByteCountOutputStreamSFE;
 
 // this class provides an API to invoke SFE from dropbear.
 // the interface uses primitive types, mostly byte[] as circuits
@@ -40,13 +36,25 @@ public class DropbearSfeServer extends DropbearAuthStreams {
 	}
 
 	public void go() throws Exception {
-		ObjectInputStream in = new ObjectInputStream(authIn);
-		ObjectOutputStream out = new ObjectOutputStream(authOut);
+		ObjectInputStream in; 
+		ObjectOutputStream out;
+		if (useSeperateSocket) {
+			Dio("open listen socket");
+			ServerSocket listen = new ServerSocket(1236);
+			Socket alice = listen.accept();
+			in = new ObjectInputStream(new BufferedInputStream(alice.getInputStream()));
+			out= new ObjectOutputStream(new BufferedOutputStream(alice.getOutputStream()));
+		} else {
+			in = new ObjectInputStream(authIn);
+			out = new ObjectOutputStream(authOut);
+		}
+		
 		go2(out, in);
 		out.close();
 	}
-
+	
 	private void go2(ObjectOutputStream out, ObjectInputStream in) throws Exception {
+		long time = System.currentTimeMillis();
 		D("using passwdcrypt "+passwdcrypt);
 		int dollar = passwdcrypt.lastIndexOf('$');
 		salt = passwdcrypt.substring(3,dollar);
@@ -67,19 +75,31 @@ public class DropbearSfeServer extends DropbearAuthStreams {
 		out.writeUTF(salt);
 		out.flush();
 		
-		//FmtFile fmt = FmtFile.readFile("priveq.fmt");
-		FmtFile fmt = FmtFile.readFile("/etc/dropbear/md5_pw_cmp.fmt");
+		Circuit cc;
+		FmtFile fmt;
 		TreeMap<Integer,Boolean> vals = new TreeMap<Integer,Boolean>();
-		fmt.mapBits(cryptpw, vals, "input.bob.y");
-
+		
+		String rstr = use_R ? "_r" : "";
+		
+		if (!useMD5) {
+			cc = CircuitParser.readFile("/etc/dropbear/priveq"+rstr+".circ");
+			fmt = FmtFile.readFile("/etc/dropbear/priveq"+rstr+".fmt");
+			fmt.mapBits(BitUtils.bytes2bool(cryptpw), vals, "input.bob.y");
+		} else {
+			cc = CircuitParser.readFile("/etc/dropbear/md5_pw_cmp"+rstr+".circ");
+			fmt = FmtFile.readFile("/etc/dropbear/md5_pw_cmp"+rstr+".fmt");
+			fmt.mapBits(BitUtils.bit_reverse(BitUtils.bytes2bool(cryptpw)), vals, "input.bob.y");
+		}
+		
 		boolean[] vv = new boolean[vals.size()];
 		int vi=0;
 		for (Boolean bb : vals.values()) {
 			vv[vi] = bb;
 			vi++;
 		}
-		sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv);
-		cbob.go();
+		sfe.shdl.Protocol.Bob cbob = new sfe.shdl.Protocol.Bob(in, out, vv, random);
+		cbob.setNumCircuits(num_circuits);
+		cbob.goWithCutChoose(cc);
 
 		BigInteger zz;
 		zz = fmt.readBits(cbob.result, "output.bob");
@@ -89,6 +109,9 @@ public class DropbearSfeServer extends DropbearAuthStreams {
 		else
 			success = true;
 		System.err.println(zz);
+
+		long time2 = System.currentTimeMillis();
+		System.out.println("Time: " + (time2-time)/1000.0);
 	}
 	
 
@@ -100,7 +123,7 @@ public class DropbearSfeServer extends DropbearAuthStreams {
 
 		ServerSocket listen = new ServerSocket(port);
 		Socket client_sock = listen.accept();
-		long startTime = System.currentTimeMillis();
+		//long startTime = System.currentTimeMillis();
 		ByteCountOutputStreamSFE byteCount = new ByteCountOutputStreamSFE(
 				client_sock.getOutputStream());
 		ObjectOutputStream out_raw = new ObjectOutputStream(byteCount);

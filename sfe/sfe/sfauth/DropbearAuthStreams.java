@@ -1,9 +1,14 @@
 package sfe.sfauth;
 
-import java.io.*;
+import java.security.SecureRandom;
 
 public abstract class DropbearAuthStreams implements Runnable {
 	boolean failure_flag;
+
+	static final boolean useMD5 = true;
+	static final boolean use_R = true;
+	static final boolean useSeperateSocket = false;
+	static final int num_circuits = 2;
 	
 	final static void D(Object s) {
 		System.err.println(s);
@@ -23,6 +28,7 @@ public abstract class DropbearAuthStreams implements Runnable {
 	byte[] inputbytes;
 	int inputbytesunread;
 	boolean waiting;
+	SecureRandom random = new SecureRandom(new byte[] { 0 });
 	
 
 	DropbearAuthStreams() {
@@ -56,6 +62,7 @@ public abstract class DropbearAuthStreams implements Runnable {
 		waitForOutput();
 	}
 		
+	@SuppressWarnings("deprecation")
 	synchronized void waitForOutput() {
 		try {
 			while(true) {

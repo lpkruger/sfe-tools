@@ -1,16 +1,18 @@
 package sfe.shdl;
 
 import java.math.*;
-//import static java.math.BigInteger.ZERO;
-import static java.math.BigInteger.ONE;
 import java.io.*;
 import java.net.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.zip.*;
 
 import javax.crypto.*;
 
 import sfe.crypto.*;
+import sfe.shdl.CircuitCrypt.AliceData;
 import sfe.util.*;
 
 /**
@@ -26,8 +28,10 @@ public class Protocol {
 	//static BigInteger QQQ = TWO.pow(129).nextProbablePrime();
 	//static BigInteger GGG = OT.findGenerator(QQQ);
 	
-	static boolean useGZIP = false;  // TODO: buggy if true, fix
-	static boolean useCutChoose = true;
+	static final boolean useGZIP = false;  // TODO: buggy if true, fix
+	
+	// setting this flag uses Goyal-Mohassel-Smith
+	static final boolean useHashOpt = true;
 	
 	public static void main(String[] args) throws Exception {
 		if (System.getProperty("BOB") != null) {
@@ -39,20 +43,30 @@ public class Protocol {
 	public static class Alice {
 		static boolean usePartialEval = false; // MUST be false
 	
+		SecureRandom random;
 		Socket bob;
 		ObjectInputStream in;
 		ObjectOutputStream out;
 		long startTime;
 		Circuit cc;
 		ByteCountOutputStreamSFE byteCount;
+		int num_copies = 1;		
 		
 		// special hack for EDProto3, April 2007 variation
 		public SecretKey[] injectKeysAtInputZero = null;
 		
-		public Alice(ObjectInputStream in, ObjectOutputStream out, Circuit cc) {
+		public Alice(ObjectInputStream in, ObjectOutputStream out, Circuit cc, SecureRandom rand) {
 			this.in = in;
 			this.out = out;
 			this.cc = cc;
+			this.random = rand;
+		}
+		public void setStreams(ObjectInputStream in, ObjectOutputStream out) {
+			this.in = in;
+			this.out = out;
+		}
+		public void setNumCircuits(int n) {
+			this.num_copies = n;
 		}
 		
 		Alice(String to, int port, Circuit cc) throws IOException {
@@ -76,7 +90,7 @@ public class Protocol {
 			String bddfile = args[2];
 			String bdddescfile = args[3];
 			
-			Random rand = null;
+			SecureRandom rand = null;
 			boolean randArgs = false;
 			
 			Circuit cc = CircuitParser.readFile(bddfile);
@@ -86,7 +100,7 @@ public class Protocol {
 			
 			if (args.length == 5 && args[4].equals("random")) {
 				randArgs = true;
-				rand = new Random();
+				rand = new SecureRandom();
 			} else if (args.length-4 != aliceVars.who.size()) {
 				throw new RuntimeException((args.length-4) + " != " + aliceVars.who.size());
 			}
@@ -111,54 +125,146 @@ public class Protocol {
 		}
 		
 		public void goWithCutChoose(TreeMap<Integer,Boolean> vals, TreeSet<Integer> aliceVars, TreeSet<Integer> bobVars) throws Exception {
+			cryptWithCutChoose(aliceVars, bobVars);
+			onlineWithCutChoose(vals, aliceVars, bobVars);
+		}
+		
+		//public CircuitCrypt.AliceData[] cryptWithCutChoose(TreeSet<Integer> aliceVars, TreeSet<Integer> bobVars) {
+		AliceData[] data;
+		OT.Sender send;
+		byte[][] rngseeds;
+		byte[][] hashes;
+		
+		public void cryptWithCutChoose(TreeSet<Integer> aliceVars, TreeSet<Integer> bobVars) {
 			long timeCryptStart = System.currentTimeMillis();
+			data = new CircuitCrypt.AliceData[num_copies];
+
+			//CircuitCrypt crypt = new CircuitCrypt();
+	
+			CircuitCrypt crypt = new CircuitCryptPermute(random);
+			MessageDigest hash = null;
+			
+			if (useHashOpt) {
+				rngseeds = new byte[num_copies][20];
+				hashes = new byte[num_copies][];
+				try {
+					hash = MessageDigest.getInstance("SHA-1");
+				} catch (NoSuchAlgorithmException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			for (int i=0; i<data.length; ++i) {
+				System.out.println("encrypt copy "+i);
+				if (useHashOpt) {
+					random.nextBytes(rngseeds[i]);
+					SecureRandom rng = DeterministicRandom.getRandom(rngseeds[i]);
+					crypt = new CircuitCryptPermute(rng);
+				}
+				
+				Circuit ccc = cc.copy();	// the permutation scrambles the truth tables
+				data[i] = crypt.encrypt(ccc);	
+				
+				if (useHashOpt) {
+					hash.reset();
+					data[i].gcc.hashCircuit(hash);
+					hashes[i] = hash.digest();
+				}
+			}
+			
+			if (true) {
+				System.out.println("Circuit crypt time: " + 
+						(System.currentTimeMillis() - timeCryptStart) / 1000.0);
+			}
+			
+			BigInteger[][] otarray = new BigInteger[num_copies*bobVars.size()][2];
+			for (int copy=0; copy<num_copies; ++copy) {
+				int j = 0;
+				for (int i=0; i<data[copy].inputSecrets.length; ++i) {
+					if (bobVars.contains(i)) {
+						//System.out.println("secrets " + i);
+						//System.out.println(data.inputSecrets[i]);
+
+						otarray[copy*bobVars.size()+j][0] = SFEKey.keyToBigInt(data[copy].inputSecrets[i][0]);
+						otarray[copy*bobVars.size()+j][1] = SFEKey.keyToBigInt(data[copy].inputSecrets[i][1]);
+						j++;
+					}
+				}
+			}
+			send = new OT.Sender(otarray, OT.QQQ, OT.GGG);
+			send.precalc();
+		}
+		
+		public void onlineWithCutChoose(TreeMap<Integer,Boolean> vals, TreeSet<Integer> aliceVars, TreeSet<Integer> bobVars) throws Exception {
+			
 			
 			// special hack for EDProto3
 			if (injectKeysAtInputZero != null || usePartialEval) {
 				throw new RuntimeException("not implemented");
 			}
 			
-			CircuitCrypt.AliceData[] data = new CircuitCrypt.AliceData[10]; 
 			
 			
 			GZIPOutputStream gzout = useGZIP ? new GZIPOutputStream(out) : null; 
 			ObjectOutputStream zout = useGZIP ? 
 					new ObjectOutputStream(gzout) : out;
+					
+
+			zout.writeObject(aliceVars);
+			zout.writeObject(bobVars);
+			zout.flush();
+
+			long timeOTStart = System.currentTimeMillis();
+
+			ByteCountOutputStreamSFE.WRITE_MODE =
+				ByteCountOutputStreamSFE.MODE_OT;
+
+			//OTFairPlay.Sender send = new OTFairPlay.Sender(otarray);
 			
+			send.setStreams(in, out);
+			send.go();
+			out.flush();
 			//zout.writeObject(data.gcc);
-			zout.writeInt(data.length);  // protocol change : write num
+			//zout.writeInt(data.length);  // protocol change : write num
 			//zout.flush();
 			
 			long timeCCStart = System.currentTimeMillis();
 			ByteCountOutputStreamSFE.WRITE_MODE =
 				ByteCountOutputStreamSFE.MODE_CIRCUIT;
 		
-			//CircuitCrypt crypt = new CircuitCrypt();
-			CircuitCrypt crypt = new CircuitCryptPermute();
 			
-			for (int i=0; i<data.length; ++i) {
-				//System.out.println("encrypt copy "+i);
-				data[i] = crypt.encrypt(cc);
-				System.out.println("sending copy "+i);
-				// protocol change : write all circuits
-				data[i].gcc.writeCircuit(zout);
+			if (useHashOpt) {
+				// write all circuit hashes		
+				for (int i=0; i<data.length; ++i) {	
+					zout.write(hashes[i]);
+				}
+			} else {
+				// write all circuits			
+				for (int i=0; i<data.length; ++i) {
+					System.out.println("sending copy "+i);
+					data[i].gcc.writeCircuit(zout);
+				}
 			}
-					
+
 			zout.flush();
 			
-			// protocol change : read selected
+			// read selected
 			int selected = in.readInt();
 			//System.out.println("read selected circuit "+selected);
-			// protocol change : send secrets for all non-selected
-			for (int i=0; i<data.length; ++i) {
-				if (i != selected)
-					zout.writeObject(data[i].inputSecrets);
-			}
-			
-			//zout.writeObject(data.rootsk);
-			zout.writeObject(aliceVars);
-			zout.writeObject(bobVars);
 
+			if (useHashOpt) {
+				// send the selected circuit, and the RNG seed for the others
+				data[selected].gcc.writeCircuit(zout);
+				rngseeds[selected] = null;
+				zout.writeObject(rngseeds);
+			} else {
+				// send secrets for all non-selected
+				for (int i=0; i<data.length; ++i) {
+					if (i != selected)
+						zout.writeObject(data[i].inputSecrets);
+				}
+			}
+		
 			BigInteger[] aliceVarsSK = new BigInteger[aliceVars.size()];
 			int jj = 0;
 			for (int i=0; i<data[selected].inputSecrets.length; ++i) {
@@ -178,62 +284,29 @@ public class Protocol {
 			
 			out.flush();
 			
-			long timeOTStart = System.currentTimeMillis();
 			
-			BigInteger[][] otarray = new BigInteger[bobVars.size()][2];
-			int j = 0;
-			for (int i=0; i<data[selected].inputSecrets.length; ++i) {
-				if (bobVars.contains(i)) {
-					//System.out.println("secrets " + i);
-					//System.out.println(data.inputSecrets[i]);
-					
-					otarray[j][0] = SFEKey.keyToBigInt(data[selected].inputSecrets[i][0]);
-					otarray[j][1] = SFEKey.keyToBigInt(data[selected].inputSecrets[i][1]);
-					j++;
-				}
-			}
-			
-			ByteCountOutputStreamSFE.WRITE_MODE =
-				ByteCountOutputStreamSFE.MODE_OT;
-			
-			//OTFairPlay.Sender send = new OTFairPlay.Sender(otarray);
-			OT.Sender send = new OT.Sender(otarray, OT.QQQ, OT.GGG);
-			send.setStreams(in, out);
-			send.go();
-			out.flush();
 			long timeEnd = System.currentTimeMillis();
 			
 			System.out.println("Alice done");
 			
-			/*
-			System.out.println("BDD orig size: " + bddOrigSize);
-			System.out.println("BDD full size: " + bddFullSize);
-			System.out.println("BDD eval size: " + bddEvalSize);
-			System.out.println("BDD totl size: " + bddTotlSize);
-			System.out.println("BDD send size: " + data.obdd.nodes.size());
-			*/
-		
 			if (byteCount != null) {
 				System.out.println("Alice sent " + byteCount.cnt + " bytes");
 				byteCount.printStats();
 			}
 			
-			if (false) {
-				System.out.println("Crypt time: " + (timeCCStart - timeCryptStart) / 1000.0);
-				System.out.println("CC    time: " + (timeOTStart - timeCCStart) / 1000.0);
-				System.out.println("OT    time: " + (timeEnd - timeOTStart) / 1000.0);
+			if (true) {
+				//System.out.println("Crypt time: " + (timeCCStart - timeCryptStart) / 1000.0);
+				System.out.println("OT    time: " + (timeCCStart - timeOTStart) / 1000.0);
+				System.out.println("CC    time: " + (timeEnd - timeCCStart) / 1000.0);
 			}	
 		}
 		
 		public void go(TreeMap<Integer,Boolean> vals, TreeSet<Integer> aliceVars, TreeSet<Integer> bobVars) throws Exception {
-			if (useCutChoose) {
-				goWithCutChoose(vals, aliceVars, bobVars);
-				return;
-			}
 			long timeCryptStart = System.currentTimeMillis();
 			
 			//CircuitCrypt crypt = new CircuitCrypt();
-			CircuitCrypt crypt = new CircuitCryptPermute();
+			System.out.println("random is "+random);
+			CircuitCrypt crypt = new CircuitCryptPermute(random);
 			
 			// special hack for EDProto3
 			if (injectKeysAtInputZero != null) {
@@ -254,13 +327,8 @@ public class Protocol {
 			ObjectOutputStream zout = useGZIP ? 
 					new ObjectOutputStream(gzout) : out;
 					
-			/*
-			System.out.println("OBDD has " + data.obdd.nodes.size() + " nodes");
-			*/
-					
 			long timeCCStart = System.currentTimeMillis();
-		
-					
+				
 			//zout.writeObject(data.gcc);
 			data.gcc.writeCircuit(zout);
 			
@@ -317,14 +385,6 @@ public class Protocol {
 			
 			System.out.println("Alice done");
 			
-			/*
-			System.out.println("BDD orig size: " + bddOrigSize);
-			System.out.println("BDD full size: " + bddFullSize);
-			System.out.println("BDD eval size: " + bddEvalSize);
-			System.out.println("BDD totl size: " + bddTotlSize);
-			System.out.println("BDD send size: " + data.obdd.nodes.size());
-			*/
-		
 			if (byteCount != null) {
 				System.out.println("Alice sent " + byteCount.cnt + " bytes");
 				byteCount.printStats();
@@ -340,6 +400,7 @@ public class Protocol {
 	}
 	
 	public static class Bob {
+		SecureRandom random;
 		ServerSocket listen;
 		Socket alice;
 		ObjectInputStream in;
@@ -348,15 +409,16 @@ public class Protocol {
 		long startTime;
 		boolean[] vals;
 		public boolean[] result;
+		int num_copies = 1;
 		
-
 		// special hack for EDProto3, April 2007 variation
 		public SecretKey injectKeyAtInputZero = null;
 		
-		public Bob(ObjectInputStream in, ObjectOutputStream out, boolean[] vals) {
+		public Bob(ObjectInputStream in, ObjectOutputStream out, boolean[] vals, SecureRandom rand) {
 			this.in = in;
 			this.out = out;
 			this.vals = vals;
+			this.random = rand;
 		}
 		
 		Bob(int port, boolean[] vals) throws IOException {
@@ -373,6 +435,10 @@ public class Protocol {
 					(alice.getInputStream()));
 			
 			this.vals = vals;
+		}
+		
+		public void setNumCircuits(int n) {
+			this.num_copies = n;
 		}
 		
 		public static void main(String[] args) throws Exception {
@@ -401,60 +467,42 @@ public class Protocol {
 			}
 		}
 		
-		public void goWithCutChoose() throws Exception {
-			GCircuitEval crypt = new GCircuitEval();
-			
+		public void goWithCutChoose(Circuit cc) throws Exception {
 			ObjectInputStream zin = useGZIP ? new ObjectInputStream(
 					new GZIPInputStream(in)) : in;
-			//GarbledCircuit gcc = (GarbledCircuit) zin.readObject();
-					
-			int numCircs = zin.readInt();
-			
-			GarbledCircuit[] gcc = new GarbledCircuit[numCircs];
-			for (int i=0; i<gcc.length; ++i) {
-				gcc[i] = GarbledCircuit.readCircuit(zin);
-				System.out.println("read copy "+i);
-			}
-			
-			// TODO: should use a cryptographic RNG
-			int selected = (int) (Math.random()*numCircs);
-			selected = 0;
-			out.writeInt(selected);
-			out.flush();
-			
-			SecretKey[][][] inputSecrets = new SecretKey[numCircs][][];
-			// read secrets for non-chosen circuits
-			for (int i=0; i<gcc.length; ++i) {
-				if (i != selected)
-					inputSecrets[i] = (SecretKey[][]) in.readObject();
-			}
+			//GarbledCircuit gcc = (GarbledCircuit) zin.readObject();	
+			//int numCircs = zin.readInt();
+			int numCircs = num_copies;
 				
 			TreeSet<Integer> aliceVars = (TreeSet<Integer>) zin.readObject();
 			if (aliceVars == null) {
 				aliceVars = new TreeSet<Integer>();
 			}
 			TreeSet<Integer> bobVars = (TreeSet<Integer>) zin.readObject();
-			BigInteger[] aliceInputSK1 = (BigInteger[]) zin.readObject();
 			
-			int[] otarray;
+			int[] otarray0;
 			
 			if (vals == null) { // use random arguments
 				System.out.println("Using random arguments for testing");
-				Random rand = new Random();
-				otarray = new int[bobVars.size()];
-				for (int i=0; i<otarray.length; ++i) {
-					otarray[i] = rand.nextInt(2);
+				otarray0 = new int[bobVars.size()];
+				for (int i=0; i<otarray0.length; ++i) {
+					otarray0[i] = random.nextInt(2);
 				}
 			} else {
-				otarray = new int[vals.length];
-				if (otarray.length != bobVars.size()) {
-					throw new RuntimeException(otarray.length + " != " + bobVars.size());
+				otarray0 = new int[vals.length];
+				if (otarray0.length != bobVars.size()) {
+					throw new RuntimeException(otarray0.length + " != " + bobVars.size());
 				}
-				for (int i=0; i<otarray.length; ++i) {
-					otarray[i] = vals[i] ? 1 : 0;
+				for (int i=0; i<otarray0.length; ++i) {
+					otarray0[i] = vals[i] ? 1 : 0;
 				}
 			}
 			
+			int[] otarray = new int[otarray0.length * num_copies];
+			for (int copy=0; copy<num_copies; ++copy) {
+				System.arraycopy(otarray0, 0, otarray, copy*otarray0.length,
+						otarray0.length);
+			}
 			ByteCountOutputStreamSFE.WRITE_MODE =
 				ByteCountOutputStreamSFE.MODE_OT;
 			
@@ -462,21 +510,92 @@ public class Protocol {
 			OT.Chooser choose = new OT.Chooser(otarray, OT.QQQ, OT.GGG);
 			//OTFairPlay.Chooser choose = new OTFairPlay.Chooser(otarray);
 			choose.setStreams(in, out);
-			BigInteger[] bobInpSK1 = choose.go();
+			BigInteger[] bobInpSK1all = choose.go();
+	
+			GarbledCircuit[] gcc = new GarbledCircuit[numCircs];
+			byte[][] hashes = null;
+			
+			if (useHashOpt) {	
+				MessageDigest hash = MessageDigest.getInstance("SHA-1");
+				int hashlen = hash.digest().length;
+				 hashes = new byte[numCircs][hashlen];
+				for (int i=0; i<gcc.length; ++i) {
+					zin.read(hashes[i]);
+					System.out.println("read hash "+i);
+				}
+			} else {
+				for (int i=0; i<gcc.length; ++i) {
+					gcc[i] = GarbledCircuit.readCircuit(zin);
+					System.out.println("read copy "+i);
+				}
+			}
+			
+			int selected = random.nextInt(numCircs);
+			out.writeInt(selected);
+			out.flush();
+			
+			long timeVrfyStart = System.currentTimeMillis();
+			
+			byte[][] rngseeds;
+			if (useHashOpt) {
+				// read the selected circuit, and the RNG seed for the others
+				gcc[selected] = GarbledCircuit.readCircuit(zin);				
+				rngseeds = (byte[][]) zin.readObject();
+				// verify non-selected circuits
+				MessageDigest hash = MessageDigest.getInstance("SHA-1");
+				for (int i=0; i<gcc.length; ++i) {
+					if (i != selected) {
+						SecureRandom rng = DeterministicRandom.getRandom(rngseeds[i]);
+						CircuitCryptPermute crypt = new CircuitCryptPermute(rng);
+						hash.reset();
+						crypt.encrypt(cc.copy()).gcc.hashCircuit(hash);
+						byte[] hashval = hash.digest();
+						
+						if (!Arrays.equals(hashes[i], hashval)) {
+							throw new RuntimeException("hash mismatch  "+
+									Arrays.toString(hashes[i])+" != "+
+									Arrays.toString(hashval));
+						}
+					}
+				}
+			} else {
+				SecretKey[][][] inputSecrets = new SecretKey[numCircs][][];
+				// read secrets for non-chosen circuits
+				for (int i=0; i<gcc.length; ++i) {
+					if (i != selected)
+						inputSecrets[i] = (SecretKey[][]) in.readObject();
+				}
+				// verify non-selected circuits
+				CircuitCryptPermute crypt = new CircuitCryptPermute(random);
+				for (int i=0; i<gcc.length; ++i) {
+					if (i != selected) {
+						
+					}
+				}
+			}
+			
+			BigInteger[] aliceInputSK1 = (BigInteger[]) zin.readObject();
+			
 			
 			long timeEvalStart = System.currentTimeMillis();
 			
-			int keySize = crypt.KG.generateKey().getEncoded().length;
+			GCircuitEval gceval = new GCircuitEval();
+			
+			int keySize = gceval.KG.generateKey().getEncoded().length;
 			TreeMap<Integer,SecretKey> inputSK = new TreeMap<Integer,SecretKey>();
 
+
+			BigInteger[] bobInpSK1 = new BigInteger[otarray0.length];
+			System.arraycopy(bobInpSK1all, selected*otarray0.length, bobInpSK1, 0, otarray0.length);
+			
 			int j = 0;
 			for (int i : aliceVars) {
-				inputSK.put(i, SFEKey.bigIntToKey(aliceInputSK1[j], keySize, crypt.CIPHER));
+				inputSK.put(i, SFEKey.bigIntToKey(aliceInputSK1[j], keySize, gceval.CIPHER));
 				j++;
 			}
 			j = 0;
 			for (int i : bobVars) {
-				inputSK.put(i, SFEKey.bigIntToKey(bobInpSK1[j], keySize, crypt.CIPHER));
+				inputSK.put(i, SFEKey.bigIntToKey(bobInpSK1[j], keySize, gceval.CIPHER));
 				j++;
 			}
 			
@@ -506,14 +625,12 @@ public class Protocol {
 				System.out.println("Bob sent " + byteCount.cnt + " bytes");
 				byteCount.printStats();
 			}
-			System.out.println("OT   time: " + (timeEvalStart - timeOTStart) / 1000.0);
+
+			System.out.println("OT   time: " + (timeVrfyStart - timeOTStart) / 1000.0);
+			System.out.println("Vrfy time: " + (timeEvalStart - timeVrfyStart) / 1000.0);
 			System.out.println("Eval time: " + (timeEnd - timeEvalStart) / 1000.0);
 		}	
 		public void go() throws Exception {
-			if (useCutChoose) {
-				goWithCutChoose();
-				return;
-			}
 			GCircuitEval crypt = new GCircuitEval();
 			
 			ObjectInputStream zin = useGZIP ? new ObjectInputStream(
@@ -532,10 +649,9 @@ public class Protocol {
 			
 			if (vals == null) { // use random arguments
 				System.out.println("Using random arguments for testing");
-				Random rand = new Random();
 				otarray = new int[bobVars.size()];
 				for (int i=0; i<otarray.length; ++i) {
-					otarray[i] = rand.nextInt(2);
+					otarray[i] = random.nextInt(2);
 				}
 			} else {
 				otarray = new int[vals.length];
@@ -597,6 +713,7 @@ public class Protocol {
 				System.out.println("Bob sent " + byteCount.cnt + " bytes");
 				byteCount.printStats();
 			}
+
 			System.out.println("OT   time: " + (timeEvalStart - timeOTStart) / 1000.0);
 			System.out.println("Eval time: " + (timeEnd - timeEvalStart) / 1000.0);
 		}	

@@ -1,6 +1,7 @@
 package sfe.shdl;
 
 import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
 import java.util.*;
 
 import javax.crypto.BadPaddingException;
@@ -10,6 +11,10 @@ import sfe.util.*;
 import sfe.shdl.GarbledCircuit.Gate;
 
 public class GCircuitEval extends CircuitCrypt {
+	public GCircuitEval() {
+		super(new SecureRandom());	// won't use the RNG for anything important
+	}
+
 	Gate getGate(int id, GarbledCircuit gcc) {
 		return gcc.allGates[id - gcc.nInputs];
 	}

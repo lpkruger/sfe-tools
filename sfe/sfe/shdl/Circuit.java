@@ -4,6 +4,10 @@ import java.util.*;
 import java.io.PrintStream;
 
 public class Circuit {
+
+	public Input[] inputs;
+	public Output[] outputs;
+
 	static public abstract class GateBase {
 		public int id;
 		public HashSet<Gate> deps = new HashSet<Gate>();
@@ -20,6 +24,7 @@ public class Circuit {
 		public String getComment() {
 			return comment;
 		}
+		abstract GateBase copy_rec(Map<GateBase,GateBase> map);
 	}
 	
     class EvalState {
@@ -55,6 +60,12 @@ public class Circuit {
 			} else {
 				out.println(id + " input  // " + var);
 			}
+		}
+
+		GateBase copy_rec(Map<GateBase,GateBase> map) {
+			Input i = new Input(id, var);
+			map.put(this, i);
+			return i;
 		}
 	}
 	
@@ -129,6 +140,24 @@ public class Circuit {
 			state.vals.put(id, truthtab[n]);
 			return truthtab[n];
 		}
+
+		GateBase copy_rec(Map<GateBase,GateBase> map) {
+			Gate g = new Gate(id);
+			g.id = id;
+			g.deps = new HashSet<Gate>();  // don't copy this, it can be recalculated
+			g.arity = arity;
+			g.truthtab = truthtab.clone();
+			g.inputs = new GateBase[inputs.length];
+			for (int i=0; i<inputs.length; ++i) {
+				GateBase gg = map.get(inputs[i]);
+				if (gg == null) {
+					gg = inputs[i].copy_rec(map);
+				}
+				g.inputs[i] = gg;
+			}
+			map.put(this, g);
+			return g;
+		}
 	}
 	
 	public static class Output extends Gate {
@@ -152,7 +181,13 @@ public class Circuit {
 			out.print(id + " output gate");
 			write0(out);
 		}
-
+		
+		GateBase copy_rec(Map<GateBase,GateBase> map) {
+			Gate g = (Gate) super.copy_rec(map);
+			Output o = new Output(g);
+			map.put(this, o);
+			return o;
+		}
 	}
 	
 	public boolean evaln(int n, boolean[] inputs) {
@@ -190,7 +225,18 @@ public class Circuit {
 	    	}
 	    }
 	}
-
-	public Input[] inputs;
-	public Output[] outputs;
+	
+	public Circuit copy() {
+		Circuit newcc = new Circuit();
+		newcc.inputs = new Input[inputs.length];
+		newcc.outputs = new Output[outputs.length];
+		Map<GateBase,GateBase> seen = new HashMap<GateBase,GateBase>();
+		for (int i=0; i<inputs.length; ++i) {
+			newcc.inputs[i] = (Input) inputs[i].copy_rec(seen);
+		}
+		for (int i=0; i<outputs.length; ++i) {
+			newcc.outputs[i] = (Output) outputs[i].copy_rec(seen);
+		}
+		return newcc;
+	}
 }

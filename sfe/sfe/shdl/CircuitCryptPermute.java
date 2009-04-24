@@ -17,8 +17,10 @@ import sfe.shdl.Circuit.Output;
 public class CircuitCryptPermute extends CircuitCrypt {
 	
 	Map<Circuit.GateBase, Boolean> flip;
-	SecureRandom rand = new SecureRandom();
 	
+	public CircuitCryptPermute(SecureRandom rand) {
+		super(rand);
+	}
 	public AliceData encrypt(Circuit cc) {
 		String NOPADDING = "//NoPadding";
 		try {
@@ -66,7 +68,7 @@ public class CircuitCryptPermute extends CircuitCrypt {
 			// TODO: need to garble Alice's output bits only
 			f = false;
 		} else {
-			f = rand.nextBoolean();
+			f = random.nextBoolean();
 		}
 		
 		flip.put(g, f);

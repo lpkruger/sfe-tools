@@ -25,7 +25,7 @@ public class Yao {
 	public static void main(String[] args) throws IOException {
 		BufferedReader in = new BufferedReader(new FileReader(args[0]));
 		Circuit cc = new CircuitParser().parse(in);
-		CircuitCrypt.AliceData data = new CircuitCrypt().encrypt(cc);
+		CircuitCrypt.AliceData data = null;// new CircuitCrypt().encrypt(cc);
 		System.out.println(data);
 	}
 }
