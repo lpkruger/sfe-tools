@@ -1,0 +1,219 @@
+/*
+ * PinkasNaorOT.cpp
+ *
+ *  Created on: Aug 22, 2009
+ *      Author: louis
+ */
+
+#include "PinkasNaorOT.h"
+#include <openssl/sha.h>
+
+static const BigInt &TWO = BigInt::TWO;
+static const BigInt &ONE = BigInt::ONE;
+static const BigInt &ZERO = BigInt::ZERO;
+
+#if 1  // NDEBUG
+#define D(x);
+
+#else
+static void D(const char* s) {
+	fprintf(stderr, "%s\n", s);
+}
+static void D(const BigInt &n) {
+	D(n.toString().c_str());
+}
+
+template<class T> static void D(vector<T> &vec) {
+	fprintf(stderr, "[%u] ", vec.size());
+	for (uint i=0; i<vec.size(); ++i) {
+		fprintf(stderr, "%u: ", i);
+		D(vec[i]);
+	}
+}
+template<> void D(vector<byte> &vec) {
+	fprintf(stderr, "[%u: ", vec.size());
+	for (uint i=0; i<vec.size(); ++i) {
+		fprintf(stderr, "%02x ", (int)vec[i]);
+	}
+	fprintf(stderr, "]\n");
+}
+#endif
+
+
+PinkasNaorOT::PinkasNaorOT() {
+
+	QQQ = TWO.pow(128).nextProbablePrime();
+			//BigInt::genPrime(129);
+	GGG = findGenerator(QQQ);
+}
+
+PinkasNaorOT::~PinkasNaorOT() {
+
+}
+
+BigInt PinkasNaorOT::findGenerator(const BigInt &p) {
+	// p should be prime
+	BigInt k = p.subtract(ONE);
+	BigInt x = ONE;
+
+	while (k.mod(TWO).equals(ZERO)) {
+		k = k.divide(TWO);
+		x = x.multiply(TWO);
+	}
+
+	for (int i=3; i<10001; i+=2) {
+		BigInt ii = BigInt(i);
+		while (k.mod(ii).equals(ZERO)) {
+			k = k.divide(ii);
+			x = x.multiply(ii);
+		}
+	}
+
+	return TWO.modPow(x, p);
+}
+
+BigInt PinkasNaorOT::hash(const BigInt &p) {
+	vector<byte> md(20);
+	vector<byte> in = p.toPosByteArray();
+	SHA1((const uchar*)(&in[0]), in.size(), (uchar*)(&md[0]));
+	D("HASH:");
+	D(in);
+	D(md);
+	return md;
+}
+
+static void writeObject(DataOutput *out, const BigInt &a) {
+	vector<byte> buf = a.toMPIByteArray();
+	out->writeFully(buf);
+}
+static void readObject(DataInput *in, BigInt &a) {
+	int len = in->readInt();
+	vector<byte> buf(len+4);
+	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
+	in->readFully(&buf[4], len);
+	//D(buf);
+	a = BigInt::fromMPIByteArray(buf);
+}
+
+
+void Sender::go() {
+	precalc();
+	online();
+}
+
+void Sender::precalc() {
+	BigInt &g = ot->GGG;
+	BigInt &q = ot->QQQ;
+	resize(C, M.size());
+	resize(rr, M.size());
+	resize(E, M.size(), 2, 2);
+	for (uint i=0; i<M.size(); ++i) {
+		C[i] = BigInt::random(q);
+		rr[i] = BigInt::random(q);
+		E[i][0][0] = g.modPow(rr[i], q);
+		E[i][1][0] = E[i][0][0];
+	}
+	D("C:");
+	D(C);
+	D("rr:");
+	D(rr);
+	resize(PK,M.size(),2);
+}
+void Sender::online() {
+	BigInt &q = ot->QQQ;
+	D("send C");
+	writeVector(out, C);
+	out->flush();
+
+	D("read PK0");
+	BigInt_Vect PKM0;
+	readVector(in, PKM0);
+	D("PKM0:");
+	D(PKM0);
+	// CHECK PKM0.length == M.length
+	if (PKM0.size() != M.size()) {
+		fprintf(stderr, "PKM0.size(%d) != M.size(%d)\n", PKM0.size(), M.size());
+		//TODO throw
+	}
+
+	for (uint i=0; i<M.size(); ++i) {
+		PK[i][0] = PKM0[i];
+		PK[i][1] = C[i].modDivide(PK[i][0], q);
+	}
+	D("PK:");
+	D(PK);
+	for (uint i=0; i<M.size(); ++i) {
+		for (int j=0; j<=1; ++j) {
+			E[i][j][1] = PinkasNaorOT::hash(PK[i][j].modPow(rr[i], q)).xxor(M[i][j]);
+			//D("PK[" + i + "," + j + "] = " + PK[i][j].modPow(r, q));
+		}
+	}
+	D("E:");
+	D(E);
+	D("send E");
+	writeVector(out, E);
+	out->flush();
+}
+
+BigInt_Vect Chooser::go() {
+	precalc();
+	return online();
+}
+void Chooser::precalc() {
+	BigInt &g = ot->GGG;
+	BigInt &q = ot->QQQ;
+	resize(k, s.size());
+	resize(PK, s.size(), 2);
+	//fprintf(stderr, "g is %s\n", g.toString().c_str());
+	//fprintf(stderr, "q is %s\n", q.toString().c_str());
+	for (uint i=0; i<s.size(); ++i) {
+		do {
+			k[i] = BigInt::random(q);
+			//fprintf(stderr, "k[%d] = %s\n", i, k[i].toString().c_str());
+		} while (k[i].equals(ZERO));
+		PK[i][s[i]] = g.modPow(k[i], q);
+		PK[i][1-s[i]] = PK[i][s[i]].modInverse(q);
+	}
+}
+
+BigInt_Vect Chooser::online() {
+	//BigInt &g = ot->GGG;
+	BigInt &q = ot->QQQ;
+	D("read C");
+	BigInt_Vect C;
+	readVector(in, C);
+	D("C:");
+	D(C);
+
+	// CHECK C.length = s.length
+	if (C.size() != s.size()) {
+		fprintf(stderr, "C.size(%d) != s.size(%d)\n", C.size(), s.size());
+		//TODO throw
+	}
+	BigInt_Vect PKS0(s.size());
+	for (uint i=0; i<s.size(); ++i) {
+		PK[i][1-s[i]] = C[i].modMultiply(PK[i][1-s[i]], q);
+		PKS0[i] = PK[i][0];
+	}
+	D("send PK0");
+	D("PK, PKS0:");
+	D(PK);
+	D(PKS0);
+	writeVector(out, PKS0);
+	out->flush();
+	BigInt_Cube E;
+	D("read E");
+	readVector(in, E);
+	D(E);
+
+	//D("E = <" + E[s][0] + ", " + E[s][1]);
+	//D("grk = " + E[s][0].modPow(k, q));
+
+	BigInt_Vect ret(s.size());
+	for (uint i=0; i<s.size(); ++i) {
+		ret[i] = PinkasNaorOT::hash(E[i][s[i]][0].modPow(k[i], q)).xxor(E[i][s[i]][1]);
+	}
+	return ret;
+}
+
+
