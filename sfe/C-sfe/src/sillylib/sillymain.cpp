@@ -31,6 +31,10 @@ void* add_main(const char* name, main_ptr main_f) {
 	return NULL;
 }
 
+int main_go(main_ptr main_f, int argc, char **argv) {
+	return main_f(argc, argv);
+}
+
 #define ARG0 1
 int main(int argc, char **argv) {
 	smap_it it;
@@ -50,7 +54,7 @@ int main(int argc, char **argv) {
 		goto usage;
 	}
 
-	return (it->second)(argc-1+ARG0, argv+1-ARG0);
+	return main_go((it->second), argc-1+ARG0, argv+1-ARG0);
 
 	usage:
 	cout << "All programs:" << endl;

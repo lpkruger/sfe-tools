@@ -24,9 +24,12 @@
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.888143089" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
 <option id="gnu.cpp.compiler.exe.debug.option.optimization.level.305854426" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.debug.option.debugging.level.2021566234" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-<option id="gnu.cpp.compiler.option.other.other.1513841820" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x -march=core2" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.1513841820" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x -march=core2 $(OTHER_CXXFLAGS)" valueType="string"/>
 <option id="gnu.cpp.compiler.option.preprocessor.def.1428611501" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 <listOptionValue builtIn="false" value="_GLIBCXX_DEBUG=1"/>
+</option>
+<option id="gnu.cpp.compiler.option.include.paths.385879310" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/include}&quot;"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.182069022" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
@@ -1441,7 +1444,10 @@
 <tool command="g++" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.307443467" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
 <option id="gnu.cpp.compiler.exe.release.option.optimization.level.770724017" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.release.option.debugging.level.2077572062" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
-<option id="gnu.cpp.compiler.option.other.other.144511824" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x -march=core2" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.144511824" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x -march=core2 $(OTHER_CXXFLAGS)" valueType="string"/>
+<option id="gnu.cpp.compiler.option.include.paths.730063343" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/include}&quot;"/>
+</option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1766587658" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.release.1931309618" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.release">
@@ -2834,7 +2840,10 @@
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1711592843" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
 <option id="gnu.cpp.compiler.exe.debug.option.optimization.level.597357525" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.more" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.debug.option.debugging.level.423187353" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-<option id="gnu.cpp.compiler.option.other.other.602327430" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x -march=core2" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.602327430" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x -march=core2 $(OTHER_CXXFLAGS)" valueType="string"/>
+<option id="gnu.cpp.compiler.option.include.paths.1663656443" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/include}&quot;"/>
+</option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1628888735" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2146667541" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -4227,9 +4236,12 @@
 <tool command="icpc" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.729777821" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
 <option id="gnu.cpp.compiler.exe.release.option.optimization.level.948990694" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.release.option.debugging.level.659133504" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
-<option id="gnu.cpp.compiler.option.other.other.2010820569" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -wd981 -std=c++0x -march=core2 -xT -ipo" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.2010820569" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -wd981 -std=c++0x -march=core2 -xT -ipo $(OTHER_ICPCFLAGS)" valueType="string"/>
 <option id="gnu.cpp.compiler.option.preprocessor.def.1984769354" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 <listOptionValue builtIn="false" value="NO_RVALREF=1"/>
+</option>
+<option id="gnu.cpp.compiler.option.include.paths.224930385" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/include}&quot;"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1373187332" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>

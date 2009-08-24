@@ -9,18 +9,14 @@
 #ifndef PINKASNAOROT_H_
 #define PINKASNAOROT_H_
 
-#include "../sillylib/silly.h"
-#include "../sillylib/sillyio.h"
+#include "silly.h"
+#include "sillyio.h"
+#include "sillytype.h"
 #include <openssl/bn.h>
 #include "BigInt.h"
 
-#ifdef NO_RVALREF
-#define move(x) x
-#endif
-
 using namespace silly;
-
-typedef BIGNUM* BigInteger;
+using namespace bigint;
 
 class PinkasNaorOT {
 public:
@@ -53,7 +49,8 @@ class Sender {
 	BigInt_Vect rr;
 
 public:
-	Sender(BigInt_Mtrx &M0, PinkasNaorOT *ot0) : ot(ot0), M(move(M0)) {
+	Sender(BigInt_Mtrx &M0, PinkasNaorOT *ot0) : ot(ot0) {
+		M.swap(M0);
 		for (uint i=0; i<M.size(); ++i) {
 			if (M[i].size() != 2) {
 				// TODO: throw new RuntimeException("Must have exactly 2 choices");
@@ -81,7 +78,9 @@ class Chooser {
 	BigInt_Vect k;
 	BigInt_Mtrx PK;
 public:
-	Chooser(vector<bool> &s0, PinkasNaorOT *ot0) : ot(ot0), s(move(s0)) {}
+	Chooser(vector<bool> &s0, PinkasNaorOT *ot0) : ot(ot0) {
+		s.swap(s0);
+	}
 
 	void setStreams(DataInput *in0, DataOutput *out0) {
 		in = in0;

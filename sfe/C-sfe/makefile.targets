@@ -1,0 +1,5 @@
+symlinks:
+	../scripts/mksymlinks symlink
+	
+symlinksclean:
+	../scripts/mksymlinks clean

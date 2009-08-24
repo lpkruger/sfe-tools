@@ -35,8 +35,8 @@ void GarbledCircuit::writeCircuit(DataOutput &out) {
 	out.writeInt(outputSecrets.size());
 
 	for (uint i=0; i<outputSecrets.size(); ++i) {
-		out.writeFully(outputSecrets[i][0].getEncoded());
-		out.writeFully(outputSecrets[i][1].getEncoded());
+		out.write(outputSecrets[i][0].getEncoded());
+		out.write(outputSecrets[i][1].getEncoded());
 	}
 
 	out.writeInt(allGates[0].truthtab[0].size());
@@ -47,7 +47,7 @@ void GarbledCircuit::writeCircuit(DataOutput &out) {
 			out.writeInt(allGates[i].inputs[j]);
 		}
 		for (uint j=0; j<allGates[i].truthtab[0].size(); ++j) {
-			out.writeFully(allGates[i].truthtab[j]);
+			out.write(allGates[i].truthtab[j]);
 		}
 	}
 }

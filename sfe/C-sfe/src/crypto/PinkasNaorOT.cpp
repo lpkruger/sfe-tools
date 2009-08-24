@@ -84,7 +84,7 @@ BigInt PinkasNaorOT::hash(const BigInt &p) {
 
 static void writeObject(DataOutput *out, const BigInt &a) {
 	vector<byte> buf = a.toMPIByteArray();
-	out->writeFully(buf);
+	out->write(buf);
 }
 static void readObject(DataInput *in, BigInt &a) {
 	int len = in->readInt();

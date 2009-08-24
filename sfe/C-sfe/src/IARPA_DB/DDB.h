@@ -12,7 +12,6 @@
 #include <map>
 
 typedef BIGNUM* BigInteger;
-typedef unsigned char byte;
 using namespace std;
 
 //bool bn_comp (BigInteger lhs, BigInteger rhs) {return BN_cmp(lhs,rhs)<0;}

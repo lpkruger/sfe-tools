@@ -8,6 +8,8 @@
 #ifndef SILLYSOCKET_H_
 #define SILLYSOCKET_H_
 
+#include <sys/socket.h>
+
 class Socket {
 	int fd;
 public:

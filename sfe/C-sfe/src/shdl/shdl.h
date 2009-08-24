@@ -13,19 +13,79 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <string.h>
 
 using namespace std;
 
-#include "../sillylib/silly.h"
-#include "../sillylib/sillyio.h"
+#include "silly.h"
+#include "sillyio.h"
+#include "bigint.h"
+
+
 namespace shdl {
 
+class ParseException :public std::exception {
+	char* msg;
+
+public:
+	ParseException() {}
+	ParseException(const char* msg0) {
+		msg = new char[strlen(msg0)];
+		strcpy(msg, msg0);
+	}
+	ParseException(const string& msgs) {
+		const char* msg0 = msgs.c_str();
+		msg = new char[strlen(msg0)];
+		strcpy(msg, msg0);
+	}
+
+	// virtual overrides
+	const char* what() throw() {
+		return msg;
+	}
+	~ParseException() throw() {
+		if (!msg)
+			delete[] msg;
+	}
+
+};
 using namespace silly;
+using namespace bigint;
 
 class Circuit;
 class Gate;
 class Input;
 class Output;
+
+
+struct FmtFile {
+	struct Obj {
+		string name;
+		int party;  // 0 for Alice, 1 for Bob
+		vector<int> bits;
+	};
+	struct VarDesc {
+		map<int,string> who;
+		VarDesc filter(string w);
+	};
+
+	map<string,Obj> mapping;
+	VarDesc vardesc;
+	map<int,int> outputmap;
+
+	typedef map<int,bool> valmap;
+
+	void mapBits(BigInt &n, valmap vals, string name);
+	void mapBits(long n, valmap vals, string name);
+	void mapBits(vector<bool> n, valmap vals, string name);
+	BigInt readBits(vector<bool> vals, string name);
+	BigInt readBits(valmap vals, string name);
+	VarDesc getVarDesc() {
+			return vardesc;
+	}
+
+	static FmtFile parseFmt(istream &in);
+};
 
 
 class EvalState {
@@ -54,6 +114,7 @@ public:
 	}
 
 	virtual string toString() = 0;
+	virtual void write(ostream &out) = 0;
 	//virtual GateBase copy_rec(Map<GateBase,GateBase> map);
 };
 
@@ -61,7 +122,10 @@ class Circuit {
 public:
 	vector<Input*> inputs;
 	vector<Output*> outputs;
+
+	static Circuit *parseCirc(istream &in);
 };
+
 
 
 class Gate : public GateBase {
@@ -75,6 +139,28 @@ public:
 	virtual string toString() {
 		return string("[Gate ") + id + " arity " + arity + "]";
 	}
+
+	void write0(ostream &out) {
+		out << " arity " << arity << " table [ ";
+		for (uint i=0; i<truthtab.size(); ++i) {
+			out << (truthtab[i] ? "1 " : "0 ");
+		}
+		out << "] inputs [ ";
+		for (uint i=0; i<inputs.size(); ++i) {
+			out << inputs[inputs.size()-1-i]->id << " ";
+		}
+		out << "]";
+		if (!comment.empty()) {
+			out << " // " << comment;
+		}
+		out << endl;
+	}
+	void write(ostream &out) {
+		out << id << " gate";
+		write0(out);
+	}
+
+
 	//virtual bool eval(EvalState &state) {return false;}
 	bool eval(EvalState &state) {
 		map<int,bool>::iterator out = state.vals.find(id);
@@ -116,6 +202,10 @@ public:
 	string toString() {
 		return string("[Output ") + id + " arity " + arity + "]";
 	}
+	void write(ostream &out) {
+		out << id << " output gate";
+		write0(out);
+	}
 };
 
 class Input : public GateBase {
@@ -135,14 +225,13 @@ public:
 		}
 		return b->second;
 	}
-
-//		public void write(PrintStream out) {
-//			if (comment != null) {
-//				out.println(id + " input  // " + comment);
-//			} else {
-//				out.println(id + " input  // " + var);
-//			}
-//		}
+	virtual void write(ostream &out) {
+		if (!comment.empty()) {
+			out << id << " input  // " << comment << endl;
+		} else {
+			out << id << " input  // " << var << endl;
+		}
+	}
 
 };
 

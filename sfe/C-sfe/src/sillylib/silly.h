@@ -18,12 +18,9 @@
 
 using std::ostream;
 
-
 namespace silly {
-//using namespace std;
 using std::string;
 using std::vector;
-//using std::shared_ptr;
 
 namespace stupid {
 template<class T> static inline string toString(T t) {
@@ -66,14 +63,10 @@ static inline std::vector<string> split(const char *s, const char *d) {
 	string dd(d);
 	return split(ss, dd);
 }
-
-//typedef unsigned int uint;
-typedef unsigned char byte;
-typedef unsigned char uchar;
-typedef bool boolean;
-
-
-
+static inline std::vector<string> split(string &s, const char *d) {
+	string dd(d);
+	return split(s, dd);
+}
 
 #if 0 // export templates not supported
 export template<class T> void resize(vector<T> &v, int d1);

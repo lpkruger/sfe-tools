@@ -7,7 +7,7 @@
 
 #include "BigInt.h"
 
-namespace silly {
+namespace bigint {
 
 const BigInt BigInt::ZERO(0L);
 const BigInt BigInt::ONE(1);

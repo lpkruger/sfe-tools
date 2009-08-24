@@ -8,8 +8,8 @@
 
 #include <vector>
 #include <string>
-#include "../sillylib/silly.h"
-#include "../sillylib/sillyio.h"
+#include "silly.h"
+#include "sillyio.h"
 #include "PinkasNaorOT.h"
 
 using namespace std;

@@ -13,13 +13,12 @@
 #include <string>
 #include <openssl/bn.h>
 #include <openssl/rsa.h>
+#include "sillytype.h"
+
 using std::vector;
 using std::string;
 
-namespace silly {
-
-typedef unsigned char byte;
-
+namespace bigint {
 namespace stupid {
 // see http://kaba.hilvi.org/Programming_C++/Texts/Null_Pointer.htm
 template <typename T> class Wrap {
@@ -218,6 +217,23 @@ public:
 		return ret;
 
 	}
+
+	bool testBit(int n) const {
+		return BN_is_bit_set(*this, n);
+	}
+	BigInt setBit(int n) const {
+		BigInt ret(*this);
+		BN_set_bit(ret, n);
+		return ret;
+	}
+	BigInt clearBit(int n) const {
+		BigInt ret(*this);
+		if (ret.testBit(n)) {
+			BN_clear_bit(ret, n);
+		}
+		return ret;
+	}
+
 	bool equals(const BigInt &o) const {
 		if (this == &o)
 			return true;

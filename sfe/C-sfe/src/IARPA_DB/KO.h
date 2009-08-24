@@ -11,23 +11,19 @@
 #include <openssl/bn.h>
 #include <openssl/sha.h>
 #include <openssl/rsa.h>
+#include "sillytype.h"
 
-typedef BIGNUM* BigInteger;
-typedef unsigned char byte;
-
-//class DDB;
 #include <vector>
 #include "DDB.h"
 
 class KO {
-public:
-	KO();
-	~KO();
-
 	BN_CTX *bn_ctx;
+public:
+	KO() { bn_ctx = BN_CTX_new(); }
+	~KO() {	BN_CTX_free(bn_ctx); }
 
 	//SecureRandom rand = new SecureRandom();
-	const static int test_sizes[]; //= { 1,2,3, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000 };
+	const static int test_sizes[];
 	const static int test_sizes_length;
 	const static int L=8;	// security param
 

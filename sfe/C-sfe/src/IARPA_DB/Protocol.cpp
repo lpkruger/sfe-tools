@@ -5,13 +5,11 @@
  *      Author: louis
  */
 
-#if 0
-
 #include "Protocol.h"
-#include <boost/asio.hpp>
+#include "sillyio.h"
 
 using namespace std;
-using namespace boost::asio;
+using namespace silly;
 
 Protocol::Protocol() {
 	// TODO Auto-generated constructor stub
@@ -22,11 +20,7 @@ Protocol::~Protocol() {
 	// TODO Auto-generated destructor stub
 }
 
-#if 1
-int main(int argc, char **argv) {
-	ip::tcp::iostream stream("www.boost.org", "http");
+static int _main(int argc, char **argv) {
+
 }
 
-#endif
-
-#endif

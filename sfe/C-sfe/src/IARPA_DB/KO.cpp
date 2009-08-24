@@ -14,14 +14,6 @@
 
 using namespace std;
 
-KO::KO() {
-	bn_ctx = BN_CTX_new();
-}
-
-KO::~KO() {
-	BN_CTX_free(bn_ctx);
-}
-
 const int KO::test_sizes[] = { 1,2,3, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000 };
 const int KO::test_sizes_length = sizeof(test_sizes)/sizeof(int);
 

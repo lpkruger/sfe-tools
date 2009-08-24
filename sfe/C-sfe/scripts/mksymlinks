@@ -1,0 +1,21 @@
+#!/bin/sh
+if [[ "$1" == "echo" ]] ; then
+  func() {
+    echo $1 $2
+  }
+elif [[ "$1" == "symlink" ]] ; then
+  func() {
+    ln -s $1 $2
+  }
+elif [[ "$1" == "clean" ]] ; then
+  func() {
+    rm $2
+  }
+else
+  echo "$0 echo | symlink | clean"
+fi
+
+names=$(./c-sfe | grep -A 500 "^All programs:"|tail -n +2)
+for i in $names ; do
+  func c-sfe $i
+done
