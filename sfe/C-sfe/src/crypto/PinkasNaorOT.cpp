@@ -8,10 +8,6 @@
 #include "PinkasNaorOT.h"
 #include <openssl/sha.h>
 
-static const BigInt &TWO = BigInt::TWO;
-static const BigInt &ONE = BigInt::ONE;
-static const BigInt &ZERO = BigInt::ZERO;
-
 #if 1  // NDEBUG
 #define D(x);
 
@@ -42,7 +38,7 @@ template<> void D(vector<byte> &vec) {
 
 PinkasNaorOT::PinkasNaorOT() {
 
-	QQQ = TWO.pow(128).nextProbablePrime();
+	QQQ = BigInt(2).pow(128).nextProbablePrime();
 			//BigInt::genPrime(129);
 	GGG = findGenerator(QQQ);
 }
@@ -53,23 +49,24 @@ PinkasNaorOT::~PinkasNaorOT() {
 
 BigInt PinkasNaorOT::findGenerator(const BigInt &p) {
 	// p should be prime
-	BigInt k = p.subtract(ONE);
-	BigInt x = ONE;
+	BigInt k = p-1;
+	BigInt x = 1;
 
-	while (k.mod(TWO).equals(ZERO)) {
-		k = k.divide(TWO);
-		x = x.multiply(TWO);
+	BigInt ZERO(0);
+
+	while ((k%2) == 0) {
+		k >>= 1;
+		x <<= 1;
 	}
 
-	for (int i=3; i<10001; i+=2) {
-		BigInt ii = BigInt(i);
-		while (k.mod(ii).equals(ZERO)) {
-			k = k.divide(ii);
-			x = x.multiply(ii);
+	for (uint i=3; i<10001; i+=2) {
+		while (k%i == 0) {
+			k /= i;
+			x *= i;
 		}
 	}
 
-	return TWO.modPow(x, p);
+	return BigInt(2).modPowThis(x, p);
 }
 
 BigInt PinkasNaorOT::hash(const BigInt &p) {
@@ -164,13 +161,14 @@ void Chooser::precalc() {
 	BigInt &q = ot->QQQ;
 	resize(k, s.size());
 	resize(PK, s.size(), 2);
+	BigInt ZERO(0);
 	//fprintf(stderr, "g is %s\n", g.toString().c_str());
 	//fprintf(stderr, "q is %s\n", q.toString().c_str());
 	for (uint i=0; i<s.size(); ++i) {
 		do {
 			k[i] = BigInt::random(q);
 			//fprintf(stderr, "k[%d] = %s\n", i, k[i].toString().c_str());
-		} while (k[i].equals(ZERO));
+		} while (k[i] == ZERO);
 		PK[i][s[i]] = g.modPow(k[i], q);
 		PK[i][1-s[i]] = PK[i][s[i]].modInverse(q);
 	}

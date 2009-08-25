@@ -31,12 +31,10 @@ static int _main(int argc, char **argv) {
 		long time1 = currentTimeMillis();
 		ok.servercommit(ddb);
 		long time2 = currentTimeMillis();
-		BigInteger b_key = BN_new();
-		BN_set_word(b_key, 2);
+		BigInt b_key(2);
 		ok.clientxfer1(b_key);
 		ok.serverxfer();
 		ok.clientxfer2(b_key);
-		BN_free(b_key);
 		long time3 = currentTimeMillis();
 		printf("DB size %d: %ld online %ld offline\n",
 				ok.n, (time3-time2), (time2-time1));

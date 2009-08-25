@@ -20,14 +20,9 @@ DDB::~DDB() {
 //static class Val {
 
 void DDB::put(int k, int v) {
-	BigInteger kk, vv;
-	kk = BN_new();
-	vv = BN_new();
-	BN_set_word(kk, k);
-	BN_set_word(vv, v);
-	thedb[kk] = vv;
+	thedb[k] = v;
 }
-void DDB::put(BigInteger k, BigInteger v) {
+void DDB::put(BigInt k, BigInt v) {
 	thedb[k] = v;
 }
 

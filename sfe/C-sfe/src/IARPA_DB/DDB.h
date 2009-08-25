@@ -8,22 +8,19 @@
 #ifndef DB_H_
 #define DB_H_
 
-#include <openssl/bn.h>
+//#include <openssl/bn.h>
+#include "bigint.h"
 #include <map>
 
-typedef BIGNUM* BigInteger;
+//typedef BIGNUM* BigInteger;
 using namespace std;
+using namespace bigint;
 
-//bool bn_comp (BigInteger lhs, BigInteger rhs) {return BN_cmp(lhs,rhs)<0;}
-struct bncmp {
-  bool operator() (BigInteger lhs, BigInteger rhs) const
-  {return BN_cmp(lhs,rhs)<0;}
-};
 class DDB {
 public:
-	map<BigInteger, BigInteger, bncmp> thedb;
+	map<BigInt, BigInt> thedb;
 	void put(int k, int v);
-	void put(BigInteger k, BigInteger v);
+	void put(BigInt k, BigInt v);
 	DDB();
 	virtual ~DDB();
 };

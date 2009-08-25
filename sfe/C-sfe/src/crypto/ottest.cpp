@@ -17,7 +17,7 @@ using namespace silly;
 
 static int main3(int argc, char **argv) {
 	BigInt n = 24;
-	n = n.pow(5);
+	n = n.pow(5); // TODO
 	printf("%s\n", n.toString().c_str());
 }
 

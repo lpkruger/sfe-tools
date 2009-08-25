@@ -253,7 +253,7 @@ void FmtFile::mapBits(vector<bool> n, valmap vals, string name) {
 BigInt FmtFile::readBits(vector<bool> vals, string name) {
 	//System.out.print("get bits: " + name);
 	Obj obj = mapping.at(name);
-	BigInt zz = BigInt::ZERO;
+	BigInt zz(0);
 	for (uint j=0; j<obj.bits.size(); ++j) {
 		int i = obj.bits.at(j);
 		int ri = outputmap.at(i);
@@ -269,7 +269,7 @@ BigInt FmtFile::readBits(vector<bool> vals, string name) {
 }
 
 BigInt FmtFile::readBits(valmap vals, string name) {
-	BigInt n = BigInt::ZERO;
+	BigInt n(0);
 	Obj obj = mapping.at(name);
 	for (uint j=0; j<obj.bits.size(); ++j) {
 		int i = obj.bits.at(j);

@@ -17,10 +17,10 @@
 #include "DDB.h"
 
 class KO {
-	BN_CTX *bn_ctx;
+	//BN_CTX *bn_ctx;
 public:
-	KO() { bn_ctx = BN_CTX_new(); }
-	~KO() {	BN_CTX_free(bn_ctx); }
+	//KO() { bn_ctx = BN_CTX_new(); }
+	//~KO() {	BN_CTX_free(bn_ctx); }
 
 	//SecureRandom rand = new SecureRandom();
 	const static int test_sizes[];
@@ -29,29 +29,29 @@ public:
 
 	DDB ddb;
 
-	BigInteger rr;
+	BigInt rr;
 	int n;
 	RSA* rsa;
 	//// xfer variables
-	BigInteger X_;
-	BigInteger Y_;
+	BigInt X_;
+	BigInt Y_;
 	vector<vector<byte> > mhat;
-	vector<BigInteger> what;
+	vector<BigInt> what;
 	//// server variables
 
-	static BigInteger H(BigInteger x) {
+	static BigInt H(BNcPtr x) {
 		byte md[SHA_DIGEST_LENGTH];
 		byte buf[BN_num_bytes(x)];
 		BN_bn2bin(x, buf);
 		SHA1(buf, BN_num_bytes(x), md);
-		BigInteger hh = BN_new();
-		BN_bin2bn(md, SHA_DIGEST_LENGTH, hh);
+		BigInt hh;
+		BN_bin2bn(md, SHA_DIGEST_LENGTH, hh.writePtr());
 		return hh;
 	}
 
-	static vector<byte> Gxor(vector<BigInteger> &x, vector<byte> &m);
-	void clientxfer1(BigInteger w);
-	void clientxfer2(BigInteger w);
+	static vector<byte> Gxor(const vector<BNcPtr> &x, const vector<byte> &m);
+	void clientxfer1(const BigInt &w);
+	void clientxfer2(const BigInt &w);
 	void servercommit(DDB & db);
 	void serverxfer();
 
