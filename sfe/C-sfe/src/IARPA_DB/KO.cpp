@@ -11,29 +11,39 @@
 #include "KO.h"
 #include <string.h>
 #include <openssl/rc4.h>
+#include "sillyio.h"
 
 using namespace std;
-
-const int KO::test_sizes[] = { 1,2,3, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000 };
-const int KO::test_sizes_length = sizeof(test_sizes)/sizeof(int);
-
+using namespace silly;
+//#define D(X) X  // to enable debugging msgs
 #define D(X)
 
-void KO::clientxfer1(const BigInt &w) {
-	BN_rand(rr.writePtr(), BN_num_bits(rsa->n), 0, 0);
-	BigInt Y = rr.modPow(rsa->e, rsa->n);
-	Y.modMultiplyThis(H(w), rsa->n);
-	Y_. swapWith(Y);
+static void writeObject(DataOutput *out, const BigInt &a) {
+	vector<byte> buf = a.toMPIByteArray();
+	out->write(buf);
+}
+static void readObject(DataInput *in, BigInt &a) {
+	int len = in->readInt();
+	vector<byte> buf(len+4);
+	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
+	in->readFully(&buf[4], len);
+	//D(buf);
+	a = BigInt::fromMPIByteArray(buf);
 }
 
-void KO::clientxfer2(const BigInt &w) {
-	const BigInt &X = X_;
+BigInt iarpa::ko::Client::clientxfer1(CBigInt &w) {
+	BN_rand(rr.writePtr(), BN_num_bits(rsa_n.ptr()), 0, 0);
+	BigInt Y = rr.modPow(rsa_e, rsa_n);
+	Y.modMultiplyThis(H(w), rsa_n);
+	return Y;
+}
 
-	BigInt wwhat = X.modDivide(rr, rsa->n);
+void iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat) {
+	BigInt wwhat = X.modDivide(rr, rsa_n);
 	D(printf("C: %s %s %s\n", wwhat.toHexString().c_str(), rr.toHexString().c_str(), X.toHexString().c_str());)
 
 	BigInt ii;
-	for (int i=0; i<n; ++i) {
+	for (uint i=0; i<mhat.size(); ++i) {
 		ii = i;
 		BNcPtr vals[3] = { w, wwhat, ii };
 		vector<BNcPtr> input(vals, vals+3);
@@ -58,10 +68,22 @@ void KO::clientxfer2(const BigInt &w) {
 	printf("All done\n");
 }
 
-void KO::servercommit(DDB & ddb) {
+void iarpa::ko::Client::online(CBigInt &w) {
+	readObject(in, rsa_n);
+	readObject(in, rsa_e);
+	BigInt Y = clientxfer1(w);
+	writeObject(out, Y);
+	BigInt X;
+	vector<vector<byte> > mhat;
+	readObject(in, X);
+	readVector(in, mhat);
+	clientxfer2(w, X, mhat);
+}
+
+void iarpa::ko::Server::servercommit(DDB & ddb) {
 	rsa = RSA_generate_key(1024, 17, NULL, NULL);
 	int dbsize = ddb.thedb.size();
-	what.resize(dbsize);
+	vector<BigInt> what(dbsize);
 	mhat.resize(dbsize);
 	int i=0;
 	BigInt ii;
@@ -86,14 +108,36 @@ void KO::servercommit(DDB & ddb) {
 		++i;
 	}
 }
-
-void KO::serverxfer() {
-	BigInt &Y = Y_;
-	BigInt X = Y.modPow(rsa->d, rsa->n);
-	X_. swapWith(X);
+void iarpa::ko::Server::precompute(DDB &ddb) {
+	servercommit(ddb);
 }
 
-vector<byte> KO::Gxor(const vector<BNcPtr> &x, const vector<byte> &m) {
+BigInt iarpa::ko::Server::serverxfer(CBigInt &Y) {
+	return Y.modPow(rsa->d, rsa->n);
+}
+
+void iarpa::ko::Server::online() {
+	writeObject(out, BigInt(rsa->n));
+	writeObject(out, BigInt(rsa->e));
+	BigInt Y;
+	readObject(in, Y);
+	BigInt X = serverxfer(Y);
+	writeObject(out, X);
+	writeVector(out, mhat);
+}
+
+BigInt iarpa::ko::H(BNcPtr x) {
+	byte md[SHA_DIGEST_LENGTH];
+	byte buf[BN_num_bytes(x)];
+	BN_bn2bin(x, buf);
+	SHA1(buf, BN_num_bytes(x), md);
+	BigInt hh;
+	BN_bin2bn(md, SHA_DIGEST_LENGTH, hh.writePtr());
+	return hh;
+}
+
+
+vector<byte> iarpa::ko::Gxor(const vector<BNcPtr> &x, const vector<byte> &m) {
 	vector<byte> zz;
 
 	int totalsize=0;
@@ -124,3 +168,56 @@ vector<byte> KO::Gxor(const vector<BNcPtr> &x, const vector<byte> &m) {
 	return out;
 }
 
+#if 1  // disable to remove test code
+
+#include "sillyio.h"
+#include <stdexcept>
+using silly::ServerSocket;
+using silly::Socket;
+
+extern int iarpa_ko_populate_test_db(iarpa::DDB &ddb, int size);
+
+static int _main(int argc, char **argv) {
+	vector<string> args(argc-1);
+	for (int i=1; i<argc; ++i) {
+		args[i-1] = argv[i];
+	}
+	try {
+		Socket *s;
+		args.at(0);
+		if (args[0] == ("A")) {
+			args.at(1);
+			s = new Socket("localhost", 5436);
+			DataOutput *out = s->getOutput();
+			DataInput *in = s->getInput();
+			iarpa::ko::Client cli;
+			cli.setStreams(in, out);
+			cli.online(BigInt(atoi(args[1].c_str())));
+		} else if (args[0] == ("B")) {
+			args.at(1);
+			iarpa::DDB ddb;
+			iarpa_ko_populate_test_db(ddb, atoi(args[1].c_str()));
+			iarpa::ko::Server serv;
+			serv.precompute(ddb);
+
+			ServerSocket *ss = new ServerSocket(5436);
+			s = ss->accept();
+			DataOutput *out = s->getOutput();
+			DataInput *in = s->getInput();
+			serv.setStreams(in, out);
+			serv.online();
+		} else {
+			fprintf(stderr, "Please specify A or B\n");
+			return 1;
+		}
+		return 0;
+	} catch (out_of_range) {
+		fprintf(stderr, "koproto A key_num (client)\n  or\nkoproto B dbsize (server)\n");
+		return 1;
+	}
+}
+
+#include "sillymain.h"
+MAIN("koproto");
+
+#endif

@@ -12,49 +12,78 @@
 #include <openssl/sha.h>
 #include <openssl/rsa.h>
 #include "sillytype.h"
+#include "sillyio.h"
 
 #include <vector>
 #include "DDB.h"
 
-class KO {
-	//BN_CTX *bn_ctx;
-public:
-	//KO() { bn_ctx = BN_CTX_new(); }
-	//~KO() {	BN_CTX_free(bn_ctx); }
+namespace iarpa {
+namespace ko {
 
-	//SecureRandom rand = new SecureRandom();
-	const static int test_sizes[];
-	const static int test_sizes_length;
-	const static int L=8;	// security param
+using namespace silly;
 
-	DDB ddb;
+BigInt H(BNcPtr x);
+vector<byte> Gxor(const vector<BNcPtr> &x, const vector<byte> &m);
 
-	BigInt rr;
-	int n;
+const static int L=8;	// security param
+
+class Server {
+	DataInput *in;
+	DataOutput *out;
+
 	RSA* rsa;
-	//// xfer variables
-	BigInt X_;
-	BigInt Y_;
 	vector<vector<byte> > mhat;
-	vector<BigInt> what;
-	//// server variables
-
-	static BigInt H(BNcPtr x) {
-		byte md[SHA_DIGEST_LENGTH];
-		byte buf[BN_num_bytes(x)];
-		BN_bn2bin(x, buf);
-		SHA1(buf, BN_num_bytes(x), md);
-		BigInt hh;
-		BN_bin2bn(md, SHA_DIGEST_LENGTH, hh.writePtr());
-		return hh;
+public:
+	Server() {}
+	~Server() {
+		if (rsa != NULL) {
+			RSA_free(rsa);
+		}
 	}
 
-	static vector<byte> Gxor(const vector<BNcPtr> &x, const vector<byte> &m);
-	void clientxfer1(const BigInt &w);
-	void clientxfer2(const BigInt &w);
-	void servercommit(DDB & db);
-	void serverxfer();
+	void setStreams(DataInput *in0, DataOutput *out0) {
+		in = in0;
+		out = out0;
+	}
+	void precompute(DDB &ddb);
+	void online();
 
+
+private:
+	void servercommit(DDB &);
+	BNcPtr rsa_e() const { return rsa->e; }
+	BNcPtr rsa_n() const { return rsa->n; }
+	BigInt serverxfer(CBigInt &Y);
+
+	friend int iarpa::ko::test_ko(int argc, char **argv);
 };
 
+class Client {
+	DataInput *in;
+	DataOutput *out;
+
+	BigInt rr;
+	BigInt rsa_e;
+	BigInt rsa_n;
+
+public:
+	void setStreams(DataInput *in0, DataOutput *out0) {
+		in = in0;
+		out = out0;
+	}
+	void online(CBigInt &w);
+
+private:
+	BigInt clientxfer1(CBigInt &w);
+	void clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat);
+
+	friend int iarpa::ko::test_ko(int argc, char **argv);
+};
+
+int test_ko(int argc, char **argv);
+
+}
+}
+
 #endif /* KO_H_ */
+

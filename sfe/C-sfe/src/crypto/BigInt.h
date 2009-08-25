@@ -39,23 +39,6 @@ template<class T> struct silly_ptr {
 typedef silly_ptr<const BIGNUM> BNcPtr;
 
 
-template<typename T> struct num {
-	typedef T ctype;
-};
-template<> struct num<const BIGNUM*> {
-	typedef BNcPtr ctype;
-};
-template<> struct num<int> {
-	typedef long ctype;
-};
-template<> struct num<unsigned int> {
-	typedef unsigned long ctype;
-};
-//template<> struct num<BNcPtr> {
-//	typedef BNcPtr type;
-//};
-
-
 class BigInt {
 private:
 	BIGNUM n;
@@ -78,12 +61,23 @@ public:
 			setDefaultBnCtx();
 		operator=(nn);
 	}
-
-	template<typename T> BigInt(T nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+	BigInt(long nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
 		BN_init(&n);
 		if (!bn_ctx)
 			setDefaultBnCtx();
-		operator= ((typename num<T>::ctype) nn);
+		operator=(nn);
+	}
+	BigInt(uint nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+		BN_init(&n);
+		if (!bn_ctx)
+			setDefaultBnCtx();
+		operator=(nn);
+	}
+	BigInt(int nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+		BN_init(&n);
+		if (!bn_ctx)
+			setDefaultBnCtx();
+		operator=(nn);
 	}
 
 
@@ -130,10 +124,13 @@ public:
 		return *this;
 	}
 	////////
-	BigInt& operator= (BNcPtr b) {
+
+	BigInt& operator= (const BIGNUM* b) {
 		BN_copy(*this, b);
 		return *this;
 	}
+	//BigInt& operator= (BNcPtr b) { return operator=((const BIGNUM *) b); }
+
 	BigInt& operator= (ulong nn) {
 		BN_set_word(*this, nn);
 		return *this;
@@ -147,21 +144,15 @@ public:
 		}
 		return *this;
 	}
-	template<typename T> BigInt& operator= (T nn) {
-		return operator= ((typename num<T>::ctype) nn);
-	}
+	BigInt& operator= (uint nn) { return operator=((ulong) nn); }
+	BigInt& operator= (int nn) { return operator=((long) nn); }
 
 
-//	BigInt mod(const BigInt &m) const {
-//		BigInt r;
-//		BN_mod(r, *this, m, bn_ctx);
-//		return r;
-//	}
 	BigInt mod(BNcPtr m) const {
-			BigInt r;
-			BN_mod(r, *this, m, bn_ctx);
-			return r;
-		}
+		BigInt r;
+		BN_mod(r, *this, m, bn_ctx);
+		return r;
+	}
 	ulong mod(ulong m) const {
 		return BN_mod_word(*this, m);
 	}
@@ -248,7 +239,7 @@ public:
 
 	static BigInt random(BNcPtr max) {
 		BigInt r;
-		BN_rand_range(r, max);
+		BN_rand_range(r, (BIGNUM*) max.p);
 		return r;
 	}
 	static BigInt random(int bits, int top=-1, bool oddnum=false) {
@@ -510,11 +501,17 @@ public:
 
 };
 
-#define CBI const BigInt&
+
+typedef const BigInt CBigInt;
+
+
+#define CBI CBigInt&
 #define IN static inline
 #define OP1m(op, fn, T) IN BigInt& operator op (BigInt& a, T b) { return a.fn(b); }
 #define OP1c(op, fn, T) IN BigInt  operator op (CBI a, T b)     { return a.fn(b); }
 #define OP1u(op, fn, T) IN T       operator op (BigInt& a, T b) { return a.fn(b); }
+//#define OP0m(op, fn) IN BigInt& operator op (BigInt& a)        { return a.fn(); }
+#define OP0c(op, fn) IN BigInt  operator op (CBI a)            { return a.fn(); }
 
 OP1c(+, add, ulong)
 OP1c(+, add, long)
@@ -541,9 +538,6 @@ OP1u(%=, modThis, ulong)
 OP1m(<<=, shiftLeftThis, int)
 OP1m(>>=, shiftRightThis, int)
 
-//#define OP0m(op, fn) IN BigInt& operator op (BigInt& a)        { return a.fn(); }
-#define OP0c(op, fn) IN BigInt  operator op (CBI a)            { return a.fn(); }
-
 OP0c(-, negate)
 OP1c(+, add, CBI)
 OP1c(-, subtract, CBI)
@@ -554,5 +548,13 @@ OP1m(-=, subtractThis, CBI)
 OP1m(*=, multiplyThis, CBI)
 OP1m(%=, modThis, CBI)
 };
+
+
+#undef CBI
+#undef IN
+#undef OP1m
+#undef OP1c
+#undef OP1u
+#undef OP0c
 
 #endif /* BIGINT_H_ */

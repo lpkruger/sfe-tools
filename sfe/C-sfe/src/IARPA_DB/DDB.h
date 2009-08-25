@@ -16,13 +16,20 @@
 using namespace std;
 using namespace bigint;
 
+namespace iarpa {
+
 class DDB {
 public:
 	map<BigInt, BigInt> thedb;
-	void put(int k, int v);
-	void put(BigInt k, BigInt v);
-	DDB();
-	virtual ~DDB();
+
+	void put(CBigInt &k, CBigInt &v) {
+		thedb[k] = v;
+	}
+
+
+	DDB() {}
+	~DDB() {}
 };
 
+}
 #endif /* DB_H_ */

@@ -182,7 +182,7 @@ public:
 
 #define D(X)
 
-template<class T> void writeVector(DataOutput *out, std::vector<T> &vec) {
+template<class T> static inline void writeVector(DataOutput *out, std::vector<T> &vec) {
 	D("write vector of BigInt");
 	out->writeInt(vec.size());
 	for (uint i=0; i<vec.size(); ++i) {
@@ -196,8 +196,12 @@ template<class T> void writeVector(DataOutput *out, std::vector<std::vector<T> >
 		writeVector(out, vec[i]);
 	}
 }
+template<> void writeVector(DataOutput *out, std::vector<byte> &vec) {
+	out->writeInt(vec.size());
+	out->write(&vec[0], vec.size());
+}
 
-template<class T> void readVector(DataInput *in, std::vector<T> &vec) {
+template<class T> static inline void readVector(DataInput *in, std::vector<T> &vec) {
 	D("read vector of BigInt");
 	int len = in->readInt();
 	vec.resize(len);
@@ -212,6 +216,11 @@ template<class T> void readVector(DataInput *in, std::vector<std::vector<T> > &v
 	for (uint i=0; i<vec.size(); ++i) {
 		readVector(in, vec[i]);
 	}
+}
+template<> void readVector(DataInput *in, std::vector<byte> &vec) {
+	int len = in->readInt();
+	vec.resize(len);
+	in->readFully(&vec[0], vec.size());
 }
 
 #undef D
