@@ -186,29 +186,38 @@ static int _main(int argc, char **argv) {
 		args.at(0);
 		if (args[0] == ("A")) {
 			args.at(1);
+			cout << "connecting" << endl;
 			s = new Socket("localhost", 5436);
 			DataOutput *out = s->getOutput();
 			DataInput *in = s->getInput();
 			iarpa::ko::Client cli;
 			cli.setStreams(in, out);
 			cli.online(BigInt(atoi(args[1].c_str())));
+			delete out;
+			delete in;
+			delete s;
 		} else if (args[0] == ("B")) {
 			args.at(1);
 			iarpa::DDB ddb;
 			iarpa_ko_populate_test_db(ddb, atoi(args[1].c_str()));
 			iarpa::ko::Server serv;
 			serv.precompute(ddb);
-
+			cout << "listening" << endl;
 			ServerSocket *ss = new ServerSocket(5436);
 			s = ss->accept();
 			DataOutput *out = s->getOutput();
 			DataInput *in = s->getInput();
 			serv.setStreams(in, out);
 			serv.online();
+			delete s;
+			delete ss;
+			delete out;
+			delete in;
 		} else {
 			fprintf(stderr, "Please specify A or B\n");
 			return 1;
 		}
+
 		return 0;
 	} catch (out_of_range) {
 		fprintf(stderr, "koproto A key_num (client)\n  or\nkoproto B dbsize (server)\n");

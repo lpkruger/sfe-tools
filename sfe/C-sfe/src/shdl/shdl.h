@@ -19,6 +19,7 @@ using namespace std;
 
 #include "silly.h"
 #include "sillyio.h"
+#include "sillymem.h"
 #include "bigint.h"
 
 namespace shdl {
@@ -49,13 +50,20 @@ public:
 
 };
 using namespace silly::misc;
+using namespace silly::mem;
 using namespace bigint;
 
 class Circuit;
+class GateBase;
 class Gate;
 class Input;
 class Output;
 
+typedef wise_ptr<Circuit> Circuit_p;
+typedef wise_ptr<GateBase> GateBase_p;
+typedef wise_ptr<Gate> Gate_p;
+typedef wise_ptr<Input> Input_p;
+typedef wise_ptr<Output> Output_p;
 
 struct FmtFile {
 	struct Obj {
@@ -97,10 +105,12 @@ class GateBase {
 
 public:
 	int id;
-	set<Gate*> deps;
+	set<Gate_p> deps;
 	GateBase(int id0) : id(id0) {
 		//this.id = id0;
 	}
+	virtual ~GateBase() {}
+
 	virtual bool eval(EvalState &state) = 0;
 	//virtual void write(PrintStream out);
 
@@ -115,14 +125,15 @@ public:
 	virtual string toString() = 0;
 	virtual void write(ostream &out) = 0;
 	//virtual GateBase copy_rec(Map<GateBase,GateBase> map);
+
 };
 
 class Circuit {
 public:
-	vector<Input*> inputs;
-	vector<Output*> outputs;
+	vector<Input_p> inputs;
+	vector<Output_p> outputs;
 
-	static Circuit *parseCirc(istream &in);
+	static Circuit_p parseCirc(istream &in);
 };
 
 
@@ -131,7 +142,7 @@ class Gate : public GateBase {
 public:
 	int arity;
 	vector<bool> truthtab;  // truth table
-	vector<GateBase*> inputs;
+	vector<GateBase_p> inputs;
 
 	Gate(int id0) : GateBase(id0) {}
 

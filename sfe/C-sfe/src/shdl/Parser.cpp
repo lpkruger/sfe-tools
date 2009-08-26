@@ -18,6 +18,11 @@ using namespace shdl;
 //extern void _exit(int n);
 
 #define D(x) cout << x << endl
+#define DD(x)
+template<class T, class D> inline void wise_ptr<T,D>::dump() {
+	//T& obj = p==NULL ? "<null>" : *(T*)p;
+	std::cout << "@" << this << " : " << p << " " << prev << " " << next << "     " << endl;
+}
 
 static void trim(string &s) {
 	while (!s.empty() && s[s.length()-1] == ' ') {
@@ -48,10 +53,10 @@ int parseInt(string s) {
 	return inp;
 }
 
-Circuit *Circuit::parseCirc(istream &in) {
-	map<int,GateBase*> gates;
-	vector<Input*> inputs;
-	vector<Output*> outputs;
+Circuit_p Circuit::parseCirc(istream &in) {
+	map<int,GateBase_p> gates;
+	vector<Input_p> inputs;
+	vector<Output_p> outputs;
 
 	string line;
 	string tmp;
@@ -83,60 +88,65 @@ Circuit *Circuit::parseCirc(istream &in) {
 			//D("gtype: " << gtype);
 			if (gtype == "input") {
 				//D("input");
-				Input *g = new Input(id, id);
+				Input_p g = new Input(id, id);
+				DD(g.dump();)
 				g->setComment(comment);
-				g->write(cout);
 				gates[id] = g;
 				inputs.push_back(g);
+				DD(g.dump();)
+				DD(gates[id].dump();)
+				DD(inputs[inputs.size()-1].dump();)
+				g->write(cout);
 			} else if (gtype == "gate" || gtype == "output") {
-				Gate *g;
+				Gate_p g;
 				if (gtype == "output") {
 					lp >> tmp; check(tmp, "gate");
-					Output *out = new Output(id);
+					Output_p out = new Output(id);
+					//out.dump();
 					g = out;
+					//g.dump();
 					outputs.push_back(out);
+					//out.dump();
 				} else {
 					g = new Gate(id);
 				}
+				//g.dump();
 
 				lp >> tmp; check(tmp, "arity");
 				int arity;
 				lp >> arity;
 				lp >> tmp; check(tmp, "table");
 				lp >> tmp; check(tmp, "[");
-				vector<bool> tt;
 				while ( (lp >> tmp), (tmp != "]")) {
 					if (tmp == "1") {
-						tt.push_back(true);
+						g->truthtab.push_back(true);
 						continue;
 					}
 					check(tmp, "0");
 					if (tmp == "0")
-						tt.push_back(false);
+						g->truthtab.push_back(false);
 				}
-				if (tt.size() != (1<<arity)) {
+				if (g->truthtab.size() != (1<<arity)) {
 					ostringstream msg;
-					msg << "check fail: arity " << arity << " but tt.size " << tt.size();
+					msg << "check fail: arity " << arity << " but tt.size " << g->truthtab.size();
 					throw ParseException(msg.str());
 				}
 				lp >> tmp; check(tmp, "inputs");
 				lp >> tmp; check(tmp, "[");
-				vector<GateBase*> inputs;
+
 				while ( (lp >> tmp), (tmp != "]")) {
 					int inp = parseInt(tmp);
-					inputs.push_back(gates.at(inp));
+					g->inputs.push_back(gates.at(inp));
 				}
-				if (inputs.size() != arity) {
+				if (g->inputs.size() != arity) {
 					ostringstream msg;
-					msg << "check fail: arity " << arity << " but inputs.size " << tt.size();
+					msg << "check fail: arity " << arity << " but inputs.size " << g->truthtab.size();
 					throw ParseException(msg.str());
 
 				}
-				reverse(inputs.begin(), inputs.end());
+				reverse(g->inputs.begin(), g->inputs.end());
 
 				g->arity = arity;
-				g->inputs.swap(inputs);
-				g->truthtab.swap(tt);
 				g->setComment(comment);
 
 				g->write(cout);
@@ -152,7 +162,7 @@ Circuit *Circuit::parseCirc(istream &in) {
 		throw ParseException(ex.what());
 	}
 
-	Circuit *cc = new Circuit();
+	Circuit_p cc = new Circuit();
 	cc->inputs.swap(inputs);
 	cc->outputs.swap(outputs);
 	return cc;
@@ -351,6 +361,9 @@ FmtFile FmtFile::parseFmt(istream &in) {
 	return fmt;
 }
 
+#include "CircuitCrypt.h"
+#include "sillyio.h"
+
 static int _main(int argc, char **argv) {
 	try {
 		cout << "1 " << 1 << " " << parseInt("1") << endl;
@@ -361,8 +374,19 @@ static int _main(int argc, char **argv) {
 		cout << "Read fmt file" << endl;
 		// test circuit
 		ifstream in("/home/louis/sfe/priveq.circ");
-		Circuit *cc = Circuit::parseCirc(in);
-		delete cc;
+		Circuit_p cc = Circuit::parseCirc(in);
+		for (int i=0; i<cc->outputs.size() ; ++i) {
+			DD(cc->outputs[i].dump();)
+		}
+
+		CircuitCrypt crypt;
+		atype<SecretKey_p>::matrix inputSecrets;
+		GarbledCircuit gcc = crypt.encrypt(*cc, inputSecrets);
+		//cout << (&gcc) << endl;
+		ofstream fout("gcircuit.bin");
+		silly::io::ostreamDataOutput fdout(fout);
+		gcc.writeCircuit(fdout);
+		fout.close();
 		return 0;
 	} catch (ParseException ex) {
 		cerr << ex.what() << endl;

@@ -15,8 +15,7 @@
 using namespace shdl;
 
 GarbledCircuit::GarbledCircuit() {
-	// TODO Auto-generated constructor stub
-
+	use_permute = 0;
 }
 
 GarbledCircuit::~GarbledCircuit() {
@@ -30,24 +29,24 @@ void GarbledCircuit::writeCircuit(DataOutput &out) {
 	for (uint i=0; i<outputs.size(); ++i)
 		out.writeInt(outputs[i]);
 
-	out.writeInt(outputSecrets[0][0].getEncoded().size());
+	out.writeInt(outputSecrets[0][0]->getEncoded().size());
 
 	out.writeInt(outputSecrets.size());
 
 	for (uint i=0; i<outputSecrets.size(); ++i) {
-		out.write(outputSecrets[i][0].getEncoded());
-		out.write(outputSecrets[i][1].getEncoded());
+		out.write(outputSecrets[i][0]->getEncoded());
+		out.write(outputSecrets[i][1]->getEncoded());
 	}
 
-	out.writeInt(allGates[0].truthtab[0].size());
+	out.writeInt(allGates[0]->truthtab[0].size());
 	out.writeInt(allGates.size());
 	for (uint i=0; i<allGates.size(); ++i) {
-		out.writeByte(allGates[i].arity);
-		for (int j=0; j<allGates[i].arity; ++j) {
-			out.writeInt(allGates[i].inputs[j]);
+		out.writeByte(allGates[i]->arity);
+		for (int j=0; j<allGates[i]->arity; ++j) {
+			out.writeInt(allGates[i]->inputs[j]);
 		}
-		for (uint j=0; j<allGates[i].truthtab[0].size(); ++j) {
-			out.write(allGates[i].truthtab[j]);
+		for (uint j=0; j<allGates[i]->truthtab.size(); ++j) {
+			out.write(allGates[i]->truthtab[j]);
 		}
 	}
 }
@@ -68,24 +67,24 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput &in) {
 		vector<byte> buf(seclen);
 		in.readFully(&buf[0], seclen);
 		gcc.outputSecrets[i].resize(2);
-		gcc.outputSecrets[i][0] = move(buf);
+		gcc.outputSecrets[i][0] = new SFEKey(buf);
 		buf.resize(seclen);
 		in.readFully(&buf[0], seclen);
-		gcc.outputSecrets[i][1] = move(buf);
+		gcc.outputSecrets[i][1] = new SFEKey(buf);
 	}
 
 	seclen = in.readInt();
 
 	gcc.allGates.resize(in.readInt());
 	for (uint i=0; i<gcc.allGates.size(); ++i) {
-		gcc.allGates[i].id = i + gcc.nInputs;
-		gcc.allGates[i].arity = in.readByte();
-		gcc.allGates[i].inputs.resize(gcc.allGates[i].arity);
-		for (int j=0; j<gcc.allGates[i].arity; ++j) {
-			gcc.allGates[i].inputs[j] = in.readInt();
+		gcc.allGates[i]->id = i + gcc.nInputs;
+		gcc.allGates[i]->arity = in.readByte();
+		gcc.allGates[i]->inputs.resize(gcc.allGates[i]->arity);
+		for (int j=0; j<gcc.allGates[i]->arity; ++j) {
+			gcc.allGates[i]->inputs[j] = in.readInt();
 		}
 		int tts = -1;
-		switch(gcc.allGates[i].arity) {
+		switch(gcc.allGates[i]->arity) {
 		case 0:
 			tts = 1; break;
 		case 1:
@@ -99,10 +98,10 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput &in) {
 			// TODO: throw new RuntimeException("Unexpected arity: " + tts);
 		}
 
-		gcc.allGates[i].truthtab.resize(tts);
-		for (uint j=0; j<gcc.allGates[i].truthtab.size(); ++j) {
-			gcc.allGates[i].truthtab[j].resize(seclen);
-			in.readFully(&gcc.allGates[i].truthtab[j][0], gcc.allGates[i].truthtab[j].size());
+		gcc.allGates[i]->truthtab.resize(tts);
+		for (uint j=0; j<gcc.allGates[i]->truthtab.size(); ++j) {
+			gcc.allGates[i]->truthtab[j].resize(seclen);
+			in.readFully(&gcc.allGates[i]->truthtab[j][0], gcc.allGates[i]->truthtab[j].size());
 		}
 	}
 	return gcc;

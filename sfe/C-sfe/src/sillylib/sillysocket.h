@@ -18,6 +18,7 @@ using namespace silly::io;
 
 class Socket {
 	int fd;
+
 public:
 	Socket(int fd0 = -1) : fd(fd0) {}
 	virtual ~Socket() {

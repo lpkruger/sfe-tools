@@ -91,7 +91,6 @@ protected:
 
 class ostreamDataOutput : public DataOutput {
 	std::ostream &out;
-	ostreamDataOutput(std::ostream &out0) : out(out0) {}
 
 protected:
 	virtual int tryWrite(const byte* c, int len) {
@@ -100,6 +99,7 @@ protected:
 	}
 
 public:
+	ostreamDataOutput(std::ostream &out0) : out(out0) {}
 	std::ostream& stream() {	return out; }
 };
 
