@@ -14,7 +14,7 @@
 #include "sillyio.h"
 
 using namespace std;
-using namespace silly;
+using namespace silly::io;
 //#define D(X) X  // to enable debugging msgs
 #define D(X)
 
@@ -95,10 +95,9 @@ void iarpa::ko::Server::servercommit(DDB & ddb) {
 
 		what[i] = H(w).modPow(rsa->d, rsa->n);
 		int mlen = BN_num_bytes(m.ptr());
-		//byte* mm = new byte[mlen+L];
+
 		vector<byte> mm(mlen+L, 0);
 		BN_bn2bin(m.ptr(), &mm[L]);
-		//memset(mm, 0, L);
 
 		ii = i;
 		BNcPtr vals[3] = {w, what[i], ii};
@@ -172,8 +171,8 @@ vector<byte> iarpa::ko::Gxor(const vector<BNcPtr> &x, const vector<byte> &m) {
 
 #include "sillyio.h"
 #include <stdexcept>
-using silly::ServerSocket;
-using silly::Socket;
+using silly::net::ServerSocket;
+using silly::net::Socket;
 
 extern int iarpa_ko_populate_test_db(iarpa::DDB &ddb, int size);
 

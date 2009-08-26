@@ -16,6 +16,7 @@
 #include <errno.h>
 
 namespace silly {
+namespace io {
 
 // IO stuff
 
@@ -63,8 +64,10 @@ public:
 			cnt+=n;
 		}
 	}
-	void write(const std::vector<byte> &v) {
-		return write(&v[0], v.size());
+	void write(const std::vector<byte> &v, int off=0, int len=-1) {
+		if (len==-1 || len>v.size())
+			len = v.size();
+		return write(&v[off], len);
 	}
 
 };
@@ -131,9 +134,11 @@ public:
 			cnt+=n;
 		}
 	}
-	void readFully(std::vector<byte> c, int off=0, int len=-1) {
+	void readFully(std::vector<byte> &c, int off=0, int len=-1) {
 		if (len==-1)
 			len = c.size();
+		else if (len>c.size())
+			c.resize(len);
 		return readFully(&c[off], len);
 	}
 };
@@ -225,8 +230,9 @@ template<> void readVector(DataInput *in, std::vector<byte> &vec) {
 
 #undef D
 
+}
+}
+
 #include "sillysocket.h"
 
-
-}
 #endif /* SILLYIO_H_ */

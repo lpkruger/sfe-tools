@@ -16,7 +16,7 @@
 #include <openssl/sha.h>
 
 using namespace shdl;
-using namespace silly;
+using namespace silly::io;
 
 using std::vector;
 class GarbledGate {

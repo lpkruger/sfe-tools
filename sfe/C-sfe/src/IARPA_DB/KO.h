@@ -20,7 +20,7 @@
 namespace iarpa {
 namespace ko {
 
-using namespace silly;
+using namespace silly::io;
 
 BigInt H(BNcPtr x);
 vector<byte> Gxor(const vector<BNcPtr> &x, const vector<byte> &m);

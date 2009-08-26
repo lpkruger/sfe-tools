@@ -19,6 +19,7 @@
 using std::ostream;
 
 namespace silly {
+namespace misc {
 using std::string;
 using std::vector;
 
@@ -101,7 +102,7 @@ public:
 };
 #endif
 
-
+}
 }
 #endif
 

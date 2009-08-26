@@ -7,14 +7,14 @@
 
 #include "silly.h"
 #include "sillyio.h"
+#include "sillysocket.h"
 #include <netdb.h>
 #include <string.h>
 
-namespace silly {
-
 using std::vector;
+using std::string;
 
-vector<string> split(string &s, string &d) {
+vector<string> silly::misc::split(string &s, string &d) {
   vector<string> ret;
   size_t i=0;
   while(i != string::npos) {
@@ -48,7 +48,7 @@ template<class T> void resize(vector<vector<vector<T> > > &v, int d1, int d2, in
 
 
 
-void Socket::connect(const char* host, const char* port) {
+void silly::net::Socket::connect(const char* host, const char* port) {
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
 	int sfd, s;
@@ -91,6 +91,4 @@ void Socket::connect(const char* host, const char* port) {
 	}
 
 	freeaddrinfo(result);           /* No longer needed */
-}
-
 }

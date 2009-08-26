@@ -361,7 +361,8 @@ static int _main(int argc, char **argv) {
 		cout << "Read fmt file" << endl;
 		// test circuit
 		ifstream in("/home/louis/sfe/priveq.circ");
-		Circuit::parseCirc(in);
+		Circuit *cc = Circuit::parseCirc(in);
+		delete cc;
 		return 0;
 	} catch (ParseException ex) {
 		cerr << ex.what() << endl;

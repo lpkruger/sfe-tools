@@ -21,7 +21,6 @@ using namespace std;
 #include "sillyio.h"
 #include "bigint.h"
 
-
 namespace shdl {
 
 class ParseException :public std::exception {
@@ -49,7 +48,7 @@ public:
 	}
 
 };
-using namespace silly;
+using namespace silly::misc;
 using namespace bigint;
 
 class Circuit;

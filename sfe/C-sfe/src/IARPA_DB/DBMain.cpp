@@ -22,6 +22,7 @@ using namespace iarpa::ko;
 
 static const int test_sizes[] = { 1,2,3, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000 };
 static const int test_sizes_length = sizeof(test_sizes)/sizeof(int);
+//static const int test_sizes_length = 3;
 
 int iarpa_ko_populate_test_db(DDB &ddb, int size) {
 	for (int i=0; i<size; ++i) {

@@ -9,6 +9,12 @@
 #define SILLYSOCKET_H_
 
 #include <sys/socket.h>
+#include "sillyio.h"
+
+namespace silly {
+namespace net {
+
+using namespace silly::io;
 
 class Socket {
 	int fd;
@@ -92,4 +98,6 @@ public:
 	}
 };
 
+}
+}
 #endif /* SILLYSOCKET_H_ */

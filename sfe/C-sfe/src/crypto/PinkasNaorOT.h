@@ -15,7 +15,8 @@
 #include <openssl/bn.h>
 #include "BigInt.h"
 
-using namespace silly;
+using namespace silly::io;
+using namespace silly::misc;
 using namespace bigint;
 
 class PinkasNaorOT {

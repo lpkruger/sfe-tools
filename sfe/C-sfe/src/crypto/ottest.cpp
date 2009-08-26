@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 #include "silly.h"
-#include "sillyio.h"
+#include "sillysocket.h"
 #include "PinkasNaorOT.h"
 
 using namespace std;
@@ -26,12 +26,13 @@ static int _main(int argc, char **argv) {
 	for (int i=1; i<argc; ++i) {
 		args[i-1] = argv[i];
 	}
-	Socket *s;
+	net::Socket *s;
+	net::ServerSocket *ss;
 	args.at(0);
 	if (args[0] == ("A")) {
-		s = new Socket("localhost", 5435);
+		s = new net::Socket("localhost", 5435);
 	} else if (args[0] == ("B")) {
-		ServerSocket *ss = new ServerSocket(5435);
+		ss = new net::ServerSocket(5435);
 		s = ss->accept();
 	} else {
 		fprintf(stderr, "Please specify A or B\n");
