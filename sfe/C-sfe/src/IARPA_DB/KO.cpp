@@ -38,7 +38,7 @@ BigInt iarpa::ko::Client::clientxfer1(CBigInt &w) {
 	return Y;
 }
 
-void iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat) {
+vector<byte> iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat) {
 	BigInt wwhat = X.modDivide(rr, rsa_n);
 	D(printf("C: %s %s %s\n", wwhat.toHexString().c_str(), rr.toHexString().c_str(), X.toHexString().c_str());)
 
@@ -57,18 +57,15 @@ void iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<
 				goto search;
 		}
 
-		for (uint j=0; j<mi.size(); ++j) {
-			printf("%02x ", mi[j]);
-		}
-		printf("\n");
+		return vector<byte>(mi.begin()+7, mi.end());
 
-		search:
-		do {} while(0);
+	search: continue;
 	}
-	printf("All done\n");
+
+	return vector<byte>();
 }
 
-void iarpa::ko::Client::online(CBigInt &w) {
+vector<byte> iarpa::ko::Client::online(CBigInt &w) {
 	readObject(in, rsa_n);
 	readObject(in, rsa_e);
 	BigInt Y = clientxfer1(w);
@@ -77,7 +74,7 @@ void iarpa::ko::Client::online(CBigInt &w) {
 	vector<vector<byte> > mhat;
 	readObject(in, X);
 	readVector(in, mhat);
-	clientxfer2(w, X, mhat);
+	return clientxfer2(w, X, mhat);
 }
 
 void iarpa::ko::Server::servercommit(DDB & ddb) {
@@ -167,7 +164,7 @@ vector<byte> iarpa::ko::Gxor(const vector<BNcPtr> &x, const vector<byte> &m) {
 	return out;
 }
 
-#if 1  // disable to remove test code
+#if 0  // disable to remove test code
 
 #include "sillyio.h"
 #include <stdexcept>

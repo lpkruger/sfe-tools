@@ -71,11 +71,11 @@ public:
 		in = in0;
 		out = out0;
 	}
-	void online(CBigInt &w);
+	vector<byte> online(CBigInt &w);
 
 private:
 	BigInt clientxfer1(CBigInt &w);
-	void clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat);
+	vector<byte> clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat);
 
 	friend int iarpa::ko::test_ko(int argc, char **argv);
 };
