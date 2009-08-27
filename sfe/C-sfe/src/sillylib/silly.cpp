@@ -8,43 +8,11 @@
 #include "silly.h"
 #include "sillyio.h"
 #include "sillysocket.h"
-#include "sillymem.h"
 #include <netdb.h>
 #include <string.h>
 
 using std::vector;
 using std::string;
-
-void silly::mem::wise_void_ptr::set(wise_void_ptr &p0) {
-	p = p0.p;
-	if ((p0.next == NULL) && (p0.prev == NULL)) {
-		p0.next = p0.prev = this;
-		next = prev = &p0;
-	} else {
-		next = p0.next;
-		prev = &p0;
-		prev->next = this;
-		next->prev = this;
-	}
-}
-void* silly::mem::wise_void_ptr::unref() {
-	// unhook object, return ptr if last copy
-	if ((next==NULL) && (prev==NULL)) {
-		void* ptr = p;
-		p = NULL;
-		return ptr;
-	}
-	if (next==prev) {
-		next->next = NULL;
-		next->prev = NULL;
-		next = prev = NULL;
-		return (p = NULL);
-	}
-	next->prev = prev;
-	prev->next = next;
-	next = prev = NULL;
-	return (p = NULL);
-}
 
 vector<string> silly::misc::split(string &s, string &d) {
   vector<string> ret;

@@ -67,10 +67,10 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput &in) {
 		vector<byte> buf(seclen);
 		in.readFully(&buf[0], seclen);
 		gcc.outputSecrets[i].resize(2);
-		gcc.outputSecrets[i][0] = new SFEKey(buf);
+		gcc.outputSecrets[i][0] = SFEKey_p(new SFEKey(buf));
 		buf.resize(seclen);
 		in.readFully(&buf[0], seclen);
-		gcc.outputSecrets[i][1] = new SFEKey(buf);
+		gcc.outputSecrets[i][1] = SFEKey_p(new SFEKey(buf));
 	}
 
 	seclen = in.readInt();

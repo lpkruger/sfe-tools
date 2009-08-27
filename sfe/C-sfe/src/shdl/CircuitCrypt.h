@@ -16,7 +16,6 @@
 #include "shdl.h"
 
 using namespace std;
-using namespace silly::mem;
 
 static const string CIPHER = "SHA-1";
 
@@ -47,9 +46,7 @@ protected:
 public:
 	CircuitCrypt();
 	virtual ~CircuitCrypt();
-
-
-	GarbledCircuit encrypt(Circuit &cc, atype<SFEKey_p>::matrix &inputsecrets);
+	virtual GarbledCircuit encrypt(Circuit &cc, atype<SFEKey_p>::matrix &inputsecrets);
 
 private:
 	int encGate_rec(Gate_p gate);

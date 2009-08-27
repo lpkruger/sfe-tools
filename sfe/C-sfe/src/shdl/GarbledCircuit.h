@@ -19,6 +19,7 @@
 
 using namespace shdl;
 using namespace silly::io;
+using namespace silly::mem;
 
 using std::vector;
 class GarbledGate {
@@ -67,8 +68,8 @@ public:
 	}
 
 	static SecretKey_p xxor(const SecretKey_p &aa, const SecretKey_p &bb, const string &cipher) {
-		SFEKey *a = dynamic_cast<SFEKey*>(aa.ptr());
-		SFEKey *b = dynamic_cast<SFEKey*>(bb.ptr());
+		SFEKey *a = dynamic_cast<SFEKey*>(aa.get());
+		SFEKey *b = dynamic_cast<SFEKey*>(bb.get());
 		if (!a) throw std::logic_error("a is not SFEKey");
 		if (!b) throw std::logic_error("b is not SFEKey");
 		if (a->buf.size() != b->buf.size())
@@ -78,7 +79,7 @@ public:
 		for (int i=0; i<c->buf.size(); ++i) {
 			c->buf[i] = a->buf[i] ^ b->buf[i];
 		}
-		return c;
+		return SecretKey_p(c);
 	}
 };
 
@@ -95,8 +96,8 @@ public:
 	void init(int mode0, SecretKey_p &key0) {
 		SHA1_Init(&ctx);
 		mode = mode0;
-		key = SFEKey_p::dyncast_from(key0);
-		if (!key.ptr()) throw std::logic_error("key is not SFEKey");
+		key = dynamic_pointer_cast<SFEKey>(key0);
+		if (!key.get()) throw std::logic_error("key is not SFEKey");
 
 	}
 	vector<byte> doFinal(const vector<byte> &data) {

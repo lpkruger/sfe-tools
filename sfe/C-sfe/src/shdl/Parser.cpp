@@ -19,10 +19,10 @@ using namespace shdl;
 
 #define D(x) cout << x << endl
 #define DD(x)
-template<class T, class D> inline void wise_ptr<T,D>::dump() {
-	//T& obj = p==NULL ? "<null>" : *(T*)p;
-	std::cout << "@" << this << " : " << p << " " << prev << " " << next << "     " << endl;
-}
+//template<class T, class D> inline void wise_ptr<T,D>::dump() {
+//	//T& obj = p==NULL ? "<null>" : *(T*)p;
+//	std::cout << "@" << this << " : " << p << " " << prev << " " << next << "     " << endl;
+//}
 
 static void trim(string &s) {
 	while (!s.empty() && s[s.length()-1] == ' ') {
@@ -88,7 +88,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 			//D("gtype: " << gtype);
 			if (gtype == "input") {
 				//D("input");
-				Input_p g = new Input(id, id);
+				Input_p g(new Input(id, id));
 				DD(g.dump();)
 				g->setComment(comment);
 				gates[id] = g;
@@ -101,14 +101,14 @@ Circuit_p Circuit::parseCirc(istream &in) {
 				Gate_p g;
 				if (gtype == "output") {
 					lp >> tmp; check(tmp, "gate");
-					Output_p out = new Output(id);
+					Output_p out(new Output(id));
 					//out.dump();
 					g = out;
 					//g.dump();
 					outputs.push_back(out);
 					//out.dump();
 				} else {
-					g = new Gate(id);
+					g = Gate_p(new Gate(id));
 				}
 				//g.dump();
 
@@ -162,7 +162,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 		throw ParseException(ex.what());
 	}
 
-	Circuit_p cc = new Circuit();
+	Circuit_p cc(new Circuit());
 	cc->inputs.swap(inputs);
 	cc->outputs.swap(outputs);
 	return cc;

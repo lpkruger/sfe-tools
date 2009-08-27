@@ -97,8 +97,8 @@ template<class T> void resize(vector<vector<vector<T> > > &v, int d1, int d2, in
 #if 0
 template<class T> class smart {
 public:
-	typedef shared_ptr<vector<T> > vec;
-	typedef shared_ptr<T> ptr;
+	typedef wise_ptr<vector<T> > vec;
+	typedef wise_ptr<T> ptr;
 };
 #endif
 

@@ -7,7 +7,7 @@
 
 #include "CircuitCrypt.h"
 #include <openssl/rand.h>
-
+//#include <tr1/memory>
 
 CircuitCrypt::~CircuitCrypt() {
 	// TODO Auto-generated destructor stub
@@ -50,7 +50,7 @@ GarbledCircuit CircuitCrypt::encrypt(Circuit &cc, atype<SFEKey_p>::matrix &input
 		if (cc.outputs[i]->arity == 0) {
 			boolean val = cc.outputs[i]->truthtab[0];
 			gcc.outputSecrets[i][val ? 1 : 0] =
-					new SFEKey(themap.at(cc.outputs[i])->truthtab[0]);
+					SFEKey_p(new SFEKey(themap.at(cc.outputs[i])->truthtab[0]));
 			// TODO: replace call to SFEKey constructor
 		}
 	}
@@ -82,9 +82,9 @@ vector<SFEKey_p> CircuitCrypt::genKeyPair(GateBase_p g) {
 	vector<SFEKey_p> ret(2);
 	vector<byte> buf(20);
 	RAND_bytes(&buf[0], 20);
-	ret[0] = new SFEKey(buf);
+	ret[0] = SFEKey_p(new SFEKey(buf));
 	RAND_bytes(&buf[0], 20);
-	ret[1] = new SFEKey(buf);
+	ret[1] = SFEKey_p(new SFEKey(buf));
 	//		TODO return new SecretKey[] { KG.generateKey(), KG.generateKey() };
 	return ret;
 }
@@ -94,7 +94,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 	if (egate_it != themap.end())
 		return egate_it->second->id;
 
-	GarbledGate_p egate = new GarbledGate();
+	GarbledGate_p egate(new GarbledGate());
 	egate->arity = gate->arity;
 	egate->inputs.resize(egate->arity);
 	atype<SFEKey_p>::matrix inpsecs(egate->arity);
@@ -102,8 +102,8 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 	for (int i=0; i<egate->arity; ++i) {
 		//Input_p inp;
 		//if (gate->inputs[i].dyncast_to(inp)) {
-		Input_p inp = Input_p::dyncast_from(gate->inputs[i]);
-		if (inp.ptr()) {
+		Input_p inp = dynamic_pointer_cast<Input>(gate->inputs[i]);
+		if (inp.get()) {
 			int var = inp->var;
 			egate->inputs[i] = var;
 			secretmap_t::iterator sec_it = secrets.find(var);
@@ -113,7 +113,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 			}
 		} else {
 			egate->inputs[i] = encGate_rec(
-					Gate_p::dyncast_from(gate->inputs[i]));
+					dynamic_pointer_cast<Gate>(gate->inputs[i]));
 			inpsecs[i] = secrets.at(egate->inputs[i]);
 		}
 	}
