@@ -4237,9 +4237,7 @@
 <option id="gnu.cpp.compiler.exe.release.option.optimization.level.948990694" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.release.option.debugging.level.659133504" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.option.other.other.2010820569" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -wd981 -std=c++0x $(OTHER_ICPCFLAGS)" valueType="string"/>
-<option id="gnu.cpp.compiler.option.preprocessor.def.1984769354" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
-<listOptionValue builtIn="false" value="NO_RVALREF=1"/>
-</option>
+<option id="gnu.cpp.compiler.option.preprocessor.def.1984769354" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols"/>
 <option id="gnu.cpp.compiler.option.include.paths.224930385" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/include}&quot;"/>
 </option>

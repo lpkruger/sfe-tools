@@ -26,7 +26,7 @@ template<class T> static void D(vector<T> &vec) {
 		D(vec[i]);
 	}
 }
-template<> void D(vector<byte> &vec) {
+template<> void D(byte_buf &vec) {
 	fprintf(stderr, "[%u: ", vec.size());
 	for (uint i=0; i<vec.size(); ++i) {
 		fprintf(stderr, "%02x ", (int)vec[i]);
@@ -70,8 +70,8 @@ BigInt PinkasNaorOT::findGenerator(const BigInt &p) {
 }
 
 BigInt PinkasNaorOT::hash(const BigInt &p) {
-	vector<byte> md(20);
-	vector<byte> in = p.toPosByteArray();
+	byte_buf md(20);
+	byte_buf in = p.toPosByteArray();
 	SHA1((const uchar*)(&in[0]), in.size(), (uchar*)(&md[0]));
 	D("HASH:");
 	D(in);
@@ -80,12 +80,12 @@ BigInt PinkasNaorOT::hash(const BigInt &p) {
 }
 
 static void writeObject(DataOutput *out, const BigInt &a) {
-	vector<byte> buf = a.toMPIByteArray();
+	byte_buf buf = a.toMPIByteArray();
 	out->write(buf);
 }
 static void readObject(DataInput *in, BigInt &a) {
 	int len = in->readInt();
-	vector<byte> buf(len+4);
+	byte_buf buf(len+4);
 	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
 	in->readFully(&buf[4], len);
 	//D(buf);

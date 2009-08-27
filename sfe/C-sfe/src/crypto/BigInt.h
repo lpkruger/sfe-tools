@@ -99,7 +99,7 @@ public:
 	}
 	////////
 
-	BigInt(const vector<byte> &b, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+	BigInt(const byte_buf &b, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
 		BN_init(&n);
 		BN_bin2bn(&b[0], b.size(), *this);
 		if (!bn_ctx)
@@ -258,31 +258,31 @@ public:
 		return BN_is_negative((const BIGNUM*)*this);
 	}
 
-	vector<byte> toPosByteArray() const {
-		vector<byte> ret(BN_num_bytes(*this));
+	byte_buf toPosByteArray() const {
+		byte_buf ret(BN_num_bytes(*this));
 		if (!ret.size())
 			ret.push_back(0);
 		BN_bn2bin(*this, &ret[0]);
 		return ret;
 	}
 
-	vector<byte> toMPIByteArray() const {
-		vector<byte> ret(BN_bn2mpi(*this, NULL));
+	byte_buf toMPIByteArray() const {
+		byte_buf ret(BN_bn2mpi(*this, NULL));
 		BN_bn2mpi(*this, &ret[0]);
-		//vector<byte>::iterator p = ret.begin();
+		//byte_buf::iterator p = ret.begin();
 		//ret.erase(p, p+4);
 		return ret;
 	}
 
-	static BigInt fromMPIByteArray(const vector<byte> buf) {
+	static BigInt fromMPIByteArray(const byte_buf buf) {
 		BigInt ret;
 		BN_mpi2bn(&buf[0], buf.size(), ret);
 		return ret;
 	}
 
 	BigInt xxor(const BigInt &b) const {
-		vector<byte> aa = toPosByteArray();
-		vector<byte> bb = b.toPosByteArray();
+		byte_buf aa = toPosByteArray();
+		byte_buf bb = b.toPosByteArray();
 
 		int asize = aa.size();
 		int bsize = bb.size();

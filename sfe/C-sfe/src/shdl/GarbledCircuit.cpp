@@ -15,73 +15,75 @@
 using namespace shdl;
 
 GarbledCircuit::GarbledCircuit() {
-	use_permute = 0;
+	use_permute = false;
 }
 
 GarbledCircuit::~GarbledCircuit() {
 	// TODO Auto-generated destructor stub
 }
 
-void GarbledCircuit::writeCircuit(DataOutput &out) {
-	out.writeBoolean(use_permute);
-	out.writeInt(nInputs);
-	out.writeInt(outputs.size());
+string SecretKey::toHexString() {
+	return SFEKey::toHexString(*getEncoded());
+}
+void GarbledCircuit::writeCircuit(DataOutput *out) {
+	out->writeBoolean(use_permute);
+	out->writeInt(nInputs);
+	out->writeInt(outputs.size());
 	for (uint i=0; i<outputs.size(); ++i)
-		out.writeInt(outputs[i]);
+		out->writeInt(outputs[i]);
 
-	out.writeInt(outputSecrets[0][0]->getEncoded().size());
+	out->writeInt(outputSecrets[0][0]->getEncoded()->size());
 
-	out.writeInt(outputSecrets.size());
+	out->writeInt(outputSecrets.size());
 
 	for (uint i=0; i<outputSecrets.size(); ++i) {
-		out.write(outputSecrets[i][0]->getEncoded());
-		out.write(outputSecrets[i][1]->getEncoded());
+		out->write(*outputSecrets[i][0]->getEncoded());
+		out->write(*outputSecrets[i][1]->getEncoded());
 	}
 
-	out.writeInt(allGates[0]->truthtab[0].size());
-	out.writeInt(allGates.size());
+	out->writeInt(allGates[0]->truthtab[0].size());
+	out->writeInt(allGates.size());
 	for (uint i=0; i<allGates.size(); ++i) {
-		out.writeByte(allGates[i]->arity);
+		out->writeByte(allGates[i]->arity);
 		for (int j=0; j<allGates[i]->arity; ++j) {
-			out.writeInt(allGates[i]->inputs[j]);
+			out->writeInt(allGates[i]->inputs[j]);
 		}
 		for (uint j=0; j<allGates[i]->truthtab.size(); ++j) {
-			out.write(allGates[i]->truthtab[j]);
+			out->write(allGates[i]->truthtab[j]);
 		}
 	}
 }
 
-GarbledCircuit GarbledCircuit::readCircuit(DataInput &in) {
+GarbledCircuit GarbledCircuit::readCircuit(DataInput *in) {
 	GarbledCircuit gcc;
-	gcc.use_permute = in.readBoolean();
-	gcc.nInputs = in.readInt();
-	gcc.outputs.resize(in.readInt());
+	gcc.use_permute = in->readBoolean();
+	gcc.nInputs = in->readInt();
+	gcc.outputs.resize(in->readInt());
 	for (uint i=0; i<gcc.outputs.size(); ++i)
-		gcc.outputs[i] = in.readInt();
+		gcc.outputs[i] = in->readInt();
 
-	int seclen = in.readInt();
+	int seclen = in->readInt();
 
-	gcc.outputSecrets.resize(in.readInt());
+	gcc.outputSecrets.resize(in->readInt());
 	// each one needs 2
 	for (uint i=0; i<gcc.outputSecrets.size(); ++i) {
-		vector<byte> buf(seclen);
-		in.readFully(&buf[0], seclen);
-		gcc.outputSecrets[i].resize(2);
-		gcc.outputSecrets[i][0] = SFEKey_p(new SFEKey(buf));
+		byte_buf buf(seclen);
+		in->readFully(&buf[0], seclen);
+		gcc.outputSecrets[i].s0 = SFEKey_p(new SFEKey(buf));
 		buf.resize(seclen);
-		in.readFully(&buf[0], seclen);
-		gcc.outputSecrets[i][1] = SFEKey_p(new SFEKey(buf));
+		in->readFully(&buf[0], seclen);
+		gcc.outputSecrets[i].s1 = SFEKey_p(new SFEKey(buf));
 	}
 
-	seclen = in.readInt();
+	seclen = in->readInt();
 
-	gcc.allGates.resize(in.readInt());
+	gcc.allGates.resize(in->readInt());
 	for (uint i=0; i<gcc.allGates.size(); ++i) {
 		gcc.allGates[i]->id = i + gcc.nInputs;
-		gcc.allGates[i]->arity = in.readByte();
+		gcc.allGates[i]->arity = in->readByte();
 		gcc.allGates[i]->inputs.resize(gcc.allGates[i]->arity);
 		for (int j=0; j<gcc.allGates[i]->arity; ++j) {
-			gcc.allGates[i]->inputs[j] = in.readInt();
+			gcc.allGates[i]->inputs[j] = in->readInt();
 		}
 		int tts = -1;
 		switch(gcc.allGates[i]->arity) {
@@ -101,7 +103,7 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput &in) {
 		gcc.allGates[i]->truthtab.resize(tts);
 		for (uint j=0; j<gcc.allGates[i]->truthtab.size(); ++j) {
 			gcc.allGates[i]->truthtab[j].resize(seclen);
-			in.readFully(&gcc.allGates[i]->truthtab[j][0], gcc.allGates[i]->truthtab[j].size());
+			in->readFully(&gcc.allGates[i]->truthtab[j][0], gcc.allGates[i]->truthtab[j].size());
 		}
 	}
 	return gcc;
@@ -109,9 +111,9 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput &in) {
 
 
 
-void GarbledCircuit::hashCircuit(vector<byte> &md) {
+void GarbledCircuit::hashCircuit(byte_buf &md) {
 	BytesDataOutput out;
-	writeCircuit(out);
+	writeCircuit(&out);
 	md.resize(20);
 	SHA1((const uchar*)(&out.buf[0]), out.buf.size(), (uchar*)(&md[0]));
 }

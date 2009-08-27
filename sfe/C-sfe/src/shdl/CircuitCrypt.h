@@ -17,15 +17,9 @@
 
 using namespace std;
 
-static const string CIPHER = "SHA-1";
-
 class CircuitCrypt {
 private:
-
-
 //	protected SecureRandom random;
-	SFECipher C;
-//	public SFEKeyGenerator KG;
 
 	typedef map<int, GarbledGate_p> gateid_t;
 	gateid_t gateid;
@@ -33,7 +27,7 @@ private:
 	typedef map<Gate_p, GarbledGate_p> gatemap_t;
 	gatemap_t themap;
 
-	typedef map<int, vector<SFEKey_p> > secretmap_t;
+	typedef map<int, boolean_secrets > secretmap_t;
 	secretmap_t secrets;
 
 	int curId;
@@ -42,11 +36,15 @@ private:
 		return curId++;
 	}
 protected:
-	vector<SFEKey_p> genKeyPair(GateBase_p g);
+	boolean_secrets genKeyPair(GateBase_p g);
+	static const string CIPHER;
+	SFEKeyGenerator KG;
+	SFECipher C;
+
 public:
 	CircuitCrypt();
 	virtual ~CircuitCrypt();
-	virtual GarbledCircuit encrypt(Circuit &cc, atype<SFEKey_p>::matrix &inputsecrets);
+	virtual GarbledCircuit encrypt(Circuit &cc, vector<boolean_secrets> &inputsecrets);
 
 private:
 	int encGate_rec(Gate_p gate);

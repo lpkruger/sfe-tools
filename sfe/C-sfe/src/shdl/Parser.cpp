@@ -96,7 +96,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 				DD(g.dump();)
 				DD(gates[id].dump();)
 				DD(inputs[inputs.size()-1].dump();)
-				g->write(cout);
+				//g->write(cout);
 			} else if (gtype == "gate" || gtype == "output") {
 				Gate_p g;
 				if (gtype == "output") {
@@ -364,6 +364,17 @@ FmtFile FmtFile::parseFmt(istream &in) {
 #include "CircuitCrypt.h"
 #include "sillyio.h"
 
+static void writeObject(DataOutput *out, SFEKey_p &key) {
+	out->write(*key->getEncoded());
+}
+
+static void writeObject(DataOutput *out, boolean_secrets &secr) {
+	writeObject(out, secr.s0);
+	writeObject(out, secr.s1);
+}
+
+#include "GCircuitEval.h"
+
 static int _main(int argc, char **argv) {
 	try {
 		cout << "1 " << 1 << " " << parseInt("1") << endl;
@@ -375,23 +386,45 @@ static int _main(int argc, char **argv) {
 		// test circuit
 		ifstream in("/home/louis/sfe/priveq.circ");
 		Circuit_p cc = Circuit::parseCirc(in);
+
 		for (int i=0; i<cc->outputs.size() ; ++i) {
 			DD(cc->outputs[i].dump();)
 		}
 
 		CircuitCrypt crypt;
-		atype<SecretKey_p>::matrix inputSecrets;
+		vector<boolean_secrets> inputSecrets;
 		GarbledCircuit gcc = crypt.encrypt(*cc, inputSecrets);
 		//cout << (&gcc) << endl;
-		ofstream fout("gcircuit.bin");
-		silly::io::ostreamDataOutput fdout(fout);
-		gcc.writeCircuit(fdout);
-		fout.close();
-		return 0;
+		cout << "write garbled circuit" << endl;
+		{
+			ofstream fout("gcircuit.bin");
+			silly::io::ostreamDataOutput fdout(fout);
+			gcc.writeCircuit(&fdout);
+			fout.close();
+		}
+		cout << "write input secrets" << endl;
+		{
+			ofstream fout("gsecrets.bin");
+			silly::io::ostreamDataOutput fdout(fout);
+			writeVector(&fdout, inputSecrets);
+			fout.close();
+		}
+		cout << "evaluate garbled circuit" << endl;
+		GCircuitEval geval;
+		vector<SecretKey_p> gcirc_input(inputSecrets.size());
+		for (uint i=0; i<gcirc_input.size(); ++i) {
+			gcirc_input[i] = inputSecrets[i].s0;
+		}
+		vector<bool> circ_out = geval.eval(gcc, gcirc_input);
+		for (uint i=0; i<circ_out.size(); ++i) {
+			cout << "output " << i << ": " << circ_out[i] << endl;
+		}
 	} catch (ParseException ex) {
 		cerr << ex.what() << endl;
 		throw;
 	}
+
+	return 0;
 }
 #include "sillymain.h"
 

@@ -19,12 +19,12 @@ using namespace silly::io;
 #define D(X)
 
 static void writeObject(DataOutput *out, const BigInt &a) {
-	vector<byte> buf = a.toMPIByteArray();
+	byte_buf buf = a.toMPIByteArray();
 	out->write(buf);
 }
 static void readObject(DataInput *in, BigInt &a) {
 	int len = in->readInt();
-	vector<byte> buf(len+4);
+	byte_buf buf(len+4);
 	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
 	in->readFully(&buf[4], len);
 	//D(buf);
@@ -38,7 +38,7 @@ BigInt iarpa::ko::Client::clientxfer1(CBigInt &w) {
 	return Y;
 }
 
-vector<byte> iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat) {
+byte_buf iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<byte_buf> &mhat) {
 	BigInt wwhat = X.modDivide(rr, rsa_n);
 	D(printf("C: %s %s %s\n", wwhat.toHexString().c_str(), rr.toHexString().c_str(), X.toHexString().c_str());)
 
@@ -49,7 +49,7 @@ vector<byte> iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector
 		vector<BNcPtr> input(vals, vals+3);
 
 		D(printf("C: %s %s %02x\n", w.toHexString().c_str(), wwhat.toHexString().c_str(), i);)
-		vector<byte> mi = Gxor(input, mhat[i]);
+		byte_buf mi = Gxor(input, mhat[i]);
 
 		for (int j=0; j<L; ++j) {
 			// test for leading 0s
@@ -57,21 +57,22 @@ vector<byte> iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector
 				goto search;
 		}
 
-		return vector<byte>(mi.begin()+7, mi.end());
+		return byte_buf(mi.begin()+L, mi.end());
 
-	search: continue;
+		search:
+		continue;
 	}
 
-	return vector<byte>();
+	return byte_buf();
 }
 
-vector<byte> iarpa::ko::Client::online(CBigInt &w) {
+byte_buf iarpa::ko::Client::online(CBigInt &w) {
 	readObject(in, rsa_n);
 	readObject(in, rsa_e);
 	BigInt Y = clientxfer1(w);
 	writeObject(out, Y);
 	BigInt X;
-	vector<vector<byte> > mhat;
+	vector<byte_buf > mhat;
 	readObject(in, X);
 	readVector(in, mhat);
 	return clientxfer2(w, X, mhat);
@@ -93,7 +94,7 @@ void iarpa::ko::Server::servercommit(DDB & ddb) {
 		what[i] = H(w).modPow(rsa->d, rsa->n);
 		int mlen = BN_num_bytes(m.ptr());
 
-		vector<byte> mm(mlen+L, 0);
+		byte_buf mm(mlen+L, 0);
 		BN_bn2bin(m.ptr(), &mm[L]);
 
 		ii = i;
@@ -133,8 +134,8 @@ BigInt iarpa::ko::H(BNcPtr x) {
 }
 
 
-vector<byte> iarpa::ko::Gxor(const vector<BNcPtr> &x, const vector<byte> &m) {
-	vector<byte> zz;
+byte_buf iarpa::ko::Gxor(const vector<BNcPtr> &x, const byte_buf &m) {
+	byte_buf zz;
 
 	int totalsize=0;
 	int zlen;
@@ -157,7 +158,7 @@ vector<byte> iarpa::ko::Gxor(const vector<BNcPtr> &x, const vector<byte> &m) {
 	}
 
 	// use RC4 as PRNG
-	vector<byte> out(m.size());
+	byte_buf out(m.size());
 	RC4_KEY key;
 	RC4_set_key(&key, zz.size(), &zz[0]);
 	RC4(&key, m.size(), &m[0], &out[0]);

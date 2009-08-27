@@ -48,7 +48,12 @@ int iarpa::ko::test_ko(int argc, char **argv) {
 		BigInt b_key(2);
 		BigInt Y_ = okC.clientxfer1(b_key);
 		BigInt X_ = okS.serverxfer(Y_);
-		okC.clientxfer2(b_key, X_, okS.mhat);
+		byte_buf mi = okC.clientxfer2(b_key, X_, okS.mhat);
+		for (uint j=0; j<mi.size(); ++j) {
+			printf("%02x ", mi[j]);
+		}
+		printf("\n");
+
 		long time3 = currentTimeMillis();
 		printf("DB size %d: %ld online %ld offline\n",
 				ddb.thedb.size(), (time3-time2), (time2-time1));

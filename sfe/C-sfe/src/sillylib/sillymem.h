@@ -194,5 +194,31 @@ template<class T, class U> static inline const wise_ptr<T>
 }
 }
 
+using silly::mem::wise_ptr;
+
+#include <map>
+#define DEBUG_WISEPTR 1
+#if DEBUG_WISEPTR
+#include <iostream>
+#endif
+namespace silly {
+namespace types {
+
+//template<class T,class U> static inline wise_ptr<T> map_get(const std::map<U,wise_ptr<T> > &map, const U &key) {
+//#if DEBUG_WISEPTR
+//	std::cout << "map get: wise_ptr overload" << std::endl;
+//#endif
+//	typedef typename std::map<U,wise_ptr<T> >::const_iterator map_it;
+//	map_it it = map.find(key);
+//	if (it == map.end())
+//		return wise_ptr<T>(NULL);
+//	return it->second;
+//}
+
+}
+}
+
+#undef D
+
 #undef DEBUG_WISEPTR
 #endif /* SILLYMEM_H_ */

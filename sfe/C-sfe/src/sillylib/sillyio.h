@@ -20,6 +20,7 @@ namespace io {
 
 // IO stuff
 
+
 class IOException : public std::exception {
 	int errnum;
 public:
@@ -64,7 +65,7 @@ public:
 			cnt+=n;
 		}
 	}
-	void write(const std::vector<byte> &v, int off=0, int len=-1) {
+	void write(const byte_buf &v, int off=0, int len=-1) {
 		if (len==-1 || len>v.size())
 			len = v.size();
 		return write(&v[off], len);
@@ -74,7 +75,7 @@ public:
 
 class BytesDataOutput : public DataOutput {
 public:
-	std::vector<byte> buf;
+	byte_buf buf;
 
 	void writeByte(byte b) {
 		buf.push_back(b);
@@ -134,7 +135,7 @@ public:
 			cnt+=n;
 		}
 	}
-	void readFully(std::vector<byte> &c, int off=0, int len=-1) {
+	void readFully(byte_buf &c, int off=0, int len=-1) {
 		if (len==-1)
 			len = c.size();
 		else if (len>c.size())
@@ -201,7 +202,7 @@ template<class T> void writeVector(DataOutput *out, std::vector<std::vector<T> >
 		writeVector(out, vec[i]);
 	}
 }
-template<> void writeVector(DataOutput *out, std::vector<byte> &vec) {
+template<> void writeVector(DataOutput *out, byte_buf &vec) {
 	out->writeInt(vec.size());
 	out->write(&vec[0], vec.size());
 }
@@ -222,7 +223,7 @@ template<class T> void readVector(DataInput *in, std::vector<std::vector<T> > &v
 		readVector(in, vec[i]);
 	}
 }
-template<> void readVector(DataInput *in, std::vector<byte> &vec) {
+template<> void readVector(DataInput *in, byte_buf &vec) {
 	int len = in->readInt();
 	vec.resize(len);
 	in->readFully(&vec[0], vec.size());

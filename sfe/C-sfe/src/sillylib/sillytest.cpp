@@ -1,5 +1,6 @@
 #include "silly.h"
 #include "sillymem.h"
+#include "sillymem3.h"
 
 #include <iostream>
 #include <string.h>
@@ -62,7 +63,7 @@ static int _main(int argc, char **argv) {
 	wise_ptr<A> aw = wise_ptr<A>(aaa[1]);
 	cout << "name: " << (typeid(&aw).name()) << endl;
 	auto_ptr<A> aa = auto_ptr<A>(aaa[2]);
-	wise_ptr<A> as = wise_ptr<A>(aaa[3]);
+	shared_ptr<A> as = shared_ptr<A>(aaa[3]);
 	dumpmem((uint*) aaa, 4);
 	cout << "A pointer   " << sizeof(ap) << endl;
 	dumpmem((uint*) &ap, sizeof(ap)/4);

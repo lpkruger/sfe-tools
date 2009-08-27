@@ -23,7 +23,7 @@ namespace ko {
 using namespace silly::io;
 
 BigInt H(BNcPtr x);
-vector<byte> Gxor(const vector<BNcPtr> &x, const vector<byte> &m);
+byte_buf Gxor(const vector<BNcPtr> &x, const byte_buf &m);
 
 const static int L=8;	// security param
 
@@ -32,7 +32,7 @@ class Server {
 	DataOutput *out;
 
 	RSA* rsa;
-	vector<vector<byte> > mhat;
+	vector<byte_buf> mhat;
 public:
 	Server() {}
 	~Server() {
@@ -71,11 +71,11 @@ public:
 		in = in0;
 		out = out0;
 	}
-	vector<byte> online(CBigInt &w);
+	byte_buf online(CBigInt &w);
 
 private:
 	BigInt clientxfer1(CBigInt &w);
-	vector<byte> clientxfer2(CBigInt &w, CBigInt &X, const vector<vector<byte> > &mhat);
+	byte_buf clientxfer2(CBigInt &w, CBigInt &X, const vector<byte_buf> &mhat);
 
 	friend int iarpa::ko::test_ko(int argc, char **argv);
 };
