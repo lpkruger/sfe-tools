@@ -22,9 +22,17 @@ using std::string;
 
 namespace bigint {
 
+class math_exception : public std::exception {
+	const char* msg;
+public:
+	math_exception(const char *msg0) : msg(msg0) {}
+	virtual const char *what() {
+		return msg;
+	}
+};
+
+
 // see http://kaba.hilvi.org/Programming_C++/Texts/Null_Pointer.htm
-
-
 template<class T> struct silly_ptr {
 	T *p;
 	silly_ptr<T>(T* p0) : p(p0) {};
@@ -98,13 +106,6 @@ public:
 		operator=(b);
 	}
 	////////
-
-	BigInt(const byte_buf &b, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
-		BN_init(&n);
-		BN_bin2bn(&b[0], b.size(), *this);
-		if (!bn_ctx)
-			setDefaultBnCtx();
-	}
 
 #ifndef NO_RVALREF
 	BigInt(BigInt &&b) {
@@ -258,31 +259,9 @@ public:
 		return BN_is_negative((const BIGNUM*)*this);
 	}
 
-	byte_buf toPosByteArray() const {
-		byte_buf ret(BN_num_bytes(*this));
-		if (!ret.size())
-			ret.push_back(0);
-		BN_bn2bin(*this, &ret[0]);
-		return ret;
-	}
-
-	byte_buf toMPIByteArray() const {
-		byte_buf ret(BN_bn2mpi(*this, NULL));
-		BN_bn2mpi(*this, &ret[0]);
-		//byte_buf::iterator p = ret.begin();
-		//ret.erase(p, p+4);
-		return ret;
-	}
-
-	static BigInt fromMPIByteArray(const byte_buf buf) {
-		BigInt ret;
-		BN_mpi2bn(&buf[0], buf.size(), ret);
-		return ret;
-	}
-
 	BigInt xxor(const BigInt &b) const {
-		byte_buf aa = toPosByteArray();
-		byte_buf bb = b.toPosByteArray();
+		byte_buf aa = fromPosBigInt(*this);
+		byte_buf bb = fromPosBigInt(b);
 
 		int asize = aa.size();
 		int bsize = bb.size();
@@ -490,6 +469,44 @@ public:
 		return BN_cmp(*this, b)!=0;
 	}
 
+	static byte_buf fromPosBigInt(BNcPtr num) {
+		byte_buf ret(BN_num_bytes(num));
+		if (!ret.size())
+			ret.push_back(0);
+		BN_bn2bin(num, &ret[0]);
+		return ret;
+	}
+
+	static BigInt toPosBigInt(const byte_buf &buf) {
+		BigInt ret;
+		BN_bin2bn(&buf[0], buf.size(), (BIGNUM*) ret.ptr());
+		return ret;
+	}
+
+	static byte_buf MPIfromBigInt(BNcPtr num) {
+		byte_buf ret(BN_bn2mpi(num, NULL));
+		BN_bn2mpi(num, &ret[0]);
+		return ret;
+	}
+
+	static BigInt MPItoBigInt(const byte_buf &buf) {
+		BigInt ret;
+		BN_mpi2bn(&buf[0], buf.size(), ret);
+		return ret;
+	}
+
+	static BigInt toPaddedBigInt(byte_buf buf) {
+		buf.insert(buf.begin(), 1);
+		return toPosBigInt(buf);
+	}
+	static byte_buf fromPaddedBigInt(BNcPtr num) {
+		byte_buf ret = fromPosBigInt(num);
+		if (ret[0] != 1)
+			throw math_exception("bignum not padded");
+		ret.erase(ret.begin());
+		return ret;
+	}
+
 
 //#define CBI const BigInt&
 //#define OP0m(op, fn)    BigInt& operator op ()          { return fn(); }
@@ -547,8 +564,6 @@ OP1m(+=, addThis, CBI)
 OP1m(-=, subtractThis, CBI)
 OP1m(*=, multiplyThis, CBI)
 OP1m(%=, modThis, CBI)
-};
-
 
 #undef CBI
 #undef IN
@@ -556,5 +571,9 @@ OP1m(%=, modThis, CBI)
 #undef OP1c
 #undef OP1u
 #undef OP0c
+
+}
+
+
 
 #endif /* BIGINT_H_ */

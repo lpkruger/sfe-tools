@@ -68,3 +68,4 @@ static int _main(int argc, char **argv) {
 }
 #include "../sillylib/sillymain.h"
 MAIN("dbtest");
+

@@ -19,7 +19,7 @@ using namespace silly::io;
 #define D(X)
 
 static void writeObject(DataOutput *out, const BigInt &a) {
-	byte_buf buf = a.toMPIByteArray();
+	byte_buf buf = BigInt::MPIfromBigInt(a);
 	out->write(buf);
 }
 static void readObject(DataInput *in, BigInt &a) {
@@ -28,7 +28,7 @@ static void readObject(DataInput *in, BigInt &a) {
 	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
 	in->readFully(&buf[4], len);
 	//D(buf);
-	a = BigInt::fromMPIByteArray(buf);
+	a = BigInt::MPItoBigInt(buf);
 }
 
 BigInt iarpa::ko::Client::clientxfer1(CBigInt &w) {
@@ -57,7 +57,8 @@ byte_buf iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<byt
 				goto search;
 		}
 
-		return byte_buf(mi.begin()+L, mi.end());
+		mi.erase(mi.begin(), mi.begin()+L);		// remove padding
+		return mi;
 
 		search:
 		continue;

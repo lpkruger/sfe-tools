@@ -1,0 +1,11 @@
+OTHER_ICPCFLAGS=-march=core2 -xT -ip # -ipo
+OTHER_CXXFLAGS=-DUSE_RVALREFS=1
+
+# include a main() program for main build
+#USER_OBJS += mycryptolib/ottest.o
+
+#hack for make clean
+#CC_DEPS += $(USER_OBJS) mycryptolib/ottest.d
+
+#userclean:
+#	-rm $(USER_OBJS)

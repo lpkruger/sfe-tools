@@ -29,6 +29,16 @@ template<class T> struct atype {
 	typedef std::vector<matrix> cubic;
 };
 
+// use this for checking arguments passed to a function
+class bad_argument : public std::exception {
+	const char* msg;
+public:
+	bad_argument(const char *msg0) : msg(msg0) {}
+	virtual const char *what() {
+		return msg;
+	}
+};
+
 #if 0
 template<class T,class U> static inline T* map_get(std::map<U,T> &map, const U &key) {
 	std::cout << "map_get: generic overload" << std::endl;
@@ -47,10 +57,6 @@ template<class T,class U> static inline T* map_get(std::map<U,T*> &map, const U 
 	return it->second;
 }
 #endif
-
-
-
-
 
 }
 }

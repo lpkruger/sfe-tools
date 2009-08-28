@@ -37,7 +37,7 @@ typedef vector<BigInt> BigInt_Vect;
 typedef vector<BigInt_Vect> BigInt_Mtrx;
 typedef vector<BigInt_Mtrx> BigInt_Cube;
 
-class Sender {
+class OTSender {
 	PinkasNaorOT *ot;
 	DataInput *in;
 	DataOutput *out;
@@ -50,10 +50,11 @@ class Sender {
 	BigInt_Vect rr;
 
 public:
-	Sender(BigInt_Mtrx &M0, PinkasNaorOT *ot0) : ot(ot0) {
+	OTSender(BigInt_Mtrx &M0, PinkasNaorOT *ot0) : ot(ot0) {
 		M.swap(M0);
 		for (uint i=0; i<M.size(); ++i) {
 			if (M[i].size() != 2) {
+
 				// TODO: throw new RuntimeException("Must have exactly 2 choices");
 			}
 		}
@@ -69,7 +70,7 @@ public:
 	void online();
 };
 
-class Chooser {
+class OTChooser {
 	PinkasNaorOT *ot;
 	DataInput *in;
 	DataOutput *out;
@@ -79,7 +80,7 @@ class Chooser {
 	BigInt_Vect k;
 	BigInt_Mtrx PK;
 public:
-	Chooser(vector<bool> &s0, PinkasNaorOT *ot0) : ot(ot0) {
+	OTChooser(vector<bool> &s0, PinkasNaorOT *ot0) : ot(ot0) {
 		s.swap(s0);
 	}
 

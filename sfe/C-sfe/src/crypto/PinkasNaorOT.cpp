@@ -71,16 +71,16 @@ BigInt PinkasNaorOT::findGenerator(const BigInt &p) {
 
 BigInt PinkasNaorOT::hash(const BigInt &p) {
 	byte_buf md(20);
-	byte_buf in = p.toPosByteArray();
+	byte_buf in = BigInt::fromPosBigInt(p);
 	SHA1((const uchar*)(&in[0]), in.size(), (uchar*)(&md[0]));
 	D("HASH:");
 	D(in);
 	D(md);
-	return md;
+	return BigInt::toPosBigInt(md);
 }
 
 static void writeObject(DataOutput *out, const BigInt &a) {
-	byte_buf buf = a.toMPIByteArray();
+	byte_buf buf = BigInt::MPIfromBigInt(a);
 	out->write(buf);
 }
 static void readObject(DataInput *in, BigInt &a) {
@@ -89,16 +89,16 @@ static void readObject(DataInput *in, BigInt &a) {
 	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
 	in->readFully(&buf[4], len);
 	//D(buf);
-	a = BigInt::fromMPIByteArray(buf);
+	a = BigInt::MPItoBigInt(buf);
 }
 
 
-void Sender::go() {
+void OTSender::go() {
 	precalc();
 	online();
 }
 
-void Sender::precalc() {
+void OTSender::precalc() {
 	BigInt &g = ot->GGG;
 	BigInt &q = ot->QQQ;
 	resize(C, M.size());
@@ -116,7 +116,7 @@ void Sender::precalc() {
 	D(rr);
 	resize(PK,M.size(),2);
 }
-void Sender::online() {
+void OTSender::online() {
 	BigInt &q = ot->QQQ;
 	D("send C");
 	writeVector(out, C);
@@ -152,11 +152,11 @@ void Sender::online() {
 	out->flush();
 }
 
-BigInt_Vect Chooser::go() {
+BigInt_Vect OTChooser::go() {
 	precalc();
 	return online();
 }
-void Chooser::precalc() {
+void OTChooser::precalc() {
 	BigInt &g = ot->GGG;
 	BigInt &q = ot->QQQ;
 	resize(k, s.size());
@@ -174,7 +174,7 @@ void Chooser::precalc() {
 	}
 }
 
-BigInt_Vect Chooser::online() {
+BigInt_Vect OTChooser::online() {
 	//BigInt &g = ot->GGG;
 	BigInt &q = ot->QQQ;
 	D("read C");

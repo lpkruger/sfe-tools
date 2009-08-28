@@ -63,7 +63,7 @@ static int _main(int argc, char **argv) {
 		M[2][0]=1003;
 		M[2][1]=83784;
 		printf("M.size %d\n", M.size());
-		Sender sender(M, &ot);
+		OTSender sender(M, &ot);
 		sender.setStreams(in, out);
 		printf("M.size %d\n", M.size());
 		sender.go();
@@ -75,7 +75,7 @@ static int _main(int argc, char **argv) {
 			}
 			ss[i-1] = args[i]=="1" ? true : false;
 		}
-		Chooser choos(ss, &ot);
+		OTChooser choos(ss, &ot);
 		choos.setStreams(in, out);
 		BigInt_Vect val = choos.go();
 		for (uint i=0; i<val.size(); ++i) {
