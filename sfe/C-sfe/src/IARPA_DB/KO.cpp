@@ -15,8 +15,9 @@
 
 using namespace std;
 using namespace silly::io;
-//#define D(X) X  // to enable debugging msgs
-#define D(X)
+
+#undef DEBUG
+#include "sillydebug.h"
 
 static void writeObject(DataOutput *out, const BigInt &a) {
 	byte_buf buf = BigInt::MPIfromBigInt(a);
@@ -27,7 +28,7 @@ static void readObject(DataInput *in, BigInt &a) {
 	byte_buf buf(len+4);
 	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
 	in->readFully(&buf[4], len);
-	//D(buf);
+	//DD(buf);
 	a = BigInt::MPItoBigInt(buf);
 }
 
@@ -40,7 +41,7 @@ BigInt iarpa::ko::Client::clientxfer1(CBigInt &w) {
 
 byte_buf iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<byte_buf> &mhat) {
 	BigInt wwhat = X.modDivide(rr, rsa_n);
-	D(printf("C: %s %s %s\n", wwhat.toHexString().c_str(), rr.toHexString().c_str(), X.toHexString().c_str());)
+	DD(printf("C: %s %s %s\n", wwhat.toHexString().c_str(), rr.toHexString().c_str(), X.toHexString().c_str());)
 
 	BigInt ii;
 	for (uint i=0; i<mhat.size(); ++i) {
@@ -48,7 +49,7 @@ byte_buf iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<byt
 		BNcPtr vals[3] = { w, wwhat, ii };
 		vector<BNcPtr> input(vals, vals+3);
 
-		D(printf("C: %s %s %02x\n", w.toHexString().c_str(), wwhat.toHexString().c_str(), i);)
+		DD(printf("C: %s %s %02x\n", w.toHexString().c_str(), wwhat.toHexString().c_str(), i);)
 		byte_buf mi = Gxor(input, mhat[i]);
 
 		for (int j=0; j<L; ++j) {
@@ -101,7 +102,7 @@ void iarpa::ko::Server::servercommit(DDB & ddb) {
 		ii = i;
 		BNcPtr vals[3] = {w, what[i], ii};
 		vector<BNcPtr> input(vals, vals+3);
-		D(printf("S: %s %s %02x\n", w.toHexString().c_str(), what[i].toHexString().c_str(), i);)
+		DD(printf("S: %s %s %02x\n", w.toHexString().c_str(), what[i].toHexString().c_str(), i);)
 		mhat[i] = Gxor(input, mm);
 		++i;
 	}

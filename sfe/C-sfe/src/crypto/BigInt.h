@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <openssl/bn.h>
 #include <openssl/rsa.h>
 #include "sillytype.h"
@@ -39,7 +40,7 @@ template<class T> struct silly_ptr {
 	operator T* () const {
 		return p;
 	}
-	T operator -> () const {
+	T* operator -> () const {
 		return p;
 	}
 };
@@ -92,7 +93,7 @@ public:
 	//explicit BigInt(const stupid::Wrap<const BIGNUM*>& nnn, bool takeown=true, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
 	//  const BIGNUM *nn = nnn;	// workaround silly 0 -> ptr cast
 
-	BigInt(BIGNUM *nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+	BigInt(const BIGNUM *nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
 		BN_init(&n);
 		if (!bn_ctx)
 			setDefaultBnCtx();
@@ -257,6 +258,9 @@ public:
 	}
 	bool isNegative() const {
 		return BN_is_negative((const BIGNUM*)*this);
+	}
+	int byteLength() const {
+		return BN_num_bytes(*this);
 	}
 
 	BigInt xxor(const BigInt &b) const {
@@ -449,6 +453,49 @@ public:
 		return *this;
 	}
 
+	ulong toULong() {
+		return BN_get_word(*this);
+	}
+	unsigned long long toULLong() {
+		const int len = sizeof(unsigned long long);
+		if (sizeof(ulong) == len)
+			return toULong();
+		if (byteLength() > len)
+			return (unsigned long long)(long long) -1;
+		byte_buf buf = fromPosBigInt(*this, len);
+		int offset = buf.size() - len;
+		unsigned long long ret = 0;
+		for (int i=offset; i<buf.size(); ++i) {
+			ret <<= 8;
+			ret |= buf[i];
+		}
+		return ret;
+	}
+	long toLong() {
+		const long minlong = long((ulong(-1L)>>1)+1);
+		const long maxlong = long(ulong(-1L)>>1);
+		ulong n = toULong();
+		long r = long(n);
+		if (r<0)
+			return isNegative() ? minlong : maxlong;
+		else
+			return isNegative() ? -r : r;
+	}
+	long long toLLong() {
+		const long long minllong = (long long)(((unsigned long long)(-1LL)>>1)+1);
+		const long long maxllong = (long long)(((unsigned long long)(-1LL))>>1);
+		const int len = sizeof(long long);
+		if (sizeof(long) == len)
+			return toLong();
+		unsigned long long n = toULLong();
+		long long r = (long long)(n);
+		if (r<0)
+			return isNegative() ? minllong : maxllong;
+		else
+			return isNegative() ? -r : r;
+	}
+
+
 
 	bool operator< (BNcPtr b) const {
 		return BN_cmp(*this, b)<0;
@@ -469,11 +516,13 @@ public:
 		return BN_cmp(*this, b)!=0;
 	}
 
-	static byte_buf fromPosBigInt(BNcPtr num) {
-		byte_buf ret(BN_num_bytes(num));
-		if (!ret.size())
-			ret.push_back(0);
-		BN_bn2bin(num, &ret[0]);
+	static byte_buf fromPosBigInt(BNcPtr num, int len=0) {
+		int reallen = BN_num_bytes(num);
+		if (len<reallen) len = reallen;
+		if (!len) return byte_buf(1, 0);
+		byte_buf ret(len);
+		int offset = len-reallen;
+		BN_bn2bin(num, &ret[offset]);
 		return ret;
 	}
 
@@ -481,6 +530,45 @@ public:
 		BigInt ret;
 		BN_bin2bn(&buf[0], buf.size(), (BIGNUM*) ret.ptr());
 		return ret;
+	}
+	static byte_buf from2sCompBigInt(BNcPtr num, int len=0) {
+		int reallen = BN_num_bytes(num);
+		if (!reallen)
+			++reallen;
+		if (BN_is_bit_set(num, reallen*8-1)) {
+			if (!BN_is_negative(num))
+				++reallen;		// need an extra byte if high bit is set
+			else {
+				BigInt tmp(num);
+				BN_clear_bit(tmp, reallen*8-1);
+				if (!BN_is_zero(tmp.ptr()))
+					++reallen;
+			}
+		}
+		if (len<reallen)
+				len = reallen;
+		if (!BN_is_negative(num)) {
+			return fromPosBigInt(num, len);
+		}
+		BigInt n2(1);
+		n2.shiftLeftThis(len*8);
+		n2.addThis(num);
+		byte_buf ret = fromPosBigInt(n2, len);
+		return ret;
+	}
+
+	static BigInt to2sCompBigInt(const byte_buf &buf) {
+		BigInt num = toPosBigInt(buf);
+		int len = num.byteLength();
+		if (!num.testBit(len*8-1))
+			return num;
+
+		// it's negative
+		BigInt n2(1);
+		n2.shiftLeftThis(len*8);
+		n2.subtractThis(num);
+		n2.negateThis();
+		return n2;
 	}
 
 	static byte_buf MPIfromBigInt(BNcPtr num) {
@@ -507,6 +595,62 @@ public:
 		return ret;
 	}
 
+	string toString(uint base=10) {
+		if (base<2 || base>36)
+			throw math_exception("toString only supports bases from 2 to 36");
+		if (BN_is_zero(ptr()))
+			return "0";
+		BigInt copy(*this);
+
+		string str;
+
+		while (!BN_is_zero(copy.ptr())) {
+			uint d = copy.mod(base);
+			str.push_back(d<10 ? '0'+(d) : 'A'+(d-10));
+			copy.divideThis(base);
+		}
+
+		if (isNegative())
+			str.push_back('-');
+
+		std::reverse(str.begin(), str.end());
+		return str;
+	}
+
+	static BigInt parseString(const string &str, uint base=10) {
+		if (str.size()==0)
+			throw math_exception("can't parse an empty string");
+		if (base<2 || base>36)
+			throw math_exception("parseString only supports bases from 2 to 36");
+		bool neg = false;
+		uint i=0;
+		if (str[i]=='+') {
+			++i;
+		} else if (str[i]=='-') {
+			neg = true;
+			++i;
+		}
+		BigInt num;
+		for (; i<str.size(); ++i) {
+			char c = str[i];
+			int d=-1;
+			if (c>='0' && c<='9')
+				d = c-'0';
+			else if (c>='A' && c<='Z')
+				d = c-'A'+10;
+			else if (c>='a' && c<='z')
+				d = c-'a'+10;
+
+			if (d<0 || d>=base)
+				throw math_exception("unexpected character parsing string");
+
+			num.multiplyThis((ulong)base).addThis((ulong)d);
+		}
+		if (neg)
+			num.negateThis();
+
+		return num;
+	}
 
 //#define CBI const BigInt&
 //#define OP0m(op, fn)    BigInt& operator op ()          { return fn(); }

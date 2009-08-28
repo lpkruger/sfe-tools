@@ -8,7 +8,8 @@
 #include "GCircuitEval.h"
 #include <string>
 
-#define D(x) std::cout << x
+#undef DEBUG
+#include "sillydebug.h"
 
 GCircuitEval::GCircuitEval() {
 	// TODO Auto-generated constructor stub
@@ -47,13 +48,13 @@ vector<bool> GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) 
 					Base64.encodeBytes(gcc.outputSecrets[i][1].getEncoded()));
 		 */
 
-		D("output ");
+		DC("output ");
 		int cout_width = cout.width(6);
-		D(i);
+		DC(i);
 		cout.width(cout_width);
-		D("  " << SFEKey::toHexString(*retval) << endl);
-		D("true           " << SFEKey::toHexString(*gcc.outputSecrets[i].s1->getEncoded()) << endl);
-		D("false          " << SFEKey::toHexString(*gcc.outputSecrets[i].s0->getEncoded()) << endl);
+		DC("  " << toHexString(*retval) << endl);
+		DC("true           " << toHexString(*gcc.outputSecrets[i].s1->getEncoded()) << endl);
+		DC("false          " << toHexString(*gcc.outputSecrets[i].s0->getEncoded()) << endl);
 
 		if (gcc.outputSecrets[i][0]->equals(retkey.get()))
 			ret[i] = false;
@@ -61,7 +62,7 @@ vector<bool> GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) 
 			ret[i] = true;
 		else {
 			// s1, s0 backwards?
-			throw std::logic_error("eval error : no matching secret");
+			throw ProtocolException("eval error : no matching secret");
 		}
 
 	}
@@ -134,7 +135,7 @@ byte_buf_p GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,
 	}
 
 	if (out.get() == NULL) {
-		throw logic_error("Can't decrypt TT with key "); // + Base64.encodeBytes(ink));
+		throw ProtocolException("Can't decrypt TT with key "); // + Base64.encodeBytes(ink));
 	}
 
 	vals[g->id] = out;

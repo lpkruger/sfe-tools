@@ -54,8 +54,7 @@ public:
 		M.swap(M0);
 		for (uint i=0; i<M.size(); ++i) {
 			if (M[i].size() != 2) {
-
-				// TODO: throw new RuntimeException("Must have exactly 2 choices");
+				throw bad_argument("Must have exactly 2 choices");
 			}
 		}
 	}

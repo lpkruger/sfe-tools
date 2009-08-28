@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 #include <string.h>
 
 using namespace std;
@@ -230,7 +231,7 @@ public:
 	virtual bool eval(EvalState &state) {
 		map<int,bool>::iterator b = state.vals.find(id);
 		if (b == state.vals.end()) {
-			///throw new RuntimeException("Input " + id + " is undefined");
+			throw std::logic_error(string_printf("Input %d is undefined", id).c_str());
 			//TODO:
 		}
 		return b->second;

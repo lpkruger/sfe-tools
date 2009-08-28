@@ -6,16 +6,10 @@
  */
 
 #include <vector>
-#include <sys/time.h>
+#include "silly.h"
 #include "DDB.h"
 #include "KO.h"
-static inline long currentTimeMillis() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	long ret = tv.tv_sec*1000;
-	ret += (tv.tv_usec/1000);
-	return ret;
-}
+
 
 using namespace iarpa;
 using namespace iarpa::ko;
@@ -45,7 +39,13 @@ static const char* str(byte_buf &b) {
 	return str.c_str();
 }
 
+using silly::misc::currentTimeMillis;
+
 int iarpa::ko::test_ko(int argc, char **argv) {
+//	for (int i=0; i<argc; ++i) {
+//		printf("arg: %s\n", argv[i]);
+//	}
+
 	for (int trial=0; trial<min(100,test_sizes_length); ++trial) {
 		DDB ddb;
 		iarpa_ko_populate_test_db(ddb, test_sizes[trial]);

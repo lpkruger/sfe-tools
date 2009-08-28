@@ -13,12 +13,13 @@
 #include <algorithm>
 #include "shdl.h"
 
+#undef DEBUG
+#include "sillydebug.h"
+
 using namespace shdl;
 
 //extern void _exit(int n);
 
-#define D(x) cout << x << endl
-#define DD(x)
 //template<class T, class D> inline void wise_ptr<T,D>::dump() {
 //	//T& obj = p==NULL ? "<null>" : *(T*)p;
 //	std::cout << "@" << this << " : " << p << " " << prev << " " << next << "     " << endl;
@@ -65,7 +66,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 			getline(in, line);
 			if (in.fail())
 				continue;
-			//D("read line: " << line);
+			//DC("read line: " << line);
 			string comment;
 			uint comment_pos = line.find("//");
 			if (comment_pos != string::npos) {
@@ -75,7 +76,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 				line.erase(comment_pos);
 			}
 			trim(line);
-			//D("chop line: " << line);
+			//DC("chop line: " << line);
 			if (line.empty())
 				continue;
 
@@ -85,9 +86,9 @@ Circuit_p Circuit::parseCirc(istream &in) {
 			lp >> id;
 			string gtype;
 			lp >> gtype;
-			//D("gtype: " << gtype);
+			//DC("gtype: " << gtype);
 			if (gtype == "input") {
-				//D("input");
+				//DC("input");
 				Input_p g(new Input(id, id));
 				DD(g.dump();)
 				g->setComment(comment);

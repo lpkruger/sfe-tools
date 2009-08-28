@@ -23,7 +23,7 @@ GarbledCircuit::~GarbledCircuit() {
 }
 
 string SecretKey::toHexString() {
-	return SFEKey::toHexString(*getEncoded());
+	return silly::io::toHexString(*getEncoded());
 }
 void GarbledCircuit::writeCircuit(DataOutput *out) {
 	out->writeBoolean(use_permute);
@@ -96,8 +96,7 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput *in) {
 		case 3:
 			tts = 8; break;
 		default:
-			do {} while(0);
-			// TODO: throw new RuntimeException("Unexpected arity: " + tts);
+			throw ProtocolException(string_printf("Unexpected arity: %d", tts).c_str());
 		}
 
 		gcc.allGates[i]->truthtab.resize(tts);

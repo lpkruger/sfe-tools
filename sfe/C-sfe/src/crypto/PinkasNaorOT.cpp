@@ -8,33 +8,8 @@
 #include "PinkasNaorOT.h"
 #include <openssl/sha.h>
 
-#if 1  // NDEBUG
-#define D(x);
-
-#else
-static void D(const char* s) {
-	fprintf(stderr, "%s\n", s);
-}
-static void D(const BigInt &n) {
-	D(n.toString().c_str());
-}
-
-template<class T> static void D(vector<T> &vec) {
-	fprintf(stderr, "[%u] ", vec.size());
-	for (uint i=0; i<vec.size(); ++i) {
-		fprintf(stderr, "%u: ", i);
-		D(vec[i]);
-	}
-}
-template<> void D(byte_buf &vec) {
-	fprintf(stderr, "[%u: ", vec.size());
-	for (uint i=0; i<vec.size(); ++i) {
-		fprintf(stderr, "%02x ", (int)vec[i]);
-	}
-	fprintf(stderr, "]\n");
-}
-#endif
-
+#undef DEBUG
+#include "sillydebug.h"
 
 PinkasNaorOT::PinkasNaorOT() {
 
@@ -130,7 +105,8 @@ void OTSender::online() {
 	// CHECK PKM0.length == M.length
 	if (PKM0.size() != M.size()) {
 		fprintf(stderr, "PKM0.size(%d) != M.size(%d)\n", PKM0.size(), M.size());
-		//TODO throw
+		throw ProtocolException(
+				string_printf("PKM0.size(%d) != M.size(%d)\n", PKM0.size(), M.size()).c_str());
 	}
 
 	for (uint i=0; i<M.size(); ++i) {
@@ -185,8 +161,8 @@ BigInt_Vect OTChooser::online() {
 
 	// CHECK C.length = s.length
 	if (C.size() != s.size()) {
-		fprintf(stderr, "C.size(%d) != s.size(%d)\n", C.size(), s.size());
-		//TODO throw
+		throw ProtocolException(
+				string_printf("C.size(%d) != s.size(%d)\n", C.size(), s.size()).c_str());
 	}
 	BigInt_Vect PKS0(s.size());
 	for (uint i=0; i<s.size(); ++i) {

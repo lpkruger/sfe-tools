@@ -32,9 +32,16 @@ public:
 		return strerror(errnum);
 	}
 };
-class EOFException : public IOException {
+struct EOFException : public IOException {
 	virtual const char *what() const throw () {
 		return "<end of file>";
+	}
+};
+struct ProtocolException : public IOException {
+	const char* msg;
+	ProtocolException(const char* msg0) : msg(msg0) {}
+	virtual const char *what() const throw () {
+		return msg;
 	}
 };
 
@@ -228,6 +235,11 @@ template<> void readVector(DataInput *in, byte_buf &vec) {
 	vec.resize(len);
 	in->readFully(&vec[0], vec.size());
 }
+
+
+std::string toBase64(const byte_buf &buf);
+byte_buf fromBase64(const std::string str);
+std::string toHexString(const byte_buf &buf);
 
 #undef D
 

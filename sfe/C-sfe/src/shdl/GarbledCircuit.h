@@ -79,7 +79,7 @@ public:
 	static byte_buf_p xxor(const byte_buf_p &a, const byte_buf_p &b) {
 
 		if (a->size() != b->size())
-			throw std::logic_error("a->size() != b->size()");
+			throw bad_argument("a->size() != b->size()");
 		byte_buf_p c = byte_buf_p(new byte_buf(a->size()));
 		for (uint i=0; i<c->size(); ++i) {
 			(*c)[i] = (*a)[i] ^ (*b)[i];
@@ -92,15 +92,6 @@ public:
 		byte_buf_p b = bb->getEncoded();
 		byte_buf_p c = xxor(a, b);
 		return SecretKey_p(new SFEKey(*c));
-	}
-
-	static string toHexString(byte_buf &buf) {
-		string s(3*buf.size()+1, ' ');
-		for (uint i=0; i<buf.size(); ++i) {
-			sprintf(&s[3*i], "%02x ", buf[i]);
-		}
-		s.resize(3*buf.size()-1);
-		return s;
 	}
 };
 
@@ -129,7 +120,7 @@ public:
 		use_padding = true;
 		mode = mode0;
 		key = dynamic_pointer_cast<SFEKey>(key0);
-		if (!key.get()) throw std::logic_error("key is not SFEKey");
+		if (!key.get()) throw bad_argument("key is not SFEKey");
 	}
 	byte_buf doFinal(const byte_buf &data) {
 		switch(mode) {
@@ -140,7 +131,7 @@ public:
 			mode = -1;
 			return use_padding ? decrypt(key, data) : deencrypt(key, data);
 		default:
-			throw logic_error("Invalid mode");
+			throw bad_argument("Invalid mode");
 		}
 	}
 
@@ -157,7 +148,7 @@ private:
 	byte_buf deencrypt(SFEKey_p &key, const byte_buf &data) {
 		byte_buf xkey = md_xkey(*key->getEncoded());
 		if (xkey.size() < data.size()) {
-			throw logic_error("data too long");
+			throw bad_argument("data too long");
 		}
 
 		byte_buf ret(data.size());
@@ -170,7 +161,7 @@ private:
 	byte_buf encrypt(SFEKey_p &key, const byte_buf &data) {
 		byte_buf xkey = md_xkey(*key->getEncoded());
 		if (xkey.size() - 1 < data.size()) {
-			throw logic_error("data too long");
+			throw bad_argument("data too long");
 		}
 		byte_buf ret(xkey.size());
 		for (uint i=0; i<data.size(); ++i) {
@@ -234,7 +225,7 @@ struct boolean_secrets {
 
 	SFEKey_p operator[](int i) {
 		if (i!=0 && i!=1) {
-			throw logic_error("secret must be 0 or 1");
+			throw bad_argument("secret must be 0 or 1");
 		}
 		if (i)
 			return s1;

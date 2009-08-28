@@ -7,8 +7,8 @@
 
 #include "CircuitCrypt.h"
 
-//#define D(x) std::cout << x
-#define D(x)
+#undef DEBUG
+#include "sillydebug.h"
 
 const string CircuitCrypt::CIPHER = "SHA-1";
 
@@ -64,7 +64,7 @@ GarbledCircuit CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &input
 
 	for (uint i=0; i<cc.inputs.size(); ++i) {
 		inputSecrets[i] = secrets.at(i);
-		D("i " << i << "  " << inputSecrets[i].s0->toHexString() <<
+		DC("i " << i << "  " << inputSecrets[i].s0->toHexString() <<
 				"  " << inputSecrets[i].s1->toHexString() << endl);
 
 		// TODO avoid null pointer on unused inputs
@@ -78,8 +78,8 @@ GarbledCircuit CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &input
 	//gcc.allGates.reserve(gateid.size());
 	// TODO: use an iterator range instead
 	for (gateid_t::iterator it = gateid.begin(); it != gateid.end(); ++it) {
-		//D(it->first << " >= " << cc.inputs.size() << " "<<(it->first >= cc.inputs.size()) << endl;
-		//D("  tt size: " << it->second->truthtab.size() << endl;
+		//DC(it->first << " >= " << cc.inputs.size() << " "<<(it->first >= cc.inputs.size()) << endl;
+		//DC("  tt size: " << it->second->truthtab.size() << endl;
 		if (it->first >= cc.inputs.size())
 			gcc.allGates.push_back(it->second);
 
@@ -139,11 +139,11 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 	//System.out.println("gate.truthtab.length : " + gate.truthtab.length);
 
 	egate->truthtab.resize(gate->truthtab.size());
-	D("resize gate " << egate->id << " truthtab to " << egate->truthtab.size() << endl);
+	DC("resize gate " << egate->id << " truthtab to " << egate->truthtab.size() << endl);
 	for (uint i=0; i<egate->truthtab.size(); ++i) {
 		SFEKey_p thisKey = ((i >> (egate->arity-1) & 0x1) == 0) ? inpsecs[0][0] : inpsecs[0][1];
 		for (int j=1; j<egate->arity; ++j) {
-			D("enc xor " << thisKey->getEncoded()->size() << " " <<
+			DC("enc xor " << thisKey->getEncoded()->size() << " " <<
 			(((i >> (egate->arity-j-1) & 0x1) == 0) ? inpsecs[j][0] : inpsecs[j][1])->getEncoded()->size()
 			<< endl);
 			thisKey = SFEKey::xxor(thisKey,
@@ -154,7 +154,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 		//			try {
 		C.init(C.ENCRYPT_MODE, thisKey);
 		egate->truthtab[i] = C.doFinal(*secr[gate-> truthtab[i]?1:0]->getEncoded());
-		D(SFEKey::toHexString(egate->truthtab[i]) << endl);
+		DC(toHexString(egate->truthtab[i]) << endl);
 
 		//			} catch (GeneralSecurityException ex) {
 		//				ex.printStackTrace();

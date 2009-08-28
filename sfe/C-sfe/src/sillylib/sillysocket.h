@@ -14,6 +14,24 @@
 namespace silly {
 namespace net {
 
+class SocketException : public io::IOException {
+	const char* msg;
+public:
+	SocketException(const char* msg0) : msg(msg0) {}
+	virtual const char *what() const throw () {
+		return msg;
+	}
+};
+struct ConnectException : public SocketException {
+	ConnectException(const char* msg0) : SocketException(msg0) {}
+};
+struct BindException : public SocketException {
+	BindException(const char* msg0) : SocketException(msg0) {}
+};
+struct UnknownHostException : public SocketException {
+	UnknownHostException(const char* msg0) : SocketException(msg0) {}
+};
+
 using namespace silly::io;
 
 class Socket {
@@ -42,12 +60,12 @@ public:
 
 	DataOutput *getOutput() {
 		if (fd < 0)
-			return NULL;  // TODO throw;
+			throw SocketException("getOutput: not connected");
 		return new FDDataOutput(fd);
 	}
 	DataInput *getInput() {
 		if (fd < 0)
-			return NULL;  // TODO throw;
+			throw SocketException("getInput: not connected");
 		return new FDDataInput(fd);
 	}
 };
@@ -64,7 +82,7 @@ public:
 
 		if ( (list_s = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
 			fprintf(stderr, "ECHOSERV: Error creating listening socket.\n");
-			// TODO throw
+			throw SocketException("can't create server socket");
 		}
 		memset(&servaddr, 0, sizeof(servaddr));
 		servaddr.sin_family      = AF_INET;
@@ -76,19 +94,16 @@ public:
 					listening socket, and call listen()  */
 
 		if ( ::bind(list_s, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0 ) {
-			fprintf(stderr, "ECHOSERV: Error calling bind()\n");
-			// TODO throw
+			throw BindException("can't bind server socket");
 		}
-		if ( listen(list_s, LISTENQ) < 0 ) {
-			fprintf(stderr, "ECHOSERV: Error calling listen()\n");
-			// TODO throw
+		if ( ::listen(list_s, LISTENQ) < 0 ) {
+			throw BindException("can't listen server socket");
 		}
 	}
 	Socket* accept() {
 		int conn_s;                /*  connection socket         */
 		if ( (conn_s = ::accept(list_s, NULL, NULL) ) < 0 ) {
-			fprintf(stderr, "ECHOSERV: Error calling accept()\n");
-			// TODO throw
+			throw SocketException("can't accept connection");
 		}
 		return new Socket(conn_s);
 	}

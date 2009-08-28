@@ -9,7 +9,8 @@
 using namespace std;
 using namespace silly;
 
-#ifdef SILLYMEM_H_
+#define _main _main_numtest
+
 using namespace silly::mem;
 
 //template<class T, class D> void wise_ptr<T,D>::dump() {
@@ -56,7 +57,7 @@ static void dumpmem(uint* mem, int n) {
 	}
 	printf("\n");
 }
-static int _main(int argc, char **argv) {
+static int _main_ptrtest(int argc, char **argv) {
 	// compare
 	A *aaa[4] = { new A(1), new A(2), new A(3), new A(4) };
 	A* ap = aaa[0];
@@ -154,9 +155,9 @@ static int _main(int argc, char **argv) {
 	//delete[] msg;
 	return 0;
 }
-#else
 
-static int _main(int argc, char **argv) {
+
+static int _main_stringtest(int argc, char **argv) {
 	vector<string> foo = misc::split("I once was lost", " ");
 	cout << "Hello" << endl;
 	vector<string>::iterator ii;
@@ -170,7 +171,59 @@ static int _main(int argc, char **argv) {
 	}
 	cout << endl;
 }
-#endif
+
+
+
+#include "bigint.h"
+#include "sillyio.h"
+using namespace bigint;
+using namespace silly::misc;
+using namespace silly::io;
+static int _main_numtest(int argc, char **argv) {
+	string sstr;
+	if (argc>1)
+		sstr = argv[1];
+	int base=10;
+	if (argc>2)
+		base = atoi(argv[2]);
+
+
+	//	printf("arg1: %s\n", sstr.c_str());
+	BigInt n = BigInt::parseString(sstr, base);
+	printf("i %d  l %d  ll %d\n", sizeof(int), sizeof(long), sizeof(long long));
+	printf("unsign: %lu %llu\n", n.toULong(), n.toULLong());
+	printf("signed: %ld %lld\n", n.toLong(), n.toLLong());
+	printf("in b32: %s\n", n.toString(32).c_str());
+	printf("in hex: %s\n", n.toString(16).c_str());
+	printf("in dec: %s\n", n.toString().c_str());
+	printf("in oct: %s\n", n.toString(8).c_str());
+	printf("in trn: %s\n", n.toString(3).c_str());
+	printf("in bin: %s\n", n.toString(2).c_str());
+
+	printf("in base64: %s\n", toBase64(BigInt::fromPosBigInt(n)).c_str());
+	printf("pos: %s\n", toHexString(BigInt::fromPosBigInt(n)).c_str());
+	printf("mpi: %s\n", toHexString(BigInt::MPIfromBigInt(n)).c_str());
+	printf("2sc: %s\n", toHexString(BigInt::from2sCompBigInt(n)).c_str());
+//	printf("pad: %s\n", toHexString(BigInt::fromPaddedBigInt(n)).c_str());
+	return 0;
+
+	byte_buf testbuf = BigInt::fromPosBigInt(n);
+	long ttime = currentTimeMillis();
+	for (int i=0; i<10000000; ++i) {
+		toBase64(testbuf);
+	}
+	long ttime2 = currentTimeMillis();
+	printf("reg %ld\n", ttime2 - ttime);
+	ttime = ttime2;
+//	for (int i=0; i<10000000; ++i) {
+//		toBase64_goto_version(testbuf);
+//	}
+//	ttime2 = currentTimeMillis();
+//	printf("krz %ld\n", ttime2 - ttime);
+//	return 0;
+}
+
+
 #include "sillymain.h"
 MAIN("sillytest");
 

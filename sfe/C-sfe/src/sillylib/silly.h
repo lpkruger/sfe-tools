@@ -102,6 +102,10 @@ public:
 };
 #endif
 
+string string_printf(const char *fmt, ...);
+long currentTimeMillis();
+
+
 }
 }
 #endif
