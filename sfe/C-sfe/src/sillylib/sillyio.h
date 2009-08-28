@@ -73,7 +73,7 @@ public:
 		}
 	}
 	void write(const byte_buf &v, int off=0, int len=-1) {
-		if (len==-1 || len>v.size())
+		if (uint(len)>v.size())
 			len = v.size();
 		return write(&v[off], len);
 	}
@@ -143,9 +143,9 @@ public:
 		}
 	}
 	void readFully(byte_buf &c, int off=0, int len=-1) {
-		if (len==-1)
+		if (len<0)
 			len = c.size();
-		else if (len>c.size())
+		else if (uint(len)>c.size())
 			c.resize(len);
 		return readFully(&c[off], len);
 	}

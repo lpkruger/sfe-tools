@@ -1,6 +1,6 @@
 #include "silly.h"
 #include "sillymem.h"
-#include "sillymem3.h"
+//#include "sillymem3.h"
 
 #include <iostream>
 #include <string.h>
@@ -190,7 +190,7 @@ static int _main_numtest(int argc, char **argv) {
 
 	//	printf("arg1: %s\n", sstr.c_str());
 	BigInt n = BigInt::parseString(sstr, base);
-	printf("i %d  l %d  ll %d\n", sizeof(int), sizeof(long), sizeof(long long));
+	printf("i %lu  l %lu  ll %lu  BN_ULONG %lu\n", sizeof(int), sizeof(long), sizeof(long long), sizeof(BN_ULONG));
 	printf("unsign: %lu %llu\n", n.toULong(), n.toULLong());
 	printf("signed: %ld %lld\n", n.toLong(), n.toLLong());
 	printf("in b32: %s\n", n.toString(32).c_str());
@@ -220,7 +220,7 @@ static int _main_numtest(int argc, char **argv) {
 //	}
 //	ttime2 = currentTimeMillis();
 //	printf("krz %ld\n", ttime2 - ttime);
-//	return 0;
+	return 0;
 }
 
 

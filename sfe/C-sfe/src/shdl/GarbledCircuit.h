@@ -183,7 +183,7 @@ private:
 		for (uint i=0; i<dec.size(); ++i) {
 			dec[i] = (data[i] ^ xkey[i]);
 		}
-		int len = dec[dec.size() - 1];
+		uint len = dec[dec.size() - 1];
 		if (len > dec.size() - 1 || len < 0)
 			throw bad_padding("Invalid data range");
 		for (uint i=len; i<dec.size()-1; ++i) {
@@ -201,14 +201,14 @@ private:
 
 class SFEKeyGenerator {
 public:
-	const static int default_length = 80;
-	int length;
+	const static uint default_length = 80;
+	uint length;
 	SFEKeyGenerator() : length(default_length) {}
 	void init(int length0) {
 		length = length0;
 	}
 
-	int getLength() {
+	uint getLength() {
 		return length;
 	}
 

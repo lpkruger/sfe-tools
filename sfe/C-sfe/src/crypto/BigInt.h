@@ -327,7 +327,8 @@ public:
 	static BigInt genPrime(int bits) {
 		BigInt ret;
 		BIGNUM *n =	BN_generate_prime(ret, 129, false, NULL, NULL, NULL, NULL);
-		// TODO: check n for NULL
+		if (!n)
+			throw math_exception("error generating prime number");
 		return ret;
 	}
 	string toHexString() const {
@@ -463,9 +464,9 @@ public:
 		if (byteLength() > len)
 			return (unsigned long long)(long long) -1;
 		byte_buf buf = fromPosBigInt(*this, len);
-		int offset = buf.size() - len;
+		uint offset = buf.size() - len;
 		unsigned long long ret = 0;
-		for (int i=offset; i<buf.size(); ++i) {
+		for (uint i=offset; i<buf.size(); ++i) {
 			ret <<= 8;
 			ret |= buf[i];
 		}
@@ -641,7 +642,7 @@ public:
 			else if (c>='a' && c<='z')
 				d = c-'a'+10;
 
-			if (d<0 || d>=base)
+			if (d<0 || uint(d)>=base)
 				throw math_exception("unexpected character parsing string");
 
 			num.multiplyThis((ulong)base).addThis((ulong)d);
