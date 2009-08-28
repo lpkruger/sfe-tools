@@ -32,11 +32,24 @@ int iarpa_ko_populate_test_db(DDB &ddb, int size) {
 	}
 }
 
+static BigInt bi_str(const char *s) {
+	return BigInt::toPaddedBigInt(byte_buf(s, s+strlen(s)));
+}
+static byte_buf str(const char *s) {
+	return byte_buf(s, s+strlen(s));
+}
+static const char* str(byte_buf &b) {
+	static string str;
+	b.push_back(0);
+	string((const char*)&b[0]).swap(str);
+	return str.c_str();
+}
+
 int iarpa::ko::test_ko(int argc, char **argv) {
 	for (int trial=0; trial<min(100,test_sizes_length); ++trial) {
 		DDB ddb;
 		iarpa_ko_populate_test_db(ddb, test_sizes[trial]);
-
+		ddb.put(str("foo"), str("bar"));
 		Server okS;
 		Client okC;
 
@@ -45,7 +58,10 @@ int iarpa::ko::test_ko(int argc, char **argv) {
 		okC.rsa_n = okS.rsa_n();
 		okC.rsa_e = okS.rsa_e();
 		long time2 = currentTimeMillis();
-		BigInt b_key(2);
+
+		//BigInt b_key(2);
+		BigInt b_key(bi_str("foo"));
+
 		BigInt Y_ = okC.clientxfer1(b_key);
 		BigInt X_ = okS.serverxfer(Y_);
 		byte_buf mi = okC.clientxfer2(b_key, X_, okS.mhat);
@@ -53,10 +69,12 @@ int iarpa::ko::test_ko(int argc, char **argv) {
 			printf("%02x ", mi[j]);
 		}
 		printf("\n");
+		printf("As string: %s\n", str(mi));
+
 
 		long time3 = currentTimeMillis();
 		printf("DB size %d: %ld online %ld offline\n",
-				ddb.thedb.size(), (time3-time2), (time2-time1));
+				ddb.size(), (time3-time2), (time2-time1));
 		//System.out.println();
 	}
 	return 0;
