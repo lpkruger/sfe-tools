@@ -102,7 +102,8 @@ public:
 };
 #endif
 
-string string_printf(const char *fmt, ...);
+string string_printf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+
 long currentTimeMillis();
 
 

@@ -91,7 +91,14 @@ struct FmtFile {
 	VarDesc getVarDesc() {
 			return vardesc;
 	}
+	int numPrefix(const char* prefix, int party);
 
+	int numInputs(int party) {
+		return numPrefix("input.", party);
+	}
+	int numOutputs(int party) {
+		return numPrefix("output.", party);
+	}
 	static FmtFile parseFmt(istream &in);
 };
 

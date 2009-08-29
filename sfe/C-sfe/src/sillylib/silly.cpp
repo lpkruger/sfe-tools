@@ -171,7 +171,7 @@ string silly::misc::string_printf(const char *fmt, ...) {
 		n = vsnprintf((char*)&buf[0], buf.size(), fmt, ap);
 		va_end(ap);
 		/* If that worked, return the string. */
-		if (n > -1 && n < buf.size())
+		if (n > -1 && uint(n) < buf.size())
 			return string((char*)&buf[0]);
 		/* Else try again with more space. */
 		if (n > -1)    /* glibc 2.1 */

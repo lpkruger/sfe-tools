@@ -150,7 +150,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 				g->arity = arity;
 				g->setComment(comment);
 
-				g->write(cout);
+				//g->write(cout);
 
 				gates[id] = g;
 			} else {
@@ -227,6 +227,19 @@ public static VarDesc readFile(String file) {
 		}
 	}
 #endif
+
+
+int FmtFile::numPrefix(const char* prefix, int party) {
+	int len = strlen(prefix);
+	int count = 0;
+	map<string,Obj>::iterator it;
+	for (it=mapping.begin(); it!=mapping.end(); ++it) {
+		Obj &obj = it->second;
+		if (obj.party == party && obj.name.substr(0, len) == prefix)
+			count += obj.bits.size();
+	}
+	return count;
+}
 
 void FmtFile::mapBits(BigInt &n, valmap vals, string name) {
 	//System.out.println("set bits: " + name + " = " + n);
@@ -410,6 +423,14 @@ static int _main(int argc, char **argv) {
 			writeVector(&fdout, inputSecrets);
 			fout.close();
 		}
+
+		bool read_back=true;
+		if (read_back) {
+			ifstream fin("gcircuit.bin");
+			silly::io::istreamDataInput fdin(fin);
+			gcc = GarbledCircuit::readCircuit(&fdin);
+		}
+
 		cout << "evaluate garbled circuit" << endl;
 		GCircuitEval geval;
 		vector<SecretKey_p> gcirc_input(inputSecrets.size());

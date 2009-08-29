@@ -187,10 +187,15 @@ static int _main_numtest(int argc, char **argv) {
 	if (argc>2)
 		base = atoi(argv[2]);
 
+	typedef int i_qi __attribute__((__mode__(__QI__)));
+	typedef int i_hi __attribute__((__mode__(__HI__)));
+	typedef int i_si __attribute__((__mode__(__SI__)));
+	typedef int i_di __attribute__((__mode__(__DI__)));
+	//typedef int i_ti __attribute__((__mode__(__TI__)));
 
 	//	printf("arg1: %s\n", sstr.c_str());
 	BigInt n = BigInt::parseString(sstr, base);
-	printf("i %lu  l %lu  ll %lu  BN_ULONG %lu\n", sizeof(int), sizeof(long), sizeof(long long), sizeof(BN_ULONG));
+	printf("i %u  l %u  ll %u  BN_ULONG %u\n", sizeof(int), sizeof(long), sizeof(long long), sizeof(BN_ULONG));
 	printf("unsign: %lu %llu\n", n.toULong(), n.toULLong());
 	printf("signed: %ld %lld\n", n.toLong(), n.toLLong());
 	printf("in b32: %s\n", n.toString(32).c_str());
@@ -228,3 +233,4 @@ static int _main_numtest(int argc, char **argv) {
 MAIN("sillytest");
 
 
+#include "sillythread.h"

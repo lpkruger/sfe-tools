@@ -262,6 +262,9 @@ public:
 	int byteLength() const {
 		return BN_num_bytes(*this);
 	}
+	int bitLength() const {
+		return BN_num_bits(*this);
+	}
 
 	BigInt xxor(const BigInt &b) const {
 		byte_buf aa = fromPosBigInt(*this);

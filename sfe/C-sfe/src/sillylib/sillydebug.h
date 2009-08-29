@@ -18,7 +18,7 @@ template<class T> static inline void D(T x) {}
 #include <iostream>
 #include <stdio.h>
 #define DD(x) x
-#define DC(x) cout << x
+#define DC(x) std::cout << x << std::endl;
 #define DF printf
 
 static void D(const char* s) {

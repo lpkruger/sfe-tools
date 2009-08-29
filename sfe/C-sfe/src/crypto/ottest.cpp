@@ -71,7 +71,7 @@ static int _main(int argc, char **argv) {
 		vector<bool> ss(args.size() - 1);
 		for (uint i=1; i<args.size(); ++i) {
 			if (args[i]!="0" && args[i]!="1") {
-				throw bad_argument(string_printf("Bad s: %s", args[i]).c_str());
+				throw bad_argument(string_printf("Bad s: %s", args[i].c_str()).c_str());
 			}
 			ss[i-1] = args[i]=="1" ? true : false;
 		}

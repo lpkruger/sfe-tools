@@ -37,6 +37,8 @@ void GarbledCircuit::writeCircuit(DataOutput *out) {
 	out->writeInt(outputSecrets.size());
 
 	for (uint i=0; i<outputSecrets.size(); ++i) {
+//		cout << "write osecret0 len " << outputSecrets[i][0]->getEncoded()->size() << endl;
+//		cout << "write osecret1 len " << outputSecrets[i][1]->getEncoded()->size() << endl;
 		out->write(*outputSecrets[i][0]->getEncoded());
 		out->write(*outputSecrets[i][1]->getEncoded());
 	}
@@ -49,6 +51,7 @@ void GarbledCircuit::writeCircuit(DataOutput *out) {
 			out->writeInt(allGates[i]->inputs[j]);
 		}
 		for (uint j=0; j<allGates[i]->truthtab.size(); ++j) {
+//			cout << "write truthtab len " << allGates[i]->truthtab[j].size() << endl;
 			out->write(allGates[i]->truthtab[j]);
 		}
 	}
@@ -79,6 +82,7 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput *in) {
 
 	gcc.allGates.resize(in->readInt());
 	for (uint i=0; i<gcc.allGates.size(); ++i) {
+		gcc.allGates[i] = new GarbledGate();
 		gcc.allGates[i]->id = i + gcc.nInputs;
 		gcc.allGates[i]->arity = in->readByte();
 		gcc.allGates[i]->inputs.resize(gcc.allGates[i]->arity);
@@ -102,7 +106,7 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput *in) {
 		gcc.allGates[i]->truthtab.resize(tts);
 		for (uint j=0; j<gcc.allGates[i]->truthtab.size(); ++j) {
 			gcc.allGates[i]->truthtab[j].resize(seclen);
-			in->readFully(&gcc.allGates[i]->truthtab[j][0], gcc.allGates[i]->truthtab[j].size());
+			in->readFully(gcc.allGates[i]->truthtab[j]);
 		}
 	}
 	return gcc;

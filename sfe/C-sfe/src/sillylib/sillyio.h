@@ -65,16 +65,21 @@ public:
 	void write(const byte* c, int len) {
 		int cnt=0;
 		while (cnt<len) {
+//			if(cnt>0)
+//				std::cout << "count is " << cnt << std::endl;
 			int n = tryWrite(c+cnt, len-cnt);
 			if (n==0) {
 				throw EOFException();
 			}
+			if (n<0) {
+				throw IOException(0);
+			}
 			cnt+=n;
 		}
 	}
-	void write(const byte_buf &v, int off=0, int len=-1) {
-		if (uint(len)>v.size())
-			len = v.size();
+	void write(const byte_buf &v, uint off=0, int len=-1) {
+		if (uint(len)>v.size()-off)
+			len = v.size()-off;
 		return write(&v[off], len);
 	}
 
@@ -182,6 +187,8 @@ protected:
 
 class istreamDataInput : public DataInput {
 	std::istream &in;
+
+public:
 	istreamDataInput(std::istream &in0) : in(in0) {}
 
 protected:

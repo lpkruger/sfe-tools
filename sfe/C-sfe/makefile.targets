@@ -3,3 +3,6 @@ symlinks:
 	
 symlinksclean:
 	../scripts/mksymlinks clean
+
+clean_all_objfiles:
+	find .. -name \*.o -print -exec rm {} \;
