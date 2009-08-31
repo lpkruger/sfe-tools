@@ -15,7 +15,6 @@
 
 using std::vector;
 
-const static int L = 8;
 const static int sync_const = 0x541C4A0;
 
 class SSHYao {
@@ -37,6 +36,7 @@ public:
 
 class SSHYaoChooser : public SSHYao {
 public:
+	const static int L = 32;
 	bit_vector go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs);
 };
 

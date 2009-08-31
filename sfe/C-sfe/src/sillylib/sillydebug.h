@@ -8,7 +8,7 @@
 #ifndef SILLYDEBUG_H_
 #define SILLYDEBUG_H_
 
-#ifndef SILLYMEM_H_
+#ifndef SILLYMEM_H_			// also declares this
 void print_backtrace(int depth=10);
 #endif
 
@@ -16,7 +16,8 @@ void print_backtrace(int depth=10);
 template<class T> static inline void D(T x) {}
 #define DD(x)
 #define DC(x)
-static inline void DF(...) {}
+static inline void sillydebug_dummy(...) {}
+#define DF sillydebug_dummy
 #else
 #include <iostream>
 #include <stdio.h>
@@ -24,9 +25,11 @@ static inline void DF(...) {}
 #define DD(x) x
 #define DC(x) std::cerr << x << std::endl;
 #define DF debug_printf
+
+#ifndef SILLYTHREAD_H_		// also declares this
 void debug_printf(const char *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
-
+#endif
 
 static inline void Dlevel(int lev) {
 	char out[lev+1];

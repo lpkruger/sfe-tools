@@ -9,6 +9,15 @@
 #ifndef SILLYMEM_H_
 #define SILLYMEM_H_
 
+//#define USE_STD_SHARED_PTR 1
+
+#if USE_STD_SHARED_PTR
+#define wise_ptr shared_ptr
+namespace silly {
+namespace mem {
+}
+}
+#else
 //#define DEBUG_WISEPTR 1
 #define CHECK_NULL_PTR 0
 
@@ -264,4 +273,7 @@ namespace types {
 }
 #undef DC
 #undef DEBUG_WISEPTR
+
+#endif
+
 #endif /* SILLYMEM_H_ */

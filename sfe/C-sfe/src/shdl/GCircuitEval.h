@@ -14,6 +14,11 @@
 
 class GCircuitEval : public CircuitCrypt {
 	GarbledGate_p getGate(int id, GarbledCircuit &gcc) {
+		// DEBUG:
+//		if (id<gcc.nInputs || id>20000)
+//			memset(0,0,1);
+
+
 		return gcc.allGates[id - gcc.nInputs];
 	}
 	byte_buf_p eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int, byte_buf_p> &vals);

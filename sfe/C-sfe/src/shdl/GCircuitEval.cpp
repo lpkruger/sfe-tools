@@ -8,7 +8,7 @@
 #include "GCircuitEval.h"
 #include <string>
 
-#undef DEBUG
+//#define DEBUG
 #include "sillydebug.h"
 
 GCircuitEval::GCircuitEval() {
@@ -33,6 +33,7 @@ bit_vector GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) {
 	}
 #endif
 	map<int,byte_buf_p> vals;
+	DF("adding %d input secrets", insk.size());
 	for (uint i=0; i<insk.size(); ++i) {
 		vals[i] = insk[i]->getEncoded();
 	}
@@ -78,15 +79,24 @@ bit_vector GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) {
 //	return it->second;
 //}
 
-template<class T,class U> static inline wise_ptr<T> map_get(const std::map<U,wise_ptr<T> > &map, const U &key) {
+template<class T,class U> static inline wise_ptr<T> map_get(const std::map<U,wise_ptr<T> > &m, const U &key) {
 #if DEBUG_WISEPTR
 	std::D("map get: wise_ptr overload" << std::endl;
 #endif
-	typedef typename std::map<U,wise_ptr<T> >::const_iterator map_it;
-	map_it it = map.find(key);
-	if (it == map.end())
-		return wise_ptr<T>(NULL);
+	//DF("map has %d elements", m.size());
+	typedef typename map<U,wise_ptr<T> >::const_iterator map_it;
+	map_it it = m.find(key);
+	if (it == m.end())
+		return wise_ptr<T>((T*)NULL);
 	return it->second;
+}
+
+void D(map<int,byte_buf_p> &m) {
+	map<int,byte_buf_p>::iterator it;
+	fprintf(stderr, "dump vals map\n");
+	for (it=m.begin(); it!=m.end(); ++it) {
+		fprintf(stderr, "{ %d, %s }\n", it->first, toHexString(*it->second).c_str());
+	}
 }
 
 byte_buf_p GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,byte_buf_p> &vals) {
@@ -97,6 +107,10 @@ byte_buf_p GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,
 
 	byte_buf_p ink = map_get(vals, g->inputs[0]);
 	if (ink.get() == NULL) {
+		if (g->inputs[0] < gcc.nInputs) {
+			fprintf(stderr, "bad0!\n");
+			D(vals);
+		}
 		ink = eval_rec(getGate(g->inputs[0], gcc), gcc, vals);
 	}
 
@@ -104,6 +118,8 @@ byte_buf_p GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,
 	for (int i=1; i<g->arity; ++i) {
 		byte_buf_p ink2 = map_get(vals, g->inputs[i]);
 		if (ink2.get() == NULL) {
+			if (g->inputs[i] < gcc.nInputs)
+				fprintf(stderr, "bad%d!\n", g->inputs[i]);
 			ink2 = eval_rec(getGate(g->inputs[i], gcc), gcc, vals);
 		}
 		//D("lengths: " << ink->size() << "  " << ink2->size() << endl);

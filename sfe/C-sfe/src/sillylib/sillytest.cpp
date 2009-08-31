@@ -17,12 +17,13 @@ using namespace silly;
 #define _main _main_threadtest
 
 using namespace silly::mem;
+using namespace silly::thread;
 
 static int count_me;
 static Mutex count_lock;
 static void* increment_it(void* arg) {
-	//Lock lock(&count_lock);
-	SYNCHRONIZE(count_lock);
+	Lock lock(&count_lock);
+	//SYNCHRONIZE(count_lock);
 	//printf("adding 1\n");
 	int* num = (int*)arg;
 	int val = *num;
@@ -83,6 +84,7 @@ static int _main_threadtest(int argc, char **argv) {
 //typedef wise_ptr<const string, news_dealloc<const string> > string_ref_ptr;
 typedef wise_ptr<const string> string_ref_ptr;
 
+#ifndef USE_STD_SHARED_PTR
 static void dump(string_ref_ptr &p1, string_ref_ptr &p2) {
 	cout << "p1: " ; p1.dump();
 	cout << "p2: " ; p2.dump();
@@ -217,7 +219,7 @@ static int _main_ptrtest(int argc, char **argv) {
 	//delete[] msg;
 	return 0;
 }
-
+#endif
 
 static int _main_stringtest(int argc, char **argv) {
 	vector<string> foo = misc::split("I once was lost", " ");

@@ -79,17 +79,69 @@ void D(const boolean_secrets &secr, int lev=0) {
 //	VarParty(const string &w) : who(w) {}
 //	bool operator()()
 //};
+
+#define USE_THREADS 4
+
+#if USE_THREADS
+#include "../sillylib/sillythread.h"
+using namespace silly::thread;
+class CircuitCrypter : public Runnable {
+	NOCOPY(CircuitCrypter)
+
+public:
+	int n;
+	Circuit_p cc;
+	GarbledCircuit_p *gcc;
+	vector<boolean_secrets> *inpsecs;
+	CircuitCrypter(int n0, Circuit_p c0, GarbledCircuit_p *g0, vector<boolean_secrets> *i0)
+			: n(n0), cc(c0), gcc(g0), inpsecs(i0) {}
+	void* run() {
+		CircuitCrypt crypt;
+		fprintf(stderr, "circuitcrypter %d starting\n", n);
+		*gcc = crypt.encrypt(*cc, *inpsecs);
+		return NULL;
+	}
+};
+#endif
+
 void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	FmtFile::VarDesc vars = fmt.getVarDesc();
 
-	CircuitCrypt crypt;
+	int L = in->readInt();
 	vector<vector<boolean_secrets> > inputSecrets(L);
 
+	long time_start = currentTimeMillis();
+
 	vector<GarbledCircuit_p> gcc(L);
-	for (int n=0; n<L; ++n) {
-		fprintf(stderr, "crypt circuit %d\n", n+1);
-		gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
+
+#if USE_THREADS
+	{
+		ThreadPool pool(numCPUs()*2);
+		CircuitCrypter *crypters[L];
+		for (int n=0; n<L; ++n) {
+			crypters[n] = new CircuitCrypter(n, cc, &gcc[n], &inputSecrets[n]);
+			pool.submit(crypters[n]);
+		}
+		pool.stopWait();
+		//pool.waitIdle();
+		for (int n=0; n<L; ++n) {
+			delete crypters[n];
+		}
+
 	}
+
+#else
+	{
+		CircuitCrypt crypt;
+		for (int n=0; n<L; ++n) {
+			fprintf(stderr, "crypt circuit %d\n", n+1);
+			gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
+		}
+	}
+#endif
+	long time_crypt = currentTimeMillis();
+	fprintf(stderr, "crypted %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
+			L, (time_crypt-time_start)/1.0e3, (time_crypt-time_start)/(1.0e3*L));
 
 #if DEBUG
 	for (int n=0; n<L; ++n) {
@@ -136,12 +188,19 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	//out->writeInt(otvals.size());
 	PinkasNaorOT ot;
 
+	long ot_start = currentTimeMillis();
+
 	OTSender sender(otvals, &ot);
 	sender.setStreams(in, out);
 	fprintf(stderr, "OT precalc\n");
 	sender.precalc();
+	long ot_calc = currentTimeMillis();
 	fprintf(stderr, "OT online\n");
 	sender.online();
+	long ot_end = currentTimeMillis();
+
+	fprintf(stderr, "OT in %0.3f secs (%0.3f + %0.3f)\n", (ot_end-ot_start)/1000.0,
+				(ot_end-ot_calc)/1000.0, (ot_calc-ot_start)/1000.0);
 
 	check_sync();
 
@@ -198,7 +257,27 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	check_sync();
 }
 
+#if USE_THREADS
+class CircuitEvaluator : public Runnable {
+	NOCOPY(CircuitEvaluator)
+public:
+	int n;
+	GarbledCircuit_p gcc;
+	vector<SecretKey_p> *inpsecs;
+	vector<bool> circ_out;
+	CircuitEvaluator(int n0, GarbledCircuit_p g0, vector<SecretKey_p> *i0)
+			: n(n0), gcc(g0), inpsecs(i0) {}
+	void* run() {
+		GCircuitEval geval;
+		fprintf(stderr, "circuitevaluator %d starting\n", n);
+		circ_out = geval.eval(*gcc, *inpsecs);
+		return NULL;
+	}
+};
+#endif
+
 bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
+	out->writeInt(L);
 	DC("have " << inputs.size() << " inputs");
 	FmtFile::VarDesc vars = fmt.getVarDesc();
 
@@ -210,13 +289,16 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	PinkasNaorOT ot;
 	OTChooser chooser(allinputs, &ot);
 	chooser.setStreams(in, out);
+	long ot_start = currentTimeMillis();
 	fprintf(stderr, "OT precalc\n");
 	chooser.precalc();
-
+	long ot_calc = currentTimeMillis();
 	fprintf(stderr, "OT online\n");
 	BigInt_Vect all_myotsecs_flat =
 			chooser.online();
-
+	long ot_end = currentTimeMillis();
+	fprintf(stderr, "OT in %0.3f secs (%0.3f + %0.3f)\n", (ot_end-ot_start)/1000.0,
+			(ot_end-ot_calc)/1000.0, (ot_calc-ot_start)/1000.0);
 	check_sync();
 
 	vector<SFEKey_p> all_myinpsecs_flat(all_myotsecs_flat.size());
@@ -263,6 +345,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	vector_perm<GarbledCircuit_p> eval_gcc =
 			verify_gcc.negate_perm();
 
+	int LL = eval_gcc.size();
 	vector<vector<SFEKey_p> > yourinputsecs;
 	readVector(in, yourinputsecs);
 
@@ -270,28 +353,53 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	vector_perm<vector<SFEKey_p> > myinputsecs(
 			all_myinputsecs, eval_perm);
 
-	vector<SecretKey_p> gcirc_input(cc->inputs.size());
-	bit_vector circ_out;
-	bit_vector output0(eval_gcc.size());
-	for (uint n=0; n<eval_gcc.size(); ++n) {
+	vector<vector<SecretKey_p> > gcirc_input(LL);
+	for (uint n=0; n<LL; ++n) {
+		gcirc_input[n].resize(cc->inputs.size());
 		int ja=0;
 		int jb=0;
-		for (uint i=0; i<gcirc_input.size(); ++i) {
+		for (uint i=0; i<gcirc_input[n].size(); ++i) {
 			if (vars.who.at(i) == "A") {
-				gcirc_input[i] = yourinputsecs[n].at(ja++);
+				gcirc_input[n][i] = yourinputsecs[n].at(ja++);
 			} else if (vars.who.at(i) == "B") {
-				gcirc_input[i] = myinputsecs[n].at(jb++);
+				gcirc_input[n][i] = myinputsecs[n].at(jb++);
 			}
 		}
+	}
 
+	bit_vector output0(LL);
+	long time_start = currentTimeMillis();
+
+#if USE_THREADS
+	ThreadPool pool(numCPUs()*2);
+	CircuitEvaluator *evaluators[LL];
+	for (int n=0; n<LL; ++n) {
 		fprintf(stderr, "eval circuit %u\n", n);
-		D(gcirc_input);
-		circ_out = geval.eval(*eval_gcc[n], gcirc_input);
+		D(gcirc_input[n]);
+		evaluators[n] = new CircuitEvaluator(
+				n, eval_gcc[n], &gcirc_input[n]);
+		pool.submit(evaluators[n]);
+		//evaluators[n]->run();
+	}
+	pool.stopWait();
+	for (int n=0; n<LL; ++n) {
+		if (evaluators[n]->circ_out.size() != 1)
+			throw ProtocolException("circuit should have 1 output");
+		output0[n] = evaluators[n]->circ_out[0];
+		delete evaluators[n];
+	}
+#else
+	for (int n=0; n<LL; ++n) {
+		bit_vector circ_out = geval.eval(*eval_gcc[n], gcirc_input[n]);
 		if (circ_out.size() != 1)
 			throw ProtocolException("circuit should have 1 output");
 		output0[n] = circ_out[0];
 	}
+#endif
 
+	long time_eval = currentTimeMillis();
+	fprintf(stderr, "evaled %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
+				L, (time_eval-time_start)/1.0e3, (time_eval-time_start)/(1.0e3*L));
 	check_sync();
 	return output0;
 }

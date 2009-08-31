@@ -79,7 +79,7 @@ GarbledCircuit_p GarbledCircuit::readCircuit(DataInput *in) {
 
 	gcc.allGates.resize(in->readInt());
 	for (uint i=0; i<gcc.allGates.size(); ++i) {
-		gcc.allGates[i] = new GarbledGate();
+		gcc.allGates[i] = GarbledGate_p(new GarbledGate());
 		gcc.allGates[i]->id = i + gcc.nInputs;
 		gcc.allGates[i]->arity = in->readByte();
 		gcc.allGates[i]->inputs.resize(gcc.allGates[i]->arity);

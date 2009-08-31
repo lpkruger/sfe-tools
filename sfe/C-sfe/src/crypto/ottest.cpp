@@ -15,7 +15,8 @@
 
 using namespace std;
 using namespace silly;
-
+using net::Socket;
+using net::ServerSocket;
 static int main3(int argc, char **argv) {
 	BigInt n = 24;
 	n = n.pow(5); // TODO
@@ -31,14 +32,14 @@ static int _main(int argc, char **argv) {
 	for (int i=1; i<argc; ++i) {
 		args[i-1] = argv[i];
 	}
-	wise_ptr<net::Socket> s;
-	wise_ptr<net::ServerSocket> ss;
+	wise_ptr<Socket> s;
+	wise_ptr<ServerSocket> ss;
 	args.at(0);
 	if (args[0] == ("A")) {
-		s = new net::Socket("localhost", 5435);
+		s = wise_ptr<Socket>(new net::Socket("localhost", 5435));
 	} else if (args[0] == ("B")) {
-		ss = new net::ServerSocket(5435);
-		s = ss->accept();
+		ss = wise_ptr<ServerSocket>(new net::ServerSocket(5435));
+		s = wise_ptr<Socket>(ss->accept());
 	} else {
 		fprintf(stderr, "Please specify A or B\n");
 		return 1;

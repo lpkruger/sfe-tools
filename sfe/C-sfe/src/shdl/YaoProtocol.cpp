@@ -81,8 +81,8 @@ bit_vector YaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) 
 		if (vars.who.at(i) == "A") {
 			gcirc_input[i] = yourinpsecs.at(ja++);
 		} else if (vars.who.at(i) == "B") {
-			gcirc_input[i] = new SFEKey(
-					BigInt::fromPaddedBigInt(myinpsecs.at(jb++)));
+			gcirc_input[i] = SFEKey_p(new SFEKey(
+					BigInt::fromPaddedBigInt(myinpsecs.at(jb++))));
 		}
 	}
 	bit_vector circ_out = geval.eval(*gcc, gcirc_input);

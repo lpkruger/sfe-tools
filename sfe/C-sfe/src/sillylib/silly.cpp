@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 using std::vector;
 using std::string;
@@ -22,6 +23,27 @@ long silly::misc::currentTimeMillis() {
 	long ret = tv.tv_sec*1000;
 	ret += (tv.tv_usec/1000);
 	return ret;
+}
+
+int silly::misc::numCPUs() {
+	int cpu_count=1;
+	std::ifstream cpuinfo("/proc/cpuinfo");
+	string line;
+	while (!cpuinfo.eof()) {
+		std::getline(cpuinfo, line);
+		const char* processor = "processor";
+		if (line.substr(0, strlen(processor)) == processor) {
+			//std::cout << line << std::endl;
+			uint space = line.rfind(' ');
+			if (space != line.npos) {
+				int num = strtol(line.substr(space+1).c_str(), NULL, 10);
+				++num;
+				if (num > cpu_count)
+					cpu_count = num;
+			}
+		}
+	}
+	return cpu_count;
 }
 
 string silly::io::toBase64(const byte_buf &buf) {
@@ -234,7 +256,11 @@ string silly::misc::string_printf(const char *fmt, ...) {
 
 	}
 }
+
+//extern uint ::pthread_self();
+
 void debug_printf(const char *fmt, ...) {
+	fprintf(stderr, "tid %08x  ", (uint) pthread_self());
 	va_list ap;
 	int n;
 	va_start(ap, fmt);

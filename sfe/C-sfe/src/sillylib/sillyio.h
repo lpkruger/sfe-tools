@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <netinet/in.h>
 #include <string.h>
 #include "sillycommon.h"
