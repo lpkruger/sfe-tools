@@ -54,11 +54,12 @@ BigInt PinkasNaorOT::hash(const BigInt &p) {
 	return BigInt::toPosBigInt(md);
 }
 
-static void writeObject(DataOutput *out, const BigInt &a) {
+#if 1
+inline void writeObject(DataOutput *out, const BigInt &a) {
 	byte_buf buf = BigInt::MPIfromBigInt(a);
 	out->write(buf);
 }
-static void readObject(DataInput *in, BigInt &a) {
+inline void readObject(DataInput *in, BigInt &a) {
 	int len = in->readInt();
 	byte_buf buf(len+4);
 	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
@@ -66,6 +67,7 @@ static void readObject(DataInput *in, BigInt &a) {
 	//D(buf);
 	a = BigInt::MPItoBigInt(buf);
 }
+#endif
 
 
 void OTSender::go() {

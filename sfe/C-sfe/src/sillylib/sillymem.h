@@ -77,10 +77,19 @@ public:
 		Twptr &p0 = (wise_ptr<T>&)(p1);
 		setWPtr(p0);
 	}
+
+#if USE_RVALREFS
 	wise_ptr(Twptr &&p0) {
 		cp = p0.cp;
 		p0.cp = NULL;
 	}
+	Twptr& operator=(Twptr &&p0) {
+		free();
+		cp = p0.cp;
+		p0.cp = NULL;
+		return *this;
+	}
+#endif
 
 	Twptr& operator=(T* p0) {
 		free();
@@ -91,12 +100,7 @@ public:
 		}
 		return *this;
 	}
-	Twptr& operator=(Twptr &&p0) {
-		free();
-		cp = p0.cp;
-		p0.cp = NULL;
-		return *this;
-	}
+
 	Twptr& operator=(const Twptr &p0) {
 		free();
 		setWPtr(p0);
@@ -124,6 +128,12 @@ public:
 			return cp->p;
 		}
 		return NULL;
+	}
+
+	int refcnt() const {
+		if (cp)
+			return cp->refcnt;
+		return 0;
 	}
 
 	void free() {

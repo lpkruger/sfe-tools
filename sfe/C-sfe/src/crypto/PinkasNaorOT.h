@@ -32,11 +32,6 @@ public:
 	static BigInt findGenerator(const BigInt &p);
 };
 
-
-typedef vector<BigInt> BigInt_Vect;
-typedef vector<BigInt_Vect> BigInt_Mtrx;
-typedef vector<BigInt_Mtrx> BigInt_Cube;
-
 class OTSender {
 	PinkasNaorOT *ot;
 	DataInput *in;
@@ -74,12 +69,12 @@ class OTChooser {
 	DataInput *in;
 	DataOutput *out;
 
-	vector<bool> s; // 0 or 1
+	bit_vector s; // 0 or 1
 
 	BigInt_Vect k;
 	BigInt_Mtrx PK;
 public:
-	OTChooser(vector<bool> &s0, PinkasNaorOT *ot0) : ot(ot0) {
+	OTChooser(bit_vector &s0, PinkasNaorOT *ot0) : ot(ot0) {
 		s.swap(s0);
 	}
 

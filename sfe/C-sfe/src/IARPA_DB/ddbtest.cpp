@@ -81,9 +81,75 @@ int iarpa::ko::test_ko(int argc, char **argv) {
 }
 
 
-static int _main(int argc, char **argv) {
+static int _main_dbtest(int argc, char **argv) {
 	return iarpa::ko::test_ko(argc, argv);
 }
+
+
 #include "../sillylib/sillymain.h"
-MAIN("dbtest");
+MAINF("dbtest", _main_dbtest);
+
+
+
+#include "sillyio.h"
+#include <stdexcept>
+using silly::net::ServerSocket;
+using silly::net::Socket;
+
+extern int iarpa_ko_populate_test_db(iarpa::DDB &ddb, int size);
+
+static int _main_kotest(int argc, char **argv) {
+	vector<string> args(argc-1);
+	for (int i=1; i<argc; ++i) {
+		args[i-1] = argv[i];
+	}
+	try {
+		Socket *s;
+		args.at(0);
+		if (args[0] == ("A")) {
+			args.at(1);
+			cout << "connecting" << endl;
+			s = new Socket("localhost", 5436);
+			DataOutput *out = s->getOutput();
+			DataInput *in = s->getInput();
+			iarpa::ko::Client cli;
+			cli.setStreams(in, out);
+			byte_buf result = cli.online(BigInt(atoi(args[1].c_str())));
+			cout << toHexString(result) << endl;
+			BigInt result_num = BigInt::toPosBigInt(result);
+			cout << result_num.toString() << endl;
+			delete out;
+			delete in;
+			delete s;
+		} else if (args[0] == ("B")) {
+			args.at(1);
+			iarpa::DDB ddb;
+			iarpa_ko_populate_test_db(ddb, atoi(args[1].c_str()));
+			iarpa::ko::Server serv;
+			serv.precompute(ddb);
+			cout << "listening" << endl;
+			ServerSocket *ss = new ServerSocket(5436);
+			s = ss->accept();
+			DataOutput *out = s->getOutput();
+			DataInput *in = s->getInput();
+			serv.setStreams(in, out);
+			serv.online();
+			delete s;
+			delete ss;
+			delete out;
+			delete in;
+		} else {
+			fprintf(stderr, "Please specify A or B\n");
+			return 1;
+		}
+
+		return 0;
+	} catch (out_of_range) {
+		fprintf(stderr, "koproto A key_num (client)\n  or\nkoproto B dbsize (server)\n");
+		return 1;
+	}
+}
+
+MAINF("koproto", _main_kotest);
+
 

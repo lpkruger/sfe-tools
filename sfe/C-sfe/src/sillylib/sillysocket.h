@@ -14,12 +14,11 @@
 namespace silly {
 namespace net {
 
-class SocketException : public io::IOException {
-	const char* msg;
-public:
-	SocketException(const char* msg0) : msg(msg0) {}
-	virtual const char *what() const throw () {
-		return msg;
+
+struct SocketException : public io::IOException, private MsgBufferException {
+	SocketException(const char* msg0) : MsgBufferException(msg0) {}
+	virtual const char* what() const throw() {
+		return MsgBufferException::what();
 	}
 };
 struct ConnectException : public SocketException {
@@ -40,8 +39,7 @@ class Socket {
 public:
 	Socket(int fd0 = -1) : fd(fd0) {}
 	virtual ~Socket() {
-		if (fd>=0)
-			::close(fd);
+		close();
 	}
 	Socket(const char* host, const char* port) {
 		connect(host, port);
@@ -58,6 +56,10 @@ public:
 		connect(host, buf);
 	}
 
+	void close() {
+		if (fd>=0)
+			::close(fd);
+	}
 	DataOutput *getOutput() {
 		if (fd < 0)
 			throw SocketException("getOutput: not connected");
@@ -75,43 +77,21 @@ public:
 class ServerSocket {
 	int list_s;                /*  listening socket          */
 public:
-	ServerSocket(short port) {
-		struct sockaddr_in servaddr;  /*  socket address structure  */
-
-		/*  Create the listening socket  */
-
-		if ( (list_s = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
-			fprintf(stderr, "ECHOSERV: Error creating listening socket.\n");
-			throw SocketException("can't create server socket");
-		}
-		memset(&servaddr, 0, sizeof(servaddr));
-		servaddr.sin_family      = AF_INET;
-		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-		servaddr.sin_port        = htons(port);
-
-
-		/*  Bind our socket addresss to the
-					listening socket, and call listen()  */
-
-		if ( ::bind(list_s, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0 ) {
-			throw BindException("can't bind server socket");
-		}
-		if ( ::listen(list_s, LISTENQ) < 0 ) {
-			throw BindException("can't listen server socket");
-		}
-	}
-	Socket* accept() {
-		int conn_s;                /*  connection socket         */
-		if ( (conn_s = ::accept(list_s, NULL, NULL) ) < 0 ) {
-			throw SocketException("can't accept connection");
-		}
-		return new Socket(conn_s);
-	}
+	ServerSocket(short port);
+	Socket* accept();
 
 	void close() {
-		::close(list_s);
-		list_s = -1;
+		if (list_s>=0) {
+			::close(list_s);
+			list_s = -1;
+		}
 	}
+
+	virtual ~ServerSocket() {
+		close();
+	}
+
+
 };
 
 }

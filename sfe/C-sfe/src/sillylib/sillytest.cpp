@@ -1,18 +1,80 @@
+#ifndef __INTEL_COMPILER	// not working
+
 #include "silly.h"
 #include "sillymem.h"
-//#include "sillymem3.h"
+#include "sillymem3.h"
+#include "sillythread.h"
 
 #include <iostream>
 #include <string.h>
 #include <algorithm>
+#include <errno.h>
 
 using namespace std;
 using namespace silly;
 
 #define _main _main_numtest
+#define _main _main_threadtest
 
 using namespace silly::mem;
 
+static int count_me;
+static Mutex count_lock;
+static void* increment_it(void* arg) {
+	//Lock lock(&count_lock);
+	SYNCHRONIZE(count_lock);
+	//printf("adding 1\n");
+	int* num = (int*)arg;
+	int val = *num;
+	usleep(20);
+	*num = val+1;
+	return (void*) 3;
+}
+static int _main_threadtest2(int argc, char **argv) {
+	const int n_threads = 10000;
+	Thread th[n_threads];
+	for (int i=0; i<n_threads; ++i) {
+		th[i].start(-1, 500, &increment_it, &count_me);
+	}
+	int retsum = 0;
+	for (int j=0; j<n_threads; ++j) {
+		retsum += (int) th[j].join();
+	}
+	printf("count_me is %d\n", count_me);
+	printf("retsum is %d\n", retsum);
+	return 0;
+}
+#if 1
+static int _main_threadtest(int argc, char **argv) {
+	const int n_threads = 10000;
+	Thread th[n_threads];
+	int i=0;
+	while (i<n_threads) {
+		for (; i<n_threads; ++i) {
+			try {
+				th[i].start(-1, 500, &increment_it, &count_me);
+				//th[i].detach();
+			} catch (ThreadException ex) {
+				if (ex.getErrno() == EAGAIN) {
+					cout << "try again" << endl;
+					break;
+				}
+				throw;
+			}
+		}
+		for (int j=0; j<i; ++j) {
+			try {
+				th[j].join();
+			} catch (ThreadException ex) {
+				if (ex.getErrno()==EINVAL || ex.getErrno()==ESRCH)
+					continue;
+				throw;
+			}
+		}
+	}
+	printf("count_me is %d\n", count_me);
+}
+#endif
 //template<class T, class D> void wise_ptr<T,D>::dump() {
 //	//T& obj = p==NULL ? "<null>" : *(T*)p;
 //	std::cout << "@" << this << " : " << p << " " << prev << " " << next << "     " << endl;
@@ -234,3 +296,5 @@ MAIN("sillytest");
 
 
 #include "sillythread.h"
+
+#endif	// __INTEL_COMPILER

@@ -13,10 +13,6 @@
 #include "../crypto/PinkasNaorOT.h"
 #include "GCircuitEval.h"
 
-class YaoProtocol {
-public:
-};
-
 
 class YaoSender {
 	DataOutput *out;
@@ -26,19 +22,19 @@ public:
 		in = in0;
 		out = out0;
 	}
-	void go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inputs);
+	void go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs);
 };
 
 class YaoChooser {
 	DataOutput *out;
 	DataInput *in;
-	vector<bool> inputs;
+	//bit_vector inputs;
 public:
 	void setStreams(DataInput *in0, DataOutput *out0) {
 		in = in0;
 		out = out0;
 	}
-	vector<bool> go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inputs);
+	bit_vector go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs);
 };
 
 

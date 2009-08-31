@@ -21,7 +21,7 @@ public:
 	GCircuitEval();
 	virtual ~GCircuitEval();
 
-	vector<bool> eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk);
+	bit_vector eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk);
 
 };
 

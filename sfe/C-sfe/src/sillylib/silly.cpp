@@ -144,7 +144,7 @@ void silly::net::Socket::connect(const char* host, const char* port) {
 			break;
 		}
 
-		close(sfd);
+		::close(sfd);
 	}
 
 	freeaddrinfo(result);           /* No longer needed */
@@ -154,6 +154,47 @@ void silly::net::Socket::connect(const char* host, const char* port) {
 	}
 
 }
+
+silly::net::ServerSocket::ServerSocket(short port) {
+	struct sockaddr_in servaddr;  /*  socket address structure  */
+
+	/*  Create the listening socket  */
+
+	if ( (list_s = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
+		fprintf(stderr, "ECHOSERV: Error creating listening socket.\n");
+		throw SocketException("can't create server socket");
+	}
+
+	int on = 1;
+	//printf("setsockopt(SO_REUSEADDR)\n");
+	setsockopt(list_s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+
+
+	memset(&servaddr, 0, sizeof(servaddr));
+	servaddr.sin_family      = AF_INET;
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_port        = htons(port);
+
+
+	/*  Bind our socket addresss to the
+					listening socket, and call listen()  */
+
+	if ( ::bind(list_s, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0 ) {
+		throw BindException("can't bind server socket");
+	}
+	if ( ::listen(list_s, LISTENQ) < 0 ) {
+		throw BindException("can't listen server socket");
+	}
+}
+
+silly::net::Socket* silly::net::ServerSocket::accept() {
+	int conn_s;                /*  connection socket         */
+	if ( (conn_s = ::accept(list_s, NULL, NULL) ) < 0 ) {
+		throw SocketException("can't accept connection");
+	}
+	return new Socket(conn_s);
+}
+
 
 
 //#include <stdio.h>

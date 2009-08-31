@@ -9,24 +9,14 @@
 #define DEBUG
 #include "sillydebug.h"
 
-static void writeObject(DataOutput *out, SecretKey_p &key) {
-	byte_buf_p enc = key->getEncoded();
-	out->writeByte(enc->size());
-	out->write(*enc);
-}
-static void readObject(DataInput *in, SecretKey_p &key) {
-	int len = in->readByte();
-	byte_buf enc(len);
-	in->readFully(enc);
-	key = SFEKey_p(new SFEKey(enc));
-}
 
 
-void YaoSender::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inputs) {
+
+void YaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	CircuitCrypt crypt;
 	vector<boolean_secrets> inputSecrets;
-	GarbledCircuit gcc = crypt.encrypt(*cc, inputSecrets);
-	gcc.writeCircuit(out);
+	GarbledCircuit_p gcc = crypt.encrypt(*cc, inputSecrets);
+	gcc->writeCircuit(out);
 	//cout << "write input secrets" << endl;
 	PinkasNaorOT ot;
 	FmtFile::VarDesc vars = fmt.getVarDesc();
@@ -38,7 +28,11 @@ void YaoSender::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inputs) {
 	for (uint i=0; i<inputSecrets.size(); ++i) {
 		//if (myvars.who.find(i) != myvars.who.end()) {
 		if (vars.who.at(i) == "A") {
+#if __INTEL_COMPILER
+			myinpsecs.resize(myinpsecs.size()+1);
+#else
 			myinpsecs.push_back();
+#endif
 			myinpsecs[j] = inputSecrets[i][inputs[j]];
 			++j;
 		}
@@ -46,14 +40,9 @@ void YaoSender::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inputs) {
 	writeVector(out, myinpsecs);
 	BigInt_Mtrx otvals;
 
-	j=0;
 	for (uint i=0; i<inputSecrets.size(); ++i) {
 		if (vars.who.at(i) == "B") {
-			otvals.push_back();
-			otvals[j].resize(2);
-			otvals[j][0] = BigInt::toPaddedBigInt(*inputSecrets[i].s0->getEncoded());
-			otvals[j][1] = BigInt::toPaddedBigInt(*inputSecrets[i].s1->getEncoded());
-			++j;
+			otvals.push_back(inputSecrets[i].toBigIntVector());
 		}
 	}
 	out->writeInt(otvals.size());
@@ -65,10 +54,10 @@ void YaoSender::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inputs) {
 }
 
 
-vector<bool> YaoChooser::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inputs) {
+bit_vector YaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	FmtFile::VarDesc vars = fmt.getVarDesc();
 
-	GarbledCircuit gcc = GarbledCircuit::readCircuit(in);
+	GarbledCircuit_p gcc = GarbledCircuit::readCircuit(in);
 	vector<SFEKey_p> yourinpsecs;
 	readVector(in, yourinpsecs);
 	uint ot_size = in->readInt();
@@ -77,7 +66,7 @@ vector<bool> YaoChooser::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inpu
 				"ot_size %d != inputs.size %d", ot_size, inputs.size()).c_str());
 
 	PinkasNaorOT ot;
-	vector<bool> inputs_copy(inputs);
+	bit_vector inputs_copy(inputs);
 	OTChooser chooser(inputs_copy, &ot);
 	chooser.setStreams(in, out);
 	chooser.precalc();
@@ -96,7 +85,7 @@ vector<bool> YaoChooser::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inpu
 					BigInt::fromPaddedBigInt(myinpsecs.at(jb++)));
 		}
 	}
-	vector<bool> circ_out = geval.eval(gcc, gcirc_input);
+	bit_vector circ_out = geval.eval(*gcc, gcirc_input);
 	return circ_out;
 }
 
@@ -107,8 +96,8 @@ vector<bool> YaoChooser::go(Circuit_p cc, FmtFile &fmt, const vector<bool> &inpu
 #include <fstream>
 using namespace silly::net;
 
-static vector<bool> toBits(BigInt n, int size) {
-	vector<bool> b;
+static bit_vector toBits(BigInt n, int size) {
+	bit_vector b;
 	int bits = n.bitLength();
 	DC("toBits expect " << size << " nbits " << bits);
 	if (size<bits)
@@ -139,7 +128,7 @@ static int _main(int argc, char **argv) {
 	if (args[0] == ("A")) {
 		args.at(1);
 		BigInt n = BigInt::parseString(args[1]);
-		vector<bool> input_bits = toBits(n, fmt.numInputs(0));
+		bit_vector input_bits = toBits(n, fmt.numInputs(0));
 
 		cout << "connecting" << endl;
 		s = new Socket("localhost", 5437);
@@ -154,7 +143,7 @@ static int _main(int argc, char **argv) {
 	} else if (args[0] == ("B")) {
 		args.at(1);
 		BigInt n = BigInt::parseString(args[1]);
-		vector<bool> input_bits = toBits(n, fmt.numInputs(1));
+		bit_vector input_bits = toBits(n, fmt.numInputs(1));
 
 		args.at(1);
 		YaoChooser srv;
@@ -165,7 +154,7 @@ static int _main(int argc, char **argv) {
 		DataOutput *out = s->getOutput();
 		DataInput *in = s->getInput();
 		srv.setStreams(in, out);
-		vector<bool> circ_out = srv.go(cc, fmt, input_bits);
+		bit_vector circ_out = srv.go(cc, fmt, input_bits);
 		for (uint i=0; i<circ_out.size(); ++i) {
 			cout << "output " << i << ": " << circ_out[i] << endl;
 		}

@@ -68,9 +68,11 @@ public:
 		buf = buf0;
 	}
 
+#if USE_RVALREFS
 	void operator= (byte_buf && buf0) {
 		buf = buf0;
 	}
+#endif
 
 	byte_buf_p getEncoded() const {
 		return byte_buf_p(new byte_buf(buf));
@@ -97,14 +99,10 @@ public:
 
 typedef wise_ptr<SecretKey> SFEKey_p;
 
-class bad_padding : public exception {
-	const char* msg;
-public:
-	bad_padding(const char *msg0) : msg(msg0) {}
-	virtual const char *what() {
-		return msg;
-	}
+struct bad_padding : public silly::MsgBufferException {
+	bad_padding(const char* msg0) : MsgBufferException(msg0) {}
 };
+
 class SFECipher {
 public:
 	const static int ENCRYPT_MODE=100;
@@ -232,7 +230,44 @@ struct boolean_secrets {
 		else
 			return s0;
 	}
+
+
+	vector<BigInt> toBigIntVector() {
+		vector<BigInt> ret(2);
+		ret[0] = BigInt::toPaddedBigInt(*s0->getEncoded());
+		ret[1] = BigInt::toPaddedBigInt(*s1->getEncoded());
+		return ret;
+	}
+#if 0
+	void fromBigIntVector(vector<BigInt> &vec) {
+		s0 = SFEKey_p(new SFEKey(BigInt::fromPaddedBigInt(vec.at(0))));
+		s1 = SFEKey_p(new SFEKey(BigInt::fromPaddedBigInt(vec.at(1))));
+	}
+#endif
 };
+
+
+inline void writeObject(DataOutput *out, SecretKey_p &key) {
+	byte_buf_p enc = key->getEncoded();
+	out->writeByte(enc->size());
+	out->write(*enc);
+}
+inline void readObject(DataInput *in, SecretKey_p &key) {
+	int len = in->readByte();
+	byte_buf enc(len);
+	in->readFully(enc);
+	key = SFEKey_p(new SFEKey(enc));
+}
+
+inline void writeObject(DataOutput *out, boolean_secrets &secr) {
+	writeObject(out, secr.s0);
+	writeObject(out, secr.s1);
+}
+inline void readObject(DataInput *in, boolean_secrets &secr) {
+	readObject(in, secr.s0);
+	readObject(in, secr.s1);
+}
+
 
 class GarbledCircuit {
 public:
@@ -248,10 +283,10 @@ public:
 
 	void hashCircuit(byte_buf &md);
 	void writeCircuit(DataOutput *out);
-	static GarbledCircuit readCircuit(DataInput *in);
+	static wise_ptr<GarbledCircuit> readCircuit(DataInput *in);
 
 };
 
-
+typedef wise_ptr<GarbledCircuit> GarbledCircuit_p;
 
 #endif /* GARBLEDCIRCUIT_H_ */

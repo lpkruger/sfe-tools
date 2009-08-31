@@ -114,7 +114,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 				//g.dump();
 
 				lp >> tmp; check(tmp, "arity");
-				int arity;
+				uint arity;
 				lp >> arity;
 				lp >> tmp; check(tmp, "table");
 				lp >> tmp; check(tmp, "[");
@@ -127,7 +127,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 					if (tmp == "0")
 						g->truthtab.push_back(false);
 				}
-				if (g->truthtab.size() != (1<<arity)) {
+				if (g->truthtab.size() != (1u<<arity)) {
 					ostringstream msg;
 					msg << "check fail: arity " << arity << " but tt.size " << g->truthtab.size();
 					throw ParseException(msg.str());
@@ -169,6 +169,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 	return cc;
 }
 
+#if 0
 static void shdltest() {
 	Circuit cc;
 	Input i0(0,0);
@@ -185,7 +186,7 @@ static void shdltest() {
 	g.inputs.push_back(&i0);
 	g.inputs.push_back(&i1);
 
-	vector<bool> bits;
+	bit_vector bits;
 	bits.push_back(false);
 	bits.push_back(true);
 	EvalState state(cc, bits);
@@ -202,7 +203,7 @@ FmtFile::VarDesc FmtFile::VarDesc::filter(string w) {
 	}
 	return bdv;
 }
-
+#endif
 
 #if 0
 public static VarDesc readFile(String file) {
@@ -263,7 +264,7 @@ void FmtFile::mapBits(long n, valmap vals, string name) {
 */
 
 
-void FmtFile::mapBits(vector<bool> n, valmap vals, string name) {
+void FmtFile::mapBits(bit_vector n, valmap vals, string name) {
 	Obj obj = mapping.at(name);
 	for (uint j=0; j<obj.bits.size(); ++j) {
 		int i = obj.bits.at(j);
@@ -274,7 +275,7 @@ void FmtFile::mapBits(vector<bool> n, valmap vals, string name) {
 
 // BUG: outputmap is wrong if format file is not monotonic
 
-BigInt FmtFile::readBits(vector<bool> vals, string name) {
+BigInt FmtFile::readBits(bit_vector vals, string name) {
 	//System.out.print("get bits: " + name);
 	Obj obj = mapping.at(name);
 	BigInt zz(0);
@@ -345,7 +346,7 @@ FmtFile FmtFile::parseFmt(istream &in) {
 
 		obj.bits.resize(spl.size() - 6);
 
-		for (int i=5; i<spl.size()-1; ++i) {
+		for (uint i=5; i<spl.size()-1; ++i) {
 			obj.bits[i-5] = parseInt(spl[i]);
 
 			if (spl[1] == ("input")) {
@@ -378,15 +379,6 @@ FmtFile FmtFile::parseFmt(istream &in) {
 #include "CircuitCrypt.h"
 #include "sillyio.h"
 
-static void writeObject(DataOutput *out, SFEKey_p &key) {
-	out->write(*key->getEncoded());
-}
-
-static void writeObject(DataOutput *out, boolean_secrets &secr) {
-	writeObject(out, secr.s0);
-	writeObject(out, secr.s1);
-}
-
 #include "GCircuitEval.h"
 
 static int _main(int argc, char **argv) {
@@ -401,19 +393,19 @@ static int _main(int argc, char **argv) {
 		ifstream in("/home/louis/sfe/priveq.circ");
 		Circuit_p cc = Circuit::parseCirc(in);
 
-		for (int i=0; i<cc->outputs.size() ; ++i) {
+		for (uint i=0; i<cc->outputs.size() ; ++i) {
 			DD(cc->outputs[i].dump();)
 		}
 
 		CircuitCrypt crypt;
 		vector<boolean_secrets> inputSecrets;
-		GarbledCircuit gcc = crypt.encrypt(*cc, inputSecrets);
+		GarbledCircuit_p gcc = crypt.encrypt(*cc, inputSecrets);
 		//cout << (&gcc) << endl;
 		cout << "write garbled circuit" << endl;
 		{
 			ofstream fout("gcircuit.bin");
 			silly::io::ostreamDataOutput fdout(fout);
-			gcc.writeCircuit(&fdout);
+			gcc->writeCircuit(&fdout);
 			fout.close();
 		}
 		cout << "write input secrets" << endl;
@@ -437,7 +429,7 @@ static int _main(int argc, char **argv) {
 		for (uint i=0; i<gcirc_input.size(); ++i) {
 			gcirc_input[i] = inputSecrets[i].s0;
 		}
-		vector<bool> circ_out = geval.eval(gcc, gcirc_input);
+		bit_vector circ_out = geval.eval(*gcc, gcirc_input);
 		for (uint i=0; i<circ_out.size(); ++i) {
 			cout << "output " << i << ": " << circ_out[i] << endl;
 		}

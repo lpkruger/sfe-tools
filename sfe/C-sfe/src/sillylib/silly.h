@@ -40,6 +40,7 @@ static inline string operator +(string s, int x) {
 
 class stringable {
 public:
+	virtual ~stringable() {}
 	virtual string toString() = 0;
 };
 

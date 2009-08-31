@@ -8,35 +8,38 @@
 #ifndef SILLYTYPE_H_
 #define SILLYTYPE_H_
 
+#include "sillycommon.h"
 #include <vector>
 #include <map>
 #include <iostream>
 
 namespace silly {
 namespace types {
-//typedef unsigned int uint;
+typedef unsigned int uint;
 typedef unsigned char byte;
 typedef unsigned char uchar;
 typedef bool boolean;
 
 typedef std::vector<byte> byte_buf;
+typedef std::vector<bool> bit_vector;
 
+template<class T, int dim> struct tensor {
+	typedef std::vector<typename tensor<T, dim-1>::type > type;
+};
+template<class T> struct tensor<T, 0> {
+	typedef T type;
+};
 
-template<class T> struct atype {
-	typedef std::vector<T> vector;
-	typedef vector array;
-	typedef std::vector<array> matrix;
-	typedef std::vector<matrix> cubic;
+template<class T, int dim=0> struct atype {
+	typedef typename tensor<T,1>::type vector;
+	typedef typename tensor<T,2>::type matrix;
+	typedef typename tensor<T,3>::type cubic;
+	typedef typename tensor<T,dim>::type tensor;
 };
 
 // use this for checking arguments passed to a function
-class bad_argument : public std::exception {
-	const char* msg;
-public:
-	bad_argument(const char *msg0) : msg(msg0) {}
-	virtual const char *what() {
-		return msg;
-	}
+struct bad_argument : public MsgBufferException {
+	bad_argument(const char *msg0) : MsgBufferException(msg0) {}
 };
 
 #if 0
@@ -58,9 +61,10 @@ template<class T,class U> static inline T* map_get(std::map<U,T*> &map, const U 
 }
 #endif
 
+
 }
 }
 using namespace silly::types;
-//using silly::types::uint;
+using silly::types::uint;
 
 #endif /* SILLYTYPE_H_ */

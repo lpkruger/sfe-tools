@@ -20,7 +20,7 @@ GCircuitEval::~GCircuitEval() {
 	// TODO Auto-generated destructor stub
 }
 
-vector<bool> GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) {
+bit_vector GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) {
 #if 0
 	if (gcc.use_permute) {
 		string NOPADDING = "//NoPadding";
@@ -37,7 +37,7 @@ vector<bool> GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) 
 		vals[i] = insk[i]->getEncoded();
 	}
 
-	vector<bool> ret(gcc.outputs.size());
+	bit_vector ret(gcc.outputs.size());
 	for (uint i=0; i<gcc.outputs.size(); ++i) {
 		byte_buf_p retval = eval_rec(getGate(gcc.outputs[i], gcc), gcc, vals);
 		SecretKey_p retkey = SFEKey::bytesToKey(*retval, CIPHER);

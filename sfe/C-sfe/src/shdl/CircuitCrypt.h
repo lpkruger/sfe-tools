@@ -44,7 +44,14 @@ protected:
 public:
 	CircuitCrypt();
 	virtual ~CircuitCrypt();
-	virtual GarbledCircuit encrypt(Circuit &cc, vector<boolean_secrets> &inputsecrets);
+	virtual GarbledCircuit_p encrypt(Circuit &cc, vector<boolean_secrets> &inputsecrets);
+
+	virtual void reset() {
+		gateid.clear();
+		themap.clear();
+		secrets.clear();
+		curId=0;
+	}
 
 private:
 	int encGate_rec(Gate_p gate);

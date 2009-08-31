@@ -16,9 +16,6 @@ CircuitCrypt::~CircuitCrypt() {
 	// TODO Auto-generated destructor stub
 }
 
-#if 1
-
-
 CircuitCrypt::CircuitCrypt() {
 	C = SFECipher();
 	KG = SFEKeyGenerator();
@@ -34,8 +31,9 @@ CircuitCrypt::CircuitCrypt() {
 	//		}
 }
 
-GarbledCircuit CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inputSecrets) {
-	GarbledCircuit gcc;
+GarbledCircuit_p CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inputSecrets) {
+	GarbledCircuit *gcc_ptr = new GarbledCircuit();
+	GarbledCircuit &gcc = *gcc_ptr;
 	gcc.nInputs = cc.inputs.size();
 	gcc.outputs.resize(cc.outputs.size());
 	gcc.outputSecrets.resize(cc.outputs.size());
@@ -80,11 +78,11 @@ GarbledCircuit CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &input
 	for (gateid_t::iterator it = gateid.begin(); it != gateid.end(); ++it) {
 		//DC(it->first << " >= " << cc.inputs.size() << " "<<(it->first >= cc.inputs.size()) << endl;
 		//DC("  tt size: " << it->second->truthtab.size() << endl;
-		if (it->first >= cc.inputs.size())
+		if (it->first >= int(cc.inputs.size()))
 			gcc.allGates.push_back(it->second);
 
 	}
-	return gcc;
+	return GarbledCircuit_p(gcc_ptr);
 }
 
 boolean_secrets CircuitCrypt::genKeyPair(GateBase_p g) {
@@ -168,5 +166,3 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 	return egate->id;
 }
 
-
-#endif

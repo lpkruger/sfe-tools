@@ -57,8 +57,9 @@ void GarbledCircuit::writeCircuit(DataOutput *out) {
 	}
 }
 
-GarbledCircuit GarbledCircuit::readCircuit(DataInput *in) {
-	GarbledCircuit gcc;
+GarbledCircuit_p GarbledCircuit::readCircuit(DataInput *in) {
+	GarbledCircuit *gcc_ptr = new GarbledCircuit();
+	GarbledCircuit &gcc = *gcc_ptr;
 	gcc.use_permute = in->readBoolean();
 	gcc.nInputs = in->readInt();
 	gcc.outputs.resize(in->readInt());
@@ -109,7 +110,7 @@ GarbledCircuit GarbledCircuit::readCircuit(DataInput *in) {
 			in->readFully(gcc.allGates[i]->truthtab[j]);
 		}
 	}
-	return gcc;
+	return GarbledCircuit_p(gcc_ptr);
 }
 
 
@@ -120,4 +121,3 @@ void GarbledCircuit::hashCircuit(byte_buf &md) {
 	md.resize(20);
 	SHA1((const uchar*)(&out.buf[0]), out.buf.size(), (uchar*)(&md[0]));
 }
-

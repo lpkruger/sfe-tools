@@ -25,31 +25,11 @@ using namespace std;
 
 namespace shdl {
 
-class ParseException :public std::exception {
-	char* msg;
-
-public:
-	ParseException() {}
-	ParseException(const char* msg0) {
-		msg = new char[strlen(msg0)];
-		strcpy(msg, msg0);
-	}
-	ParseException(const string& msgs) {
-		const char* msg0 = msgs.c_str();
-		msg = new char[strlen(msg0)];
-		strcpy(msg, msg0);
-	}
-
-	// virtual overrides
-	const char* what() throw() {
-		return msg;
-	}
-	~ParseException() throw() {
-		if (!msg)
-			delete[] msg;
-	}
-
+struct ParseException : public silly::MsgBufferException {
+	ParseException(const char *msg0) : MsgBufferException(msg0) {}
+	ParseException(const string &msg0) : MsgBufferException(msg0.c_str()) {}
 };
+
 using namespace silly::misc;
 using namespace silly::mem;
 using namespace bigint;
@@ -85,8 +65,8 @@ struct FmtFile {
 
 	void mapBits(BigInt &n, valmap vals, string name);
 	void mapBits(long n, valmap vals, string name);
-	void mapBits(vector<bool> n, valmap vals, string name);
-	BigInt readBits(vector<bool> vals, string name);
+	void mapBits(bit_vector n, valmap vals, string name);
+	BigInt readBits(bit_vector vals, string name);
 	BigInt readBits(valmap vals, string name);
 	VarDesc getVarDesc() {
 			return vardesc;
@@ -106,7 +86,7 @@ struct FmtFile {
 class EvalState {
 public:
 	map<int,bool> vals;
-	EvalState(Circuit &cc, vector<bool> &in);
+	EvalState(Circuit &cc, bit_vector &in);
 };
 
 class GateBase {
@@ -149,7 +129,7 @@ public:
 class Gate : public GateBase {
 public:
 	int arity;
-	vector<bool> truthtab;  // truth table
+	bit_vector truthtab;  // truth table
 	vector<GateBase_p> inputs;
 
 	Gate(int id0) : GateBase(id0) {}
@@ -253,7 +233,7 @@ public:
 
 };
 
-inline EvalState::EvalState(Circuit &cc, vector<bool> &in) {
+inline EvalState::EvalState(Circuit &cc, bit_vector &in) {
 	for (uint i=0; i<in.size(); ++i) {
 		vals[cc.inputs[i]->id] = in[i];
 	}
@@ -266,57 +246,57 @@ inline EvalState::EvalState(Circuit &cc, vector<bool> &in) {
 
 #define VECTOR(a) vector<typeof(a[0])>(a, a + sizeof(a)/sizeof(a[0]))
 
-static inline vector<bool> TT_XOR() {
+static inline bit_vector TT_XOR() {
 	bool tt[] = { false, true, true, false };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_XOR3() {
+static inline bit_vector TT_XOR3() {
 	bool tt[] = { false, true, true, false, true, false, false, true};
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_XNOR() {
+static inline bit_vector TT_XNOR() {
 	bool tt[] = { true, false, false, true };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_AND() {
+static inline bit_vector TT_AND() {
 	bool tt[] = { false, false, false, true };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_OR() {
+static inline bit_vector TT_OR() {
 	bool tt[] = { false, true, true, true };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_ANDNOT() {
+static inline bit_vector TT_ANDNOT() {
 	//boolean[] tt = { false, true, false, false };
 	bool tt[] = { false, false, true, false };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_AND3() {
+static inline bit_vector TT_AND3() {
 	bool tt[] = { false, false, false, false, false, false, false, true };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_ADDCARRY3() {
+static inline bit_vector TT_ADDCARRY3() {
 	// carry, left, right -> next carry
 	bool tt[] = { false, false, false, true, false, true, true, true };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_SUBCARRY3() {
+static inline bit_vector TT_SUBCARRY3() {
 	//boolean[] tt = { false, true, true, true, false, false, false, false };
 	// carry, left, right -> next carry
 	bool tt[] = { false, true, false, false, true, true, false, true };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_EQ3() {
+static inline bit_vector TT_EQ3() {
 	bool tt[] = { false, false, false, false, true, false, false, true };
 	return VECTOR(tt);
 }
-static inline vector<bool> TT_NEQ3() {
+static inline bit_vector TT_NEQ3() {
 	bool tt[] = { false, true, true, false, true, true, true, true};
 	return VECTOR(tt);
 }
 
 // if arg1 true: arg2, false: arg3
-static inline vector<bool> TT_MUX() {
+static inline bit_vector TT_MUX() {
 	bool tt[] = { false, true, false, true, false, false, true, true};
 	return VECTOR(tt);
 }

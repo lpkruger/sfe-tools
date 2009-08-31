@@ -12,6 +12,7 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <string.h>
+#include "sillycommon.h"
 #include "sillytype.h"
 #include <errno.h>
 
@@ -21,34 +22,28 @@ namespace io {
 // IO stuff
 
 
-class IOException : public std::exception {
-	int errnum;
-public:
-	IOException(int err=-1) : errnum(err) {}
-
-	virtual const char *what() const throw () {
-		if (errnum==-1)
-			return "<unspecified i/o error>";
-		return strerror(errnum);
-	}
+struct IOException : public ErrnoException {
+	typedef ErrnoException super;
+	IOException(int err=-1) : super(err) {}
 };
 struct EOFException : public IOException {
-	virtual const char *what() const throw () {
+	const char *what() const throw () {
 		return "<end of file>";
 	}
 };
-struct ProtocolException : public IOException {
-	const char* msg;
-	ProtocolException(const char* msg0) : msg(msg0) {}
-	virtual const char *what() const throw () {
-		return msg;
+struct ProtocolException : public IOException, public MsgBufferException {
+	ProtocolException(const char* msg0) : MsgBufferException(msg0) {}
+	virtual const char* what() const throw() {
+		return MsgBufferException::what();
 	}
 };
+
 
 class DataOutput {
 protected:
 	virtual int tryWrite(const byte* c, int len) = 0;
 public:
+	virtual ~DataOutput() {}
 	virtual void flush() {}
 	virtual void close() {}
 
@@ -72,7 +67,7 @@ public:
 				throw EOFException();
 			}
 			if (n<0) {
-				throw IOException(0);
+				throw IOException();
 			}
 			cnt+=n;
 		}
@@ -89,6 +84,7 @@ class BytesDataOutput : public DataOutput {
 public:
 	byte_buf buf;
 
+	//BytesDataOutput() : buf() {}
 	void writeByte(byte b) {
 		buf.push_back(b);
 	}
@@ -120,6 +116,7 @@ class DataInput {
 protected:
 	virtual int tryRead(byte* c, int len) = 0;
 public:
+	virtual ~DataInput() {}
 	int read(byte* c, int len) {
 		return tryRead(c, len);
 	}
@@ -202,26 +199,51 @@ public:
 
 #define D(X)
 
-template<class T> static inline void writeVector(DataOutput *out, std::vector<T> &vec) {
-	D("write vector of BigInt");
+namespace std_obj_rw {
+// putting these in a seperate namespace prevents overloading problems
+inline void writeObject(DataOutput *out, const int num) {
+	out->writeInt(num);
+}
+inline void readObject(DataInput *in, int &num) {
+	num = in->readInt();
+}
+template<class T> inline void writeObject(DataOutput *out, std::vector<T> *v) {
+	writeVector(out, *v);
+}
+template<class T> inline void readObject(DataInput *in, std::vector<T> *v) {
+	readVector(in, *v);
+}
+}
+
+
+//template<class I> inline void writeIt(DataOutput *out, I it, I last) {
+//	out->writeInt(last - it);
+//	while(it != last) {
+//		writeObject(out, *it);
+//		++it;
+//	}
+//}
+
+template<class T> inline void writeVector(DataOutput *out, std::vector<T> &vec) {
+	D("write vector of objects");
 	out->writeInt(vec.size());
 	for (uint i=0; i<vec.size(); ++i) {
 		writeObject(out, vec[i]);
 	}
 }
-template<class T> void writeVector(DataOutput *out, std::vector<std::vector<T> > &vec) {
+template<class T> inline void writeVector(DataOutput *out, std::vector<std::vector<T> > &vec) {
 	D("write vector of vector");
 	out->writeInt(vec.size());
 	for (uint i=0; i<vec.size(); ++i) {
 		writeVector(out, vec[i]);
 	}
 }
-template<> void writeVector(DataOutput *out, byte_buf &vec) {
+template<> inline void writeVector(DataOutput *out, byte_buf &vec) {
 	out->writeInt(vec.size());
 	out->write(&vec[0], vec.size());
 }
 
-template<class T> static inline void readVector(DataInput *in, std::vector<T> &vec) {
+template<class T> inline void readVector(DataInput *in, std::vector<T> &vec) {
 	D("read vector of BigInt");
 	int len = in->readInt();
 	vec.resize(len);
@@ -229,7 +251,7 @@ template<class T> static inline void readVector(DataInput *in, std::vector<T> &v
 		readObject(in, vec[i]);
 	}
 }
-template<class T> void readVector(DataInput *in, std::vector<std::vector<T> > &vec) {
+template<class T> inline void readVector(DataInput *in, std::vector<std::vector<T> > &vec) {
 	D("read vector of vector");
 	int len = in->readInt();
 	vec.resize(len);
@@ -237,7 +259,7 @@ template<class T> void readVector(DataInput *in, std::vector<std::vector<T> > &v
 		readVector(in, vec[i]);
 	}
 }
-template<> void readVector(DataInput *in, byte_buf &vec) {
+template<> inline void readVector(DataInput *in, byte_buf &vec) {
 	int len = in->readInt();
 	vec.resize(len);
 	in->readFully(&vec[0], vec.size());
