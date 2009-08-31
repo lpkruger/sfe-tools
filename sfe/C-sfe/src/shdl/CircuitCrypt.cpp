@@ -7,7 +7,7 @@
 
 #include "CircuitCrypt.h"
 
-#undef DEBUG
+//#define DEBUG 1
 #include "sillydebug.h"
 
 const string CircuitCrypt::CIPHER = "SHA-1";
@@ -62,8 +62,8 @@ GarbledCircuit_p CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inp
 
 	for (uint i=0; i<cc.inputs.size(); ++i) {
 		inputSecrets[i] = secrets.at(i);
-		DC("i " << i << "  " << inputSecrets[i].s0->toHexString() <<
-				"  " << inputSecrets[i].s1->toHexString() << endl);
+		DC("inpsec " << i << "  " << inputSecrets[i].s0->toHexString() <<
+				"  " << inputSecrets[i].s1->toHexString());
 
 		// TODO avoid null pointer on unused inputs
 		//			if (data.inputSecrets[i] == null) {
@@ -76,8 +76,8 @@ GarbledCircuit_p CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inp
 	//gcc.allGates.reserve(gateid.size());
 	// TODO: use an iterator range instead
 	for (gateid_t::iterator it = gateid.begin(); it != gateid.end(); ++it) {
-		//DC(it->first << " >= " << cc.inputs.size() << " "<<(it->first >= cc.inputs.size()) << endl;
-		//DC("  tt size: " << it->second->truthtab.size() << endl;
+		//DC(it->first << " >= " << cc.inputs.size() << " "<<(it->first >= cc.inputs.size());
+		//DC("  tt size: " << it->second->truthtab.size();
 		if (it->first >= int(cc.inputs.size()))
 			gcc.allGates.push_back(it->second);
 
@@ -113,6 +113,8 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 			if (sec_it == secrets.end()) {
 				inpsecs[i] = genKeyPair(gate->inputs[i]);
 				secrets[var] = inpsecs[i];
+			} else {
+				inpsecs[i] = sec_it->second;
 			}
 		} else {
 			egate->inputs[i] = encGate_rec(
@@ -133,17 +135,28 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 	//			inpsecs = new SecretKey[][] { genKeyPair(null) };
 	//		}
 
-	//System.out.println("inpsecs.length : " + inpsecs.length);
-	//System.out.println("gate.truthtab.length : " + gate.truthtab.length);
+	DF("inpsecs.length : %d", inpsecs.size());
+	DF("gate.truthtab.length : %d", gate->truthtab.size());
 
 	egate->truthtab.resize(gate->truthtab.size());
-	DC("resize gate " << egate->id << " truthtab to " << egate->truthtab.size() << endl);
+	DC("resize gate " << egate->id << " truthtab to " << egate->truthtab.size());
+	D(egate->toString().c_str());
 	for (uint i=0; i<egate->truthtab.size(); ++i) {
 		SFEKey_p thisKey = ((i >> (egate->arity-1) & 0x1) == 0) ? inpsecs[0][0] : inpsecs[0][1];
 		for (int j=1; j<egate->arity; ++j) {
-			DC("enc xor " << thisKey->getEncoded()->size() << " " <<
-			(((i >> (egate->arity-j-1) & 0x1) == 0) ? inpsecs[j][0] : inpsecs[j][1])->getEncoded()->size()
-			<< endl);
+//			DC("enc xor " << thisKey->getEncoded()->size() << " " <<
+//			(((i >> (egate->arity-j-1) & 0x1) == 0) ? inpsecs[j][0] : inpsecs[j][1])->getEncoded()->size());
+
+
+#if DEBUG
+			if (!thisKey.get())
+				throw null_pointer("thisKey is null");
+			if (!inpsecs[j].s0.get())
+				throw null_pointer("s0 is null");
+			if (!inpsecs[j].s0.get())
+				throw null_pointer("s1 is null");
+#endif
+
 			thisKey = SFEKey::xxor(thisKey,
 					((i >> (egate->arity-j-1) & 0x1) == 0) ? inpsecs[j][0] : inpsecs[j][1],
 							CIPHER);
@@ -152,7 +165,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 		//			try {
 		C.init(C.ENCRYPT_MODE, thisKey);
 		egate->truthtab[i] = C.doFinal(*secr[gate-> truthtab[i]?1:0]->getEncoded());
-		DC(toHexString(egate->truthtab[i]) << endl);
+		DF("final tt%d  %s", i, toHexString(egate->truthtab[i]).c_str());
 
 		//			} catch (GeneralSecurityException ex) {
 		//				ex.printStackTrace();
@@ -162,7 +175,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 		// variation: randomly permute the truth table
 		// see CircuitCryptPermute
 	}
-
+	D(egate->toString().c_str());
 	return egate->id;
 }
 

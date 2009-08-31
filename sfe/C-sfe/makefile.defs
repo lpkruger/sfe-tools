@@ -1,5 +1,5 @@
-OTHER_ICPCFLAGS=-DNO_RVALREF=1 -march=core2 -xT -ip # -ipo
-OTHER_CXXFLAGS=-DUSE_RVALREFS=1 -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo
+OTHER_ICPCFLAGS=-march=core2 -mtune=core2 -xT #-ip #-ipo
+OTHER_CXXFLAGS=-pipe -DUSE_RVALREFS=1 -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo
 #-Wold-style-cast -Weffc++ -frepo -Wno-pmf-conversions
 
 # include a main() program for main build

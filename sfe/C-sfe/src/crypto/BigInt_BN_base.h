@@ -128,7 +128,7 @@ public:
 	}
 	////////
 
-#ifndef NO_RVALREF
+#if USE_RVALREFS
 	BigInt_BN_Base(BigInt_BN_Base &&b) {
 		_init();
 		_swap(b);

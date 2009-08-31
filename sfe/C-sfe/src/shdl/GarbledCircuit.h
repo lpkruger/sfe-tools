@@ -9,6 +9,8 @@
 #define GARBLEDCIRCUIT_H_
 
 #include <vector>
+#include <string>
+#include <iostream>
 #include <stdexcept>
 #include <typeinfo>
 #include "shdl.h"
@@ -24,12 +26,28 @@ using namespace silly::io;
 using namespace silly::mem;
 
 using std::vector;
-class GarbledGate {
+class GarbledGate : public stringable {
 public:
 	int id;
 	int arity;
 	vector<int> inputs;
 	vector<byte_buf> truthtab;   // randomly permuted set of E(k)(Zn)
+
+	string toString() {
+		ostringstream ostr;
+//		ostreamDataOutput out(ostr);
+		ostr << "eGate id=" << id << "  arity=" << arity << endl;
+		ostr << "  inp: [";
+		for (uint i=0; i<inputs.size(); ++i) {
+			ostr << " " << inputs[i];
+		}
+		ostr << " ]" << endl;
+		for (uint i=0; i<truthtab.size(); ++i) {
+			ostr << "  tt" << i <<": " << toHexString(truthtab[i]) << endl;
+		}
+		ostr << endl;
+		return ostr.str();
+	}
 };
 
 typedef wise_ptr<GarbledGate> GarbledGate_p;

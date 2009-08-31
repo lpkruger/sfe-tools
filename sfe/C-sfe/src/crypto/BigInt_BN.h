@@ -44,7 +44,7 @@ public:
 	//////// copy constructor: do not delete
 	BigInt(const BigInt_BN_Base &b) : super(b) {}
 	////////
-#ifndef NO_RVALREF
+#if USE_RVALREFS
 	BigInt(BigInt_BN_Base &&b) : super(b) {}
 	BigInt& operator= (BigInt_BN_Base &&b) {
 		super::operator=(b); return *this;

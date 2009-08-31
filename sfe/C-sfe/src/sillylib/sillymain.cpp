@@ -31,6 +31,28 @@ void* add_main(const char* name, main_ptr main_f) {
 	return NULL;
 }
 
+
+//// backtrace function ////
+#include <stdio.h>
+#include <stdlib.h>
+#include <execinfo.h>
+
+void print_backtrace(int depth=10){
+	void *addresses[depth];
+	char **strings;
+
+	int size = backtrace(addresses, depth);
+	strings = backtrace_symbols(addresses, size);
+	fprintf(stderr, "Stack frames: %d\n", size);
+	for(int i = 0; i < size; i++)
+	{
+		fprintf(stderr, "%d: %08X\t", i, (int)addresses[i]);
+		fprintf(stderr, "%s\n", strings[i]);
+	}
+	free(strings);
+}
+///////////////////////////
+
 int main_go(main_ptr main_f, int argc, char **argv) {
 	return main_f(argc, argv);
 }

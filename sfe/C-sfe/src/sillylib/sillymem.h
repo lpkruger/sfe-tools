@@ -10,17 +10,29 @@
 #define SILLYMEM_H_
 
 //#define DEBUG_WISEPTR 1
+#define CHECK_NULL_PTR 0
 
 #if DEBUG_WISEPTR
 #include <iostream>
-#define D(x) std::cout << x
+#define DC(x) std::cout << x
 #else
-#define D(x)
+#define DC(x)
 #endif
+
+#ifndef SILLYDEBUG_H_
+void print_backtrace(int depth=10);
+#endif
+
+//#include "sillydebug.h"
+#include "sillycommon.h"
+
 
 namespace silly {
 namespace mem {
 
+struct null_pointer : public MsgBufferException {
+	null_pointer(const char *msg) : MsgBufferException(msg) {}
+};
 // auto-freeing reference-counting pointers.  yay.
 // wise_ptr struct uses 4 bytes vs 8 bytes for C++/Boost shared_ptr
 // therefore mine is better
@@ -34,7 +46,7 @@ template<class T> class wise_ptr_common {
 	wise_ptr_common(T* p0) : p(p0), refcnt(1) {}
 
 	void dealloc() {	// TODO: overload
-		D("dealloc " << p << " <- " << this << " " << refcnt << std::endl);
+		DC("dealloc " << p << " <- " << this << " " << refcnt << std::endl);
 		delete p;
 		delete this;	// TODO check for weak refs
 	}
@@ -53,18 +65,27 @@ template<class T> class wise_ptr {
 		} else {
 			cp = p0.cp;
 			++cp->refcnt;
-			D("linking " << cp->p << " <- " << cp << " <- " << this <<
+			DC("linking " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 
 		}
 	}
 public:
-	explicit wise_ptr(T *p0 = NULL) {
+	explicit wise_ptr() {
+		cp = NULL;
+	}
+//	explicit wise_ptr(T *p0 = NULL)
+	explicit wise_ptr(T *p0) {
+		if (CHECK_NULL_PTR && !p0) {
+			fprintf(stderr, "-- null pointer C --  ");
+			print_backtrace(6);
+			memset(p0, 0, 1);
+		}
 		if (!p0) {
 			cp = NULL;
 		} else {
 			cp = new wise_ptr_common<T>(p0);
-			D("alloCat " << cp->p << " <- " << cp << " <- " << this <<
+			DC("alloCat " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 		}
 	}
@@ -92,10 +113,14 @@ public:
 #endif
 
 	Twptr& operator=(T* p0) {
+		if (CHECK_NULL_PTR && !p0) {
+			fprintf(stderr, "-- null pointer = --  ");
+			fprintf(stderr, "\n");
+		}
 		free();
 		if (p0) {
 			cp = new wise_ptr_common<T>(p0);
-			D("allo=at " << cp->p << " <- " << cp << " <- " << this <<
+			DC("allo=at " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 		}
 		return *this;
@@ -117,9 +142,19 @@ public:
 
 
 	T& operator*() const {
+		if (CHECK_NULL_PTR && !get()) {
+			fprintf(stderr, "--- null pointer * ---  ");
+			print_backtrace();
+			//throw null_pointer();
+		}
 		return *get();
 	}
 	T* operator->() const {
+		if (CHECK_NULL_PTR && !get()) {
+			fprintf(stderr, "--- null pointer -> ---  ");
+			print_backtrace();
+			//throw null_pointer();
+		}
 		return get();
 	}
 
@@ -151,7 +186,7 @@ public:
 			return NULL;
 		if (--cptr->refcnt != 0) {
 			cptr = NULL;
-			D("unlinkd " << cp->p << " <- " << cp << " <- " << this <<
+			DC("unlinkd " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 		}
 		cp = NULL;
@@ -227,8 +262,6 @@ namespace types {
 
 }
 }
-
-#undef D
-
+#undef DC
 #undef DEBUG_WISEPTR
 #endif /* SILLYMEM_H_ */

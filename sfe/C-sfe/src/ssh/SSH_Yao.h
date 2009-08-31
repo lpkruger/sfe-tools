@@ -15,7 +15,7 @@
 
 using std::vector;
 
-const static int L = 32;
+const static int L = 8;
 const static int sync_const = 0x541C4A0;
 
 class SSHYao {

@@ -13,4 +13,5 @@ extern void* add_main(const char* name, main_ptr main_f);
 #define MAIN(name) static void* p_main = add_main(name, &_main);
 #define MAINF(name, f) static void* p_main_##f = add_main(name, &f);
 
+
 #endif /* SILLYMAIN_H_ */

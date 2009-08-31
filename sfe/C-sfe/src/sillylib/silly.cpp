@@ -68,12 +68,24 @@ string silly::io::toBase64(const byte_buf &buf) {
 
 
 std::string silly::io::toHexString(const byte_buf &buf) {
+	if (!buf.size())
+		return "<empty>";
+#if 1
 	string s(3*buf.size()+1, ' ');
 	for (uint i=0; i<buf.size(); ++i) {
 		sprintf(&s[3*i], "%02x ", buf[i]);
 	}
 	s.resize(3*buf.size()-1);
 	return s;
+#else
+	string s;
+	char sss[1024];
+	for (uint i=0; i<buf.size(); ++i) {
+		snprintf(sss, 1022, "%02x ", buf[i]);
+		s.append(sss);
+	}
+	return s;
+#endif
 }
 
 
@@ -221,4 +233,12 @@ string silly::misc::string_printf(const char *fmt, ...) {
 			buf.resize(buf.size()*2);  /* twice the old size */
 
 	}
+}
+void debug_printf(const char *fmt, ...) {
+	va_list ap;
+	int n;
+	va_start(ap, fmt);
+	n = vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fprintf(stderr, "\n");
 }

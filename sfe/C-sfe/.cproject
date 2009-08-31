@@ -44,6 +44,7 @@
 <listOptionValue builtIn="false" value="ssl"/>
 <listOptionValue builtIn="false" value="pthread"/>
 </option>
+<option id="gnu.cpp.link.option.flags.2016664239" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-rdynamic" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1360431809" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 <additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -4237,7 +4238,7 @@
 <builder arguments="${MAKE_OPTS}" buildPath="${workspace_loc:/c-sfe/Release}" command="make" id="cdt.managedbuild.target.gnu.builder.exe.release.374164366" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="false" parallelizationNumber="-2" superClass="cdt.managedbuild.target.gnu.builder.exe.release"/>
 <tool id="cdt.managedbuild.tool.gnu.archiver.base.1833560985" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 <tool command="icpc" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.729777821" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
-<option id="gnu.cpp.compiler.exe.release.option.optimization.level.948990694" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.exe.release.option.optimization.level.948990694" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.more" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.release.option.debugging.level.659133504" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.option.other.other.2010820569" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -wd981 -std=c++0x $(OTHER_ICPCFLAGS)" valueType="string"/>
 <option id="gnu.cpp.compiler.option.preprocessor.def.1984769354" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def"/>
@@ -4273,7 +4274,7 @@
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.release" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.release"/>
 <tool id="cdt.managedbuild.tool.gnu.archiver.base.417104346" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.1833560985"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1985121797" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.729777821">
-<option id="gnu.cpp.compiler.exe.release.option.optimization.level.409915729" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.exe.release.option.optimization.level.409915729" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.more" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.exe.release.option.debugging.level.1337875988" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1927485474" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>

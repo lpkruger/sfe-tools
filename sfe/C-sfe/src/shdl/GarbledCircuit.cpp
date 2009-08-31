@@ -8,10 +8,6 @@
 #include "GarbledCircuit.h"
 #include "shdl.h"
 
-#ifdef NO_RVALREF
-#define move(x) x
-#endif
-
 using namespace shdl;
 
 GarbledCircuit::GarbledCircuit() {

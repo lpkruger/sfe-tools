@@ -386,11 +386,13 @@ static int _main(int argc, char **argv) {
 		cout << "1 " << 1 << " " << parseInt("1") << endl;
 		//shdl::shdltest();
 		// test fmtfile
-		ifstream fmtin("/home/louis/sfe/priveq.fmt");
+		//ifstream fmtin("/home/louis/sfe/priveq.fmt");
+		ifstream fmtin("/home/louis/sfe/md5_pw_cmp.fmt");
 		FmtFile::parseFmt(fmtin);
 		cout << "Read fmt file" << endl;
 		// test circuit
-		ifstream in("/home/louis/sfe/priveq.circ");
+		//ifstream in("/home/louis/sfe/priveq.circ");
+		ifstream in("/home/louis/sfe/md5_pw_cmp.circ");
 		Circuit_p cc = Circuit::parseCirc(in);
 
 		for (uint i=0; i<cc->outputs.size() ; ++i) {

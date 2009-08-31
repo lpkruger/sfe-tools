@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include "SSH_Yao.h"
-#define DEBUG 1
+//#define DEBUG 1
 #include "sillydebug.h"
 
 template<class T> inline void
@@ -37,83 +37,6 @@ unflatten(const vector<T> &in, vector<vector<T> > &out, const vector<int> &geom)
 		throw bad_argument("index != in.size()");
 }
 
-// access a vector through a permutation
-template<class T> class vector_perm {
-	vector<T> &the;
-	vector<int> perm;
-public:
-	vector_perm(vector<T> &v, vector<int> &p) :
-		the(v), perm(p) {}
-
-	T& at(int i) {
-		return the.at(perm.at(i));
-	}
-	T& operator[] (int i) {
-		return the.at(perm.at(i));
-	}
-	uint size() {
-		return perm.size();
-	}
-	vector<int> getPerm() {
-		return perm;
-	}
-	class iterator {
-		vector_perm &v;
-		int pos;
-	public:
-		iterator(vector_perm &v0, int p0) : v(v0), pos(p0) {}
-		T& operator*() {
-			return v[pos];
-		}
-		T* operator->() {
-			return &v[pos];
-		}
-		int operator-(const iterator &o) const {
-			return pos - o.pos;
-		}
-		bool operator==(const iterator &o) const {
-			return pos==o.pos && &v == &o.v;
-		}
-		bool operator!=(const iterator &o) const {
-			return ! operator==(o);
-		}
-		iterator& operator++() {
-			++pos;
-			return *this;
-		}
-		iterator operator++(int) {
-			iterator ret(v,pos);
-			++pos;
-			return ret;
-		}
-	};
-
-	iterator begin() {
-		return iterator(*this, 0);
-	}
-	iterator end() {
-		return iterator(*this, the.size());
-	}
-	vector_perm inverse_perm() {
-		vector<int> invperm(the.size(), -1);
-		for (uint i=0; i<perm.size(); ++i) {
-			invperm.at(perm[i]) = i;
-		}
-		return vector_perm(the, invperm);
-	}
-	vector_perm negate_perm() {
-		vector<bool> mark(the.size());
-		for (uint i=0; i<perm.size(); ++i) {
-			mark.at(perm[i]) = true;
-		}
-		vector<int> negperm;
-		for (uint i=0; i<mark.size(); ++i) {
-			if (!mark[i] )
-				negperm.push_back(i);
-		}
-		return vector_perm(the, negperm);
-	}
-};
 
 template < class InputIterator, class OutputIterator,
 		class Predicate, class T >
@@ -140,6 +63,17 @@ void flatten_test() {
 using std_obj_rw::readObject;
 using std_obj_rw::writeObject;
 
+#if DEBUG
+
+void D(const SecretKey_p &k, int lev=0) {
+	D(*k->getEncoded(), lev);
+}
+void D(const boolean_secrets &secr, int lev=0) {
+	D(secr.s0, lev);
+	D(secr.s1, lev);
+}
+#endif
+
 //struct VarParty {
 //	string who;
 //	VarParty(const string &w) : who(w) {}
@@ -153,8 +87,18 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 
 	vector<GarbledCircuit_p> gcc(L);
 	for (int n=0; n<L; ++n) {
+		fprintf(stderr, "crypt circuit %d\n", n+1);
 		gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
 	}
+
+#if DEBUG
+	for (int n=0; n<L; ++n) {
+		DD(printf("\ncopy %d:\n", n));
+		D(inputSecrets[n]);
+	}
+	D("");
+#endif
+
 
 	vector<vector<boolean_secrets> > all_myinpsecs(L);
 	vector<vector<boolean_secrets> > all_yourinpsecs(L);
@@ -170,18 +114,23 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		}
 	}
 
+	D("mine");
+	D(all_myinpsecs);
+	D("yours");
+	D(all_yourinpsecs);
+
 	BigInt_Cube all_otvals(L);
 
 	for (int n=0; n<L; ++n) {
 		all_otvals[n].resize(all_yourinpsecs[n].size());
 		for (uint i=0; i<all_yourinpsecs[n].size(); ++i) {
-			all_otvals[n][i] = inputSecrets[n][i].toBigIntVector();
+			all_otvals[n][i] = all_yourinpsecs[n][i].toBigIntVector();
 		}
 	}
 
 	BigInt_Mtrx otvals;
 	vector<int> geom;
-
+	//D(all_otvals);
 	flatten(all_otvals, otvals, geom);
 
 	//out->writeInt(otvals.size());
@@ -189,7 +138,9 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 
 	OTSender sender(otvals, &ot);
 	sender.setStreams(in, out);
+	fprintf(stderr, "OT precalc\n");
 	sender.precalc();
+	fprintf(stderr, "OT online\n");
 	sender.online();
 
 	check_sync();
@@ -216,8 +167,20 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 
 	check_sync();
 
+	DF("chosen circuits:\n");
+	D(all_my_chosen_secrets.getPerm());
+
 	vector_perm<vector<boolean_secrets > > all_my_unchosen_secrets =
 			all_my_chosen_secrets.negate_perm();
+
+
+	DF("unchosen circuits:\n");
+	D(all_my_unchosen_secrets.getPerm());
+
+	for (uint i=0; i<all_my_unchosen_secrets.size(); ++i) {
+		DF("my unchosen secret %u:\n", i);
+		D(all_my_unchosen_secrets[i]);
+	}
 
 	vector<vector<SFEKey_p> > my_sent_secrets(all_my_unchosen_secrets.size());
 
@@ -228,8 +191,10 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 					all_my_unchosen_secrets[n].at(i)[inputs[i]];
 		}
 	}
+	D("my sent secrets:");
+	D(my_sent_secrets);
 	writeVector(out, my_sent_secrets);
-
+	fprintf(stderr, "done\n");
 	check_sync();
 }
 
@@ -245,18 +210,26 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	PinkasNaorOT ot;
 	OTChooser chooser(allinputs, &ot);
 	chooser.setStreams(in, out);
+	fprintf(stderr, "OT precalc\n");
 	chooser.precalc();
-	BigInt_Vect myinpsecs_flat =
+
+	fprintf(stderr, "OT online\n");
+	BigInt_Vect all_myotsecs_flat =
 			chooser.online();
 
 	check_sync();
 
+	vector<SFEKey_p> all_myinpsecs_flat(all_myotsecs_flat.size());
+	for (uint i=0; i<all_myinpsecs_flat.size(); ++i) {
+		all_myinpsecs_flat[i] = SFEKey_p(new SFEKey(
+				BigInt::fromPaddedBigInt(all_myotsecs_flat[i])));
+	}
 	vector<int> geom(L, inputs.size());
-	BigInt_Mtrx myinputsecs;
+	vector<vector<SFEKey_p> > all_myinputsecs;
 
-	DC("read " << myinpsecs_flat.size() << " from OT")
-	unflatten(myinpsecs_flat, myinputsecs, geom);
-
+	DC("read " << all_myinpsecs_flat.size() << " from OT")
+	unflatten(all_myinpsecs_flat, all_myinputsecs, geom);
+	//D(myinputsecs);
 	vector<GarbledCircuit_p> gcc(L);
 	for (int i=0; i<L; ++i) {
 		gcc[i] = GarbledCircuit::readCircuit(in);
@@ -264,10 +237,13 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 
 	check_sync();
 
-	vector<int> choices;
+	vector<int> choices;		// which ones to open
+	// TODO: choose randomly
+//	for (int i=2; i<L; ++i) {
+//		choices.push_back(i);
+//	}
 	for (int i=0; i<L; i+=2) {
 		choices.push_back(i);	// for testing choose even numbers
-		// TODO: choose randomly
 	}
 	writeVector(out, choices);
 
@@ -283,12 +259,16 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	vector_perm<GarbledCircuit_p> verify_gcc(gcc, choices);
 	// TODO: verify
 
-	vector<vector<SFEKey_p> > yourinputsecs;
-	readVector(in, yourinputsecs);
-
 	GCircuitEval geval;
 	vector_perm<GarbledCircuit_p> eval_gcc =
 			verify_gcc.negate_perm();
+
+	vector<vector<SFEKey_p> > yourinputsecs;
+	readVector(in, yourinputsecs);
+
+	vector<int> eval_perm = eval_gcc.getPerm();
+	vector_perm<vector<SFEKey_p> > myinputsecs(
+			all_myinputsecs, eval_perm);
 
 	vector<SecretKey_p> gcirc_input(cc->inputs.size());
 	bit_vector circ_out;
@@ -300,11 +280,13 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 			if (vars.who.at(i) == "A") {
 				gcirc_input[i] = yourinputsecs[n].at(ja++);
 			} else if (vars.who.at(i) == "B") {
-				gcirc_input[i] = new SFEKey(
-						BigInt::fromPaddedBigInt(myinputsecs[n].at(jb++)));
+				gcirc_input[i] = myinputsecs[n].at(jb++);
 			}
 		}
-		circ_out = geval.eval(*gcc[n], gcirc_input);
+
+		fprintf(stderr, "eval circuit %u\n", n);
+		D(gcirc_input);
+		circ_out = geval.eval(*eval_gcc[n], gcirc_input);
 		if (circ_out.size() != 1)
 			throw ProtocolException("circuit should have 1 output");
 		output0[n] = circ_out[0];
@@ -349,10 +331,13 @@ static int _main(int argc, char **argv) {
 	//SSHYaoProtocol yao;
 	Socket *s;
 
-	ifstream fmtin("/home/louis/sfe/priveq.fmt");
+	//ifstream fmtin("/home/louis/sfe/priveq.fmt");
+	ifstream fmtin("/home/louis/sfe/md5_pw_cmp.fmt");
+
 	FmtFile fmt = FmtFile::parseFmt(fmtin);
 	cout << "Read fmt file" << endl;
-	ifstream in("/home/louis/sfe/priveq.circ");
+	//ifstream in("/home/louis/sfe/priveq.circ");
+	ifstream in("/home/louis/sfe/md5_pw_cmp.circ");
 	Circuit_p cc = Circuit::parseCirc(in);
 
 	if (args[0] == ("A")) {
