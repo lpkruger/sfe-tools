@@ -9,7 +9,9 @@
 #define BIGINT_H_
 
 #include "sillytype.h"
+#include "sillymem.h"
 
+namespace silly {
 namespace bigint {
 
 class math_exception : public silly::MsgBufferException {
@@ -22,28 +24,14 @@ public:
 
 };
 
-
-// see http://kaba.hilvi.org/Programming_C++/Texts/Null_Pointer.htm
-template<class T> struct silly_ptr {
-	T *p;
-	silly_ptr<T>(T* p0) : p(p0) {};
-	operator T* () const {
-		return p;
-	}
-	T* operator -> () const {
-		return p;
-	}
-	T* get() {
-		return p;
-	}
-};
-
+}
 }
 
 //#define BigInt BigInt_BN
 #include "BigInt_BN.h"
 //#undef BigInt
 
+namespace silly {
 namespace bigint {
 
 //typedef BigInt_BN BigInt;
@@ -52,6 +40,12 @@ typedef vector<BigInt> BigInt_Vect;
 typedef vector<BigInt_Vect> BigInt_Mtrx;
 typedef vector<BigInt_Mtrx> BigInt_Cube;
 
+}
+}
+
+// for compatibility
+namespace bigint {
+using namespace silly::bigint;
 }
 
 #endif /* BIGINT_H_ */

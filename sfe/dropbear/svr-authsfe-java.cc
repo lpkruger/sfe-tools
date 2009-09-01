@@ -8,8 +8,18 @@ extern "C" {
 #include "packet.h"
 #include "runopts.h"
 }
+#include <jni.h>       /* where everything is defined */
 
-void server_
+static JavaVM *jvm;       /* denotes a Java VM */
+static JNIEnv *env;       /* pointer to native method interface */
+static jclass serverClass;
+static jobject jserver;
+static jmethodID receivePacket;
+static jboolean inactive = true;
+
+typedef const unsigned char cuchar;
+
+JNIEXPORT jboolean JNICALL Java_sfe_sfauth_DropbearAuthStreams_writePacket
   (JNIEnv *env, jobject that, jbyteArray jbuf) {
     jint length = env->GetArrayLength(jbuf);
     jbyte* buf = env->GetByteArrayElements(jbuf, NULL);

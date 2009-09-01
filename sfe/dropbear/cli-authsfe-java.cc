@@ -8,9 +8,24 @@ extern "C" {
 #include "packet.h"
 #include "runopts.h"
 }
+#include <jni.h>       /* where everything is defined */
+#include "sfe_sfauth_DropbearAuthStreams.h"
 
-void client_sfeauth_send_payload(byte *buf, int len) {
-    byte *p = buf;
+static JavaVM *jvm;       /* denotes a Java VM */
+static JNIEnv *env;       /* pointer to native method interface */
+static jclass clientClass;
+static jobject jclient;
+static jmethodID receivePacket;
+static jboolean inactive = true;
+
+typedef const unsigned char cuchar;
+
+JNIEXPORT jboolean JNICALL Java_sfe_sfauth_DropbearAuthStreams_writePacket
+  (JNIEnv *env, jobject that, jbyteArray jbuf) {
+    jint length = env->GetArrayLength(jbuf);
+    jbyte* buf = env->GetByteArrayElements(jbuf, NULL);
+    jbyte* p = buf;
+
     fprintf(stderr, "sending payload, len %d\n", length);
 
     int maxbuf = TRANS_MAX_PAYLOAD_LEN - 16;
@@ -20,16 +35,51 @@ void client_sfeauth_send_payload(byte *buf, int len) {
       n = MIN(length, maxbuf);
       buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SFEMSG);
       buf_putint(ses.writepayload, n);
-      buf_putbytes(ses.writepayload, p, n);
+      buf_putbytes(ses.writepayload, (cuchar*) p, n);
       encrypt_packet();
       fprintf(stderr, "*");
       p += n;
       length -= n;
     }
 
+    env->ReleaseByteArrayElements(jbuf, buf, 0);
     return true;
 }
 
+
+static int cli_auth_sfe_init() {
+    JavaVMInitArgs vm_args; /* JDK/JRE 6 VM initialization arguments */
+    JavaVMOption* options = new JavaVMOption[3];
+    options[0].optionString = "-Xms800m";
+    options[1].optionString = "-Xmx800m";
+    options[2].optionString = "-Djava.class.path=/etc/dropbear/sfe.jar";
+
+    vm_args.version = JNI_VERSION_1_6;
+    vm_args.nOptions = 3;
+    vm_args.options = options;
+    vm_args.ignoreUnrecognized = false;
+    /* load and initialize a Java VM, return a JNI interface
+     * pointer in env */
+    JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+    delete options;
+
+    JNINativeMethod nMethods[1];
+    nMethods[0].name = "writePacket";
+    nMethods[0].signature = "([B)Z";
+    nMethods[0].fnPtr = (void*) Java_sfe_sfauth_DropbearAuthStreams_writePacket;
+
+    jclass authClass = env->FindClass("sfe/sfauth/DropbearAuthStreams");
+    env->RegisterNatives(authClass, nMethods, 1);
+
+
+    /* invoke the Main.test method using the JNI */
+    clientClass = env->FindClass("sfe/sfauth/DropbearSfeClient");
+    receivePacket = env->GetMethodID(clientClass, "receivePacket", "([B)V");
+    //fprintf(stderr, "%x %x %x\n", clientClass, receivePacket, ctor);
+
+    /* We are done. */
+    //jvm->DestroyJavaVM();
+}
 
 
 int cli_auth_sfe() {
@@ -53,6 +103,14 @@ int cli_auth_sfe() {
 
 
   fprintf(stderr, "cli_auth_sfe\n");
+  if (!env) {
+    cli_auth_sfe_init();
+  }
+  // initialize an instance
+  inactive = false;
+  jstring jpassword = env->NewStringUTF(password);
+  jmethodID ctor = env->GetMethodID(clientClass, "<init>", "(Ljava/lang/String;)V");
+  jclient = env->NewObject(clientClass, ctor, jpassword);
 
   CHECKCLEARTOWRITE();
   buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
@@ -65,7 +123,6 @@ int cli_auth_sfe() {
       AUTH_METHOD_SFE_LEN);
   encrypt_packet();
 
-  new_sfe_client(password)->start()
   jmethodID start = env->GetMethodID(clientClass, "start", "()V");
   env->CallVoidMethod(jclient, start);
 

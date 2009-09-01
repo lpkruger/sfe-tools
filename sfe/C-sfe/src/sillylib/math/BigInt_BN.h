@@ -26,6 +26,7 @@ using std::string;
 
 #include "BigInt_BN_base.h"
 
+namespace silly {
 namespace bigint {
 
 //#define BI_VIRTUAL //virtual
@@ -163,7 +164,7 @@ public:
 
 	static BigInt random(BNcPtr max) {
 		BigInt r;
-		BN_rand_range(r, (BIGNUM*) max.p);
+		BN_rand_range(r, (BIGNUM*) max.ptr());
 		return r;
 	}
 	static BigInt random(int bits, int top=-1, bool oddnum=false) {
@@ -237,7 +238,7 @@ public:
 	}
 
 	bool equals(BNcPtr o) const {
-		if (ptr() == o.p)
+		if (ptr() == o)
 			return true;
 		return BN_cmp(*this, o) == 0;
 	}
@@ -638,6 +639,7 @@ OP1m(%=, modThis, CBI)
 #undef OP1u
 #undef OP0c
 
+}
 }
 
 #endif /* BIGINT_H_ */

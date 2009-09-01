@@ -7,13 +7,11 @@
 
 #include "BigInt.h"
 
-namespace bigint {
-
 //const BigInt BigInt::ZERO(0);
 //const BigInt BigInt::ONE(1);
 //const BigInt BigInt::TWO(2);
 
-void BigInt_BN_Base::setDefaultBnCtx() {
+void silly::bigint::BigInt_BN_Base::setDefaultBnCtx() {
 	static BN_CTX *default_bn_ctx = BN_CTX_new();
 	bn_ctx = default_bn_ctx;
 }
@@ -34,4 +32,3 @@ void *crash_test_dummy = (void*) &test;
 
 #endif
 
-}

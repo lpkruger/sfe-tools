@@ -142,7 +142,7 @@ byte_buf iarpa::ko::Gxor(const vector<BNcPtr> &x, const byte_buf &m) {
 	int totalsize=0;
 	int zlen;
 	for (uint i=0; i<x.size(); ++i) {
-		zlen = BN_num_bytes(x[i].p);
+		zlen = BN_num_bytes(x[i]);
 		if(!zlen) ++zlen;
 		totalsize+= zlen;
 		//printf("x[%d]/%d total = %d\n", i, zlen, totalsize);

@@ -1,0 +1,10 @@
+To install:
+
+Create a directory /etc/dropbear
+Copy sfe.jar to /etc/dropbear/sfe.jar
+Copy md5_pw_cmp.circ to /etc/dropbear/md5_pw_cmp.circ
+Copy md5_pw_cmp.fmt to /etc/dropbear/md5_pw_cmp.fmt
+
+Add $JAVA_HOME/jre/lib/i386/client to your LD_LIBRARY_PATH
+
+Run dropbear (server) and dbclient (client) as normal

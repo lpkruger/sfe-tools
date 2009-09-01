@@ -13,7 +13,7 @@
 #include "sillyio.h"
 #include "sillytype.h"
 #include <openssl/bn.h>
-#include "BigInt.h"
+#include "bigint.h"
 
 using namespace silly::io;
 using namespace silly::misc;

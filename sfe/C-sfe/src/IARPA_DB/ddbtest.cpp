@@ -24,6 +24,7 @@ int iarpa_ko_populate_test_db(DDB &ddb, int size) {
 		int xx = x*x;
 		ddb.put(x, xx);
 	}
+	return size;
 }
 
 static BigInt bi_str(const char *s) {
@@ -144,7 +145,7 @@ static int _main_kotest(int argc, char **argv) {
 		}
 
 		return 0;
-	} catch (out_of_range) {
+	} catch (std::out_of_range) {
 		fprintf(stderr, "koproto A key_num (client)\n  or\nkoproto B dbsize (server)\n");
 		return 1;
 	}

@@ -55,29 +55,8 @@
 </tool>
 </toolChain>
 </folderInfo>
-<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.365896811.263581440" name="/" resourcePath="Debug">
-<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.754009988" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.exe.debug" unusedChildren="">
-<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
-<tool id="cdt.managedbuild.tool.gnu.archiver.base.2004332588" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.2106689289"/>
-<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.315015273" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.888143089">
-<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.316618566" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
-<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1458657859" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.686012847" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
-</tool>
-<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.1830018921" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.2098384134">
-<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.68097809" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
-<option id="gnu.c.compiler.exe.debug.option.debugging.level.484582426" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
-<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.24633062" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
-</tool>
-<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1947283063" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug.65717111"/>
-<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.735349424" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.2069443753"/>
-<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1509014505" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug.1660000911">
-<inputType id="cdt.managedbuild.tool.gnu.assembler.input.617726565" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-</tool>
-</toolChain>
-</folderInfo>
 <sourceEntries>
-<entry excluding="Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -1474,7 +1453,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -2871,7 +2850,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -4291,7 +4270,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

@@ -1,8 +1,8 @@
-#ifndef __INTEL_COMPILER	// not working
+#if 0 && !defined(__INTEL_COMPILER)	// not working
 
 #include "silly.h"
 #include "sillymem.h"
-#include "sillymem3.h"
+#include "mem/arena.h"
 #include "sillythread.h"
 
 #include <iostream>
@@ -15,6 +15,8 @@ using namespace silly;
 
 #define _main _main_numtest
 #define _main _main_threadtest
+#define _main pmf::_main_typetest
+#define _main _main_arenatest
 
 using namespace silly::mem;
 using namespace silly::thread;

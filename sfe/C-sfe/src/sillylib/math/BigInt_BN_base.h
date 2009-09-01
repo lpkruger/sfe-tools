@@ -19,18 +19,16 @@
 #include <openssl/rsa.h>
 #include "sillytype.h"
 
-//#include "BigInt.h"
+namespace silly {
+namespace bigint {
 
 using std::vector;
 using std::string;
 
-namespace bigint {
-
-typedef silly_ptr<const BIGNUM> BNcPtr;
+typedef silly::mem::basic_ptr<const BIGNUM> BNcPtr;
 
 #define BI_VIRTUAL //virtual
-#define BI_BASE
-// : public BigIntBase
+#define BI_BASE // : public BigIntBase
 
 //#define BN_PTR
 
@@ -170,6 +168,7 @@ public:
 	BigInt_BN_Base& operator= (int nn) { return operator=((long) nn); }
 };
 
+}
 }
 
 #endif /* BIGINT_H_ */

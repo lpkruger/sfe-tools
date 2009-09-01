@@ -5,8 +5,6 @@
  *      Author: louis
  */
 
-#ifndef __INTEL_COMPILER // doesn't work yet
-
 #include <algorithm>
 #include "SSH_Yao.h"
 //#define DEBUG 1
@@ -493,5 +491,3 @@ static int _main(int argc, char **argv) {
 #include "sillymain.h"
 MAIN("sshyao")
 #endif
-
-#endif // __INTEL_COMPILER

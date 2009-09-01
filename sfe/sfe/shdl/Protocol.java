@@ -171,7 +171,7 @@ public class Protocol {
 							return false;
 						}
 						CircuitCryptPermute crypt;
-						System.out.println("encrypt copy "+num);
+						//System.out.println("encrypt copy "+num);
 						if (useHashOpt) {
 							random.nextBytes(rngseeds[num]);
 							SecureRandom rng = DeterministicRandom.getRandom(rngseeds[num]);
@@ -197,7 +197,8 @@ public class Protocol {
 						System.out.println("failed crypt copy  "+i);
 						throw new RuntimeException("failed crypt copy "+i);
 					}
-					System.out.println("done crypt copy "+i);
+					//System.out.println("done crypt copy "+i);
+					System.out.print("^");
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					throw new RuntimeException(e);
@@ -595,7 +596,7 @@ public class Protocol {
 									e.printStackTrace();
 									return false;
 								}
-								System.out.println("verify hash "+num);
+								//System.out.println("verify hash "+num);
 								SecureRandom rng = DeterministicRandom.getRandom(rngseeds[num]);
 								CircuitCryptPermute crypt = new CircuitCryptPermute(rng);
 								hash.reset();
@@ -620,7 +621,8 @@ public class Protocol {
 								System.out.println("failed verify copy  "+i);
 								throw new RuntimeException("failed crypt copy "+i);
 							}
-							System.out.println("done verify copy "+i);
+							//System.out.println("done verify copy "+i);
+							System.out.print("^");
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							throw new RuntimeException(e);
