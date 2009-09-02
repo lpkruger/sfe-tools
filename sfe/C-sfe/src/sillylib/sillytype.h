@@ -8,8 +8,8 @@
 #ifndef SILLYTYPE_H_
 #define SILLYTYPE_H_
 
-#include <gc/gc.h>
-#include <gc/gc_allocator.h>
+//#include <gc/gc.h>
+//#include <gc/gc_allocator.h>
 #include "sillycommon.h"
 //#include "sillymem.h"		// for backtrace
 #include <vector>
