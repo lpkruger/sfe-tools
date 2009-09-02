@@ -37,14 +37,15 @@ void* add_main(const char* name, main_ptr main_f) {
 #include <stdlib.h>
 #include <execinfo.h>
 
-void print_backtrace(int depth=10){
-	void *addresses[depth];
+void print_backtrace(int depth, const char *msg0){
+	void *addresses[depth+1];
 	char **strings;
 
-	int size = backtrace(addresses, depth);
+	int size = backtrace(addresses, depth+1);
 	strings = backtrace_symbols(addresses, size);
-	fprintf(stderr, "Stack frames: %d\n", size);
-	for(int i = 0; i < size; i++)
+	const char *msg = msg0 ? msg0 : "";
+	fprintf(stderr, "%s  stack frames: %d\n", msg, size-1);
+	for(int i = 1; i < size; i++)
 	{
 		fprintf(stderr, "%d: %08X\t", i, (int)addresses[i]);
 		fprintf(stderr, "%s\n", strings[i]);

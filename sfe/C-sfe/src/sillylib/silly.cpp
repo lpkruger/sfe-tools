@@ -16,6 +16,7 @@
 using std::vector;
 using std::string;
 
+object_counter byte_buf::counter("byte_buf");
 
 long silly::misc::currentTimeMillis() {
 	struct timeval tv;

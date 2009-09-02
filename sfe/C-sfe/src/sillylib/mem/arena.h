@@ -5,8 +5,8 @@
  *      Author: louis
  */
 
-#ifndef SILLYMEM3_H_
-#define SILLYMEM3_H_
+#ifndef SILLYMEM_ARENA_H_
+#define SILLYMEM_ARENA_H_
 
 
 #include <string.h>
@@ -166,7 +166,7 @@ public:
 		DF("this: %08lx\n--------", (ulong) this);
 		if (!mem) return;
 		for (char *p=base; p<bottom; ++p) {
-			fprintf(stderr, "%02x ", (uchar)*p);
+			fprintf(stderr, "%02x ", (unsigned char)*p);
 			if ((uint(p)%16)==15)
 				fprintf(stderr, "\n");
 			else if ((uint(p)%8)==7)
@@ -475,4 +475,9 @@ static int _main_typetest(int argc, char **argv) {
 }
 
 }
+
+#undef D
+#undef DF
+#undef DC
+#undef DD
 #endif /* SILLYMEM3_H_ */

@@ -10,16 +10,8 @@
 
 using namespace shdl;
 
-GarbledCircuit::GarbledCircuit() {
-	use_permute = false;
-}
-
-GarbledCircuit::~GarbledCircuit() {
-	// TODO Auto-generated destructor stub
-}
-
 string SecretKey::toHexString() {
-	return silly::io::toHexString(*getEncoded());
+	return silly::io::toHexString(getEncoded());
 }
 void GarbledCircuit::writeCircuit(DataOutput *out) {
 	out->writeBoolean(use_permute);
@@ -28,15 +20,15 @@ void GarbledCircuit::writeCircuit(DataOutput *out) {
 	for (uint i=0; i<outputs.size(); ++i)
 		out->writeInt(outputs[i]);
 
-	out->writeInt(outputSecrets[0][0]->getEncoded()->size());
+	out->writeInt(outputSecrets[0][0]->getEncoded().size());
 
 	out->writeInt(outputSecrets.size());
 
 	for (uint i=0; i<outputSecrets.size(); ++i) {
 //		cout << "write osecret0 len " << outputSecrets[i][0]->getEncoded()->size() << endl;
 //		cout << "write osecret1 len " << outputSecrets[i][1]->getEncoded()->size() << endl;
-		out->write(*outputSecrets[i][0]->getEncoded());
-		out->write(*outputSecrets[i][1]->getEncoded());
+		out->write(outputSecrets[i][0]->getEncoded());
+		out->write(outputSecrets[i][1]->getEncoded());
 	}
 
 	out->writeInt(allGates[0]->truthtab[0].size());
@@ -67,12 +59,12 @@ GarbledCircuit_p GarbledCircuit::readCircuit(DataInput *in) {
 	gcc.outputSecrets.resize(in->readInt());
 	// each one needs 2
 	for (uint i=0; i<gcc.outputSecrets.size(); ++i) {
-		byte_buf buf(seclen);
-		in->readFully(&buf[0], seclen);
-		gcc.outputSecrets[i].s0 = SFEKey_p(new SFEKey(buf));
-		buf.resize(seclen);
-		in->readFully(&buf[0], seclen);
-		gcc.outputSecrets[i].s1 = SFEKey_p(new SFEKey(buf));
+		byte_buf *buf = new byte_buf(seclen);
+		in->readFully(&(*buf)[0], seclen);
+		gcc.outputSecrets[i].s0 = SFEKey_p(new SFEKey(buf, true));
+		buf = new byte_buf(seclen);
+		in->readFully(&(*buf)[0], seclen);
+		gcc.outputSecrets[i].s1 = SFEKey_p(new SFEKey(buf, true));
 	}
 
 	seclen = in->readInt();

@@ -8,10 +8,26 @@
 #ifndef SILLYTYPE_H_
 #define SILLYTYPE_H_
 
+#include <gc/gc.h>
+#include <gc/gc_allocator.h>
 #include "sillycommon.h"
+//#include "sillymem.h"		// for backtrace
 #include <vector>
 #include <map>
 #include <iostream>
+
+namespace std {
+struct nullptr_t {
+	template<class T>
+	operator T*() const { return 0; }
+	template<class T, class U>
+	operator T U::*() const { return 0; }
+	operator bool() const { return false; }
+	void* const __dummy_zero_value;
+};
+}
+
+const std::nullptr_t nullptr = {0};
 
 namespace silly {
 namespace types {
@@ -24,7 +40,70 @@ typedef unsigned char byte;
 typedef unsigned char uchar;
 typedef bool boolean;
 
-typedef vector<byte> byte_buf;
+struct copy_counter {
+	const char *name;
+	int copy_count;
+	int move_count;
+	int eq_count;
+	int refeq_count;
+
+	copy_counter(const char *n) : name(n) {}
+	~copy_counter() {
+		fprintf(stderr, "%s:  con& %d   con&& %d\n=& %d   =&& %d\n",
+				name, copy_count, move_count, eq_count, refeq_count);
+	}
+};
+
+struct object_counter : public copy_counter {
+	int con_count;
+	int des_count;
+	object_counter(const char *n) : copy_counter(n) {}
+	~object_counter() {
+		fprintf(stderr, "%s: con %d   des %d\n",
+				name, con_count, des_count);
+	}
+};
+
+/* print_backtrace(5, #type); */
+#define COPY_COUNTER(type) \
+		type(const type &copy) { ++counter.copy_count; } \
+		type(type &&move) { ++counter.move_count; } \
+		type& operator=(const type &copy) { \
+			++counter.eq_count; \
+			return *this; } \
+		type& operator=(type &&copy) { \
+			++counter.refeq_count; \
+			return *this; }
+
+#define COPY_COUNTER_DERIVED(type, super) \
+		type(const type &copy, super) : super(copy) { ++counter.copy_count;  } \
+		type(type &&move) : super(move) { ++counter.move_count; } \
+		type& operator=(const type &copy) { \
+			super::operator=(copy); \
+			++counter.eq_count; \
+			return *this; } \
+		type& operator=(type &&copy) { \
+			super::operator=(copy); \
+			++counter.refeq_count; \
+			return *this; }
+
+
+//typedef vector<byte, gc_allocator<byte> > byte_buf;
+class byte_buf : public vector<byte> {
+	typedef vector<byte> super;
+	static object_counter counter;
+public:
+	explicit byte_buf() : super() { ++counter.con_count; }
+	explicit byte_buf(size_type size) : super(size) { ++counter.con_count; }
+	explicit byte_buf(size_type size, byte value) : super(size, value) { ++counter.con_count; }
+	explicit byte_buf(super::const_iterator first, super::const_iterator last)
+			: super(first, last) { ++counter.con_count; }
+	COPY_COUNTER_DERIVED(byte_buf, super)
+	~byte_buf() { ++counter.des_count; }
+
+};
+
+
 typedef vector<bool> bit_vector;
 
 template<class T, int dim> struct tensor {

@@ -18,8 +18,8 @@
 #include "sillyio.h"
 #include "sillymem.h"
 #include "sillytype.h"
-#include <openssl/sha.h>
-#include <openssl/rand.h>
+
+#include "../crypto/cipher/SFECipher.h"
 
 using namespace shdl;
 using namespace silly::io;
@@ -53,187 +53,16 @@ public:
 typedef wise_ptr<GarbledGate> GarbledGate_p;
 typedef wise_ptr<byte_buf> byte_buf_p;
 
-class SecretKey {
-public:
-	virtual byte_buf_p getEncoded() const = 0;
-	virtual ~SecretKey() {}
-	virtual bool equals(SecretKey* o) const = 0;
 
-	string toHexString();
-};
+using crypto::cipher::SecretKey;
+using crypto::cipher::SFEKey;
+using crypto::cipher::SFECipher;
+using crypto::cipher::SFEKeyGenerator;
+using crypto::cipher::bad_padding;
 
 typedef wise_ptr<SecretKey> SecretKey_p;
+typedef wise_ptr<SFEKey> SFEKey_p;
 
-class SFEKey : public SecretKey {
-public:
-	byte_buf buf;
-
-	SFEKey() {}
-	SFEKey(const byte_buf & buf0) : buf(buf0) {}
-
-	static SecretKey_p bytesToKey(const byte_buf buf, string CIPHER) {
-		return SecretKey_p(new SFEKey(buf));
-	}
-
-	virtual bool equals(SecretKey* o0) const {
-		SFEKey *o = dynamic_cast<SFEKey*>(o0);
-		if (!o)
-			return false;
-		return buf == o->buf;
-	}
-
-	void operator= (const byte_buf & buf0) {
-		buf = buf0;
-	}
-
-#if USE_RVALREFS
-	void operator= (byte_buf && buf0) {
-		buf = buf0;
-	}
-#endif
-
-	byte_buf_p getEncoded() const {
-		return byte_buf_p(new byte_buf(buf));
-	}
-
-	static byte_buf_p xxor(const byte_buf_p &a, const byte_buf_p &b) {
-
-		if (a->size() != b->size())
-			throw bad_argument("a->size() != b->size()");
-		byte_buf_p c = byte_buf_p(new byte_buf(a->size()));
-		for (uint i=0; i<c->size(); ++i) {
-			(*c)[i] = (*a)[i] ^ (*b)[i];
-		}
-		return byte_buf_p(c);
-	}
-
-	static SecretKey_p xxor(const SecretKey_p &aa, const SecretKey_p &bb, const string &cipher) {
-		byte_buf_p a = aa->getEncoded();
-		byte_buf_p b = bb->getEncoded();
-		byte_buf_p c = xxor(a, b);
-		return SecretKey_p(new SFEKey(*c));
-	}
-};
-
-typedef wise_ptr<SecretKey> SFEKey_p;
-
-struct bad_padding : public silly::MsgBufferException {
-	bad_padding(const char* msg0) : MsgBufferException(msg0) {}
-};
-
-class SFECipher {
-public:
-	const static int ENCRYPT_MODE=100;
-	const static int DECRYPT_MODE=101;
-	SHA_CTX ctx;
-	SFEKey_p key;
-	int mode;
-	bool use_padding;
-
-	// TODO
-	void init(int mode0, SecretKey_p &key0) {
-		SHA1_Init(&ctx);
-		use_padding = true;
-		mode = mode0;
-		key = dynamic_pointer_cast<SFEKey>(key0);
-		if (!key.get()) throw bad_argument("key is not SFEKey");
-	}
-	byte_buf doFinal(const byte_buf &data) {
-		switch(mode) {
-		case ENCRYPT_MODE:
-			mode = -1;
-			return use_padding ? encrypt(key, data) : deencrypt(key, data);
-		case DECRYPT_MODE:
-			mode = -1;
-			return use_padding ? decrypt(key, data) : deencrypt(key, data);
-		default:
-			throw bad_argument("Invalid mode");
-		}
-	}
-
-
-private:
-
-	byte_buf md_xkey(const byte_buf &data) {
-		byte_buf xkey(20);
-		SHA1_Update(&ctx, &data[0], data.size());
-		SHA1_Final(&xkey[0], &ctx);
-		return xkey;
-	}
-	// padding-free mode
-	byte_buf deencrypt(SFEKey_p &key, const byte_buf &data) {
-		byte_buf xkey = md_xkey(*key->getEncoded());
-		if (xkey.size() < data.size()) {
-			throw bad_argument("data too long");
-		}
-
-		byte_buf ret(data.size());
-		for (uint i=0; i<ret.size(); ++i) {
-			ret[i] = (data[i] ^ xkey[i]);
-		}
-		return ret;
-	}
-
-	byte_buf encrypt(SFEKey_p &key, const byte_buf &data) {
-		byte_buf xkey = md_xkey(*key->getEncoded());
-		if (xkey.size() - 1 < data.size()) {
-			throw bad_argument("data too long");
-		}
-		byte_buf ret(xkey.size());
-		for (uint i=0; i<data.size(); ++i) {
-			ret[i] = (data[i] ^ xkey[i]);
-		}
-		for (uint i=data.size(); i<ret.size() - 1; ++i) {
-			ret[i] = xkey[i];
-		}
-		ret[ret.size() - 1] = (xkey[ret.size() - 1] ^ data.size());
-		return ret;
-	}
-
-	byte_buf decrypt(SFEKey_p key, const byte_buf &data) { // throws BadPaddingException {
-		byte_buf xkey = md_xkey(*key->getEncoded());
-		if (xkey.size() != data.size()) {
-			throw bad_padding("Invalid data length");
-		}
-		byte_buf dec(data.size());
-		for (uint i=0; i<dec.size(); ++i) {
-			dec[i] = (data[i] ^ xkey[i]);
-		}
-		uint len = dec[dec.size() - 1];
-		if (len > dec.size() - 1 || len < 0)
-			throw bad_padding("Invalid data range");
-		for (uint i=len; i<dec.size()-1; ++i) {
-			if (dec[i] != 0)
-				throw bad_padding("Invalid data range");
-		}
-		dec.resize(len);
-		//byte_buf ret = new byte[len];
-		//System.arraycopy(dec, 0, ret, 0, len);
-		//System.out.println("len is " + len + "  xkey is " + xkey.length);
-		return dec;
-	}
-
-};
-
-class SFEKeyGenerator {
-public:
-	const static uint default_length = 80;
-	uint length;
-	SFEKeyGenerator() : length(default_length) {}
-	void init(int length0) {
-		length = length0;
-	}
-
-	uint getLength() {
-		return length;
-	}
-
-	SecretKey_p generateKey() {
-		byte_buf buf(length/8);
-		RAND_bytes(&buf[0], buf.size());
-		return SecretKey_p(new SFEKey(buf));
-	}
-};
 
 struct boolean_secrets {
 	SFEKey_p s0;
@@ -252,8 +81,8 @@ struct boolean_secrets {
 
 	vector<BigInt> toBigIntVector() {
 		vector<BigInt> ret(2);
-		ret[0] = BigInt::toPaddedBigInt(*s0->getEncoded());
-		ret[1] = BigInt::toPaddedBigInt(*s1->getEncoded());
+		ret[0] = BigInt::toPaddedBigInt(s0->getEncoded());
+		ret[1] = BigInt::toPaddedBigInt(s1->getEncoded());
 		return ret;
 	}
 #if 0
@@ -265,16 +94,16 @@ struct boolean_secrets {
 };
 
 
-inline void writeObject(DataOutput *out, SecretKey_p &key) {
-	byte_buf_p enc = key->getEncoded();
+inline void writeObject(DataOutput *out, SFEKey_p &key) {
+	byte_buf *enc = key->getRawBuffer();
 	out->writeByte(enc->size());
 	out->write(*enc);
 }
-inline void readObject(DataInput *in, SecretKey_p &key) {
+inline void readObject(DataInput *in, SFEKey_p &key) {
 	int len = in->readByte();
-	byte_buf enc(len);
-	in->readFully(enc);
-	key = SFEKey_p(new SFEKey(enc));
+	byte_buf *enc = new byte_buf(len);
+	in->readFully(*enc);
+	key = SFEKey_p(new SFEKey(enc, true));
 }
 
 inline void writeObject(DataOutput *out, boolean_secrets &secr) {
@@ -296,8 +125,8 @@ public:
 	vector<boolean_secrets> outputSecrets;
 	vector<GarbledGate_p> allGates;
 
-	GarbledCircuit();
-	virtual ~GarbledCircuit();
+	GarbledCircuit() { use_permute=false; }
+	virtual ~GarbledCircuit() {}
 
 	void hashCircuit(byte_buf &md);
 	void writeCircuit(DataOutput *out);

@@ -35,8 +35,9 @@ public:
 };
 
 class SSHYaoChooser : public SSHYao {
+	int L;
 public:
-	const static int L = 32;
+	SSHYaoChooser(int L0) : L(L0) {}
 	bit_vector go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs);
 };
 

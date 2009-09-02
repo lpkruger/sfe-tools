@@ -18,3 +18,14 @@
    fun:BN_MONT_CTX_set
 }
 
+{
+   gc_eager_cond
+   Memcheck:Cond
+   fun:GC_push_all_eager
+}
+{
+   gc_eager_addr4
+   Memcheck:Addr4
+   fun:GC_push_all_eager
+}
+

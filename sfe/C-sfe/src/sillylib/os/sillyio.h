@@ -199,6 +199,57 @@ public:
 
 #define D(X)
 
+
+
+//template<class I> inline void writeIt(DataOutput *out, I it, I last) {
+//	out->writeInt(last - it);
+//	while(it != last) {
+//		writeObject(out, *it);
+//		++it;
+//	}
+//}
+
+template<class T, class A=std::allocator<T> > inline void writeVector(DataOutput *out, std::vector<T,A> &vec) {
+	D("write vector of objects");
+	out->writeInt(vec.size());
+	for (uint i=0; i<vec.size(); ++i) {
+		writeObject(out, vec[i]);
+	}
+}
+template<class T, class A> inline void writeVector(DataOutput *out, std::vector<std::vector<T,A> > &vec) {
+	D("write vector of vector");
+	out->writeInt(vec.size());
+	for (uint i=0; i<vec.size(); ++i) {
+		writeVector(out, vec[i]);
+	}
+}
+inline void writeVector(DataOutput *out, byte_buf &vec) {
+	out->writeInt(vec.size());
+	out->write(&vec[0], vec.size());
+}
+
+template<class T, class A=std::allocator<T> > inline void readVector(DataInput *in, std::vector<T,A> &vec) {
+	D("read vector of BigInt");
+	int len = in->readInt();
+	vec.resize(len);
+	for (uint i=0; i<vec.size(); ++i) {
+		readObject(in, vec[i]);
+	}
+}
+template<class T, class A> inline void readVector(DataInput *in, std::vector<std::vector<T,A> > &vec) {
+	D("read vector of vector");
+	int len = in->readInt();
+	vec.resize(len);
+	for (uint i=0; i<vec.size(); ++i) {
+		readVector(in, vec[i]);
+	}
+}
+inline void readVector(DataInput *in, byte_buf &vec) {
+	int len = in->readInt();
+	vec.resize(len);
+	in->readFully(&vec[0], vec.size());
+}
+
 namespace std_obj_rw {
 // putting these in a seperate namespace prevents overloading problems
 inline void writeObject(DataOutput *out, const int num) {
@@ -213,56 +264,13 @@ template<class T> inline void writeObject(DataOutput *out, std::vector<T> *v) {
 template<class T> inline void readObject(DataInput *in, std::vector<T> *v) {
 	readVector(in, *v);
 }
+inline void writeObject(DataOutput *out, byte_buf &vec) {
+	writeVector(out, vec);
 }
 
-
-//template<class I> inline void writeIt(DataOutput *out, I it, I last) {
-//	out->writeInt(last - it);
-//	while(it != last) {
-//		writeObject(out, *it);
-//		++it;
-//	}
-//}
-
-template<class T> inline void writeVector(DataOutput *out, std::vector<T> &vec) {
-	D("write vector of objects");
-	out->writeInt(vec.size());
-	for (uint i=0; i<vec.size(); ++i) {
-		writeObject(out, vec[i]);
-	}
+inline void readObject(DataInput *in, byte_buf &vec) {
+	readVector(in, vec);
 }
-template<class T> inline void writeVector(DataOutput *out, std::vector<std::vector<T> > &vec) {
-	D("write vector of vector");
-	out->writeInt(vec.size());
-	for (uint i=0; i<vec.size(); ++i) {
-		writeVector(out, vec[i]);
-	}
-}
-template<> inline void writeVector(DataOutput *out, byte_buf &vec) {
-	out->writeInt(vec.size());
-	out->write(&vec[0], vec.size());
-}
-
-template<class T> inline void readVector(DataInput *in, std::vector<T> &vec) {
-	D("read vector of BigInt");
-	int len = in->readInt();
-	vec.resize(len);
-	for (uint i=0; i<vec.size(); ++i) {
-		readObject(in, vec[i]);
-	}
-}
-template<class T> inline void readVector(DataInput *in, std::vector<std::vector<T> > &vec) {
-	D("read vector of vector");
-	int len = in->readInt();
-	vec.resize(len);
-	for (uint i=0; i<vec.size(); ++i) {
-		readVector(in, vec[i]);
-	}
-}
-template<> inline void readVector(DataInput *in, byte_buf &vec) {
-	int len = in->readInt();
-	vec.resize(len);
-	in->readFully(&vec[0], vec.size());
 }
 
 

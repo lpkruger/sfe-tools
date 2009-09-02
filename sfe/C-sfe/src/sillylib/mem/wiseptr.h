@@ -62,7 +62,7 @@ public:
 #endif
 
 #ifndef SILLYDEBUG_H_
-void print_backtrace(int depth=10);
+void print_backtrace(int depth=10, const char *msg=NULL);
 #endif
 
 //#include "sillydebug.h"
@@ -134,7 +134,7 @@ public:
 	}
 	template<class U> wise_ptr(const wise_ptr<U> &p1) {
 		T* pp = (U*) NULL;
-		pp = static_cast<T*>(p1.get());
+		pp = static_cast<T*>(p1.to_ptr());
 		Twptr &p0 = (wise_ptr<T>&)(p1);
 		setWPtr(p0);
 	}
@@ -173,7 +173,7 @@ public:
 	}
 	template<class U> Twptr& operator=(const wise_ptr<U> &p1) {
 		T* pp = (U*) NULL;
-		pp = static_cast<T*>(p1.get());
+		pp = static_cast<T*>(p1.to_ptr());
 		Twptr &p0 = (wise_ptr<T>&)(p1);
 		free();
 		setWPtr(p0);
@@ -182,28 +182,32 @@ public:
 
 
 	T& operator*() const {
-		if (CHECK_NULL_PTR && !get()) {
+		if (CHECK_NULL_PTR && !to_ptr()) {
 			fprintf(stderr, "--- null pointer * ---  ");
 			print_backtrace();
 			//throw null_pointer();
 		}
-		return *get();
+		return *to_ptr();
 	}
 	T* operator->() const {
-		if (CHECK_NULL_PTR && !get()) {
+		if (CHECK_NULL_PTR && !to_ptr()) {
 			fprintf(stderr, "--- null pointer -> ---  ");
 			print_backtrace();
 			//throw null_pointer();
 		}
-		return get();
+		return to_ptr();
 	}
 
-	T* get() const {
+//	T* get() const {
+	T* to_ptr() const {
 		if (cp) {
 			return cp->p;
 		}
 		return NULL;
 	}
+//	T* ptr() const {
+//		return get();
+//	}
 
 	int refcnt() const {
 		if (cp)
@@ -241,7 +245,7 @@ public:
 	}
 
 	template<class U> static Twptr dyn_cast(wise_ptr<U> &p0) {
-		T *pp = dynamic_cast<T*>(p0.get());
+		T *pp = dynamic_cast<T*>(p0.to_ptr());
 		if (pp) {
 			Twptr &pref = (Twptr&) p0;
 			return wise_ptr(pref);
@@ -252,22 +256,22 @@ public:
 
 
 	template <class U> bool operator==(const wise_ptr<U> &p0) const {
-		return get() == static_cast<T*>(p0.get());
+		return to_ptr() == static_cast<T*>(p0.to_ptr());
 	}
 	template <class U> bool operator!=(const wise_ptr<U> &p0) const {
-		return get() != static_cast<T*>(p0.get());
+		return to_ptr() != static_cast<T*>(p0.to_ptr());
 	}
 	template <class U> bool operator<=(const wise_ptr<U> &p0) const {
-		return get() <= static_cast<T*>(p0.get());
+		return to_ptr() <= static_cast<T*>(p0.to_ptr());
 	}
 	template <class U> bool operator>=(const wise_ptr<U> &p0) const {
-		return get() >= static_cast<T*>(p0.get());
+		return to_ptr() >= static_cast<T*>(p0.to_ptr());
 	}
 	template <class U> bool operator<(const wise_ptr<U> &p0) const {
-		return get() < static_cast<T*>(p0.get());
+		return to_ptr() < static_cast<T*>(p0.to_ptr());
 	}
 	template <class U> bool operator>(const wise_ptr<U> &p0) const {
-		return get() > static_cast<T*>(p0.get());
+		return to_ptr() > static_cast<T*>(p0.to_ptr());
 	}
 };
 

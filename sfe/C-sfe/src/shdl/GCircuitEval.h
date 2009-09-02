@@ -9,10 +9,11 @@
 #define GCIRCUITEVAL_H_
 
 #include "sillytype.h"
+#include "sillymem.h"
 #include "GarbledCircuit.h"
 #include "CircuitCrypt.h"
 
-class GCircuitEval : public CircuitCrypt {
+class GCircuitEval : public CircuitCrypt, public Reclaimer {
 	GarbledGate_p getGate(int id, GarbledCircuit &gcc) {
 		// DEBUG:
 //		if (id<gcc.nInputs || id>20000)
@@ -21,10 +22,10 @@ class GCircuitEval : public CircuitCrypt {
 
 		return gcc.allGates[id - gcc.nInputs];
 	}
-	byte_buf_p eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int, byte_buf_p> &vals);
+	byte_buf* eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int, byte_buf*> &vals);
+	//vector<byte_buf*> garbage;
 public:
-	GCircuitEval();
-	virtual ~GCircuitEval();
+
 
 	bit_vector eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk);
 

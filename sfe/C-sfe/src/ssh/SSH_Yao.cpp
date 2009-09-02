@@ -275,6 +275,8 @@ public:
 #endif
 
 bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
+	if (L<2)
+		throw bad_argument("L must be at least 2");
 	out->writeInt(L);
 	DC("have " << inputs.size() << " inputs");
 	FmtFile::VarDesc vars = fmt.getVarDesc();
@@ -302,7 +304,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	vector<SFEKey_p> all_myinpsecs_flat(all_myotsecs_flat.size());
 	for (uint i=0; i<all_myinpsecs_flat.size(); ++i) {
 		all_myinpsecs_flat[i] = SFEKey_p(new SFEKey(
-				BigInt::fromPaddedBigInt(all_myotsecs_flat[i])));
+				new byte_buf(BigInt::fromPaddedBigInt(all_myotsecs_flat[i])), true));
 	}
 	vector<int> geom(L, inputs.size());
 	vector<vector<SFEKey_p> > all_myinputsecs;
@@ -467,7 +469,10 @@ static int _main(int argc, char **argv) {
 		bit_vector input_bits = toBits(n, fmt.numInputs(1));
 
 		args.at(1);
-		SSHYaoChooser srv;
+		int Lparam = 4;
+		if (args.size() > 2)
+			Lparam = strtol(args[2].c_str(), NULL, 10);
+		SSHYaoChooser srv(Lparam);
 
 		cout << "listening" << endl;
 		ServerSocket *ss = new ServerSocket(5437);

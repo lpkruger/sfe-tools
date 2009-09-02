@@ -71,7 +71,7 @@ static int _main(int argc, char **argv) {
 			M[2][1]=83784;
 			printf("M.size %d\n", M.size());
 			OTSender sender(M, &ot);
-			sender.setStreams(in.get(), out.get());
+			sender.setStreams(in.to_ptr(), out.to_ptr());
 			printf("M.size %d\n", M.size());
 			sender.go();
 		} else if (args[0] == ("B")) {
@@ -83,7 +83,7 @@ static int _main(int argc, char **argv) {
 				ss[i-1] = args[i]=="1" ? true : false;
 			}
 			OTChooser choos(ss, &ot);
-			choos.setStreams(in.get(), out.get());
+			choos.setStreams(in.to_ptr(), out.to_ptr());
 			BigInt_Vect val = choos.go();
 			for (uint i=0; i<val.size(); ++i) {
 				printf("Value %d = %s\n", i, val[i].toString().c_str());

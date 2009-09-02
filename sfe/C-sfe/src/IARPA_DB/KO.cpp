@@ -19,6 +19,8 @@ using namespace silly::io;
 #undef DEBUG
 #include "sillydebug.h"
 
+using namespace std_obj_rw;
+
 static void writeObject(DataOutput *out, const BigInt &a) {
 	byte_buf buf = BigInt::MPIfromBigInt(a);
 	out->write(buf);

@@ -55,7 +55,7 @@ GarbledCircuit_p CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inp
 		if (cc.outputs[i]->arity == 0) {
 			boolean val = cc.outputs[i]->truthtab[0];
 			gcc.outputSecrets[i][val ? 1 : 0] =
-					SFEKey_p(new SFEKey(themap.at(cc.outputs[i])->truthtab[0]));
+					SFEKey_p(new SFEKey(&themap.at(cc.outputs[i])->truthtab[0]));
 			// TODO: replace call to SFEKey constructor
 		}
 	}
@@ -106,7 +106,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 		//Input_p inp;
 		//if (gate->inputs[i].dyncast_to(inp)) {
 		Input_p inp = dynamic_pointer_cast<Input>(gate->inputs[i]);
-		if (inp.get()) {
+		if (inp.to_ptr()) {
 			int var = inp->var;
 			egate->inputs[i] = var;
 			secretmap_t::iterator sec_it = secrets.find(var);
@@ -157,14 +157,14 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 				throw null_pointer("s1 is null");
 #endif
 
-			thisKey = SFEKey::xxor(thisKey,
-					((i >> (egate->arity-j-1) & 0x1) == 0) ? inpsecs[j][0] : inpsecs[j][1],
+			thisKey = SFEKey::xxor(*thisKey,
+					((i >> (egate->arity-j-1) & 0x1) == 0) ? *inpsecs[j][0] : *inpsecs[j][1],
 							CIPHER);
 		}
 
 		//			try {
-		C.init(C.ENCRYPT_MODE, thisKey);
-		egate->truthtab[i] = C.doFinal(*secr[gate-> truthtab[i]?1:0]->getEncoded());
+		C.init(C.ENCRYPT_MODE, *thisKey);
+		egate->truthtab[i] = C.doFinal(*secr[gate-> truthtab[i]?1:0]->getRawBuffer());
 		DF("final tt%d  %s", i, toHexString(egate->truthtab[i]).c_str());
 
 		//			} catch (GeneralSecurityException ex) {

@@ -9,10 +9,11 @@
 #define SILLYDEBUG_H_
 
 #ifndef SILLYMEM_H_			// also declares this
-void print_backtrace(int depth=10);
+void print_backtrace(int depth=10, const char *msg=NULL);
 #endif
 
 #ifndef DEBUG
+#define D D_OFF
 template<class T> static inline void D(T x) {}
 #define DD(x)
 #define DC(x)
@@ -22,6 +23,8 @@ static inline void sillydebug_dummy(...) {}
 #include <iostream>
 #include <stdio.h>
 #include <stdarg.h>
+#include "sillytype.h"
+#define D D_ON
 #define DD(x) x
 #define DC(x) std::cerr << x << std::endl;
 #define DF debug_printf
@@ -47,7 +50,7 @@ static inline void D(const BigInt &n, int lev=0) {
 	D(n.toString().c_str());
 }
 
-template<class T> static void D(const vector<T> &vec, int lev=0) {
+template<class T,class A=std::allocator<T> > static void D(const vector<T,A> &vec, int lev=0) {
 	Dlevel(lev);
 	fprintf(stderr, "[%u]:\n ", vec.size());
 	for (uint i=0; i<vec.size(); ++i) {
@@ -64,7 +67,7 @@ template<> void D(const vector<int> &vec, int lev) {
 	}
 	fprintf(stderr, "]\n");
 }
-template<> void D(const byte_buf &vec, int lev) {
+static inline void D(const byte_buf &vec, int lev) {
 	Dlevel(lev);
 	fprintf(stderr, "[%u: ", vec.size());
 	for (uint i=0; i<vec.size(); ++i) {
