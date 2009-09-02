@@ -2,7 +2,7 @@
 # Directories
 INCLUDE=../../../include
 CRYPTOCODE=../../crypto
-IARPA_DB=../
+IARPA_DB=..
 SILLYDIR=../../sillylib
 SILLYMATH=../../sillylib/math
 
