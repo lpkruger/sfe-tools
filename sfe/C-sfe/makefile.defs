@@ -1,5 +1,5 @@
-OTHER_ICPCFLAGS=-march=core2 -mtune=core2 -xT -ip #-ipo
-OTHER_CXXFLAGS=-pipe -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo -Wall -Wextra -Wno-unused-parameter
+OTHER_ICPCFLAGS=-DMAIN_OVERLOAD -march=core2 -mtune=core2 -xT -ip #-ipo
+OTHER_CXXFLAGS=-DMAIN_OVERLOAD -pipe -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo -Wall -Wextra -Wno-unused-parameter
 #-DUSE_RVALREFS=1
 #-Wold-style-cast -Weffc++ -frepo -Wno-pmf-conversions
 

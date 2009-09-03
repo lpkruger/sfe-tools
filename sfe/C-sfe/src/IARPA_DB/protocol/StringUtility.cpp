@@ -25,7 +25,7 @@ unsigned int StringUtility::hashBuf(const unsigned char * buf, int len) {
 // leading 0's.
 BigInt StringUtility::bytes2BigInt(const unsigned char *buf, int len) {
   
-  vector<unsigned char> bytes;
+  byte_buf bytes;
   bytes.push_back((unsigned char)0xFF);
 
   for(int i = 0; i < len; i++)
@@ -38,10 +38,10 @@ BigInt StringUtility::bytes2BigInt(const unsigned char *buf, int len) {
 // the length of the buffer in len.
 unsigned char *StringUtility::bigInt2Bytes(BigInt b, int *len) {
   
-  vector<unsigned char> bytes = BigInt::fromPaddedBigInt(b); //.toPosByteArray();
+  byte_buf bytes = BigInt::fromPaddedBigInt(b); //.toPosByteArray();
   unsigned char *ret = new unsigned char[bytes.size()];
 
-  vector<unsigned char>::iterator bi;
+  byte_buf::iterator bi;
   for(bi = bytes.begin()+1; bi != bytes.end(); bi++)
     ret[bi-(bytes.begin()+1)] = *bi;
 

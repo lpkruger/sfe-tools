@@ -120,7 +120,12 @@ void PIRIsolatedBox::runServer() {
   }
 }
 
-int main(int argc, char *argv[]) {
+#ifdef MAIN_OVERLOAD
+static int _main(int argc, char *argv[])
+#else
+int main(int argc, char *argv[])
+#endif
+{
 
   PIRIsolatedBox ib;
 
@@ -128,3 +133,9 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
+
+#ifdef MAIN_OVERLOAD
+#include "sillymain.h"
+MAIN("PIRIsolatedBox")
+#endif

@@ -7,7 +7,7 @@
 #include "CSVDatabase.h"
 #include "sillyio.h"
 #include "bigint.h"
-#include "DDB.h"
+#include "../DDB.h"
 
 using namespace std;
 using namespace silly::net;

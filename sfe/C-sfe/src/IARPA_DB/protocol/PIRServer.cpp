@@ -9,7 +9,7 @@
 #include "PIRServer.h"
 #include "AES.h"
 #include "Permutation.h"
-#include "KO.h"
+#include "../KO.h"
 
 // Takes a set of database rows (a view), and builds a network "blob" of data.
 // The format of the data is:
@@ -82,7 +82,7 @@ DDB PIRServer::makeKOTDatabase(vector<string> atVals, vector<unsigned char *> ke
   vector<unsigned char *>::iterator ki;
   for(ki = keys.begin(); ki != keys.end(); ki++) {
     unsigned char *curKey = *ki;
-    vector<unsigned char> bytes;
+    byte_buf bytes;
 
     // Put a dummy byte in to make sure any leading 0's aren't cut off
     bytes.push_back((unsigned char)0xFF);
@@ -287,7 +287,12 @@ PIRServer::PIRServer(char *iba, int ibp, string dbfile, string dbafile) {
 //       2 = isolated box port
 //       3 = database file
 //       4 = database attributes file
-int main(int argc, char *argv[]) {
+#ifdef MAIN_OVERLOAD
+static int _main(int argc, char *argv[])
+#else
+int main(int argc, char *argv[])
+#endif
+{
   // TODO: fix arg handling
   PIRServer server(argv[1], atoi(argv[2]), string(argv[3]), string(argv[4]));
 
@@ -295,3 +300,9 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
+
+#ifdef MAIN_OVERLOAD
+#include "sillymain.h"
+MAIN("PIRServer")
+#endif

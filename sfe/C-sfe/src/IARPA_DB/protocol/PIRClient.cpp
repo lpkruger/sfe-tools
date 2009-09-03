@@ -9,9 +9,10 @@
 
 #include "PIRClient.h"
 #include "AES.h"
-#include "KO.h"
+#include "../KO.h"
 
 using namespace std;
+
 
 // Takes a BigInt that represents an AES key/permutation index
 // pair, and returns a map with a single element representing that
@@ -109,7 +110,7 @@ CSVDatabase PIRClient::queryServer(string attr, string val) {
   DataInput *sKotIn = s.getInput();
   ko::Client cli;
   cli.setStreams(sKotIn, sKotOut);
-  vector<byte> netKoResult = cli.online(StringUtility::bytes2BigInt((unsigned char *)val.c_str(), val.length()));
+  byte_buf netKoResult = cli.online(StringUtility::bytes2BigInt((unsigned char *)val.c_str(), val.length()));
   // If netKoResult has not bytes, then a match was not found
   if(netKoResult.size() == 0)
     return CSVDatabase(attributesFile);
@@ -197,7 +198,12 @@ CSVDatabase PIRClient::doQuery(string sqlQuery) {
 //       3 = server address
 //       4 = server port
 //       5 = attributes file
-int main(int argc, char *argv[]) {
+#ifdef MAIN_OVERLOAD
+static int _main(int argc, char *argv[])
+#else
+int main(int argc, char *argv[])
+#endif
+{
   PIRClient client(argv[1], atoi(argv[2]), argv[3], atoi(argv[4]), argv[5]);
 
 //   CSVDatabase result = client.doQuery("select * from sample where State = \'NY\'");
@@ -221,3 +227,8 @@ int main(int argc, char *argv[]) {
   
   return 0;
 }
+
+#ifdef MAIN_OVERLOAD
+#include "sillymain.h"
+MAIN("PIRClient")
+#endif
