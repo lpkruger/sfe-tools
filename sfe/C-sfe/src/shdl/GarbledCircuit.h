@@ -68,7 +68,7 @@ struct boolean_secrets {
 	SFEKey_p s0;
 	SFEKey_p s1;
 
-	SFEKey_p operator[](int i) {
+	SFEKey_p& operator[](int i) {
 		if (i!=0 && i!=1) {
 			throw bad_argument("secret must be 0 or 1");
 		}
@@ -116,8 +116,8 @@ inline void readObject(DataInput *in, boolean_secrets &secr) {
 }
 
 
-class GarbledCircuit {
-public:
+struct GarbledCircuit {
+
 	boolean use_permute;
 	int nInputs;
 	vector<int> outputs;
@@ -125,8 +125,16 @@ public:
 	vector<boolean_secrets> outputSecrets;
 	vector<GarbledGate_p> allGates;
 
-	GarbledCircuit() { use_permute=false; }
-	virtual ~GarbledCircuit() {}
+	GarbledCircuit() { reset(); }
+
+	void reset() {
+		use_permute = false;
+		nInputs = 0;
+		nInputs = 0;
+		outputs.clear();
+		outputSecrets.clear();
+		allGates.clear();
+	}
 
 	void hashCircuit(byte_buf &md);
 	void writeCircuit(DataOutput *out);

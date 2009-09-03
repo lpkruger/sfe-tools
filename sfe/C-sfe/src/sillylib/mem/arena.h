@@ -10,10 +10,10 @@
 
 
 #include <string.h>
-#define DEBUG 1
+//#define DEBUG 1
 #include <vector>
 #include "bigint.h"
-#include "sillydebug.h"
+//#include "sillydebug.h"
 
 // this isn't really necessary, enable it if you want
 #undef USE_PTR_MEMBER_FN
@@ -476,8 +476,8 @@ static int _main_typetest(int argc, char **argv) {
 
 }
 
-#undef D
-#undef DF
-#undef DC
-#undef DD
+//#undef D
+//#undef DF
+//#undef DC
+//#undef DD
 #endif /* SILLYMEM3_H_ */

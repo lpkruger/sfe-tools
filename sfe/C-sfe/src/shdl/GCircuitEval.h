@@ -13,7 +13,7 @@
 #include "GarbledCircuit.h"
 #include "CircuitCrypt.h"
 
-class GCircuitEval : public CircuitCrypt, public Reclaimer {
+class GCircuitEval : public CircuitCrypt, public Reclaimer<byte_buf> {
 	GarbledGate_p getGate(int id, GarbledCircuit &gcc) {
 		// DEBUG:
 //		if (id<gcc.nInputs || id>20000)
@@ -25,7 +25,6 @@ class GCircuitEval : public CircuitCrypt, public Reclaimer {
 	byte_buf* eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int, byte_buf*> &vals);
 	//vector<byte_buf*> garbage;
 public:
-
 
 	bit_vector eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk);
 

@@ -9,6 +9,7 @@
 #define SHDL_H_
 
 #include <vector>
+#include <list>
 #include <set>
 #include <map>
 #include <string>
@@ -97,6 +98,10 @@ public:
 	GateBase(int id0) : id(id0) {
 		//this.id = id0;
 	}
+
+	virtual bool isInput() { return false; }
+	virtual bool isOuput() { return false; }
+
 	virtual ~GateBase() {}
 
 	virtual bool eval(EvalState &state) = 0;
@@ -122,9 +127,14 @@ public:
 	vector<Output_p> outputs;
 
 	static Circuit_p parseCirc(istream &in);
+
+	void calcDeps();
+	void clearDeps();
+
+	~Circuit() {
+		clearDeps();
+	}
 };
-
-
 
 class Gate : public GateBase {
 public:
@@ -192,6 +202,7 @@ public:
 //		public Gate(int id) {
 //			super(id);
 //		}
+
 };
 
 class Output : public Gate {
@@ -204,6 +215,8 @@ public:
 		out << id << " output gate";
 		write0(out);
 	}
+
+	virtual bool isOuput() { return true; }
 };
 
 class Input : public GateBase {
@@ -231,6 +244,8 @@ public:
 		}
 	}
 
+	virtual bool isInput() { return true; }
+	virtual bool isOuput() { return false; }
 };
 
 inline EvalState::EvalState(Circuit &cc, bit_vector &in) {
@@ -301,7 +316,6 @@ static inline bit_vector TT_MUX() {
 	return VECTOR(tt);
 }
 #undef VECTOR
-
 #endif
 
 

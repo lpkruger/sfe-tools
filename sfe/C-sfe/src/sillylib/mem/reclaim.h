@@ -9,27 +9,48 @@
 #define RECLAIM_H_
 
 #include <vector>
-// a context that is responsible for deleting an object
+	// a context that is responsible for deleting objects
 
 namespace silly {
 namespace mem {
 
-class Reclaimer {
-	template<class T> static void callDelete(T* a) {
-		delete a;
+template<class T = void> class Reclaimer {
+	std::vector<T*> garbage_bin;
+public:
+	void add_garbage(T* ptr) {
+		garbage_bin.push_back(ptr);
 	}
-	template<class T> struct functoid {
-		typedef void (*type)(T*);
+
+	void empty_garbage() {
+		while (!garbage_bin.empty()) {
+			T *p = garbage_bin.back();
+			garbage_bin.pop_back();
+			delete p;
+		}
+	}
+
+	virtual ~Reclaimer() {
+		empty_garbage();
+	}
+};
+
+template<> class Reclaimer<void> {
+	template<class U> struct functoid {
+		typedef void (*type)(U*);
 	};
-	template<class T> static inline typename functoid<T>::type getDeleter() {
-		return callDelete;
-	}
 	struct pair {
 		void *ptr;
 		functoid<void>::type fn;
 	};
+
 	std::vector<pair> garbage_bin;
 
+	template<class U> static void callDelete(U* a) {
+		delete a;
+	}
+	template<class U> static inline typename functoid<U>::type getDeleter() {
+		return callDelete;
+	}
 public:
 
 	template<class T> void add_garbage(T* ptr) {

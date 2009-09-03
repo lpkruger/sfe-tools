@@ -49,6 +49,7 @@ public:
 
 #if USE_STD_SHARED_PTR
 #define wise_ptr shared_ptr
+#define to_ptr() get()
 
 #else
 //#define DEBUG_WISEPTR 1
@@ -56,9 +57,9 @@ public:
 
 #if DEBUG_WISEPTR
 #include <iostream>
-#define DC(x) std::cout << x
+#define DCC(x) std::cout << x
 #else
-#define DC(x)
+#define DCC(x)
 #endif
 
 #ifndef SILLYDEBUG_H_
@@ -86,7 +87,7 @@ template<class T> class wise_ptr_common {
 	wise_ptr_common(T* p0) : p(p0), refcnt(1) {}
 
 	void dealloc() {	// TODO: overload
-		DC("dealloc " << p << " <- " << this << " " << refcnt << std::endl);
+		DCC("dealloc " << p << " <- " << this << " " << refcnt << std::endl);
 		delete p;
 		delete this;	// TODO check for weak refs
 	}
@@ -105,7 +106,7 @@ template<class T> class wise_ptr {
 		} else {
 			cp = p0.cp;
 			++cp->refcnt;
-			DC("linking " << cp->p << " <- " << cp << " <- " << this <<
+			DCC("linking " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 
 		}
@@ -125,7 +126,7 @@ public:
 			cp = NULL;
 		} else {
 			cp = new wise_ptr_common<T>(p0);
-			DC("alloCat " << cp->p << " <- " << cp << " <- " << this <<
+			DCC("alloCat " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 		}
 	}
@@ -160,7 +161,7 @@ public:
 		free();
 		if (p0) {
 			cp = new wise_ptr_common<T>(p0);
-			DC("allo=at " << cp->p << " <- " << cp << " <- " << this <<
+			DCC("allo=at " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 		}
 		return *this;
@@ -230,7 +231,7 @@ public:
 			return NULL;
 		if (--cptr->refcnt != 0) {
 			cptr = NULL;
-			DC("unlinkd " << cp->p << " <- " << cp << " <- " << this <<
+			DCC("unlinkd " << cp->p << " <- " << cp << " <- " << this <<
 					" " << cp->refcnt << std::endl);
 		}
 		cp = NULL;
@@ -306,7 +307,7 @@ namespace types {
 
 }
 }
-#undef DC
+#undef DCC
 #undef DEBUG_WISEPTR
 
 #endif

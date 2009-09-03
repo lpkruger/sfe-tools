@@ -497,7 +497,7 @@ public:
 	static byte_buf MPIfromBigInt(BNcPtr num) {
 		byte_buf ret(BN_bn2mpi(num, NULL));
 		BN_bn2mpi(num, &ret[0]);
-		return move(ret);
+		return silly_move(ret);
 	}
 
 	static BigInt MPItoBigInt(const byte_buf &buf) {
@@ -515,7 +515,7 @@ public:
 		if (ret[0] != 1)
 			throw math_exception("bignum not padded");
 		ret.erase(ret.begin());
-		return move(ret);
+		return silly_move(ret);
 	}
 
 	string toString(uint base=10) {

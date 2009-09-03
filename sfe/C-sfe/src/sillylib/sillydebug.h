@@ -9,10 +9,10 @@
 #define SILLYDEBUG_H_
 
 #ifndef SILLYMEM_H_			// also declares this
-void print_backtrace(int depth=10, const char *msg=NULL);
+void print_backtrace(int depth=10, const char *msg=0);
 #endif
 
-#ifndef DEBUG
+#if !defined(DEBUG) && !defined(DEBUG2)
 #define D D_OFF
 template<class T> static inline void D(T x) {}
 #define DD(x)
@@ -45,10 +45,13 @@ static inline void D(const char* s, int lev=0) {
 	Dlevel(lev);
 	fprintf(stderr, "%s\n", s);
 }
-static inline void D(const BigInt &n, int lev=0) {
+
+#ifdef BIGINT_H_
+static inline void D(const bigint::BigInt &n, int lev=0) {
 	Dlevel(lev);
 	D(n.toString().c_str());
 }
+#endif
 
 template<class T,class A=std::allocator<T> > static void D(const vector<T,A> &vec, int lev=0) {
 	Dlevel(lev);

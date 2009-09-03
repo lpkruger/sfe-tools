@@ -85,10 +85,10 @@ GarbledCircuit_p CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inp
 	return GarbledCircuit_p(gcc_ptr);
 }
 
-boolean_secrets CircuitCrypt::genKeyPair(GateBase_p g) {
+boolean_secrets CircuitCrypt::genKeyPair(GateBase_p) {
 	boolean_secrets ret;
-	ret.s0 = KG.generateKey();
-	ret.s1 = KG.generateKey();
+	ret.s0 = SFEKey_p(KG.generateKey());
+	ret.s1 = SFEKey_p(KG.generateKey());
 	return ret;
 }
 
@@ -157,9 +157,9 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 				throw null_pointer("s1 is null");
 #endif
 
-			thisKey = SFEKey::xxor(*thisKey,
+			thisKey = SFEKey_p(SFEKey::xxor(*thisKey,
 					((i >> (egate->arity-j-1) & 0x1) == 0) ? *inpsecs[j][0] : *inpsecs[j][1],
-							CIPHER);
+							CIPHER));
 		}
 
 		//			try {

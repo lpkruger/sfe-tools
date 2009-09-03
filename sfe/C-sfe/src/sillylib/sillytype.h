@@ -15,6 +15,8 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <stdint.h>
+#include "mem/counter.h"
 
 namespace std {
 struct nullptr_t {
@@ -34,58 +36,14 @@ namespace types {
 
 using std::vector;
 using std::map;
+using mem::copy_counter;
+using mem::object_counter;
 
 typedef unsigned int uint;
 typedef unsigned char byte;
 typedef unsigned char uchar;
 typedef bool boolean;
 
-struct copy_counter {
-	const char *name;
-	int copy_count;
-	int move_count;
-	int eq_count;
-	int refeq_count;
-
-	copy_counter(const char *n) : name(n) {}
-	~copy_counter() {
-		fprintf(stderr, "%s:  con& %d   con&& %d\n=& %d   =&& %d\n",
-				name, copy_count, move_count, eq_count, refeq_count);
-	}
-};
-
-struct object_counter : public copy_counter {
-	int con_count;
-	int des_count;
-	object_counter(const char *n) : copy_counter(n) {}
-	~object_counter() {
-		fprintf(stderr, "%s: con %d   des %d\n",
-				name, con_count, des_count);
-	}
-};
-
-/* print_backtrace(5, #type); */
-#define COPY_COUNTER(type) \
-		type(const type &copy) { ++counter.copy_count; } \
-		type(type &&move) { ++counter.move_count; } \
-		type& operator=(const type &copy) { \
-			++counter.eq_count; \
-			return *this; } \
-		type& operator=(type &&copy) { \
-			++counter.refeq_count; \
-			return *this; }
-
-#define COPY_COUNTER_DERIVED(type, super) \
-		type(const type &copy, super) : super(copy) { ++counter.copy_count;  } \
-		type(type &&move) : super(move) { ++counter.move_count; } \
-		type& operator=(const type &copy) { \
-			super::operator=(copy); \
-			++counter.eq_count; \
-			return *this; } \
-		type& operator=(type &&copy) { \
-			super::operator=(copy); \
-			++counter.refeq_count; \
-			return *this; }
 
 
 //typedef vector<byte, gc_allocator<byte> > byte_buf;
@@ -96,7 +54,8 @@ public:
 	explicit byte_buf() : super() { ++counter.con_count; }
 	explicit byte_buf(size_type size) : super(size) { ++counter.con_count; }
 	explicit byte_buf(size_type size, byte value) : super(size, value) { ++counter.con_count; }
-	explicit byte_buf(super::const_iterator first, super::const_iterator last)
+	template<class InputIterator>
+	explicit byte_buf(InputIterator first, InputIterator last)
 			: super(first, last) { ++counter.con_count; }
 	COPY_COUNTER_DERIVED(byte_buf, super)
 	~byte_buf() { ++counter.des_count; }
@@ -222,10 +181,18 @@ public:
 	}
 };
 
+#if USE_RVALREFS
+#define silly_move(x) std::move(x)
+#else
+#define silly_move(x) x
+#endif
 
 }
+
 }
 using namespace silly::types;
 using silly::types::uint;
+
+
 
 #endif /* SILLYTYPE_H_ */

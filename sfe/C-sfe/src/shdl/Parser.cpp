@@ -377,11 +377,12 @@ FmtFile FmtFile::parseFmt(istream &in) {
 }
 
 #include "CircuitCrypt.h"
+#include "CircuitCryptPermute.h"
 #include "sillyio.h"
 
 #include "GCircuitEval.h"
 
-static int _main(int argc, char **argv) {
+static int _main(int , char **) {
 	try {
 		cout << "1 " << 1 << " " << parseInt("1") << endl;
 		//shdl::shdltest();
@@ -401,9 +402,11 @@ static int _main(int argc, char **argv) {
 			DD(cc->outputs[i].dump();)
 		}
 
-		CircuitCrypt crypt;
+		CircuitCryptPermute crypt;
+		//CircuitCrypt crypt;
 		vector<boolean_secrets> inputSecrets;
 		GarbledCircuit_p gcc = crypt.encrypt(*cc, inputSecrets);
+
 		//cout << (&gcc) << endl;
 		cout << "write garbled circuit" << endl;
 		{
@@ -422,9 +425,19 @@ static int _main(int argc, char **argv) {
 
 		bool read_back=true;
 		if (read_back) {
-			ifstream fin("gcircuit.bin");
-			silly::io::istreamDataInput fdin(fin);
-			gcc = GarbledCircuit::readCircuit(&fdin);
+			{
+				ifstream fin("gcircuit.bin");
+				silly::io::istreamDataInput fdin(fin);
+				gcc->reset();
+				gcc.free();
+				gcc = GarbledCircuit::readCircuit(&fdin);
+			}
+			{
+			    inputSecrets.clear();
+			    ifstream fin("gsecrets.bin");
+			    silly::io::istreamDataInput fdin(fin);
+			    readVector(&fdin, inputSecrets);
+			}
 		}
 
 		cout << "evaluate garbled circuit" << endl;

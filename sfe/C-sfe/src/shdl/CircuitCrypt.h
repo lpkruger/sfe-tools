@@ -36,7 +36,8 @@ private:
 		return curId++;
 	}
 protected:
-	boolean_secrets genKeyPair(GateBase_p g);
+	virtual boolean_secrets genKeyPair(GateBase_p g);
+
 	static const string CIPHER;
 	SFEKeyGenerator KG;
 	SFECipher C;
