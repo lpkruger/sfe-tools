@@ -294,6 +294,11 @@ int main(int argc, char *argv[])
 #endif
 {
   // TODO: fix arg handling
+  if (argc!=5) {
+	  printf("Usage: PIRServer (isolated box address) (isolated box port)\n");
+	  printf("                 (database file) (database attributes file)\n");
+	  return 1;
+  }
   PIRServer server(argv[1], atoi(argv[2]), string(argv[3]), string(argv[4]));
 
   server.waitForQueries();

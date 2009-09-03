@@ -204,6 +204,11 @@ static int _main(int argc, char *argv[])
 int main(int argc, char *argv[])
 #endif
 {
+	if (argc!=6) {
+		printf("Usage: PIRClient (isolated box address) (isolated box port)\n");
+		printf("                 (server address) (server port) (attributes file)\n");
+		return 1;
+	}
   PIRClient client(argv[1], atoi(argv[2]), argv[3], atoi(argv[4]), argv[5]);
 
 //   CSVDatabase result = client.doQuery("select * from sample where State = \'NY\'");
