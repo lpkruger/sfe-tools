@@ -13,7 +13,7 @@
 
 
 void YaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
-	CircuitCrypt crypt;
+	CircuitCryptPermute crypt;
 	vector<boolean_secrets> inputSecrets;
 	GarbledCircuit_p gcc = crypt.encrypt(*cc, inputSecrets);
 	gcc->writeCircuit(out);

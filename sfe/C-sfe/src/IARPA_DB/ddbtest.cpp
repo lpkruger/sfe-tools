@@ -96,6 +96,7 @@ MAINF("dbtest", _main_dbtest);
 #include <stdexcept>
 using silly::net::ServerSocket;
 using silly::net::Socket;
+using silly::misc::toHexString;
 
 extern int iarpa_ko_populate_test_db(iarpa::DDB &ddb, int size);
 

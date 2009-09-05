@@ -9,8 +9,18 @@ extern "C" {
 #include "runopts.h"
 }
 
-void client_sfeauth_send_payload(byte *buf, int len) {
-    byte *p = buf;
+typedef unsigned char byte;
+typedef const unsigned char cuchar;
+
+bool inactive = true;
+
+extern void new_sfe_client(char*);
+extern void sfe_client_receive_packet(byte*,int);
+extern bool sfe_client_get_failflag();
+
+bool ssh_writePacket(byte *buf, int length) {
+    byte* p = buf;
+
     fprintf(stderr, "sending payload, len %d\n", length);
 
     int maxbuf = TRANS_MAX_PAYLOAD_LEN - 16;
@@ -20,7 +30,7 @@ void client_sfeauth_send_payload(byte *buf, int len) {
       n = MIN(length, maxbuf);
       buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SFEMSG);
       buf_putint(ses.writepayload, n);
-      buf_putbytes(ses.writepayload, p, n);
+      buf_putbytes(ses.writepayload, (cuchar*) p, n);
       encrypt_packet();
       fprintf(stderr, "*");
       p += n;
@@ -29,8 +39,6 @@ void client_sfeauth_send_payload(byte *buf, int len) {
 
     return true;
 }
-
-
 
 int cli_auth_sfe() {
         char* password = NULL;
@@ -53,6 +61,7 @@ int cli_auth_sfe() {
 
 
   fprintf(stderr, "cli_auth_sfe\n");
+  inactive = false;
 
   CHECKCLEARTOWRITE();
   buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
@@ -65,9 +74,7 @@ int cli_auth_sfe() {
       AUTH_METHOD_SFE_LEN);
   encrypt_packet();
 
-  new_sfe_client(password)->start()
-  jmethodID start = env->GetMethodID(clientClass, "start", "()V");
-  env->CallVoidMethod(jclient, start);
+  new_sfe_client(password);
 
 #if 0
   jbyteArray sbuf = (jbyteArray) env->CallObjectMethod(jclient, start);
@@ -80,23 +87,21 @@ int cli_auth_sfe() {
   return 1;
 }
 
+extern "C" void recv_msg_userauth_sfemsg();
+
 void recv_msg_userauth_sfemsg() {
   if (inactive) {
-    fprintf(stderr, "%");
+    fprintf(stderr, "%%");
     return;
   }
   //fprintf(stderr, "recv_msg_userauth_sfemsg\n");
   fprintf(stderr, ".");
-  jsize len = buf_getint(ses.payload);
-  jbyte *buf = (jbyte*) buf_getptr(ses.payload, len);
+  int len = buf_getint(ses.payload);
+  byte *buf = buf_getptr(ses.payload, len);
   
-  jbyteArray jbuf = env->NewByteArray(len);
-  env->SetByteArrayRegion(jbuf, 0, len, buf);
-  env->CallVoidMethod(jclient, receivePacket, jbuf);
+  sfe_client_receive_packet(buf, len);
 
-
-  jfieldID failed = env->GetFieldID(clientClass, "failure_flag", "Z");
-  if (env->GetBooleanField(jclient, failed)) {
+  if (sfe_client_get_failflag()) {
       inactive = true;
       fprintf(stderr, "Exception failure\n");
       cli_ses.state = USERAUTH_FAIL_RCVD;
@@ -110,3 +115,7 @@ void recv_msg_userauth_sfemsg() {
   }
 #endif
 }
+
+typedef int (*main_ptr)(int,char**);
+void* add_main(const char* name, main_ptr main_f) {}
+

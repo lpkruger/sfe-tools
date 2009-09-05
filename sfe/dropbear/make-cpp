@@ -1,0 +1,18 @@
+#!/bin/bash
+set -x
+JLIBDIR=$(echo $JAVA_HOME/jre/lib/*/client)
+JINCDIR=$JAVA_HOME/include
+export LD_LIBRARY_PATH=$JLIBDIR
+
+BUILD=Debug
+dir=../C-sfe/$BUILD/src
+SFE_SERVER_OBJS=$dir/ssh/SfeServer.o
+SFE_CLIENT_OBJS=$dir/ssh/SfeClient.o
+SFE_OBJS="$dir/ssh/SSH_Yao.o $dir/crypto/PinkasNaorOT.o $dir/crypto/cipher/SFE*.o $dir/shdl/*.o $dir/sillylib/silly.o $dir/sillylib/math/BigInt.o"
+DIRFLAGS="-I. -I$JINCDIR -I$JINCDIR/linux/ -L$JLIBDIR -I./libtomcrypt/src/headers/"
+gcc -c -g $DIRFLAGS -DDROPBEAR_CLIENT cli-authsfe.cc  || exit 1
+gcc -c -g $DIRFLAGS -DDROPBEAR_SERVER -DDROPBEAR_CLIENT svr-authsfe.cc  || exit 1
+
+g++  -o dropbear dbutil.o buffer.o dss.o bignum.o signkey.o rsa.o random.o queue.o atomicio.o compat.o  fake-rfc2553.o common-session.o packet.o common-algo.o common-kex.o common-channel.o common-chansession.o termcodes.o loginrec.o tcp-accept.o listener.o process-packet.o common-runopts.o circbuffer.o svr-kex.o svr-algo.o svr-auth.o sshpty.o svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o svr-chansession.o svr-runopts.o svr-agentfwd.o svr-main.o svr-x11fwd.o svr-tcpfwd.o svr-authpam.o svr-authsfe.o libtomcrypt/libtomcrypt.a libtommath/libtommath.a $SFE_SERVER_OBJS $SFE_OBJS -lutil -lz  -lcrypt -lssl -lpthread || exit 1
+g++ -o dbclient dbutil.o buffer.o dss.o bignum.o signkey.o rsa.o random.o queue.o atomicio.o compat.o  fake-rfc2553.o common-session.o packet.o common-algo.o common-kex.o common-channel.o common-chansession.o termcodes.o loginrec.o tcp-accept.o listener.o process-packet.o common-runopts.o circbuffer.o cli-algo.o cli-main.o cli-auth.o cli-authpasswd.o cli-kex.o cli-session.o cli-service.o cli-runopts.o cli-chansession.o cli-authpubkey.o cli-tcpfwd.o cli-channel.o cli-authinteract.o cli-authsfe.o libtomcrypt/libtomcrypt.a libtommath/libtommath.a  $SFE_CLIENT_OBJS $SFE_OBJS -lutil -lz  -lcrypt -lssl -lpthread || exit 1
+

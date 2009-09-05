@@ -47,7 +47,7 @@ int silly::misc::numCPUs() {
 	return cpu_count;
 }
 
-string silly::io::toBase64(const byte_buf &buf) {
+string silly::misc::toBase64(const byte_buf &buf) {
 	const char *table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 	int remainder = buf.size()%3;
@@ -90,7 +90,7 @@ string silly::io::toBase64(const byte_buf &buf) {
 }
 
 
-std::string silly::io::toHexString(const byte_buf &buf) {
+std::string silly::misc::toHexString(const byte_buf &buf) {
 	if (!buf.size())
 		return "<empty>";
 #if 1
@@ -143,7 +143,6 @@ template<class T> void resize(vector<vector<vector<T> > > &v, int d1, int d2, in
 	}
 }
 #endif
-
 
 
 void silly::net::Socket::connect(const char* host, const char* port) {
@@ -269,3 +268,25 @@ void debug_printf(const char *fmt, ...) {
 	va_end(ap);
 	fprintf(stderr, "\n");
 }
+
+//// backtrace function ////
+#include <stdio.h>
+#include <stdlib.h>
+#include <execinfo.h>
+
+void print_backtrace(int depth, const char *msg0){
+	void *addresses[depth+1];
+	char **strings;
+
+	int size = backtrace(addresses, depth+1);
+	strings = backtrace_symbols(addresses, size);
+	const char *msg = msg0 ? msg0 : "";
+	fprintf(stderr, "%s  stack frames: %d\n", msg, size-1);
+	for(int i = 1; i < size; i++)
+	{
+		fprintf(stderr, "%d: %08X\t", i, (int)addresses[i]);
+		fprintf(stderr, "%s\n", strings[i]);
+	}
+	free(strings);
+}
+///////////////////////////

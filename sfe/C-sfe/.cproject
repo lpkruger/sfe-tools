@@ -45,6 +45,13 @@
 <listOptionValue builtIn="false" value="pthread"/>
 </option>
 <option id="gnu.cpp.link.option.flags.2016664239" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-rdynamic" valueType="string"/>
+<option id="gnu.cpp.link.option.paths.133091699" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+<listOptionValue builtIn="false" value="/home/louis/src/openssl-debug"/>
+</option>
+<option id="gnu.cpp.link.option.userobjs.1278679417" name="Other objects" superClass="gnu.cpp.link.option.userobjs"/>
+<option id="gnu.cpp.link.option.other.1416337888" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">
+<listOptionValue builtIn="false" value="-rpath /home/louis/src/openssl-debug"/>
+</option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1360431809" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 <additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -56,7 +63,6 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -1453,7 +1459,6 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -2850,7 +2855,6 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -4270,7 +4274,6 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="src/sillylib2|mem|Protocol.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

@@ -8,7 +8,7 @@
 #ifndef YAOPROTOCOL_H_
 #define YAOPROTOCOL_H_
 
-#include "CircuitCrypt.h"
+#include "CircuitCryptPermute.h"
 #include "sillyio.h"
 #include "../crypto/PinkasNaorOT.h"
 #include "GCircuitEval.h"

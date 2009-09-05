@@ -15,6 +15,7 @@
 #include <sstream>
 #include <iosfwd>
 #include <memory>
+#include "sillytype.h"
 
 using std::ostream;
 
@@ -109,7 +110,9 @@ string string_printf(const char *fmt, ...)
 long currentTimeMillis();
 int numCPUs();
 
-
+string toBase64(const byte_buf &buf);
+byte_buf fromBase64(const std::string str);
+string toHexString(const byte_buf &buf);
 
 }
 }

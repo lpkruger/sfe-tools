@@ -64,11 +64,11 @@ struct FmtFile {
 
 	typedef map<int,bool> valmap;
 
-	void mapBits(BigInt &n, valmap vals, string name);
-	void mapBits(long n, valmap vals, string name);
-	void mapBits(bit_vector n, valmap vals, string name);
-	BigInt readBits(bit_vector vals, string name);
-	BigInt readBits(valmap vals, string name);
+	void mapBits(const BigInt &n, valmap &vals, const string &name);
+	void mapBits(long n, valmap &vals, const string &name);
+	void mapBits(const bit_vector &n, valmap &vals, const string &name);
+	BigInt readBits(const bit_vector &vals, const string &name);
+	BigInt readBits(const valmap &vals, const string &name);
 	VarDesc getVarDesc() {
 			return vardesc;
 	}
@@ -91,7 +91,24 @@ public:
 };
 
 class GateBase {
+protected:
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) = 0;
+	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *g) {
+		g->id = id;
+	}
 
+	GateBase_p deepCopy(map<GateBase*,GateBase_p> &mapping) {
+		map<GateBase*,GateBase_p>::iterator it;
+		it = mapping.find(this);
+		if (it != mapping.end()) {
+			return it->second;
+		}
+		GateBase_p pp = GateBase_p(deepCopy0(mapping));
+		mapping[this] = pp;
+		return pp;
+	}
+	friend class Circuit;
+	friend class Gate;
 public:
 	int id;
 	set<Gate_p> deps;
@@ -119,7 +136,7 @@ public:
 	virtual void write(ostream &out) = 0;
 	//virtual GateBase copy_rec(Map<GateBase,GateBase> map);
 
-};
+	};
 
 class Circuit {
 public:
@@ -131,9 +148,12 @@ public:
 	void calcDeps();
 	void clearDeps();
 
+	Circuit_p deepCopy();
+
 	~Circuit() {
 		clearDeps();
 	}
+
 };
 
 class Gate : public GateBase {
@@ -144,6 +164,22 @@ public:
 
 	Gate(int id0) : GateBase(id0) {}
 
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) {
+		Gate *gg = new Gate(id);
+		deepCopy1(mapping, gg);
+		return gg;
+	}
+
+	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg) {
+		GateBase::deepCopy1(mapping, gg);
+		Gate *g = (Gate*) gg;
+		g->arity = arity;
+		g->truthtab = truthtab;
+		g->inputs.resize(inputs.size());
+		for (uint i=0; i < inputs.size(); ++i) {
+			g->inputs[i] = inputs[i]->deepCopy(mapping);
+		}
+	}
 	virtual string toString() {
 		return string("[Gate ") + id + " arity " + arity + "]";
 	}
@@ -207,7 +243,15 @@ public:
 
 class Output : public Gate {
 public:
+
 	Output(int id0) : Gate(id0) {}
+	Output(const Output& copy) : Gate(copy) {}
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) {
+		Output *g = new Output(id);
+		deepCopy1(mapping, g);
+		return g;
+	}
+
 	string toString() {
 		return string("[Output ") + id + " arity " + arity + "]";
 	}
@@ -222,9 +266,15 @@ public:
 class Input : public GateBase {
 public:
 	int var;
-	Input(int id0, int var0) : GateBase(id0), var(var0) {
-		//this.var = var;
+	Input(int id0, int var0) : GateBase(id0), var(var0) {}
+
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) {
+		Input *g = new Input(id, var);
+		return g;
 	}
+
+	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg) {}
+
 	string toString() {
 		return string("[Input ") + id + " (" + var + ") ]";
 	}
@@ -247,6 +297,24 @@ public:
 	virtual bool isInput() { return true; }
 	virtual bool isOuput() { return false; }
 };
+
+
+inline Circuit_p Circuit::deepCopy() {
+	Circuit_p pNewCirc = Circuit_p(new Circuit());
+	Circuit& newCirc = *pNewCirc;
+	map<GateBase*,GateBase_p> mapping;
+	newCirc.inputs.resize(inputs.size());
+	newCirc.outputs.resize(outputs.size());
+	for (uint i=0; i<inputs.size(); ++i) {
+		Input_p ppp(dynamic_pointer_cast<Input>(inputs[i]->deepCopy(mapping)));
+		newCirc.inputs[i] = ppp;
+	}
+	for (uint i=0; i<outputs.size(); ++i) {
+		Output_p ppp(dynamic_pointer_cast<Output>(outputs[i]->deepCopy(mapping)));
+		newCirc.outputs[i] = ppp;
+	}
+	return pNewCirc;
+}
 
 inline EvalState::EvalState(Circuit &cc, bit_vector &in) {
 	for (uint i=0; i<in.size(); ++i) {

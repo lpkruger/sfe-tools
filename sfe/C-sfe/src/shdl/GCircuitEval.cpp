@@ -132,7 +132,7 @@ byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,b
 		}
 		DC("lengths: " << ink->size() << "  " << ink2->size() << endl);
 
-		ink = new byte_buf(SFEKey::xxor(*ink, *ink2));
+		ink = new byte_buf(crypto::cipher::xxor(*ink, *ink2));
 		DC("ink from xxor: " << ink->size());
 		add_garbage(ink);
 		DC("newlens: " << ink->size() << "  " << ink2->size() << endl);
@@ -149,11 +149,11 @@ byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,b
 
 	byte_buf* out = NULL;
 	SFEKey sk(ink);
-
+	SecretKey *sk_ptr = &sk;
 	// TODO: don't use bad_padding exception, it's slow
 	for (uint i=ttstart; i<g->truthtab.size(); ++i) {
 		try {
-			C.init(C.DECRYPT_MODE, sk);
+			C.init(C.DECRYPT_MODE, sk_ptr);
 
 			//C.use_padding = false;
 			out = new byte_buf(C.doFinal(g->truthtab[i]));
@@ -161,7 +161,9 @@ byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,b
 			if (out->size() == KG.getLength()/8)
 				break;
 		} catch (bad_padding ex) {
-			printf("bad padding %s\n", ex.what());
+			if (gcc.use_permute) {
+				printf("bad padding %s\n", ex.what());
+			}
 			// it wasn't the right one, keep trying
 		}
 	}

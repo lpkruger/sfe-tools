@@ -2,5 +2,5 @@
 set -x
 JLIBDIR=$(echo $JAVA_HOME/jre/lib/*/client)
 export LD_LIBRARY_PATH=$JLIBDIR
-sh m || exit 1
+sh make-cpp || exit 1
 ./dbclient localhost -p 2222

@@ -1,6 +1,8 @@
 OTHER_ICPCFLAGS=-DMAIN_OVERLOAD -march=core2 -mtune=core2 -xT -ip #-ipo
-OTHER_CXXFLAGS=-DMAIN_OVERLOAD -pipe -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo -Wall -Wextra -Wno-unused-parameter
-#-DUSE_RVALREFS=1
+
+RVALS=-DUSE_RVALREFS=1
+OTHER_CXXFLAGS=-DMAIN_OVERLOAD ${RVALS} -pipe -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo -Wall -Wextra -Wno-unused-parameter
+
 #-Wold-style-cast -Weffc++ -frepo -Wno-pmf-conversions
 
 # include a main() program for main build
@@ -11,3 +13,12 @@ OTHER_CXXFLAGS=-DMAIN_OVERLOAD -pipe -fdiagnostics-show-option -fpermissive -Wov
 
 #userclean:
 #	-rm $(USER_OBJS)
+
+
+
+#USER_OBJS += delete_special
+
+delete_special:
+	-rm src/ssh/SfeServer.?
+
+.PHONY: delete_special

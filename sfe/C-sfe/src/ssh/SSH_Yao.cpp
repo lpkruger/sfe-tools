@@ -5,10 +5,15 @@
  *      Author: louis
  */
 
+#define DEBUG 1
+#define DEBUG2 1
 #include <algorithm>
 #include "SSH_Yao.h"
-//#define DEBUG 1
+#include "AuthStreams.h"
+
 #include "sillydebug.h"
+
+static bool use_permute = false;
 
 template<class T> inline void
 flatten(vector<vector<T> > &in, vector<T> &out, vector<int> &geom) {
@@ -63,8 +68,11 @@ using std_obj_rw::writeObject;
 
 #if DEBUG
 
-void D(const SecretKey_p &k, int lev=0) {
-	D(*k->getEncoded(), lev);
+void D_ON(const SecretKey_p &k, int lev=0) {
+	D(k->getEncoded(), lev);
+}
+void D_ON(const SFEKey_p &k, int lev=0) {
+	D(k->getEncoded(), lev);
 }
 void D(const boolean_secrets &secr, int lev=0) {
 	D(secr.s0, lev);
@@ -77,6 +85,20 @@ void D(const boolean_secrets &secr, int lev=0) {
 //	VarParty(const string &w) : who(w) {}
 //	bool operator()()
 //};
+
+static void test_eval(int n, GarbledCircuit &gcc, vector<boolean_secrets> &inputSecrets) {
+	const char *test = "11110100001010011011100000101100011011000101011010000010100101011111100001001111011001000010001110111010101111011001101000000000";
+	int testlen=strlen(test);
+	GCircuitEval geval;
+	vector<SecretKey_p> gcirc_input(inputSecrets.size());
+	for (uint i=0; i<gcirc_input.size(); ++i) {
+		gcirc_input[i] = inputSecrets[i][test[i%testlen]-'0'];
+	}
+	bit_vector circ_out = geval.eval(gcc, gcirc_input);
+	DC("test eval " << n);
+	D(circ_out);
+	printf("test_eval %d %u\n", testlen, gcirc_input.size());
+}
 
 #define USE_THREADS 4
 
@@ -94,9 +116,43 @@ public:
 	CircuitCrypter(int n0, Circuit_p c0, GarbledCircuit_p *g0, vector<boolean_secrets> *i0)
 			: n(n0), cc(c0), gcc(g0), inpsecs(i0) {}
 	void* run() {
-		CircuitCrypt crypt;
 		fprintf(stderr, "circuitcrypter %d starting\n", n);
-		*gcc = crypt.encrypt(*cc, *inpsecs);
+
+
+
+#if 0 // just a test
+		Circuit copy;
+		copy = cc->deepCopy();
+		if (use_permute) {
+			CircuitCryptPermute crypt;
+			*gcc = crypt.encrypt(copy, *inpsecs);
+		} else {
+			CircuitCrypt crypt;
+			*gcc = crypt.encrypt(copy, *inpsecs);
+		}
+		test_eval(n, **gcc, *inpsecs);
+		copy = cc->deepCopy();
+		if (!use_permute) {
+			CircuitCryptPermute crypt;
+			*gcc = crypt.encrypt(*cc, *inpsecs);
+		} else {
+			CircuitCrypt crypt;
+			*gcc = crypt.encrypt(*cc, *inpsecs);
+		}
+		test_eval(1000+n, **gcc, *inpsecs);
+		copy = cc->deepCopy();
+#else
+#define copy cc
+#endif
+
+		if (use_permute) {
+			CircuitCryptPermute crypt;
+			*gcc = crypt.encrypt(*copy, *inpsecs);
+		} else {
+			CircuitCrypt crypt;
+			*gcc = crypt.encrypt(*copy, *inpsecs);
+		}
+#undef copy
 		return NULL;
 	}
 };
@@ -104,6 +160,9 @@ public:
 
 void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	FmtFile::VarDesc vars = fmt.getVarDesc();
+
+	D("inputs:");
+	D(inputs);
 
 	int L = in->readInt();
 	vector<vector<boolean_secrets> > inputSecrets(L);
@@ -117,8 +176,9 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		ThreadPool pool(numCPUs()*2);
 		CircuitCrypter *crypters[L];
 		for (int n=0; n<L; ++n) {
-			crypters[n] = new CircuitCrypter(n, cc, &gcc[n], &inputSecrets[n]);
+			crypters[n] = new CircuitCrypter(n, cc->deepCopy(), &gcc[n], &inputSecrets[n]);
 			pool.submit(crypters[n]);
+
 		}
 		pool.stopWait();
 		//pool.waitIdle();
@@ -130,10 +190,17 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 
 #else
 	{
-		CircuitCrypt crypt;
-		for (int n=0; n<L; ++n) {
-			fprintf(stderr, "crypt circuit %d\n", n+1);
-			gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
+		if (use_permute) {
+			CircuitCryptPermute crypt;
+			for (int n=0; n<L; ++n) {
+				fprintf(stderr, "cryptp circuit %d\n", n+1);
+				gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
+			}
+		} else {
+			CircuitCrypt crypt;
+			for (int n=0; n<L; ++n) {
+				fprintf(stderr, "crypt circuit %d\n", n+1);
+				gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
 		}
 	}
 #endif
@@ -141,7 +208,7 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	fprintf(stderr, "crypted %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
 			L, (time_crypt-time_start)/1.0e3, (time_crypt-time_start)/(1.0e3*L));
 
-#if DEBUG
+#if 0 && DEBUG
 	for (int n=0; n<L; ++n) {
 		DD(printf("\ncopy %d:\n", n));
 		D(inputSecrets[n]);
@@ -164,10 +231,10 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		}
 	}
 
-	D("mine");
-	D(all_myinpsecs);
-	D("yours");
-	D(all_yourinpsecs);
+//	D("mine");
+//	D(all_myinpsecs);
+//	D("yours");
+//	D(all_yourinpsecs);
 
 	BigInt_Cube all_otvals(L);
 
@@ -192,6 +259,7 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	sender.setStreams(in, out);
 	fprintf(stderr, "OT precalc\n");
 	sender.precalc();
+	check_sync();
 	long ot_calc = currentTimeMillis();
 	fprintf(stderr, "OT online\n");
 	sender.online();
@@ -235,8 +303,8 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	D(all_my_unchosen_secrets.getPerm());
 
 	for (uint i=0; i<all_my_unchosen_secrets.size(); ++i) {
-		DF("my unchosen secret %u:\n", i);
-		D(all_my_unchosen_secrets[i]);
+		//DF("my unchosen secret %u:\n", i);
+		//D(all_my_unchosen_secrets[i]);
 	}
 
 	vector<vector<SFEKey_p> > my_sent_secrets(all_my_unchosen_secrets.size());
@@ -249,7 +317,12 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		}
 	}
 	D("my sent secrets:");
-	D(my_sent_secrets);
+	//D(my_sent_secrets);
+	for (uint q=0; q<my_sent_secrets.size(); ++q) {
+		for (uint qq=0; qq<my_sent_secrets[q].size(); ++qq) {
+			//D(my_sent_secrets[q][qq]);
+		}
+	}
 	writeVector(out, my_sent_secrets);
 	fprintf(stderr, "done\n");
 	check_sync();
@@ -275,6 +348,8 @@ public:
 #endif
 
 bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
+	D("inputs:");
+	D(inputs);
 	if (L<2)
 		throw bad_argument("L must be at least 2");
 	out->writeInt(L);
@@ -286,12 +361,15 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 		allinputs.insert(allinputs.end(), inputs.begin(), inputs.end());
 	}
 
+	D("allinputs:");
+	D(allinputs);
 	PinkasNaorOT ot;
 	OTChooser chooser(allinputs, &ot);
 	chooser.setStreams(in, out);
 	long ot_start = currentTimeMillis();
 	fprintf(stderr, "OT precalc\n");
 	chooser.precalc();
+	check_sync();
 	long ot_calc = currentTimeMillis();
 	fprintf(stderr, "OT online\n");
 	BigInt_Vect all_myotsecs_flat =
@@ -354,7 +432,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 			all_myinputsecs, eval_perm);
 
 	vector<vector<SecretKey_p> > gcirc_input(LL);
-	for (uint n=0; n<LL; ++n) {
+	for (int n=0; n<LL; ++n) {
 		gcirc_input[n].resize(cc->inputs.size());
 		int ja=0;
 		int jb=0;
@@ -374,8 +452,10 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	ThreadPool pool(numCPUs()*2);
 	CircuitEvaluator *evaluators[LL];
 	for (int n=0; n<LL; ++n) {
-		fprintf(stderr, "eval circuit %u\n", n);
-		D(gcirc_input[n]);
+		//fprintf(stderr, "eval circuit %u\n", n);
+		for (uint q=0; q<gcirc_input[n].size(); ++q) {
+			//D(gcirc_input[n][q]);
+		}
 		evaluators[n] = new CircuitEvaluator(
 				n, eval_gcc[n], &gcirc_input[n]);
 		pool.submit(evaluators[n]);
@@ -383,9 +463,16 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	}
 	pool.stopWait();
 	for (int n=0; n<LL; ++n) {
-		if (evaluators[n]->circ_out.size() != 1)
-			throw ProtocolException("circuit should have 1 output");
-		output0[n] = evaluators[n]->circ_out[0];
+
+		printf("received %d outputs", evaluators[n]->circ_out.size());
+		bool success = false;
+		for (uint j=0; j<evaluators[n]->circ_out.size(); ++j) {
+			if (evaluators[n]->circ_out[j])
+				success = true;
+		}
+		printf(": %d\n", success);
+
+		output0[n] = success;
 		delete evaluators[n];
 	}
 #else

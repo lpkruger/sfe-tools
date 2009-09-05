@@ -49,16 +49,17 @@ typedef bool boolean;
 //typedef vector<byte, gc_allocator<byte> > byte_buf;
 class byte_buf : public vector<byte> {
 	typedef vector<byte> super;
-	static object_counter counter;
 public:
-	explicit byte_buf() : super() { ++counter.con_count; }
-	explicit byte_buf(size_type size) : super(size) { ++counter.con_count; }
-	explicit byte_buf(size_type size, byte value) : super(size, value) { ++counter.con_count; }
+	static object_counter counter;
+
+	explicit byte_buf() : super() { counter.count_con(); }
+	explicit byte_buf(size_type size) : super(size) { counter.count_con(); }
+	explicit byte_buf(size_type size, byte value) : super(size, value) { counter.count_con(); }
 	template<class InputIterator>
 	explicit byte_buf(InputIterator first, InputIterator last)
-			: super(first, last) { ++counter.con_count; }
+			: super(first, last) { counter.count_con(); }
 	COPY_COUNTER_DERIVED(byte_buf, super)
-	~byte_buf() { ++counter.des_count; }
+	~byte_buf() { counter.count_des(); }
 
 };
 

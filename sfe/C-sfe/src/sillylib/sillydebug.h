@@ -14,7 +14,7 @@ void print_backtrace(int depth=10, const char *msg=0);
 
 #if !defined(DEBUG) && !defined(DEBUG2)
 #define D D_OFF
-template<class T> static inline void D(T x) {}
+template<class T> static inline void D(T x, int lev=0) {}
 #define DD(x)
 #define DC(x)
 static inline void sillydebug_dummy(...) {}
@@ -53,6 +53,7 @@ static inline void D(const bigint::BigInt &n, int lev=0) {
 }
 #endif
 
+namespace debug_vector {
 template<class T,class A=std::allocator<T> > static void D(const vector<T,A> &vec, int lev=0) {
 	Dlevel(lev);
 	fprintf(stderr, "[%u]:\n ", vec.size());
@@ -70,6 +71,10 @@ template<> void D(const vector<int> &vec, int lev) {
 	}
 	fprintf(stderr, "]\n");
 }
+}
+
+using debug_vector::D;
+
 static inline void D(const byte_buf &vec, int lev) {
 	Dlevel(lev);
 	fprintf(stderr, "[%u: ", vec.size());

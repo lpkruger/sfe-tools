@@ -71,6 +71,10 @@ public:
 			}
 	}
 
+	void stop() {
+		throwIfError(pthread_cancel(thread));
+	}
+
 	void detach() {
 		throwIfError(pthread_detach(thread));
 		thread = -1;
@@ -269,6 +273,10 @@ public:
 		running = true;
 		super::detach();
 	}
+	void stop() {
+		super::stop();
+	}
+
 	void* join() {
 		if (returned)
 			return retval;

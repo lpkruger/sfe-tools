@@ -174,6 +174,12 @@ public:
 		return r;
 	}
 
+	BigInt gcd(BNcPtr b) {
+		BigInt r;
+		BN_gcd(r, *this, b, bn_ctx);
+		return r;
+	}
+
 	BigInt negate() const {
 		BigInt r(*this);
 		BN_set_negative(r, !r.isNegative());
@@ -188,6 +194,8 @@ public:
 	int bitLength() const {
 		return BN_num_bits(*this);
 	}
+
+
 
 	BigInt xxor(const BigInt &b) const {
 		byte_buf aa = fromPosBigInt(*this);
@@ -241,6 +249,14 @@ public:
 		if (ptr() == o)
 			return true;
 		return BN_cmp(*this, o) == 0;
+	}
+	bool equals(ulong n) const {
+		if (n == ulong(-1L)) {
+			return equals(BigInt(n));
+		}
+		if (BN_get_word(*this) == n)
+			return true;
+		return false;
 	}
 
 	BIGNUM* writePtr() {
@@ -626,6 +642,7 @@ OP0c(-, negate)
 OP1c(+, add, CBI)
 OP1c(-, subtract, CBI)
 OP1c(*, multiply, CBI)
+OP1c(/, divide, CBI)
 OP1c(%, mod, CBI)
 OP1m(+=, addThis, CBI)
 OP1m(-=, subtractThis, CBI)

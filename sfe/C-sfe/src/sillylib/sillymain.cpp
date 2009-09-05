@@ -32,27 +32,7 @@ void* add_main(const char* name, main_ptr main_f) {
 }
 
 
-//// backtrace function ////
-#include <stdio.h>
-#include <stdlib.h>
-#include <execinfo.h>
 
-void print_backtrace(int depth, const char *msg0){
-	void *addresses[depth+1];
-	char **strings;
-
-	int size = backtrace(addresses, depth+1);
-	strings = backtrace_symbols(addresses, size);
-	const char *msg = msg0 ? msg0 : "";
-	fprintf(stderr, "%s  stack frames: %d\n", msg, size-1);
-	for(int i = 1; i < size; i++)
-	{
-		fprintf(stderr, "%d: %08X\t", i, (int)addresses[i]);
-		fprintf(stderr, "%s\n", strings[i]);
-	}
-	free(strings);
-}
-///////////////////////////
 
 int main_go(main_ptr main_f, int argc, char **argv) {
 	return main_f(argc, argv);

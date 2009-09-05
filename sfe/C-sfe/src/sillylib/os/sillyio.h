@@ -153,6 +153,31 @@ public:
 	}
 };
 
+class BytesDataInput : public DataInput {
+public:
+	byte_buf buf;
+	uint pos;
+
+protected:
+	virtual int tryRead(byte* c, int len0) {
+		uint len = len0;
+		if (buf.size()-pos > len) {
+			memcpy(c, &buf[pos], len);
+			pos += len;
+			if (buf.size()-pos < 1024) { // arbitrary
+				buf.erase(buf.begin(), buf.begin()+pos);
+				pos = 0;
+			}
+			return len;
+		} else {
+			len = buf.size();
+			memcpy(c, &buf[pos], len);
+			buf.clear();
+			return len;
+		}
+	}
+};
+
 class FDDataOutput : public DataOutput {
 	int fd;
 public:
@@ -271,12 +296,18 @@ inline void writeObject(DataOutput *out, byte_buf &vec) {
 inline void readObject(DataInput *in, byte_buf &vec) {
 	readVector(in, vec);
 }
+inline void writeObject(DataOutput *out, std::string &vec) {
+	byte_buf buf(vec.begin(), vec.end());
+	writeVector(out, buf);
 }
 
+inline void readObject(DataInput *in, std::string &vec) {
+	byte_buf buf;
+	readVector(in, buf);
+	vec.assign(buf.begin(), buf.end());
+}
 
-std::string toBase64(const byte_buf &buf);
-byte_buf fromBase64(const std::string str);
-std::string toHexString(const byte_buf &buf);
+}
 
 #undef D
 

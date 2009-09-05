@@ -6,15 +6,6 @@
  */
 
 #include "Paillier.h"
-/*
-Paillier::Paillier() {
-	// TODO Auto-generated constructor stub
-
-}*/
-
-Paillier::~Paillier() {
-	// TODO Auto-generated destructor stub
-}
 
 
 /*

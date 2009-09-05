@@ -157,13 +157,13 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 				throw null_pointer("s1 is null");
 #endif
 
-			thisKey = SFEKey_p(SFEKey::xxor(*thisKey,
+			thisKey = SFEKey_p(crypto::cipher::xxor(*thisKey,
 					((i >> (egate->arity-j-1) & 0x1) == 0) ? *inpsecs[j][0] : *inpsecs[j][1],
 							CIPHER));
 		}
 
 		//			try {
-		C.init(C.ENCRYPT_MODE, *thisKey);
+		C.init(C.ENCRYPT_MODE, thisKey.to_ptr());
 		egate->truthtab[i] = C.doFinal(*secr[gate-> truthtab[i]?1:0]->getRawBuffer());
 		DF("final tt%d  %s", i, toHexString(egate->truthtab[i]).c_str());
 

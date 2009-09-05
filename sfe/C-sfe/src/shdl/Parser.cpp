@@ -242,7 +242,7 @@ int FmtFile::numPrefix(const char* prefix, int party) {
 	return count;
 }
 
-void FmtFile::mapBits(BigInt &n, valmap vals, string name) {
+void FmtFile::mapBits(const BigInt &n, valmap &vals, const string &name) {
 	//System.out.println("set bits: " + name + " = " + n);
 	Obj obj = mapping.at(name);
 	for (uint j=0; j<obj.bits.size(); ++j) {
@@ -252,7 +252,7 @@ void FmtFile::mapBits(BigInt &n, valmap vals, string name) {
 	}
 }
 
-void FmtFile::mapBits(long n, valmap vals, string name) {
+void FmtFile::mapBits(long n, valmap &vals, const string &name) {
 	BigInt nn(n);
 	mapBits(nn, vals, name);
 }
@@ -264,7 +264,7 @@ void FmtFile::mapBits(long n, valmap vals, string name) {
 */
 
 
-void FmtFile::mapBits(bit_vector n, valmap vals, string name) {
+void FmtFile::mapBits(const bit_vector &n, valmap &vals, const string &name) {
 	Obj obj = mapping.at(name);
 	for (uint j=0; j<obj.bits.size(); ++j) {
 		int i = obj.bits.at(j);
@@ -275,7 +275,7 @@ void FmtFile::mapBits(bit_vector n, valmap vals, string name) {
 
 // BUG: outputmap is wrong if format file is not monotonic
 
-BigInt FmtFile::readBits(bit_vector vals, string name) {
+BigInt FmtFile::readBits(const bit_vector &vals, const string &name) {
 	//System.out.print("get bits: " + name);
 	Obj obj = mapping.at(name);
 	BigInt zz(0);
@@ -293,7 +293,7 @@ BigInt FmtFile::readBits(bit_vector vals, string name) {
 
 }
 
-BigInt FmtFile::readBits(valmap vals, string name) {
+BigInt FmtFile::readBits(const valmap &vals, const string &name) {
 	BigInt n(0);
 	Obj obj = mapping.at(name);
 	for (uint j=0; j<obj.bits.size(); ++j) {
@@ -342,7 +342,7 @@ FmtFile FmtFile::parseFmt(istream &in) {
 			throw ParseException(msg.str());
 		}
 
-		obj.name = spl[3].substr(1, spl[3].length()-1);
+		obj.name = spl[3].substr(1, spl[3].length()-2);
 
 		obj.bits.resize(spl.size() - 6);
 
@@ -358,7 +358,7 @@ FmtFile FmtFile::parseFmt(istream &in) {
 				fmt.outputmap[obj.bits[i-5]] = (outputNum++);
 			}
 		}
-
+		printf("%s\n", obj.name.c_str());
 		fmt.mapping[obj.name] = obj;
 	}
 
@@ -387,14 +387,14 @@ static int _main(int , char **) {
 		cout << "1 " << 1 << " " << parseInt("1") << endl;
 		//shdl::shdltest();
 		// test fmtfile
-		//ifstream fmtin("/home/louis/sfe/priveq.fmt");
-		ifstream fmtin("/home/louis/sfe/priveq2.fmt");
+		ifstream fmtin("/home/louis/sfe/priveq.fmt");
+		//ifstream fmtin("/home/louis/sfe/priveq2.fmt");
 		//ifstream fmtin("/home/louis/sfe/md5_pw_cmp.fmt");
 		FmtFile::parseFmt(fmtin);
 		cout << "Read fmt file" << endl;
 		// test circuit
-		//ifstream in("/home/louis/sfe/priveq.circ");
-		ifstream in("/home/louis/sfe/priveq2.circ");
+		ifstream in("/home/louis/sfe/priveq.circ");
+		//ifstream in("/home/louis/sfe/priveq2.circ");
 		//ifstream in("/home/louis/sfe/md5_pw_cmp.circ");
 		Circuit_p cc = Circuit::parseCirc(in);
 
@@ -405,8 +405,9 @@ static int _main(int , char **) {
 		CircuitCryptPermute crypt;
 		//CircuitCrypt crypt;
 		vector<boolean_secrets> inputSecrets;
-		GarbledCircuit_p gcc = crypt.encrypt(*cc, inputSecrets);
-
+		Circuit_p copy = cc->deepCopy();
+		GarbledCircuit_p gcc = crypt.encrypt(*copy, inputSecrets);
+		copy.unref();
 		//cout << (&gcc) << endl;
 		cout << "write garbled circuit" << endl;
 		{
@@ -444,7 +445,7 @@ static int _main(int , char **) {
 		GCircuitEval geval;
 		vector<SecretKey_p> gcirc_input(inputSecrets.size());
 		for (uint i=0; i<gcirc_input.size(); ++i) {
-			gcirc_input[i] = inputSecrets[i].s0;
+			gcirc_input[i] = inputSecrets[i][i%2?1:0];
 		}
 		bit_vector circ_out = geval.eval(*gcc, gcirc_input);
 		for (uint i=0; i<circ_out.size(); ++i) {

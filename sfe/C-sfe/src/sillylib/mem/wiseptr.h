@@ -245,7 +245,7 @@ public:
 		free();
 	}
 
-	template<class U> static Twptr dyn_cast(wise_ptr<U> &p0) {
+	template<class U> static Twptr dyn_cast(const wise_ptr<U> &p0) {
 		T *pp = dynamic_cast<T*>(p0.to_ptr());
 		if (pp) {
 			Twptr &pref = (Twptr&) p0;
@@ -276,8 +276,9 @@ public:
 	}
 };
 
-template<class T, class U> static inline const wise_ptr<T>
-			dynamic_pointer_cast(wise_ptr<U> &p0) {
+// note: T is class, NOT wise_ptr<class> or class_p-- I always forget
+template<class T, class U> static inline wise_ptr<T>
+			dynamic_pointer_cast(const wise_ptr<U> &p0) {
 	return wise_ptr<T>::dyn_cast(p0);
 }
 

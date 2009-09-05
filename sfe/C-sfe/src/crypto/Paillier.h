@@ -8,130 +8,162 @@
 #ifndef PAILLIER_H_
 #define PAILLIER_H_
 
-#include <openssl/bn.h>
+#include "cipher/Cipher.h"
+#include "bigint.h"
 
-typedef BIGNUM* BigInteger;
+namespace crypto {
+namespace cipher {
 
-class Paillier {
-public:
-	BigInteger ZERO;
-	BigInteger ONE;
+using namespace silly::bigint;
 
-	BigInteger n;
-	BigInteger g;
+// L function
+static BigInt L(const BigInt &u, const BigInt &n) {
+	return (u-1)/n;
+}
 
-	BigInteger encrypt(BIGNUM M);
-	BigInteger add(BigInteger x, BigInteger y);
-
-	Paillier() {
-		ZERO = BN_new();
-		ONE = BN_new();
-		BN_zero(ZERO);
-		BN_one(ONE);
-
+struct PaillierEncKey {
+	BigInt n;
+	BigInt g;
+	BigInt n2;
+	//		public String toString() {
+	//			return "EncKey("+g+","+n+")";
+	//		}
+	PaillierEncKey(const BigInt &n0, const BigInt &g0) : n(n0), g(g0) {
+		n2 = n*n;
 	}
-	virtual ~Paillier();
-
-/*
-	// private key, not serializable
-	final public static class DecKey implements HomomorphicCipher.DecKey {
-		BigInteger n;
-		BigInteger g;
-		BigInteger lambda;
-		BigInteger u;
-
-		DecKey(BigInteger n, BigInteger g, BigInteger lambda, BigInteger u) {
-			this.n = n;
-			this.g = g;
-			this.lambda = lambda;
-			this.u = u;
-		}
-
-		public EncKey encKey() {
-			return new EncKey(n, g);
-		}
-
-		public BigInteger decrypt(BigInteger z) {
-			BigInteger n2 = n.multiply(n);
-			return L(z.modPow(lambda, n2), n).multiply(u).mod(n);
-		}
-
-
-	}
-
-	// L function
-	static BigInteger L(BigInteger u, BigInteger n) {
-		return u.subtract(ONE).divide(n);
-	}
-
-	public static DecKey genKey(int nBits) {
-		Random rand = new Random();
-
-		BigInteger p = new BigInteger(nBits, 100, rand);
-		BigInteger q;
+	BigInt encrypt(BigInt &M) {
+		BigInt r;
 		do {
-			q = new BigInteger(nBits, 100, rand);
-		} while (q.equals(p));
+			r = BigInt::random(n2.bitLength()).mod(n2);
+		} while (!r.gcd(n).equals(1));
 
-		//System.out.println("p=" + p + "  q=" + q);
+		return g.modPow(M, n2).modMultiply(r.modPow(n, n2), n2);
+	}
+	BigInt add(const BigInt &x, const BigInt &y) {
+		return x.modMultiply(y, n2);
+	}
+};
+
+struct PaillierDecKey {
+	BigInt n;
+	BigInt g;
+	BigInt lambda;
+	BigInt u;
+	BigInt n2;
+	PaillierDecKey(BigInt n0, BigInt &g0, BigInt &lambda0, BigInt &u0) :
+		n(n0), g(g0), lambda(lambda0), u(u0) {
+		n2 = n*n;
+	}
+
+	PaillierEncKey encKey() {
+		return PaillierEncKey(n, g);
+	}
+
+	BigInt decrypt(BigInt &z) {
+		BigInt n2 = n.multiply(n);
+		return L(z.modPow(lambda, n2), n).multiply(u).mod(n);
+	}
+
+};
+
+class Paillier : public Cipher {
+public:
+	BigInt n;
+	BigInt g;
+
+
+	static PaillierDecKey genKey(int nBits) {
+		BigInt p = BigInt::random(nBits).nextProbablePrime();
+		BigInt q;
+		do {
+			q = BigInt::random(nBits).nextProbablePrime();
+		} while (q == p);
+
+		//out("p=" + p + "  q=" + q);
 
 		// computer LCM(p-1, q-1)
-		BigInteger pm1 = p.subtract(ONE);
-		BigInteger qm1 = q.subtract(ONE);
-		BigInteger gcd = pm1.gcd(qm1);
-		BigInteger lambda = pm1.divide(gcd).multiply(qm1);
+		BigInt pm1 = p-1;
+		BigInt qm1 = q-1;
+		BigInt gcd = pm1.gcd(qm1);
+		BigInt lambda = pm1/gcd*qm1;
 
-		BigInteger n = p.multiply(q);
-		BigInteger n2 = n.multiply(n);
+		BigInt n = p.multiply(q);
+		BigInt n2 = n.multiply(n);
 
-		BigInteger g;
-		BigInteger u;
+		BigInt g;
+		BigInt u;
 		do {
-			g = new BigInteger(n2.bitLength()+16, rand).mod(n2);
+			g = BigInt::random(n2.bitLength()).mod(n2);
 			u = L(g.modPow(lambda, n2), n);
-		} while (!g.gcd(n).equals(ONE) || !u.gcd(n).equals(ONE));
+		} while (!g.gcd(n).equals(1) || !u.gcd(n).equals(1));
 		u = u.modInverse(n);
 
-		return new DecKey(n, g, lambda, u);
+		return PaillierDecKey(n, g, lambda, u);
 	}
-
-	// test
-	public static void main(String[] args) {
-		Random rand = new Random();
-
-		int nbits = Integer.parseInt(args[0]);
-
-		DecKey d = genKey(nbits);
-
-		System.out.println("DecKey:"); // rpqyn
-		System.out.println("n = " + d.n);
-		System.out.println("lambda = " + d.lambda);
-		System.out.println("u = " + d.u);
-		System.out.println();
-
-		EncKey e = d.encKey();
-		System.out.println("g = " + e.g);
-		System.out.println("n = " + e.n);
-		System.out.println();
-
-
-		BigInteger M = new BigInteger(d.n.bitLength() + 16, rand).mod(d.n);
-		System.out.println("M = " + M);
-		BigInteger z1 = e.encrypt(M);
-		System.out.println("z1 = " + z1);
-		BigInteger z2 = e.encrypt(M);
-		System.out.println("z2 = " + z2);
-		BigInteger z3 = e.encrypt(M);
-		System.out.println("z3 = " + z3);
-		BigInteger M1 = d.decrypt(z1);
-		System.out.println("M1 = " + M1);
-		BigInteger M2 = d.decrypt(z2);
-		System.out.println("M2 = " + M2);
-		BigInteger M3 = d.decrypt(z3);
-		System.out.println("M3 = " + M3);
-	}
-
-	 */
 };
+
+#define out(x) std::cout << x << std::endl
+#define nl() std::cout << std::endl
+	// test
+
+
+
+}
+}
+
+using namespace crypto::cipher;
+
+static std::ostream& operator<<(std::ostream &out, const BigInt& num) {
+	out << num.toString();
+	return out;
+}
+
+static int _main(int argc, char **argv) {
+	vector<string> args(argc-1);
+	for (int i=1; i<argc; ++i) {
+		args[i-1] = argv[i];
+	}
+
+	int nbits = strtol(args.at(0).c_str(), NULL, 0);
+
+	PaillierDecKey d = Paillier::genKey(nbits);
+
+	out("DecKey:"); // rpqyn
+	out("n = " << d.n);
+	out("lambda = " << d.lambda);
+	out("u = " << d.u);
+	nl();
+
+	PaillierEncKey e = d.encKey();
+	out("g = " << e.g);
+	out("n = " << e.n);
+	nl();
+
+
+	BigInt M = BigInt::random(d.n.bitLength()).mod(d.n);
+	out("M = " << M);
+	BigInt z1 = e.encrypt(M);
+	out("z1 = " << z1);
+	BigInt z2 = e.encrypt(M);
+	out("z2 = " << z2);
+	BigInt z3 = e.encrypt(M);
+	out("z3 = " << z3);
+	BigInt M1 = d.decrypt(z1);
+	out("M1 = " << M1);
+	BigInt M2 = d.decrypt(z2);
+	out("M2 = " << M2);
+	BigInt M3 = d.decrypt(z3);
+	out("M3 = " << M3);
+	nl();
+	out("   3 * M = " << (M*3));
+	BigInt z_3 = e.add(e.add(z1,z2),z3);
+	out("z1+z2+z3 = " << z_3);
+	out("D(3 * z) = " << d.decrypt(z_3));
+	nl();
+	return 0;
+}
+
+#include "sillymain.h"
+MAIN("pailliertest")
 
 #endif /* PAILLIER_H_ */

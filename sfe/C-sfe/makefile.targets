@@ -6,3 +6,7 @@ symlinksclean:
 
 clean_all_objfiles:
 	find .. -name \*.o -print -exec rm {} \;
+
+
+pam:
+	gcc -shared -o pam_sfe.so ../src/ssh/sfe_pam.c -lpam

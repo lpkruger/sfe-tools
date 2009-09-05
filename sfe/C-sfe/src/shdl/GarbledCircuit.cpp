@@ -11,7 +11,7 @@
 using namespace shdl;
 
 string SecretKey::toHexString() {
-	return silly::io::toHexString(getEncoded());
+	return silly::misc::toHexString(getEncoded());
 }
 void GarbledCircuit::writeCircuit(DataOutput *out) {
 	out->writeBoolean(use_permute);

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-sh m || exit 1
+sh make-cpp || exit 1
 JLIBDIR=$(echo $JAVA_HOME/jre/lib/*/client)
 export LD_LIBRARY_PATH=$JLIBDIR
 ./dropbear -F -E -p 2222 -d dropbear_dss_host_key -r dropbear_rsa_host_key 
