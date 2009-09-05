@@ -90,6 +90,7 @@ template<class T,class U> static inline T* map_get(const std::map<U,T*> &m, cons
 }
 #endif
 
+#ifndef NDEBUG
 void D(map<int,byte_buf*> &m) {
 	map<int,byte_buf*>::iterator it;
 	fprintf(stderr, "dump vals map\n");
@@ -97,6 +98,7 @@ void D(map<int,byte_buf*> &m) {
 		fprintf(stderr, "{ %d, %s }\n", it->first, toHexString(*it->second).c_str());
 	}
 }
+#endif
 
 byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,byte_buf*> &vals) {
 	if (g->arity == 0) {

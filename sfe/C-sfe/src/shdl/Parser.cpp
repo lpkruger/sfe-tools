@@ -90,13 +90,13 @@ Circuit_p Circuit::parseCirc(istream &in) {
 			if (gtype == "input") {
 				//DC("input");
 				Input_p g(new Input(id, id));
-				DD(g.dump();)
+				DD(g.dump());
 				g->setComment(comment);
 				gates[id] = g;
 				inputs.push_back(g);
-				DD(g.dump();)
-				DD(gates[id].dump();)
-				DD(inputs[inputs.size()-1].dump();)
+				DD(g.dump());
+				DD(gates[id].dump());
+				DD(inputs[inputs.size()-1].dump());
 				//g->write(cout);
 			} else if (gtype == "gate" || gtype == "output") {
 				Gate_p g;
@@ -399,7 +399,7 @@ static int _main(int , char **) {
 		Circuit_p cc = Circuit::parseCirc(in);
 
 		for (uint i=0; i<cc->outputs.size() ; ++i) {
-			DD(cc->outputs[i].dump();)
+			DD(cc->outputs[i].dump());
 		}
 
 		CircuitCryptPermute crypt;

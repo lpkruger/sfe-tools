@@ -13,12 +13,15 @@ void print_backtrace(int depth=10, const char *msg=0);
 #endif
 
 #if !defined(DEBUG) && !defined(DEBUG2)
-#define D D_OFF
-template<class T> static inline void D(T x, int lev=0) {}
-#define DD(x)
-#define DC(x)
-static inline void sillydebug_dummy(...) {}
-#define DF sillydebug_dummy
+#define D(...) do {} while(0)
+#define NDEBUG 1
+//#define D D_OFF
+//template<class T> static inline void D_OFF(T x, int lev=0) {}
+#define DD(x) do {} while(0)
+#define DC(x) do {} while(0)
+//static inline void sillydebug_dummy(...) {}
+//#define DF sillydebug_dummy
+#define DF(...) do {} while(0)
 #else
 #include <iostream>
 #include <stdio.h>

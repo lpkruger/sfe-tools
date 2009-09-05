@@ -13,7 +13,7 @@
 
 #include "sillydebug.h"
 
-static bool use_permute = false;
+static bool use_permute = true;
 
 template<class T> inline void
 flatten(vector<vector<T> > &in, vector<T> &out, vector<int> &geom) {
@@ -486,7 +486,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 
 	long time_eval = currentTimeMillis();
 	fprintf(stderr, "evaled %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
-				L, (time_eval-time_start)/1.0e3, (time_eval-time_start)/(1.0e3*L));
+				LL, (time_eval-time_start)/1.0e3, (time_eval-time_start)/(1.0e3*LL));
 	check_sync();
 	return output0;
 }
