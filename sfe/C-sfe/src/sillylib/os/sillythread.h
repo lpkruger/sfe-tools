@@ -196,7 +196,7 @@ class Lock {
 	bool locked;
 	bool threadhadlock;
 	NOCOPY(Lock)
-	friend class Mutex;
+	//friend class Mutex;
 protected:
 	Lock() : mux(NULL), locked(false) {}
 
@@ -204,6 +204,7 @@ public:
 	Lock(Mutex *mux0) : mux(mux0), locked(false), threadhadlock(false) {
 		if (mux->owner == pthread_self()) {
 			threadhadlock = true;
+			locked = true;
 		} else {
 			mux->acquire();
 			mux->owner = pthread_self();
@@ -213,39 +214,52 @@ public:
 	Lock(Mutex &mux0) : mux(&mux0), locked(false), threadhadlock(false) {
 		if (mux->owner == pthread_self()) {
 			threadhadlock = true;
+			locked = true;
 		} else {
 			mux->acquire();
-			locked = true;
 			mux->owner = pthread_self();
+			locked = true;
 		}
 	}
 	~Lock() {
-		if (!locked && !threadhadlock)
-			throw ThreadException(EINVAL);
+		if (locked && !threadhadlock) {
+			unlock();
+		} else if (!locked && threadhadlock) {
+			lock();
+		}
+	}
+	void lock() {
+		if (!locked) {
+			mux->acquire();
+			mux->owner = pthread_self();
+			locked = true;
+		}
+	}
+	void unlock() {
 		if (locked) {
 			mux->owner = -1;
 			mux->release();
+			locked = false;
 		}
-		locked = false;
 	}
 #if 1
 	void notify() {
-		if (!locked && !threadhadlock)
+		if (!locked)
 			throw new ThreadException(EINVAL);
 		mux->notify();
 	}
 	void notifyAll() {
-		if (!locked && !threadhadlock)
+		if (!locked)
 			throw new ThreadException(EINVAL);
 		mux->notifyAll();
 	}
 	void wait() {
-		if (!locked && !threadhadlock)
+		if (!locked)
 			throw new ThreadException(EINVAL);
 		mux->wait();
 	}
 	void wait(ulong milsec) {
-		if (!locked && !threadhadlock)
+		if (!locked)
 			throw new ThreadException(EINVAL);
 		mux->wait(milsec);
 	}

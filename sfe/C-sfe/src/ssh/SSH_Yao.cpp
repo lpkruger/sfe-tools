@@ -164,7 +164,7 @@ public:
 	string tmpstr;							\
 	tmpstr = string_printf(__VA_ARGS__);	\
 	benchmark_buffer.append(tmpstr);		\
-	printf("%s", tmpstr.c_str());		\
+	DF("\n%s", tmpstr.c_str());			\
 } while(0)
 
 #ifdef BUILDNAME
@@ -288,14 +288,21 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 				(ot_precalc_end-ot_start)/1000.0, (ot_online_start-ot_precalc_end)/1000.0,
 				(ot_end-ot_online_start)/1000.0, (ot_finished-ot_end)/1000.0);
 
-
-
+	long time_before_circ = currentTimeMillis();
+	long bytes_before_circ = out->total;
+	bench_printf("written before circuits: %lu\n", out->total);
 	for (int n=0; n<L; ++n) {
 		gcc[n]->writeCircuit(out);
 		fast_sync();
+		//fprintf(stderr, "written: %d\n", out->total);
     }
-
 	check_sync();
+	long time_after_circ = currentTimeMillis();
+	bench_printf("circuit writing: %0.3f MB, %0.3f sec, speed: %0.3f MB/s\n",
+			(out->total - bytes_before_circ)/1000000.0,
+			(time_after_circ-time_before_circ)/1000.0,
+			(out->total - bytes_before_circ)*0.001/(time_after_circ-time_before_circ));
+
 
 	vector<int> choices;
 	readVector(in, choices);
@@ -353,6 +360,7 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	//long time_end = currentTimeMillis();
 	//bench_printf("all done in %03f seconds\n", (time_end-time_start)/1000.0);
 	bench_printf("online time %0.3f seconds\n", (time_done-ot_online_start)/1000.0);
+	bench_printf("total bytes written: %lu\n", out->total);
 	cerr << endl << "----------------------------" << endl;
 	cerr << benchmark_buffer;
 	cerr << "----------------------------" << endl << endl;

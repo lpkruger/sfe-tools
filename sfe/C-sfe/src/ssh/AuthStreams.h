@@ -26,6 +26,8 @@ using namespace std;
 // interface to ssh
 extern bool ssh_writePacket(const byte *buf, int length);
 
+//#define MAX_PACKET	(2*1024*1024)
+#define MAX_PACKET		(1529635+20000)	// based on the size of a single garbled circuit
 ///////////
 class AuthStreams;
 
@@ -155,7 +157,9 @@ struct AuthStreams : public Runnable {
 			waitingForIO = false;
 		}
 		inputbytesunread += len;
-
+		if (inputbytesunread >= 0) {
+			authOut->flush_flag = false;
+		}
 		synch.notifyAll();
 		waitForIO();
 	}
@@ -175,8 +179,21 @@ struct AuthStreams : public Runnable {
 
 				//byte_buf outputbytes(authOut->buf);
 				//writePacket(outputbytes);
-				writePacket(authOut->buf);
-				authOut->buf.clear();
+				{
+					if (inputbytesunread<0 && authOut->buf.size() > MAX_PACKET) {		// TODO: arbitrary limit
+						byte_buf tmpbuf(authOut->buf.begin(), authOut->buf.begin()+MAX_PACKET);
+						authOut->buf.erase(authOut->buf.begin(), authOut->buf.begin()+MAX_PACKET);
+						synch.unlock();
+						writePacket(tmpbuf);
+						synch.lock();
+					} else {
+						byte_buf tmpbuf(authOut->buf);
+						authOut->buf.clear();
+						synch.unlock();
+						writePacket(tmpbuf);
+						synch.lock();
+					}
+				}
 				Dio("Wrote a packet");
 				if (authOut->flush_flag && inputbytesunread<0) {
 					// this is a big hack, will it work?

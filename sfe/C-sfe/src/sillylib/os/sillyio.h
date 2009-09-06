@@ -43,6 +43,8 @@ class DataOutput {
 protected:
 	virtual int tryWrite(const byte* c, int len) = 0;
 public:
+	ulong total;
+	DataOutput() : total(0) {}
 	virtual ~DataOutput() {}
 	virtual void flush() {}
 	virtual void close() {}
@@ -70,6 +72,7 @@ public:
 				throw IOException();
 			}
 			cnt+=n;
+			total+=n;
 		}
 	}
 	void write(const byte_buf &v, uint off=0, int len=-1) {
@@ -114,6 +117,8 @@ class DataInput {
 protected:
 	virtual int tryRead(byte* c, int len) = 0;
 public:
+	ulong total;
+	DataInput() : total(0) {}
 	virtual ~DataInput() {}
 	virtual void skip(int len) {
 		byte c[len];
@@ -144,6 +149,7 @@ public:
 				throw EOFException();
 			}
 			cnt+=n;
+			total+=n;
 		}
 	}
 	void readFully(byte_buf &c, int off=0, int len=-1) {

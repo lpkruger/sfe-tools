@@ -21,27 +21,41 @@ class SSHYao {
 protected:
 	DataOutput *out;
 	DataInput *in;
+	bool no_fast_sync;
+	bool no_check_sync;
 public:
+	SSHYao() {
+		char *opt;
+		opt = getenv("NOFASTSYNC");
+		no_fast_sync = (opt!=NULL && strcmp(opt, "0"));
+		opt = getenv("NOCHECKSYNC");
+		no_check_sync = (opt!=NULL && strcmp(opt, "0"));
+
+	}
 	void setStreams(DataInput *in0, DataOutput *out0) {
 		in = in0;
 		out = out0;
 	}
 
 	void fast_sync() {
+		if (no_fast_sync)
+			return;
 		out->writeInt(sync_const + 0x1234567);
-		out->flush();
 		in->skip(4);
-
+		out->flush();
 	}
 
 	void check_sync() {
-		fast_sync();
-		return;
-
+		if (no_check_sync && no_fast_sync)
+			return;
 		out->writeInt(sync_const);
-		int magic = in->readInt();
-		if (magic != sync_const)
-			throw ProtocolException("protocol synchronization failure");
+		if (no_check_sync) {
+			in->skip(4);
+		} else {
+			int magic = in->readInt();
+			if (magic != sync_const)
+				throw ProtocolException("protocol synchronization failure");
+		}
 	}
 
 };
