@@ -12,13 +12,10 @@
 
 const string CircuitCrypt::CIPHER = "SHA-1";
 
-CircuitCrypt::~CircuitCrypt() {
-	// TODO Auto-generated destructor stub
-}
 
-CircuitCrypt::CircuitCrypt() {
-	C = SFECipher();
-	KG = SFEKeyGenerator();
+CircuitCrypt::CircuitCrypt(Random *r0) : rand(r0), KG(r0) {
+	//C = SFECipher();
+	//KG = SFEKeyGenerator(r0);
 	//KG.init(128);
 	//KG.init(80);
 	//		try {

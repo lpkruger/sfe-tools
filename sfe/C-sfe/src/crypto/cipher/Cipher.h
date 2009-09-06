@@ -11,6 +11,7 @@
 #include <string>
 #include <typeinfo>
 #include "sillytype.h"
+#include <algorithm>
 
 using std::string;
 
@@ -87,16 +88,27 @@ public:
 #endif
 
 	virtual bool equals(SecretKey *o0) const {
-		//printf("%s %s\n", typeid(*this).name(), typeid(*o0).name());
-		if (typeid(*this) != typeid(*o0))
-			return false;
-
-//		CipherKey *o = dynamic_cast<CipherKey*>(o0);
-//		if (!o)
+//		printf("%s %s\n", typeid(*this).name(), typeid(*o0).name());
+//		if (strcmp(typeid(*this).name(), typeid(*o0).name()))
 //			return false;
 
-		CipherKey *o = static_cast<CipherKey*>(o0);
-		return *buf == *o->buf;
+		CipherKey *o = dynamic_cast<CipherKey*>(o0);
+		if (!o)
+			return false;
+		//CipherKey *o = static_cast<CipherKey*>(o0);
+		//printf("sizes: %d %d", buf->size(), o->buf->size());
+		if (buf->size() != o->buf->size())
+			return false;
+		return std::equal(buf->begin(), buf->end(), o->buf->begin());
+
+		for (uint i=0; i<buf->size(); ++i) {
+			printf(" (%d,%d)", (int) buf->operator[](i), (int) o->buf->operator[](i));
+			if (buf->operator[](i) != o->buf->operator[](i))
+				return false;
+		}
+		return true;
+//		printf("iseq: %s", buf->operator==(*o->buf) ? "true" : "false");
+//		return buf->operator==(*o->buf);
 	}
 
 	byte_buf getEncoded() const {

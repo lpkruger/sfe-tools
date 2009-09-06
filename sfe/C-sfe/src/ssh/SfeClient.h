@@ -31,6 +31,7 @@ class SfeClient : public AuthStreams {
 
 	//public final static String dir="/home/louis/sfe/build"
 
+	crypto::SecureRandom rand;
 	string password;
 public:
 	SfeClient(string passw0) {
@@ -178,7 +179,7 @@ public:
 		}
 		if (use_R) {
 			byte_buf rval(128/8);
-			RAND_bytes(&rval[0], rval.size());
+			rand.getBytes(&rval[0], rval.size());
 			DC("R = " << toHexString(rval));
 			fmt.mapBits(bytes2bool(rval), vals, "input.alice.r");
 		}

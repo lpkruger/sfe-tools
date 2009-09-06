@@ -10,7 +10,7 @@
 
 //#include <gc_cpp.h>
 #include <openssl/sha.h>
-#include <openssl/rand.h>
+#include "random.h"
 #include "Cipher.h"
 #include "silly.h"
 #include "sillydebug.h"
@@ -104,10 +104,14 @@ private:
 };
 
 class SFEKeyGenerator {
+	Random *rand;
 public:
 	const static uint default_length = 80;
 	uint length;
-	SFEKeyGenerator() : length(default_length) {}
+	SFEKeyGenerator(Random *r0) : rand(r0), length(default_length) {
+		if (!rand)
+			rand = new SecureRandom();
+	}
 	void init(int length0) {
 		length = length0;
 	}
@@ -118,7 +122,7 @@ public:
 
 	SFEKey *generateKey() {
 		byte_buf *buf = new byte_buf(length/8);
-		RAND_bytes(&(*buf)[0], buf->size());
+		rand->getBytes(*buf);
 		return new SFEKey(buf, true);
 	}
 };

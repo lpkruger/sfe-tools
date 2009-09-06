@@ -9,6 +9,7 @@
 
 using namespace shdl;
 
+
 void Circuit::calcDeps() {
     vector<Gate_p> stack;
 

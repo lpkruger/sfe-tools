@@ -25,7 +25,7 @@ class GCircuitEval : public CircuitCrypt, public Reclaimer<byte_buf> {
 	byte_buf* eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int, byte_buf*> &vals);
 	//vector<byte_buf*> garbage;
 public:
-
+	GCircuitEval() : CircuitCrypt(NULL) {}
 	bit_vector eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk);
 
 };

@@ -14,13 +14,17 @@
 #include "sillymem.h"
 #include "GarbledCircuit.h"
 #include "shdl.h"
+#include "../crypto/cipher/PseudoRandom.h"
+//#include "../crypto/SecureRandom.h"
 
 using namespace std;
+using crypto::Random;
 
 class CircuitCrypt {
-private:
-//	protected SecureRandom random;
+protected:
+	Random *rand;
 
+private:
 	typedef map<int, GarbledGate_p> gateid_t;
 	gateid_t gateid;
 
@@ -43,8 +47,10 @@ protected:
 	SFECipher C;
 
 public:
-	CircuitCrypt();
-	virtual ~CircuitCrypt();
+	CircuitCrypt(Random *r0);
+	virtual ~CircuitCrypt() {
+		delete rand;
+	}
 	virtual GarbledCircuit_p encrypt(Circuit &cc, vector<boolean_secrets> &inputsecrets);
 
 	virtual void reset() {

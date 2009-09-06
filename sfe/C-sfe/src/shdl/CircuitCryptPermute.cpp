@@ -6,7 +6,7 @@
  */
 
 #include "CircuitCryptPermute.h"
-#include <openssl/rand.h>
+//#include <openssl/rand.h>
 
 
 
@@ -69,7 +69,7 @@ bool CircuitCryptPermute::doFlip_rec(GateBase_p g) {
 		f = false;
 	} else {
 		byte b = 0;
-		RAND_bytes(&b, 1);
+		rand->getBytes(&b, 1);
 		f = b & 0x01;
 	}
 

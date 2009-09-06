@@ -68,6 +68,13 @@ struct boolean_secrets {
 	SFEKey_p s0;
 	SFEKey_p s1;
 
+	bool operator==(const boolean_secrets &b) const {
+		return s0->equals(b.s0.to_ptr()) &&
+		       s1->equals(b.s1.to_ptr());
+	}
+	bool operator!=(const boolean_secrets &b) const {
+		return !operator==(b);
+	}
 	SFEKey_p& operator[](int i) {
 		if (i!=0 && i!=1) {
 			throw bad_argument("secret must be 0 or 1");
@@ -79,7 +86,7 @@ struct boolean_secrets {
 	}
 
 
-	vector<BigInt> toBigIntVector() {
+	vector<BigInt> toBigIntVector() const {
 		vector<BigInt> ret(2);
 		ret[0] = BigInt::toPaddedBigInt(s0->getEncoded());
 		ret[1] = BigInt::toPaddedBigInt(s1->getEncoded());

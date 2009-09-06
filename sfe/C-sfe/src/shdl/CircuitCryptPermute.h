@@ -15,7 +15,7 @@ class CircuitCryptPermute : public CircuitCrypt {
 	map<GateBase_p, bool> flip;
 	typedef map<GateBase_p, bool>::iterator flip_it_t;
 public:
-	CircuitCryptPermute() : super() {
+	CircuitCryptPermute(Random *r0) : super(r0) {
 		C.setUsePadding(false);
 	}
 	virtual ~CircuitCryptPermute() {}

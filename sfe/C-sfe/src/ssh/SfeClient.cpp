@@ -70,10 +70,15 @@ static int _main(int argc, char **argv) {
 
 	} catch (std::out_of_range) {
 		printf("sshclient to port pw\n");
-		return 1;
+		return 2;
 	}
 	SfeClient cli(pw);
-	cli.go2(out_raw.to_ptr(), in_raw.to_ptr());
+	try {
+		cli.go2(out_raw.to_ptr(), in_raw.to_ptr());
+	} catch (std::exception &ex) {
+		printf("exception %s : %s\n", typeid(ex).name(), ex.what());
+		return 1;
+	}
 	return 0;
 }
 

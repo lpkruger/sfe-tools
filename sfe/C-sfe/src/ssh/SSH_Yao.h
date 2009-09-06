@@ -16,6 +16,12 @@
 using std::vector;
 
 const static int sync_const = 0x541C4A0;
+const static bool use_permute = true;
+const static bool use_prng = true;
+
+using crypto::Random;
+using crypto::SecureRandom;
+using crypto::cipher::PseudoRandom;
 
 class SSHYao {
 protected:
@@ -23,6 +29,7 @@ protected:
 	DataInput *in;
 	bool no_fast_sync;
 	bool no_check_sync;
+	SecureRandom srandom;
 public:
 	SSHYao() {
 		char *opt;

@@ -406,7 +406,7 @@ static int _main(int , char **) {
 			DD(cc->outputs[i].dump());
 		}
 
-		CircuitCryptPermute crypt;
+		CircuitCryptPermute crypt(new crypto::SecureRandom());
 		//CircuitCrypt crypt;
 		vector<boolean_secrets> inputSecrets;
 		Circuit_p copy = cc->deepCopy();
