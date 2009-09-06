@@ -50,8 +50,8 @@ public:
 	}
 };
 
-typedef wise_ptr<GarbledGate> GarbledGate_p;
-typedef wise_ptr<byte_buf> byte_buf_p;
+typedef GarbledGate* GarbledGate_p;
+//typedef byte_buf* byte_buf_p;
 
 
 using crypto::cipher::SecretKey;
@@ -116,7 +116,7 @@ inline void readObject(DataInput *in, boolean_secrets &secr) {
 }
 
 
-struct GarbledCircuit {
+struct GarbledCircuit : public Reclaimer<GarbledGate>{
 
 	boolean use_permute;
 	int nInputs;

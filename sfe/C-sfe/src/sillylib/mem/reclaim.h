@@ -16,7 +16,9 @@ namespace mem {
 
 template<class T = void> class Reclaimer {
 	std::vector<T*> garbage_bin;
+	NOCOPY(Reclaimer)
 public:
+	Reclaimer() {}
 	void add_garbage(T* ptr) {
 		garbage_bin.push_back(ptr);
 	}
@@ -51,7 +53,11 @@ template<> class Reclaimer<void> {
 	template<class U> static inline typename functoid<U>::type getDeleter() {
 		return callDelete;
 	}
+
+	NOCOPY(Reclaimer)
 public:
+
+	Reclaimer() {}
 
 	template<class T> void add_garbage(T* ptr) {
 		pair p = {

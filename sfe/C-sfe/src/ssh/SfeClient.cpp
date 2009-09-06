@@ -43,15 +43,17 @@ static int _main(int argc, char **argv) {
 	for (int i=1; i<argc; ++i) {
 		args[i-1] = argv[i];
 	}
-	DataOutput *out_raw;
-	DataInput *in_raw;
+
+	wise_ptr<Socket> server_sock;
+	wise_ptr<DataOutput> out_raw;
+	wise_ptr<DataInput> in_raw;
 	string pw;
 	try {
 		string to = args.at(0);
 		int port = strtol(args.at(1).c_str(), NULL, 0);
 		pw = args.at(2);
 
-		Socket *server_sock = new Socket(to.c_str(), port);
+		server_sock = new Socket(to.c_str(), port);
 
 		//long startTime = System.currentTimeMillis();
 		//	ByteCountOutputStreamSFE byteCount = new ByteCountOutputStreamSFE(
@@ -71,7 +73,7 @@ static int _main(int argc, char **argv) {
 		return 1;
 	}
 	SfeClient cli(pw);
-	cli.go2(out_raw, in_raw);
+	cli.go2(out_raw.to_ptr(), in_raw.to_ptr());
 	return 0;
 }
 

@@ -42,10 +42,10 @@ class Input;
 class Output;
 
 typedef wise_ptr<Circuit> Circuit_p;
-typedef wise_ptr<GateBase> GateBase_p;
-typedef wise_ptr<Gate> Gate_p;
-typedef wise_ptr<Input> Input_p;
-typedef wise_ptr<Output> Output_p;
+typedef GateBase* GateBase_p;
+typedef Gate* Gate_p;
+typedef Input* Input_p;
+typedef Output* Output_p;
 
 struct FmtFile {
 	struct Obj {
@@ -92,18 +92,18 @@ public:
 
 class GateBase {
 protected:
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) = 0;
-	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *g) {
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) = 0;
+	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *g, Reclaimer<GateBase> &trash) {
 		g->id = id;
 	}
 
-	GateBase_p deepCopy(map<GateBase*,GateBase_p> &mapping) {
+	GateBase_p deepCopy(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
 		map<GateBase*,GateBase_p>::iterator it;
 		it = mapping.find(this);
 		if (it != mapping.end()) {
 			return it->second;
 		}
-		GateBase_p pp = GateBase_p(deepCopy0(mapping));
+		GateBase_p pp = GateBase_p(deepCopy0(mapping, trash));
 		mapping[this] = pp;
 		return pp;
 	}
@@ -138,7 +138,7 @@ public:
 
 	};
 
-class Circuit {
+class Circuit : public Reclaimer<GateBase>{
 public:
 	vector<Input_p> inputs;
 	vector<Output_p> outputs;
@@ -150,10 +150,8 @@ public:
 
 	Circuit_p deepCopy();
 
-	~Circuit() {
-		clearDeps();
-	}
-
+	Circuit() {}
+	~Circuit() { clearDeps(); }
 };
 
 class Gate : public GateBase {
@@ -164,20 +162,21 @@ public:
 
 	Gate(int id0) : GateBase(id0) {}
 
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) {
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
 		Gate *gg = new Gate(id);
-		deepCopy1(mapping, gg);
+		trash.add_garbage(gg);
+		deepCopy1(mapping, gg, trash);
 		return gg;
 	}
 
-	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg) {
-		GateBase::deepCopy1(mapping, gg);
+	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg, Reclaimer<GateBase> &trash) {
+		GateBase::deepCopy1(mapping, gg, trash);
 		Gate *g = (Gate*) gg;
 		g->arity = arity;
 		g->truthtab = truthtab;
 		g->inputs.resize(inputs.size());
 		for (uint i=0; i < inputs.size(); ++i) {
-			g->inputs[i] = inputs[i]->deepCopy(mapping);
+			g->inputs[i] = inputs[i]->deepCopy(mapping, trash);
 		}
 	}
 	virtual string toString() {
@@ -246,9 +245,10 @@ public:
 
 	Output(int id0) : Gate(id0) {}
 	Output(const Output& copy) : Gate(copy) {}
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) {
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
 		Output *g = new Output(id);
-		deepCopy1(mapping, g);
+		trash.add_garbage(g);
+		deepCopy1(mapping, g, trash);
 		return g;
 	}
 
@@ -268,12 +268,13 @@ public:
 	int var;
 	Input(int id0, int var0) : GateBase(id0), var(var0) {}
 
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping) {
+	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
 		Input *g = new Input(id, var);
+		trash.add_garbage(g);
 		return g;
 	}
 
-	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg) {}
+	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg, Reclaimer<GateBase> &trash) {}
 
 	string toString() {
 		return string("[Input ") + id + " (" + var + ") ]";
@@ -306,11 +307,13 @@ inline Circuit_p Circuit::deepCopy() {
 	newCirc.inputs.resize(inputs.size());
 	newCirc.outputs.resize(outputs.size());
 	for (uint i=0; i<inputs.size(); ++i) {
-		Input_p ppp(dynamic_pointer_cast<Input>(inputs[i]->deepCopy(mapping)));
+		//Input_p ppp(dynamic_pointer_cast<Input>(inputs[i]->deepCopy(mapping)));
+		Input *ppp = static_cast<Input*>(inputs[i]->deepCopy(mapping, *pNewCirc));
 		newCirc.inputs[i] = ppp;
 	}
 	for (uint i=0; i<outputs.size(); ++i) {
-		Output_p ppp(dynamic_pointer_cast<Output>(outputs[i]->deepCopy(mapping)));
+		//Output_p ppp(dynamic_pointer_cast<Output>(outputs[i]->deepCopy(mapping)));
+		Output *ppp = static_cast<Output*>(outputs[i]->deepCopy(mapping, *pNewCirc));
 		newCirc.outputs[i] = ppp;
 	}
 	return pNewCirc;

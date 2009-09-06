@@ -266,20 +266,9 @@ struct AuthStreams : public Runnable {
     		lock.notifyAll();
     	} catch (ProtocolException ex) {
     		fprintf(stderr,"protocol exception: %s\n", ex.what());
-    		//failure_flag = true;
-    		throw;
-    	} catch (std::exception ex) {
-    		fprintf(stderr, "exception: %s\n", ex.what());
-    		//failure_flag = true;
-    		throw;
-    	} catch (...) {
-    		fprintf(stderr, "unknown exception (pthread_cancel?)\n");
-    		///failure_flag = true;		// could be a thread cancellation
-    		//print_backtrace();
-    		throw;
     	}
     	return NULL;
-	}
+    }
 };
 
 inline int AuthOutputStream::tryWrite(const byte* c, int len) {

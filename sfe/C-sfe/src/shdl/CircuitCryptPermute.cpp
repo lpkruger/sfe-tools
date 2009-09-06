@@ -78,7 +78,8 @@ bool CircuitCryptPermute::doFlip_rec(GateBase_p g) {
 		return f;
 	}
 
-	Gate_p gg = dynamic_pointer_cast<Gate>(g);
+	//Gate_p gg = dynamic_pointer_cast<Gate>(g);
+	Gate_p gg = dynamic_cast<Gate*>(g);
 
 	for (int i=0; i<gg->arity; ++i) {
 		if (doFlip_rec(gg->inputs[i])) {

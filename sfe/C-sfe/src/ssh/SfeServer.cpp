@@ -66,20 +66,22 @@ static int _main(int argc, char **argv) {
 		args[i-1] = argv[i];
 	}
 
-	DataOutput *out_raw;
-	DataInput *in_raw;
+	wise_ptr<ServerSocket> listen;
+	wise_ptr<Socket> client_sock;
+	wise_ptr<DataOutput> out_raw;
+	wise_ptr<DataInput> in_raw;
 	string pw;
 	int num_circuits;
 	try {
 		int port = strtol(args.at(0).c_str(), NULL, 0);
-		 //pw = args.size() ==1 ? string("$1$QyenZBsY$w92OuQyOOk02pRUjZTjr20")
+		//pw = args.size() ==1 ? string("$1$QyenZBsY$w92OuQyOOk02pRUjZTjr20")
 		num_circuits = args.size() < 2 ? AuthStreams::num_circuits_default :
-			strtol(args.at(1).c_str(), NULL, 0);
-		 pw = args.size() < 3 ? string("$1$G1tl1u3T$u86xxKN8OWDi.w29KF4PX.") //MD5("Q")
+		strtol(args.at(1).c_str(), NULL, 0);
+		pw = args.size() < 3 ? string("$1$G1tl1u3T$u86xxKN8OWDi.w29KF4PX.") //MD5("Q")
 				: args.at(2);
 		//cout << pw << endl;
-		ServerSocket *listen = new ServerSocket(port);
-		Socket *client_sock = listen->accept();
+		listen = new ServerSocket(port);
+		client_sock = listen->accept();
 		//long startTime = System.currentTimeMillis();
 		out_raw = client_sock->getOutput();
 		in_raw = client_sock->getInput();
@@ -89,7 +91,7 @@ static int _main(int argc, char **argv) {
 		return 1;
 	}
 	SfeServer serv(pw, num_circuits);
-	serv.go2(out_raw, in_raw);
+	serv.go2(out_raw.to_ptr(), in_raw.to_ptr());
 	return 0;
 
 

@@ -305,18 +305,14 @@ protected:
 	bool deleteOnJoin;
 	bool deleteOnTerm;
 	void* retval;
-	static void* go(Thread *that) {
-		void *retval=NULL;
-		try {
-			retval = that->run();
-		} catch (std::exception ex) {
-			printf("exception caught %s", ex.what());
-		} catch (...) {
-			printf("unknown exception caught...");
-			throw;
-		}
-		bool deletethat = false;
-		{
+
+	struct cleaner {
+		Thread *that;
+		void *retval;
+		cleaner(Thread *t0) : that(t0), retval(NULL) {}
+		~cleaner() {
+			bool deletethat = false;
+
 			Lock lock(that->threadLock);
 			that->returned = true;
 			that->retval = retval;
@@ -325,10 +321,27 @@ protected:
 				deletethat = true;
 			else
 				lock.notifyAll();
+
+			lock.unlock();
+			if (deletethat)
+				delete that;
 		}
-		if (deletethat)
-			delete that;
-		return retval;
+	};
+	static void* go(Thread *that) {
+
+		cleaner it(that);
+		it.retval = that->run();
+
+//		try {
+//		} catch (std::exception ex) {
+//			fprintf(stderr, "exception caught %s", ex.what());
+//		} catch (__cxxabiv1::__forced_unwind &w) {
+//			throw;
+//		} catch (...) {
+//			fprintf(stderr, "unknown exception caught...");
+//		}
+
+		return it.retval;
 	}
 	~Thread() {}	// thread deletes itself
 public:

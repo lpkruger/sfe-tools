@@ -59,6 +59,8 @@ Circuit_p Circuit::parseCirc(istream &in) {
 	vector<Input_p> inputs;
 	vector<Output_p> outputs;
 
+	Circuit_p cc(new Circuit());
+
 	string line;
 	string tmp;
 	try {
@@ -90,6 +92,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 			if (gtype == "input") {
 				//DC("input");
 				Input_p g(new Input(id, id));
+				cc->add_garbage(g);
 				DD(g.dump());
 				g->setComment(comment);
 				gates[id] = g;
@@ -103,6 +106,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 				if (gtype == "output") {
 					lp >> tmp; check(tmp, "gate");
 					Output_p out(new Output(id));
+					cc->add_garbage(out);
 					//out.dump();
 					g = out;
 					//g.dump();
@@ -110,6 +114,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 					//out.dump();
 				} else {
 					g = Gate_p(new Gate(id));
+					cc->add_garbage(g);
 				}
 				//g.dump();
 
@@ -163,7 +168,6 @@ Circuit_p Circuit::parseCirc(istream &in) {
 		throw ParseException(ex.what());
 	}
 
-	Circuit_p cc(new Circuit());
 	cc->inputs.swap(inputs);
 	cc->outputs.swap(outputs);
 	return cc;

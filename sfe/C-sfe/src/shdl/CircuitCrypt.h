@@ -55,7 +55,7 @@ public:
 	}
 
 private:
-	int encGate_rec(Gate_p gate);
+	int encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash);
 
 };
 #endif /* CIRCUITCRYPT_H_ */

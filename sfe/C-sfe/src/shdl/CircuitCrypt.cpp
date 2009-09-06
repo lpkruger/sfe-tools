@@ -48,7 +48,7 @@ GarbledCircuit_p CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inp
 	curId = cc.inputs.size();
 
 	for (uint i=0; i<cc.outputs.size(); ++i) {
-		gcc.outputs[i] = encGate_rec(cc.outputs[i]);
+		gcc.outputs[i] = encGate_rec(cc.outputs[i], gcc);
 		gcc.outputSecrets[i] = secrets.at(gcc.outputs[i]);
 
 		// special case
@@ -92,21 +92,24 @@ boolean_secrets CircuitCrypt::genKeyPair(GateBase_p) {
 	return ret;
 }
 
-int CircuitCrypt::encGate_rec(Gate_p gate) {
+int CircuitCrypt::encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash) {
 	gatemap_t::iterator egate_it = themap.find(gate);
 	if (egate_it != themap.end())
 		return egate_it->second->id;
 
 	GarbledGate_p egate(new GarbledGate());
+	trash.add_garbage(egate);
+
 	egate->arity = gate->arity;
 	egate->inputs.resize(egate->arity);
 	vector<boolean_secrets> inpsecs(egate->arity);
 
 	for (int i=0; i<egate->arity; ++i) {
-		//Input_p inp;
-		//if (gate->inputs[i].dyncast_to(inp)) {
-		Input_p inp = dynamic_pointer_cast<Input>(gate->inputs[i]);
-		if (inp.to_ptr()) {
+//		Input_p inp = dynamic_pointer_cast<Input>(gate->inputs[i]);
+//		if (inp.to_ptr())
+		Input_p inp = dynamic_cast<Input*>(gate->inputs[i]);
+		if (inp)
+		{
 			int var = inp->var;
 			egate->inputs[i] = var;
 			secretmap_t::iterator sec_it = secrets.find(var);
@@ -118,7 +121,9 @@ int CircuitCrypt::encGate_rec(Gate_p gate) {
 			}
 		} else {
 			egate->inputs[i] = encGate_rec(
-					dynamic_pointer_cast<Gate>(gate->inputs[i]));
+					//dynamic_pointer_cast<Gate>(gate->inputs[i]));
+					dynamic_cast<Gate*>(gate->inputs[i]),
+					trash);
 			inpsecs[i] = secrets.at(egate->inputs[i]);
 		}
 	}
