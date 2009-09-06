@@ -1,16 +1,22 @@
 #!/bin/bash
 set -x
-BUILD=DebugOpt
+BUILD=Intel
 
 dir=../C-sfe/$BUILD/src
 SFE_SERVER_OBJS=$dir/ssh/SfeServer.o
 SFE_CLIENT_OBJS=$dir/ssh/SfeClient.o
 SFE_OBJS="$dir/ssh/SSH_Yao.o $dir/crypto/PinkasNaorOT.o $dir/crypto/cipher/SFE*.o $dir/shdl/*.o $dir/sillylib/silly.o $dir/sillylib/math/BigInt.o"
-DIRFLAGS="-I.  -I./libtomcrypt/src/headers/"
-OPTFLAGS="-O2 -g -march=core2"
-gcc -c $OPTFLAGS $DIRFLAGS -DDROPBEAR_CLIENT cli-authsfe.cc  || exit 1
-gcc -c $OPTFLAGS $DIRFLAGS -DDROPBEAR_SERVER -DDROPBEAR_CLIENT svr-authsfe.cc  || exit 1
+INCFLAGS="-I.  -I./libtomcrypt/src/headers/"
+#CC=g++
+#OPTFLAGS="-O2 -g -march=core2"
+CC=icpc
+OPTFLAGS="-O2 -march=core2 -mtune=core2 -xT -ip -Wall"
+$CC -c $OPTFLAGS $INCFLAGS -DDROPBEAR_CLIENT cli-authsfe.cc  || exit 1
+$CC -c $OPTFLAGS $INCFLAGS -DDROPBEAR_SERVER -DDROPBEAR_CLIENT svr-authsfe.cc  || exit 1
 
-g++  -o dropbear dbutil.o buffer.o dss.o bignum.o signkey.o rsa.o random.o queue.o atomicio.o compat.o  fake-rfc2553.o common-session.o packet.o common-algo.o common-kex.o common-channel.o common-chansession.o termcodes.o loginrec.o tcp-accept.o listener.o process-packet.o common-runopts.o circbuffer.o svr-kex.o svr-algo.o svr-auth.o sshpty.o svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o svr-chansession.o svr-runopts.o svr-agentfwd.o svr-main.o svr-x11fwd.o svr-tcpfwd.o svr-authpam.o svr-authsfe.o libtomcrypt/libtomcrypt.a libtommath/libtommath.a $SFE_SERVER_OBJS $SFE_OBJS -lutil -lz  -lcrypt -lssl -lpthread || exit 1
-g++ -o dbclient dbutil.o buffer.o dss.o bignum.o signkey.o rsa.o random.o queue.o atomicio.o compat.o  fake-rfc2553.o common-session.o packet.o common-algo.o common-kex.o common-channel.o common-chansession.o termcodes.o loginrec.o tcp-accept.o listener.o process-packet.o common-runopts.o circbuffer.o cli-algo.o cli-main.o cli-auth.o cli-authpasswd.o cli-kex.o cli-session.o cli-service.o cli-runopts.o cli-chansession.o cli-authpubkey.o cli-tcpfwd.o cli-channel.o cli-authinteract.o cli-authsfe.o libtomcrypt/libtomcrypt.a libtommath/libtommath.a  $SFE_CLIENT_OBJS $SFE_OBJS -lutil -lz  -lcrypt -lssl -lpthread || exit 1
+LIBS="-lutil -lz  -lcrypt -lssl -lcrypto -lpthread"
+TOMLIBS="libtomcrypt/libtomcrypt.a libtommath/libtommath.a"
+#TOMLIBS="$( find libtomcrypt -name \*.o ) $( find libtommath -name \*.o )"
+$CC  -o dropbear dbutil.o buffer.o dss.o bignum.o signkey.o rsa.o random.o queue.o atomicio.o compat.o  fake-rfc2553.o common-session.o packet.o common-algo.o common-kex.o common-channel.o common-chansession.o termcodes.o loginrec.o tcp-accept.o listener.o process-packet.o common-runopts.o circbuffer.o svr-kex.o svr-algo.o svr-auth.o sshpty.o svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o svr-chansession.o svr-runopts.o svr-agentfwd.o svr-main.o svr-x11fwd.o svr-tcpfwd.o svr-authpam.o svr-authsfe.o $TOMLIBS $SFE_SERVER_OBJS $SFE_OBJS $LIBS || exit 1
+$CC -o dbclient dbutil.o buffer.o dss.o bignum.o signkey.o rsa.o random.o queue.o atomicio.o compat.o  fake-rfc2553.o common-session.o packet.o common-algo.o common-kex.o common-channel.o common-chansession.o termcodes.o loginrec.o tcp-accept.o listener.o process-packet.o common-runopts.o circbuffer.o cli-algo.o cli-main.o cli-auth.o cli-authpasswd.o cli-kex.o cli-session.o cli-service.o cli-runopts.o cli-chansession.o cli-authpubkey.o cli-tcpfwd.o cli-channel.o cli-authinteract.o cli-authsfe.o $TOMLIBS  $SFE_CLIENT_OBJS $SFE_OBJS $LIBS || exit 1
 

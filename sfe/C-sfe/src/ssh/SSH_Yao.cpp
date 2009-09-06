@@ -164,7 +164,7 @@ public:
 	string tmpstr;							\
 	tmpstr = string_printf(__VA_ARGS__);	\
 	benchmark_buffer.append(tmpstr);		\
-	DF("%s", tmpstr.c_str());		\
+	printf("%s", tmpstr.c_str());		\
 } while(0)
 
 #ifdef BUILDNAME
@@ -292,6 +292,7 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 
 	for (int n=0; n<L; ++n) {
 		gcc[n]->writeCircuit(out);
+		fast_sync();
     }
 
 	check_sync();
@@ -429,8 +430,9 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	unflatten(all_myinpsecs_flat, all_myinputsecs, geom);
 	//D(myinputsecs);
 	vector<GarbledCircuit_p> gcc(L);
-	for (int i=0; i<L; ++i) {
-		gcc[i] = GarbledCircuit::readCircuit(in);
+	for (int n=0; n<L; ++n) {
+		gcc[n] = GarbledCircuit::readCircuit(in);
+		fast_sync();
 	}
 
 	check_sync();

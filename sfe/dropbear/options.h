@@ -5,6 +5,9 @@
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
 
+#define ENABLE_CLI_SFE_AUTH
+#define ENABLE_SVR_SFE_AUTH
+
 /******************************************************************
  * Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
  * parts are to allow for commandline -DDROPBEAR_XXX options etc.
@@ -153,7 +156,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* PAM requires ./configure --enable-pam */
 /*#define ENABLE_SVR_PAM_AUTH*/
 #define ENABLE_SVR_PUBKEY_AUTH
-#define ENABLE_SVR_SFE_AUTH
 
 /* Wether to ake public key options in authorized_keys file into account */
 #ifdef ENABLE_SVR_PUBKEY_AUTH
@@ -164,7 +166,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_CLI_PUBKEY_AUTH
 #define ENABLE_CLI_INTERACT_AUTH
 
-#define ENABLE_CLI_SFE_AUTH
 
 /* This variable can be used to set a password for client
  * authentication on the commandline. Beware of platforms

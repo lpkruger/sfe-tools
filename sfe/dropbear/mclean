@@ -1,6 +1,6 @@
 make clean
-make
+make -j
 ./make-cpp
-make
+make -j
 ./make-cpp
-make
+make -j

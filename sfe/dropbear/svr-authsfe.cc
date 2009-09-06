@@ -22,8 +22,8 @@ extern bool sfe_server_get_doneflag();
 extern bool sfe_server_get_success();
 
 
-bool ssh_writePacket(byte *buf, int length) {
-    byte* p = buf;
+bool ssh_writePacket(const unsigned char *buf, int length) {
+    const byte *p = buf;
 
     //fprintf(stderr, "sending payload, len %d\n", length);
     fprintf(stderr, ">(%d) ", length);
@@ -37,7 +37,7 @@ bool ssh_writePacket(byte *buf, int length) {
       buf_putint(ses.writepayload, n);
       buf_putbytes(ses.writepayload, (cuchar*) p, n);
       encrypt_packet();
-      fprintf(stderr, "*(%d) ", n);
+      fprintf(stderr, "*", n);
       p += n;
       length -= n;
     }
@@ -122,7 +122,8 @@ void recv_msg_userauth_sfemsg() {
   //fprintf(stderr, "recv_msg_userauth_sfemsg\n");
   int len = buf_getint(ses.payload);
   byte *buf = buf_getptr(ses.payload, len);
-  fprintf(stderr, ".(%d) ", len);
+  fprintf(stderr, ".{%d}", len);
+  //fprintf(stderr, ".", len);
 
   //fprintf(stderr, "recv_msg_userauth_sfemsg len=%d\n", len);
   sfe_server_receive_packet(buf, len);

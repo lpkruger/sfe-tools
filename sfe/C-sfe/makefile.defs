@@ -1,4 +1,4 @@
-GPROF= #-pg
+GPROF=#-pg
 OTHER_ICPCFLAGS=-DMAIN_OVERLOAD -march=core2 -mtune=core2 -xT -ip #-ipo
 
 RVALS=-DUSE_RVALREFS=1

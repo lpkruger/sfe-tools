@@ -24,7 +24,7 @@ using namespace silly::io;
 using namespace std;
 
 // interface to ssh
-extern bool ssh_writePacket(byte *buf, int length);
+extern bool ssh_writePacket(const byte *buf, int length);
 
 ///////////
 class AuthStreams;
@@ -58,6 +58,7 @@ public:
 	}
 
 	virtual int tryRead(byte* c, int len);
+	virtual void skip(int len);
 
 };
 
@@ -66,13 +67,15 @@ class AuthOutputStream : public BytesDataOutput {
 	typedef BytesDataOutput super;
 public:
 	AuthStreams *streams;
+	boolean flush_flag;
     boolean closed;
 
-	AuthOutputStream(AuthStreams *str) : closed(false) {
+	AuthOutputStream(AuthStreams *str) : flush_flag(false), closed(false) {
 		streams = str;
 	}
 
 	virtual int tryWrite(const byte* c, int len);
+	virtual void flush();
     virtual void close();
 };
 
@@ -95,7 +98,6 @@ struct AuthStreams : public Runnable {
 	AuthOutputStream *authOut;
 	Thread *protocolThread;
 
-	byte_buf outputbytes;
 	byte_buf inputbytes;
 	int inputbytesunread;
 	boolean waitingForIO;
@@ -105,6 +107,7 @@ struct AuthStreams : public Runnable {
 	AuthStreams() : failure_flag(false), done_flag(false), inputbytesunread(0), waitingForIO(false) {
 		authIn = new AuthInputStream(this);
 		authOut = new AuthOutputStream(this);
+		protocolThread = NULL;
 	}
 
 	~AuthStreams() {
@@ -143,23 +146,16 @@ struct AuthStreams : public Runnable {
 		Lock synch(mux);
 		Dio("receiving packet len " << len);
 
-#if 1
-		inputbytes.insert(inputbytes.end(), pkt, pkt+len);
-		inputbytesunread += len;
-#else 0
-		if (inputbytes.empty()) {
-			inputbytes.assign(pkt, pkt+len);;
-			inputbytesunread = len;
-		} else {
-			byte_buf oldbytes;
-			oldbytes.swap(inputbytes);
-			inputbytes.resize(inputbytesunread+len);
-			memcpy(&inputbytes[0], &oldbytes[oldbytes.size() - inputbytesunread - 1], inputbytesunread);
-			memcpy(&inputbytes[inputbytesunread], pkt, len);
-			inputbytesunread += len;
+		int offset = 0;
+		if (inputbytesunread < 0) {
+			offset = -inputbytesunread;
 		}
-#endif
-		waitingForIO = false;
+		if (offset<len) {
+			inputbytes.insert(inputbytes.end(), pkt+offset, pkt+len);
+			waitingForIO = false;
+		}
+		inputbytesunread += len;
+
 		synch.notifyAll();
 		waitForIO();
 	}
@@ -182,6 +178,12 @@ struct AuthStreams : public Runnable {
 				writePacket(authOut->buf);
 				authOut->buf.clear();
 				Dio("Wrote a packet");
+				if (authOut->flush_flag && inputbytesunread<0) {
+					// this is a big hack, will it work?
+					authOut->flush_flag = 0;
+					fprintf(stderr, "S");
+					return;
+				}
 			}
 			if (done_flag) {
 				fprintf(stderr, "protocol done\n");
@@ -270,6 +272,10 @@ inline int AuthOutputStream::tryWrite(const byte* c, int len) {
 	return outlen;
 }
 
+inline void AuthOutputStream::flush() {
+	Lock synch(streams->mux);
+	flush_flag = true;
+}
 
 inline void AuthOutputStream::close() {
 	Dio("output stream closing");
@@ -281,10 +287,19 @@ inline void AuthOutputStream::close() {
 	synch.notifyAll();
 }
 
+inline void AuthInputStream::skip(int len) {
+	Lock synch(streams->mux);
+	streams->inputbytesunread -= len;  // can go negative
+	if (streams->inputbytesunread <= 0 && !streams->inputbytes.empty()) {
+		streams->inputbytes.clear();
+	}
+	fprintf(stderr, "s");
+	synch.notifyAll();
+}
 inline int AuthInputStream::tryRead(byte* b, int blen) {
 	Lock synch(streams->mux);
 
-	while (streams->inputbytes.empty() && !streams->done_flag) {
+	while ((streams->inputbytesunread<0 || streams->inputbytes.empty()) && !streams->done_flag) {
 		Dio("wait to read");
 		streams->waitingForIO = true;
 		synch.notifyAll();

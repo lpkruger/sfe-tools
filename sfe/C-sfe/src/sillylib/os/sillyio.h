@@ -115,6 +115,10 @@ protected:
 	virtual int tryRead(byte* c, int len) = 0;
 public:
 	virtual ~DataInput() {}
+	virtual void skip(int len) {
+		byte c[len];
+		readFully(c, len);
+	}
 	int read(byte* c, int len) {
 		return tryRead(c, len);
 	}
@@ -149,6 +153,7 @@ public:
 			c.resize(len);
 		return readFully(&c[off], len);
 	}
+
 };
 
 class BytesDataInput : public DataInput {

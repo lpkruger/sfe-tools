@@ -19,21 +19,23 @@ extern void stop_sfe_client();
 extern void sfe_client_receive_packet(byte*,int);
 extern bool sfe_client_get_failflag();
 
-bool ssh_writePacket(byte *buf, int length) {
-    byte* p = buf;
+bool ssh_writePacket(const byte *buf, int length) {
+    const byte* p = buf;
 
     //fprintf(stderr, "sending payload, len %d\n", length);
 
     int maxbuf = TRANS_MAX_PAYLOAD_LEN - 16;
     int n;
 
+    fprintf(stderr, ">(%d) ", length);
     while(length>0) {
       n = MIN(length, maxbuf);
       buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SFEMSG);
       buf_putint(ses.writepayload, n);
       buf_putbytes(ses.writepayload, (cuchar*) p, n);
       encrypt_packet();
-      fprintf(stderr, "*(%d) ", length);
+      //fprintf(stderr, "*(%d) ", n);
+      fprintf(stderr, "*");
       p += n;
       length -= n;
     }
@@ -89,7 +91,8 @@ void recv_msg_userauth_sfemsg() {
   int len = buf_getint(ses.payload);
   byte *buf = buf_getptr(ses.payload, len);
   
-  fprintf(stderr, ".(%d) ", len);
+  fprintf(stderr, ".{%d}", len);
+  //fprintf(stderr, ".");
   //fprintf(stderr, "recv_msg_userauth_sfemsg len=%d\n", len);
   sfe_client_receive_packet(buf, len);
 

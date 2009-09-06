@@ -26,12 +26,24 @@ public:
 		in = in0;
 		out = out0;
 	}
+
+	void fast_sync() {
+		out->writeInt(sync_const + 0x1234567);
+		out->flush();
+		in->skip(4);
+
+	}
+
 	void check_sync() {
+		fast_sync();
+		return;
+
 		out->writeInt(sync_const);
 		int magic = in->readInt();
 		if (magic != sync_const)
 			throw ProtocolException("protocol synchronization failure");
 	}
+
 };
 
 class SSHYaoChooser : public SSHYao {
