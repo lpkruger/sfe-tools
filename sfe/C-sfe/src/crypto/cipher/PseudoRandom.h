@@ -24,7 +24,7 @@ class PseudoRandom : public Random {
 	byte_buf buf;
 
 public:
-	PseudoRandom(byte_buf &key, EVPCipher *cipher0 = NULL, bool tofree0=false);
+	PseudoRandom(const byte_buf &key, EVPCipher *cipher0 = NULL, bool tofree0=false);
 	void getBytes(byte *out, uint len);
 	void getBytes(byte_buf &buf, uint off=0, uint len=0);
 	~PseudoRandom();

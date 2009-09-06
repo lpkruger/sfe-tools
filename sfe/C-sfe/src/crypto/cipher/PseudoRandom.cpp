@@ -11,7 +11,7 @@
 namespace crypto {
 namespace cipher {
 
-PseudoRandom::PseudoRandom(byte_buf &key, EVPCipher *cipher0, bool tofree0) :
+PseudoRandom::PseudoRandom(const byte_buf &key, EVPCipher *cipher0, bool tofree0) :
 	cipher(cipher0), tofree(tofree0) {
 	if (!cipher) {
 		cipher = new EVPCipher(EVP_rc4());

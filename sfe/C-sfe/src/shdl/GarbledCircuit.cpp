@@ -13,22 +13,22 @@ using namespace shdl;
 string SecretKey::toHexString() {
 	return silly::misc::toHexString(getEncoded());
 }
-void GarbledCircuit::writeCircuit(DataOutput *out) {
+void GarbledCircuit::writeCircuit(DataOutput *out) const {
 	out->writeBoolean(use_permute);
 	out->writeInt(nInputs);
 	out->writeInt(outputs.size());
 	for (uint i=0; i<outputs.size(); ++i)
 		out->writeInt(outputs[i]);
 
-	out->writeInt(outputSecrets[0][0]->getEncoded().size());
+	out->writeInt(outputSecrets[0].s0->getEncoded().size());
 
 	out->writeInt(outputSecrets.size());
 
 	for (uint i=0; i<outputSecrets.size(); ++i) {
 //		cout << "write osecret0 len " << outputSecrets[i][0]->getEncoded()->size() << endl;
 //		cout << "write osecret1 len " << outputSecrets[i][1]->getEncoded()->size() << endl;
-		out->write(outputSecrets[i][0]->getEncoded());
-		out->write(outputSecrets[i][1]->getEncoded());
+		out->write(outputSecrets[i].s0->getEncoded());
+		out->write(outputSecrets[i].s1->getEncoded());
 	}
 
 	out->writeInt(allGates[0]->truthtab[0].size());
@@ -104,9 +104,10 @@ GarbledCircuit_p GarbledCircuit::readCircuit(DataInput *in) {
 
 
 
-void GarbledCircuit::hashCircuit(byte_buf &md) {
+byte_buf GarbledCircuit::hashCircuit() const {
 	BytesDataOutput out;
 	writeCircuit(&out);
-	md.resize(20);
+	byte_buf md(20);
 	SHA1((const uchar*)(&out.buf[0]), out.buf.size(), (uchar*)(&md[0]));
+	return md;
 }

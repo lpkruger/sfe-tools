@@ -5,7 +5,7 @@ BUILD=Intel
 dir=../C-sfe/$BUILD/src
 SFE_SERVER_OBJS=$dir/ssh/SfeServer.o
 SFE_CLIENT_OBJS=$dir/ssh/SfeClient.o
-SFE_OBJS="$dir/ssh/SSH_Yao.o $dir/crypto/PinkasNaorOT.o $dir/crypto/cipher/SFE*.o $dir/shdl/*.o $dir/sillylib/silly.o $dir/sillylib/math/BigInt.o"
+SFE_OBJS="$dir/ssh/SSH_Yao.o $dir/crypto/PinkasNaorOT.o $dir/crypto/SecureRandom.o $dir/crypto/cipher/[PES][sVF][ePE]*.o $dir/shdl/*.o $dir/sillylib/silly.o $dir/sillylib/math/BigInt.o"
 INCFLAGS="-I.  -I./libtomcrypt/src/headers/"
 #CC=g++
 #OPTFLAGS="-O2 -g -march=core2"

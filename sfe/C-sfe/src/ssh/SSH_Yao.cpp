@@ -159,6 +159,69 @@ public:
 };
 #endif
 
+struct CircuitCryptChecker : public Runnable {
+	int n;
+	Circuit_p cc;
+	const byte_buf &check_hash;
+	const FmtFile::VarDesc &vars;
+	const byte_buf &prng_key;
+	const vector<boolean_secrets> &my_secrets;
+	const vector<boolean_secrets> &your_secrets;
+
+	string failure;
+	CircuitCryptChecker(int n0, Circuit_p copy0, const byte_buf &hash0, const byte_buf &key, const FmtFile::VarDesc &var0,
+			const vector<boolean_secrets> &my, const vector<boolean_secrets> &your) :
+				n(n0), check_hash(hash0), vars(var0), prng_key(key), my_secrets(my), your_secrets(your) {
+		cc = copy0;
+	}
+
+	void* run() {
+		GarbledCircuit_p verify_gcc;
+		// checking all chosen circuits
+		vector<boolean_secrets> test_inpsecs;
+		DF("checking circuit %d with seed %s\n", n, toHexString(prng_key).c_str());
+		fprintf(stderr, "v");
+		vector<boolean_secrets> check_inpsecs(cc->inputs.size());
+		int ja=0;
+		int jb=0;
+		for (uint i=0; i<check_inpsecs.size(); ++i) {
+			if (vars.who.at(i) == "A") {
+				check_inpsecs[i] = your_secrets.at(ja++);
+			} else if (vars.who.at(i) == "B") {
+				check_inpsecs[i] = my_secrets.at(jb++);
+			}
+		}
+
+		CircuitCryptPermute crypt(new PseudoRandom(prng_key));
+		GarbledCircuit_p test_gcc = crypt.encrypt(*cc, test_inpsecs);
+
+		//printf("checking secrets...\n");
+
+		if (check_inpsecs != test_inpsecs) {
+			failure = string_printf("Input secrets don't match in circuit %d", n);
+			return NULL;
+		}
+
+		DF("checking garbled circ...\n");
+		if (test_gcc->hashCircuit() != check_hash) {
+			failure = string_printf("Garbled circuit hash mismatch in circuit %d", n);
+		}
+//		BytesDataOutput out1;
+//		test_gcc->writeCircuit(&out1);
+		//DF("circ%db %s\n",   choices[n], toHexString(out1.buf).c_str());
+
+//		BytesDataOutput out2;
+//		check_gcc->writeCircuit(&out2);
+//		//DF("circ%da %s\n\n", choices[n], toHexString(out2.buf).c_str());
+//		if (out1.buf.size() != out2.buf.size() ||
+//				!std::equal(out1.buf.begin(), out1.buf.end(), out2.buf.begin())) {
+//			failure = string_printf("Garbled circuits don't match in circuit %d", n);
+//		}
+		return NULL;
+
+	}
+};
+
 #define bench_printf(...) do {				\
 	string tmpstr;							\
 	tmpstr = string_printf(__VA_ARGS__);	\
@@ -304,9 +367,15 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	long time_before_circ = currentTimeMillis();
 	long bytes_before_circ = out->total;
 	bench_printf("written before circuits: %lu\n", out->total);
+
 	for (int n=0; n<L; ++n) {
-		gcc[n]->writeCircuit(out);
-		fast_sync();
+		if (use_prng) {
+			byte_buf hash = gcc[n]->hashCircuit();
+			writeObject(out, hash);
+		} else {
+			gcc[n]->writeCircuit(out);
+			fast_sync();
+		}
 		//fprintf(stderr, "written: %d\n", out->total);
     }
 	check_sync();
@@ -333,6 +402,15 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		writeVector(out, all_my_chosen_secrets[i]);
 	}
 
+	if (use_prng) {
+		check_sync();
+		vector_perm<GarbledCircuit_p> chosen_gcc(gcc, choices);
+		vector_perm<GarbledCircuit_p> eval_gcc(chosen_gcc.negate_perm());
+		for (uint n=0; n<eval_gcc.size(); ++n) {
+			eval_gcc[n]->writeCircuit(out);
+			fast_sync();
+		}
+	}
 	check_sync();
 
 	DF("chosen circuits:\n");
@@ -417,7 +495,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	FmtFile::VarDesc vars = fmt.getVarDesc();
 
 	bit_vector allinputs;
-	for (int i=0; i<L; ++i) {
+	for (int n=0; n<L; ++n) {
 		allinputs.insert(allinputs.end(), inputs.begin(), inputs.end());
 	}
 
@@ -453,9 +531,14 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	unflatten(all_myinpsecs_flat, all_myinputsecs, geom);
 	//D(myinputsecs);
 	vector<GarbledCircuit_p> gcc(L);
+	vector<byte_buf> gcc_hashes(use_prng ? L : 0);
 	for (int n=0; n<L; ++n) {
-		gcc[n] = GarbledCircuit::readCircuit(in);
-		fast_sync();
+		if (use_prng) {
+			readObject(in, gcc_hashes[n]);
+		} else {
+			gcc[n] = GarbledCircuit::readCircuit(in);
+			fast_sync();
+		}
 	}
 
 	check_sync();
@@ -474,80 +557,53 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	vector<vector<boolean_secrets > > all_my_chosen_secrets(choices.size());
 	vector<vector<boolean_secrets > > all_your_chosen_secrets(choices.size());
 
-	///////////////////////
-//	ThreadPool pool(numCPUs()*2);
-//	CircuitCrypter *crypters[choices.size()];
-//	Random *rn;
-//	crypters[n] = new CircuitCrypter(n, cc->deepCopy(), &gcc[n], &inputSecrets[n], rn);
-//	pool.submit(crypters[n]);
-//
-//	pool.stopWait();
-//	//pool.waitIdle();
-//	for (int n=0; n<choices.size(); ++n) {
-//		delete crypters[n];
-//	}
-	///////////////////////
+	//vector<vector<boolean_secrets> > all_check_input_secs(choices.size());
 
-
+	ThreadPool checkpool(numCPUs());
+	CircuitCryptChecker *checkers[choices.size()];
 
 	for (uint n=0; n<choices.size(); ++n) {
 		if (use_prng)
 			readVector(in, chosen_prng_keys[n]);
 		readVector(in, all_my_chosen_secrets[n]);
 		readVector(in, all_your_chosen_secrets[n]);
+
+		if (use_prng) {
+			checkers[n] = new CircuitCryptChecker(choices[n], cc->deepCopy(), gcc_hashes.at(choices[n]),
+					chosen_prng_keys[n], vars,
+					all_my_chosen_secrets[n], all_your_chosen_secrets[n]);
+
+			checkpool.submit(checkers[n]);
+		}
 	}
-
-	check_sync();
 	vector_perm<GarbledCircuit_p> verify_gcc(gcc, choices);
+	vector_perm<GarbledCircuit_p> eval_gcc =
+			verify_gcc.negate_perm();
+
 	if (use_prng) {
-		// checking all chosen circuits
-		vector<boolean_secrets> test_inpsecs;
+		check_sync();
+		vector_perm<GarbledCircuit_p> chosen_gcc(gcc, choices);
+		vector_perm<GarbledCircuit_p> eval_gcc(chosen_gcc.negate_perm());
+		for (uint n=0; n<eval_gcc.size(); ++n) {
+			eval_gcc[n] = GarbledCircuit::readCircuit(in);
+			fast_sync();
+		}
+
+		string failure;
+		checkpool.stopWait();
 		for (uint n=0; n<choices.size(); ++n) {
-			printf("checking circuit %d with seed %s\n", choices[n], toHexString(chosen_prng_keys[n]).c_str());
-			///
-
-			vector<boolean_secrets> check_inpsecs(cc->inputs.size());
-			int ja=0;
-			int jb=0;
-			for (uint i=0; i<check_inpsecs.size(); ++i) {
-				if (vars.who.at(i) == "A") {
-					check_inpsecs[i] = all_your_chosen_secrets[n].at(ja++);
-				} else if (vars.who.at(i) == "B") {
-					check_inpsecs[i] = all_my_chosen_secrets[n].at(jb++);
-				}
-			}
-
-			CircuitCryptPermute crypt(new PseudoRandom(chosen_prng_keys[n]));
-			Circuit_p copy = (use_permute ? cc->deepCopy() : cc);
-			GarbledCircuit_p test_gcc = crypt.encrypt(*copy, test_inpsecs);
-
-			printf("checking secrets...\n");
-			for (uint q=0; q<check_inpsecs.size(); ++q) {
-//				printf( "%4d s0: %s\n", q, toHexString(check_inpsecs[q].s0->getEncoded()).c_str());
-//				printf("  =? s0: %s\n",    toHexString( test_inpsecs[q].s0->getEncoded()).c_str());
-//				printf("     s1: %s\n",    toHexString(check_inpsecs[q].s1->getEncoded()).c_str());
-//				printf("  =? s1: %s\n",    toHexString( test_inpsecs[q].s1->getEncoded()).c_str());
-//				printf("%4d : %s\n", q,  (check_inpsecs[q] == test_inpsecs[q]) ? "pass" : "fail");
-			}
-			if (check_inpsecs != test_inpsecs)
-				throw ProtocolException("Input secrets don't match");
-
-			printf("checking garbled circ...\n");
-			BytesDataOutput out1;
-			test_gcc->writeCircuit(&out1);
-			//printf("circ%db %s\n",   choices[n], toHexString(out1.buf).c_str());
-			BytesDataOutput out2;
-			gcc.at(choices[n])->writeCircuit(&out2);
-			//printf("circ%da %s\n\n", choices[n], toHexString(out2.buf).c_str());
-			if (out1.buf.size() != out2.buf.size() ||
-					!std::equal(out1.buf.begin(), out1.buf.end(), out2.buf.begin())) {
-				throw ProtocolException("Garbled circuits don't match");
-			}
+			if (failure.empty() && !checkers[n]->failure.empty())
+				failure = checkers[n]->failure;
+			delete checkers[n];
+		}
+		if (!failure.empty()) {
+			throw ProtocolException(failure.c_str());
 		}
 	}
 
-	vector_perm<GarbledCircuit_p> eval_gcc =
-			verify_gcc.negate_perm();
+	check_sync();
+
+
 
 	int LL = eval_gcc.size();
 	vector<vector<SFEKey_p> > yourinputsecs;

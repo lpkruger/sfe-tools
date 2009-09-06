@@ -148,7 +148,7 @@ public:
 	void calcDeps();
 	void clearDeps();
 
-	Circuit_p deepCopy();
+	Circuit_p deepCopy() const;
 
 	Circuit() {}
 	~Circuit() { clearDeps(); }
@@ -300,7 +300,7 @@ public:
 };
 
 
-inline Circuit_p Circuit::deepCopy() {
+inline Circuit_p Circuit::deepCopy() const {
 	Circuit_p pNewCirc = Circuit_p(new Circuit());
 	Circuit& newCirc = *pNewCirc;
 	map<GateBase*,GateBase_p> mapping;

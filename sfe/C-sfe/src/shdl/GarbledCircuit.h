@@ -143,8 +143,8 @@ struct GarbledCircuit : public Reclaimer<GarbledGate>{
 		allGates.clear();
 	}
 
-	void hashCircuit(byte_buf &md);
-	void writeCircuit(DataOutput *out);
+	byte_buf hashCircuit() const;
+	void writeCircuit(DataOutput *out) const;
 	static wise_ptr<GarbledCircuit> readCircuit(DataInput *in);
 
 };
