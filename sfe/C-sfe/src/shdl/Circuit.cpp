@@ -40,7 +40,7 @@ void Circuit::calcDeps() {
 
 void Circuit::clearDeps() {
     vector<Gate_p> stack;
-    printf("clearing...\n");
+    //printf("clearing...\n");
 
     for (uint i=0; i<outputs.size(); ++i) {
     	stack.push_back(outputs[i]);

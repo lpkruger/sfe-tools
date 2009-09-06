@@ -1,0 +1,15 @@
+program priveq {
+	const N=128;
+	type Bool = Int<1>;
+	type Num = Int<N>;
+	type Char = Int<8>;
+	type AliceInput = struct { Num x };
+	type BobInput = struct { Num y };
+	type BobOutput = Bool; 
+	type Input = struct {AliceInput alice, BobInput bob};
+	type Output = struct {BobOutput bob};
+
+	function Output output(Input input) {
+           output.bob = (input.alice.x == input.bob.y);
+	}
+}

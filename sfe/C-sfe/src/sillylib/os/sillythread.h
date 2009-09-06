@@ -5,11 +5,18 @@
  *      Author: louis
  */
 
-#include <pthread.h>
-#include "errno.h"
 
 #ifndef SILLYTHREAD_H_
 #define SILLYTHREAD_H_
+
+#include <pthread.h>
+#include <time.h>
+#include <sys/time.h>
+#include "errno.h"
+
+//TODO: this is stupid
+#include <sys/syscall.h>
+#define clock_gettime(X,Y)  syscall(__NR_clock_gettime, X, Y)
 
 #if 1
 static inline void sillythread_dummy(...) {}
@@ -30,11 +37,16 @@ struct ThreadException : public silly::ErrnoException {
 	ThreadException(int err) : super (err) {}
 };
 
-static inline void throwIfError(int code) {
+static inline void throwIfError0(int code) {
 	if (!code)
 		return;
 	throw ThreadException(code);
 }
+#define throwIfError(condition) do {		\
+	int err = condition;					\
+	if (err)								\
+		fprintf(stderr, "%s = %d at %s:%d\n", #condition, err, __FILE__, __LINE__);	\
+	throwIfError0(err);	} while(0)
 
 class PrimitiveThread {
 	NOCOPY(PrimitiveThread)
@@ -72,23 +84,21 @@ public:
 	}
 
 	void stop() {
+		if (thread==pthread_t(-1))
+			throw ThreadException(ESRCH);
 		throwIfError(pthread_cancel(thread));
 	}
 
 	void detach() {
+		if (thread==pthread_t(-1))
+			throw ThreadException(ESRCH);
 		throwIfError(pthread_detach(thread));
-		thread = -1;
 	}
 	void* join() {
-		if (thread==pthread_t(-1)) {
+		if (thread==pthread_t(-1))
 			throw ThreadException(ESRCH);
-			// ESRCH?
-			// ESTALE?
-			// EINVAL?
-		}
 		void *retval;
 		throwIfError(pthread_join(thread, &retval));
-		thread = -1;
 		return retval;
 	}
 } RESOURCE;
@@ -122,12 +132,14 @@ protected:
 	pthread_mutex_t mux;
 
 public:
-	PrimitiveMutex() {
-		// TODO: PTHREAD_MUTEX_RECURSIVE
+	PrimitiveMutex(int kind=PTHREAD_MUTEX_NORMAL) {
+		pthread_mutexattr_t attr;
+		pthread_mutexattr_init(&attr);
+		pthread_mutexattr_settype(&attr, kind);
 		memset(&mux, 0, sizeof(mux));
-		throwIfError(pthread_mutex_init(&mux, NULL));
-
+		throwIfError(pthread_mutex_init(&mux, &attr));
 	}
+
 	~PrimitiveMutex() {
 		throwIfError(pthread_mutex_destroy(&mux));
 	}
@@ -143,10 +155,30 @@ public:
 };
 
 class Mutex : protected PrimitiveMutex, protected ConditionVar {
-
+	pthread_t owner;
 public:
+	Mutex() : owner(-1) {}
+	~Mutex();
+
+private:
 	void wait() {
 		throwIfError(pthread_cond_wait(&cond, &mux));
+	}
+	void wait(ulong milsec) {
+		timespec timer;
+		clockid_t clock;
+		pthread_condattr_t attr;
+		throwIfError(pthread_condattr_init(&attr));
+		throwIfError(pthread_condattr_getclock(&attr, &clock));
+		int err = clock_gettime(clock, &timer);
+		if(err==-1)
+			throwIfError(errno);
+		timer.tv_nsec += (milsec%1000)*1000000;
+		timer.tv_sec +=  milsec/1000 + (timer.tv_nsec/1000000000);
+		timer.tv_nsec %= 1000000000;
+		err = pthread_cond_timedwait(&cond, &mux, &timer);
+		if (err != ETIMEDOUT)
+			throwIfError(err);
 	}
 	void notify() {
 		ConditionVar::notify();
@@ -156,52 +188,83 @@ public:
 		ConditionVar::notifyAll();
 	}
 	friend class Lock;
+
 };
 
 class Lock {
 	Mutex *mux;
 	bool locked;
-
+	bool threadhadlock;
 	NOCOPY(Lock)
-
+	friend class Mutex;
 protected:
 	Lock() : mux(NULL), locked(false) {}
 
 public:
-	Lock(Mutex *mux0) : mux(mux0), locked(false) {
-		mux->acquire();
-		locked = true;
+	Lock(Mutex *mux0) : mux(mux0), locked(false), threadhadlock(false) {
+		if (mux->owner == pthread_self()) {
+			threadhadlock = true;
+		} else {
+			mux->acquire();
+			mux->owner = pthread_self();
+			locked = true;
+		}
 	}
-	Lock(Mutex &mux0) : mux(&mux0), locked(false) {
-		mux->acquire();
-		locked = true;
+	Lock(Mutex &mux0) : mux(&mux0), locked(false), threadhadlock(false) {
+		if (mux->owner == pthread_self()) {
+			threadhadlock = true;
+		} else {
+			mux->acquire();
+			locked = true;
+			mux->owner = pthread_self();
+		}
 	}
 	~Lock() {
-		if (!locked)
+		if (!locked && !threadhadlock)
 			throw ThreadException(EINVAL);
+		if (locked) {
+			mux->owner = -1;
+			mux->release();
+		}
 		locked = false;
-		mux->release();
 	}
-#if 0
+#if 1
 	void notify() {
-		if (!locked)
+		if (!locked && !threadhadlock)
 			throw new ThreadException(EINVAL);
 		mux->notify();
 	}
 	void notifyAll() {
-		if (!locked)
+		if (!locked && !threadhadlock)
 			throw new ThreadException(EINVAL);
 		mux->notifyAll();
 	}
 	void wait() {
-		if (!locked)
+		if (!locked && !threadhadlock)
 			throw new ThreadException(EINVAL);
 		mux->wait();
+	}
+	void wait(ulong milsec) {
+		if (!locked && !threadhadlock)
+			throw new ThreadException(EINVAL);
+		mux->wait(milsec);
 	}
 #endif
 } RESOURCE;
 
 
+inline Mutex::~Mutex() {
+#if 0
+	Lock lock(this);
+	fprintf(stderr, "acquired lock before destruction\n");
+	notifyAll();
+	if (lock.threadhadlock)
+		fprintf(stderr, "weird\n");
+	// PrimitiveMutex destructor will destroy the object
+#endif
+}
+
+///////////////////////
 struct Runnable {
 	virtual ~Runnable() {}
 	virtual void* run() = 0;
@@ -229,7 +292,15 @@ protected:
 	bool deleteOnTerm;
 	void* retval;
 	static void* go(Thread *that) {
-		void *retval = that->run();
+		void *retval=NULL;
+		try {
+			retval = that->run();
+		} catch (std::exception ex) {
+			printf("exception caught %s", ex.what());
+		} catch (...) {
+			printf("unknown exception caught...");
+			throw;
+		}
 		bool deletethat = false;
 		{
 			Lock lock(that->threadLock);
@@ -239,19 +310,20 @@ protected:
 			if (that->deleteOnTerm)
 				deletethat = true;
 			else
-				that->threadLock.notifyAll();
+				lock.notifyAll();
 		}
 		if (deletethat)
 			delete that;
 		return retval;
 	}
+	~Thread() {}	// thread deletes itself
 public:
 	Thread(Runnable *f0 = NULL) : super() {
 		func = f0;
 		running = false;
 		returned = false;
 		deleteOnJoin = false;
-		deleteOnTerm = false;
+		deleteOnTerm = true;
 		retval = NULL;
 	}
 	void* run() {
@@ -274,6 +346,9 @@ public:
 		super::detach();
 	}
 	void stop() {
+		Lock lock(threadLock);
+		if (returned || !running)
+			return;
 		super::stop();
 	}
 
@@ -285,9 +360,11 @@ public:
 			if (!running)
 				throw ThreadException(EINVAL);
 			while (!returned)
-				threadLock.wait();
-			if (deleteOnJoin)
+				lock.wait();
+			if (deleteOnJoin) {
+				deleteOnTerm = false;
 				delete this;
+			}
 			return retval;
 		}
 	}
@@ -373,7 +450,7 @@ class ThreadPool {
 								pool->threads.end(), this);
 				pool->threads.erase(this_thread);
 				DF("worker thread %08x stopped", (uint)this);
-				pool->pool_mux.notifyAll();
+				lock.notifyAll();
 			}
 
 			return NULL;
@@ -405,7 +482,7 @@ public:
 		DF("Waiting for idle");
 		Lock lock(pool_mux);
 		while (!threads.empty())
-			pool_mux.wait();
+			lock.wait();
 	}
 	void stopWait() {
 		stop();

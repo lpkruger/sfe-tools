@@ -71,9 +71,9 @@ void print_backtrace(int depth=10, const char *msg=NULL);
 namespace silly {
 namespace mem {
 
-struct null_pointer : public MsgBufferException {
-	null_pointer(const char *msg) : MsgBufferException(msg) {}
-};
+//struct null_pointer : public MsgBufferException {
+//	null_pointer(const char *msg) : MsgBufferException(msg) {}
+//};
 // auto-freeing reference-counting pointers.  yay.
 // wise_ptr struct uses 4 bytes vs 8 bytes for C++/Boost shared_ptr
 // therefore mine is better

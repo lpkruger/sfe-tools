@@ -252,10 +252,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DEFAULT_RECV_WINDOW 24576
 /* Maximum size of a received SSH data packet - this _MUST_ be >= 32768
    in order to interoperate with other implementations */
-#define RECV_MAX_PAYLOAD_LEN 32768
+#define RECV_MAX_PAYLOAD_LEN (32768*16)
 /* Maximum size of a transmitted data packet - this can be any value,
    though increasing it may not make a significant difference. */
-#define TRANS_MAX_PAYLOAD_LEN 16384
+#define TRANS_MAX_PAYLOAD_LEN (16384*16)
 
 /* Ensure that data is transmitted every KEEPALIVE seconds. This can
 be overridden at runtime with -K. 0 disables keepalives */

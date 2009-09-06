@@ -14,14 +14,15 @@ typedef const unsigned char cuchar;
 
 bool inactive = true;
 
-extern void new_sfe_client(char*);
+extern void start_sfe_client(char*);
+extern void stop_sfe_client();
 extern void sfe_client_receive_packet(byte*,int);
 extern bool sfe_client_get_failflag();
 
 bool ssh_writePacket(byte *buf, int length) {
     byte* p = buf;
 
-    fprintf(stderr, "sending payload, len %d\n", length);
+    //fprintf(stderr, "sending payload, len %d\n", length);
 
     int maxbuf = TRANS_MAX_PAYLOAD_LEN - 16;
     int n;
@@ -32,7 +33,7 @@ bool ssh_writePacket(byte *buf, int length) {
       buf_putint(ses.writepayload, n);
       buf_putbytes(ses.writepayload, (cuchar*) p, n);
       encrypt_packet();
-      fprintf(stderr, "*");
+      fprintf(stderr, "*(%d) ", length);
       p += n;
       length -= n;
     }
@@ -59,10 +60,6 @@ int cli_auth_sfe() {
 		password = getpass_or_cancel(prompt);
 	}
 
-
-  fprintf(stderr, "cli_auth_sfe\n");
-  inactive = false;
-
   CHECKCLEARTOWRITE();
   buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
   buf_putstring(ses.writepayload, (cuchar*) cli_opts.username,
@@ -74,48 +71,40 @@ int cli_auth_sfe() {
       AUTH_METHOD_SFE_LEN);
   encrypt_packet();
 
-  new_sfe_client(password);
+  fprintf(stderr, "cli_auth_sfe\n");
+  start_sfe_client(password);
+  inactive = false;
 
-#if 0
-  jbyteArray sbuf = (jbyteArray) env->CallObjectMethod(jclient, start);
-  fprintf(stderr, "cli_auth_sfe2\n");
-  if (sbuf) {
-    write_packet(sbuf);
-  }
-#endif
-    
   return 1;
 }
 
-extern "C" void recv_msg_userauth_sfemsg();
+//extern "C" void recv_msg_userauth_sfemsg();
 
 void recv_msg_userauth_sfemsg() {
   if (inactive) {
-    fprintf(stderr, "%%");
+    fprintf(stderr, "!");
     return;
   }
   //fprintf(stderr, "recv_msg_userauth_sfemsg\n");
-  fprintf(stderr, ".");
   int len = buf_getint(ses.payload);
   byte *buf = buf_getptr(ses.payload, len);
   
+  fprintf(stderr, ".(%d) ", len);
+  //fprintf(stderr, "recv_msg_userauth_sfemsg len=%d\n", len);
   sfe_client_receive_packet(buf, len);
 
   if (sfe_client_get_failflag()) {
+
+      stop_sfe_client();
       inactive = true;
       fprintf(stderr, "Exception failure\n");
       cli_ses.state = USERAUTH_FAIL_RCVD;
   } else {
-      fprintf(stderr, "-");
+      //fprintf(stderr, "-");
   }
-#if 0
-  jbyteArray sbuf = (jbyteArray) env->CallObjectMethod(jclient, receivePacket, jbuf);
-  if (sbuf) {
-    write_packet(sbuf);
-  }
-#endif
 }
 
+// to prevent link errors with SFE library
 typedef int (*main_ptr)(int,char**);
 void* add_main(const char* name, main_ptr main_f) {}
 

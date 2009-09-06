@@ -91,9 +91,7 @@ public:
 
 protected:
 	virtual int tryWrite(const byte* c, int len) {
-		for (int i=0; i<len; ++i) {
-			buf.push_back(c[i]);
-		}
+		buf.insert(buf.end(), c, c+len);
 		return len;
 	}
 };

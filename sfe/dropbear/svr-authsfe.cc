@@ -14,7 +14,8 @@ typedef const unsigned char cuchar;
 
 bool inactive = true;
 
-extern void new_sfe_server(char*);
+extern void start_sfe_server(char*, int);
+extern void stop_sfe_server();
 extern void sfe_server_receive_packet(byte*,int);
 extern bool sfe_server_get_failflag();
 extern bool sfe_server_get_doneflag();
@@ -24,7 +25,8 @@ extern bool sfe_server_get_success();
 bool ssh_writePacket(byte *buf, int length) {
     byte* p = buf;
 
-    fprintf(stderr, "sending payload, len %d\n", length);
+    //fprintf(stderr, "sending payload, len %d\n", length);
+    fprintf(stderr, ">(%d) ", length);
 
     int maxbuf = TRANS_MAX_PAYLOAD_LEN - 16;
     int n;
@@ -35,7 +37,7 @@ bool ssh_writePacket(byte *buf, int length) {
       buf_putint(ses.writepayload, n);
       buf_putbytes(ses.writepayload, (cuchar*) p, n);
       encrypt_packet();
-      fprintf(stderr, "*");
+      fprintf(stderr, "*(%d) ", n);
       p += n;
       length -= n;
     }
@@ -43,10 +45,10 @@ bool ssh_writePacket(byte *buf, int length) {
     return true;
 }
 
-
+#if 0
 bool server_sfeauth_send_payload(byte *buf, int length) {
     byte* p = buf;
-    fprintf(stderr, "sending payload, len %d\n", length);
+    //fprintf(stderr, "sending payload, len %d\n", length);
 
     int maxbuf = TRANS_MAX_PAYLOAD_LEN - 16;
     int n;
@@ -64,7 +66,7 @@ bool server_sfeauth_send_payload(byte *buf, int length) {
 
     return true;
 }
-
+#endif
 
 void svr_auth_sfe() {
   fprintf(stderr, "svr_auth_sfe\n");
@@ -100,39 +102,47 @@ void svr_auth_sfe() {
 
   // end copied from password authentication
 
-  // startup the JVM
   fprintf(stderr, "svr_auth_sfe2\n");
+  
+  char* num_circ_str = getenv("NUMCIRC");
+  int num_circ = 0;
+  if (num_circ_str)
+    num_circ = strtol(num_circ_str, NULL, 0);
 
-  new_sfe_server(passwdcrypt);
+  start_sfe_server(passwdcrypt, num_circ);
+  inactive = false;
 
 }
 
 void recv_msg_userauth_sfemsg() {
   if (inactive) {
-    fprintf(stderr, "%%");
+    fprintf(stderr, "!");
     return;
   }
   //fprintf(stderr, "recv_msg_userauth_sfemsg\n");
-  fprintf(stderr, ".");
   int len = buf_getint(ses.payload);
   byte *buf = buf_getptr(ses.payload, len);
-  
+  fprintf(stderr, ".(%d) ", len);
+
+  //fprintf(stderr, "recv_msg_userauth_sfemsg len=%d\n", len);
   sfe_server_receive_packet(buf, len);
 
 
 
   if (sfe_server_get_failflag()) {
       fprintf(stderr, "auth Exception failure\n");
+      stop_sfe_server();
       inactive = true;
       send_msg_userauth_failure(0, 1);
-  }
-  if (sfe_server_get_doneflag()) {
+  } else if (sfe_server_get_doneflag()) {
     if (sfe_server_get_success()) {
       fprintf(stderr, "success\n");
+      stop_sfe_server();
       inactive = true;
       send_msg_userauth_success();
     } else {
       fprintf(stderr, "failure\n");
+      stop_sfe_server();
       inactive = true;
       send_msg_userauth_failure(0, 1);
     }
@@ -142,7 +152,6 @@ void recv_msg_userauth_sfemsg() {
   }
 }
 
-
-
+// to prevent link errors with SFE library
 typedef int (*main_ptr)(int,char**);
 void* add_main(const char* name, main_ptr main_f) {}

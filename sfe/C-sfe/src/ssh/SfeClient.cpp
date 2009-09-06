@@ -7,16 +7,26 @@
 
 #include "SfeClient.h"
 
-extern void new_sfe_client(char*);
+// interface from dropbear
+extern void start_sfe_client(char*);
+extern void stop_sfe_client();
 extern void sfe_client_receive_packet(byte*,int);
 extern bool sfe_client_get_failflag();
-extern bool sfe_client_get_doneflag();
-extern bool sfe_client_get_success();
+//////
+
 
 static SfeClient *client;
 
-void new_sfe_client(char *pwcrypt) {
+void start_sfe_client(char *pwcrypt) {
+	if (client)
+		delete client;
 	client = new SfeClient(string(pwcrypt));
+	client->start();
+}
+void stop_sfe_client() {
+	if (client)
+		delete client;
+	client = NULL;
 }
 void sfe_client_receive_packet(byte *pkt, int len) {
 	client->receivePacket(pkt, len);

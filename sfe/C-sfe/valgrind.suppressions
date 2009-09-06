@@ -19,13 +19,25 @@
 }
 
 {
-   gc_eager_cond
+   gc_eager_cond from Boehm
    Memcheck:Cond
    fun:GC_push_all_eager
 }
 {
-   gc_eager_addr4
+   gc_eager_addr4 from Boehm
    Memcheck:Addr4
    fun:GC_push_all_eager
 }
 
+{
+   rt_sigaction frop dropbear
+   Memcheck:Param
+   rt_sigaction(act->sa_mask)
+   obj:/lib/ld-2.8.so
+   fun:sigaction
+}
+{
+   dropbear sesscheckclose
+   Memcheck:Addr4
+   fun:sesscheckclose
+}

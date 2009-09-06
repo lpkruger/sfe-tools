@@ -13,7 +13,7 @@
 #include <algorithm>
 #include "shdl.h"
 
-#undef DEBUG
+//#define DEBUG 1
 #include "sillydebug.h"
 
 using namespace shdl;
@@ -358,7 +358,7 @@ FmtFile FmtFile::parseFmt(istream &in) {
 				fmt.outputmap[obj.bits[i-5]] = (outputNum++);
 			}
 		}
-		printf("%s\n", obj.name.c_str());
+		DF("%s\n", obj.name.c_str());
 		fmt.mapping[obj.name] = obj;
 	}
 

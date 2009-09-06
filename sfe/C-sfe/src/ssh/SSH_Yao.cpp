@@ -5,11 +5,10 @@
  *      Author: louis
  */
 
-#define DEBUG 1
-#define DEBUG2 1
+//#define DEBUG 1
+//#define DEBUG2 1
 #include <algorithm>
 #include "SSH_Yao.h"
-#include "AuthStreams.h"
 
 #include "sillydebug.h"
 
@@ -74,7 +73,7 @@ void D_ON(const SecretKey_p &k, int lev=0) {
 void D_ON(const SFEKey_p &k, int lev=0) {
 	D(k->getEncoded(), lev);
 }
-void D(const boolean_secrets &secr, int lev=0) {
+void D_ON(const boolean_secrets &secr, int lev=0) {
 	D(secr.s0, lev);
 	D(secr.s1, lev);
 }
@@ -97,7 +96,7 @@ static void test_eval(int n, GarbledCircuit &gcc, vector<boolean_secrets> &input
 	bit_vector circ_out = geval.eval(gcc, gcirc_input);
 	DC("test eval " << n);
 	D(circ_out);
-	printf("test_eval %d %u\n", testlen, gcirc_input.size());
+	DF("test_eval %d %u\n", testlen, gcirc_input.size());
 }
 
 #define USE_THREADS 4
@@ -116,8 +115,11 @@ public:
 	CircuitCrypter(int n0, Circuit_p c0, GarbledCircuit_p *g0, vector<boolean_secrets> *i0)
 			: n(n0), cc(c0), gcc(g0), inpsecs(i0) {}
 	void* run() {
-		fprintf(stderr, "circuitcrypter %d starting\n", n);
-
+#if NDEBUG
+		fprintf(stderr, "#");
+#else
+		DF(stderr, "circuitcrypter %d starting\n", n);
+#endif
 
 
 #if 0 // just a test
@@ -158,7 +160,23 @@ public:
 };
 #endif
 
+#define bench_printf(...) do {				\
+	string tmpstr;							\
+	tmpstr = string_printf(__VA_ARGS__);	\
+	benchmark_buffer.append(tmpstr);		\
+	DF("%s", tmpstr.c_str());		\
+} while(0)
+
+#ifdef BUILDNAME
+#define STRINGIFY(X) #X
+#define GET_STRING(X) STRINGIFY(X)
+#define BENCHNAME(n) "SSH " n " Benchmarks for build " GET_STRING(BUILDNAME) "\n"
+#else
+#define BENCHNAME ""
+#endif
+
 void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
+	string benchmark_buffer(BENCHNAME("Client"));
 	FmtFile::VarDesc vars = fmt.getVarDesc();
 
 	D("inputs:");
@@ -193,19 +211,19 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		if (use_permute) {
 			CircuitCryptPermute crypt;
 			for (int n=0; n<L; ++n) {
-				fprintf(stderr, "cryptp circuit %d\n", n+1);
+				DF"cryptp circuit %d\n", n+1);
 				gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
 			}
 		} else {
 			CircuitCrypt crypt;
 			for (int n=0; n<L; ++n) {
-				fprintf(stderr, "crypt circuit %d\n", n+1);
+				DF"crypt circuit %d\n", n+1);
 				gcc[n] = crypt.encrypt(*cc, inputSecrets[n]);
 		}
 	}
 #endif
 	long time_crypt = currentTimeMillis();
-	fprintf(stderr, "crypted %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
+	bench_printf("crypted %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
 			L, (time_crypt-time_start)/1.0e3, (time_crypt-time_start)/(1.0e3*L));
 
 #if 0 && DEBUG
@@ -254,21 +272,23 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	PinkasNaorOT ot;
 
 	long ot_start = currentTimeMillis();
-
 	OTSender sender(otvals, &ot);
 	sender.setStreams(in, out);
-	fprintf(stderr, "OT precalc\n");
+	DF("OT precalc\n");
 	sender.precalc();
+	long ot_precalc_end = currentTimeMillis();
 	check_sync();
-	long ot_calc = currentTimeMillis();
-	fprintf(stderr, "OT online\n");
+	long ot_online_start = currentTimeMillis();
+	DF("OT online\n");
 	sender.online();
 	long ot_end = currentTimeMillis();
-
-	fprintf(stderr, "OT in %0.3f secs (%0.3f + %0.3f)\n", (ot_end-ot_start)/1000.0,
-				(ot_end-ot_calc)/1000.0, (ot_calc-ot_start)/1000.0);
-
 	check_sync();
+	long ot_finished = currentTimeMillis();
+	bench_printf("OT in %0.3f secs (%0.3f + %0.3f + %0.3f + %0.3f)\n", (ot_finished-ot_start)/1000.0,
+				(ot_precalc_end-ot_start)/1000.0, (ot_online_start-ot_precalc_end)/1000.0,
+				(ot_end-ot_online_start)/1000.0, (ot_finished-ot_end)/1000.0);
+
+
 
 	for (int n=0; n<L; ++n) {
 		gcc[n]->writeCircuit(out);
@@ -324,8 +344,18 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		}
 	}
 	writeVector(out, my_sent_secrets);
-	fprintf(stderr, "done\n");
-	check_sync();
+	DF(stderr, "done\n");
+	long time_done = currentTimeMillis();
+	bench_printf("communication time %0.3f\n", (time_done-ot_finished)/1000.0);
+	bench_printf("client done in %0.3f seconds\n", (time_done-time_start)/1000.0);
+	//check_sync();
+	//long time_end = currentTimeMillis();
+	//bench_printf("all done in %03f seconds\n", (time_end-time_start)/1000.0);
+	bench_printf("online time %0.3f seconds\n", (time_done-ot_online_start)/1000.0);
+	cerr << endl << "----------------------------" << endl;
+	cerr << benchmark_buffer;
+	cerr << "----------------------------" << endl << endl;
+
 }
 
 #if USE_THREADS
@@ -340,7 +370,11 @@ public:
 			: n(n0), gcc(g0), inpsecs(i0) {}
 	void* run() {
 		GCircuitEval geval;
-		fprintf(stderr, "circuitevaluator %d starting\n", n);
+#if NDEBUG
+		fprintf(stderr, "$");
+#else
+		DF(stderr, "circuitevaluator %d starting\n", n);
+#endif
 		circ_out = geval.eval(*gcc, *inpsecs);
 		return NULL;
 	}
@@ -348,6 +382,8 @@ public:
 #endif
 
 bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
+	string benchmark_buffer(BENCHNAME("Server"));
+	long time_start = currentTimeMillis();
 	D("inputs:");
 	D(inputs);
 	if (L<2)
@@ -367,16 +403,18 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	OTChooser chooser(allinputs, &ot);
 	chooser.setStreams(in, out);
 	long ot_start = currentTimeMillis();
-	fprintf(stderr, "OT precalc\n");
+	DF(stderr, "OT precalc\n");
 	chooser.precalc();
+	long ot_precalc_end = currentTimeMillis();
 	check_sync();
-	long ot_calc = currentTimeMillis();
-	fprintf(stderr, "OT online\n");
+	long ot_online_start = currentTimeMillis();
+	DF(stderr, "OT online\n");
 	BigInt_Vect all_myotsecs_flat =
 			chooser.online();
 	long ot_end = currentTimeMillis();
-	fprintf(stderr, "OT in %0.3f secs (%0.3f + %0.3f)\n", (ot_end-ot_start)/1000.0,
-			(ot_end-ot_calc)/1000.0, (ot_calc-ot_start)/1000.0);
+	bench_printf("OT in %0.3f secs (%0.3f + %0.3f + %0.3f)\n", (ot_end-ot_start)/1000.0,
+					(ot_precalc_end-ot_start)/1000.0, (ot_online_start-ot_precalc_end)/1000.0,
+					(ot_end-ot_online_start)/1000.0);
 	check_sync();
 
 	vector<SFEKey_p> all_myinpsecs_flat(all_myotsecs_flat.size());
@@ -387,7 +425,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	vector<int> geom(L, inputs.size());
 	vector<vector<SFEKey_p> > all_myinputsecs;
 
-	DC("read " << all_myinpsecs_flat.size() << " from OT")
+	DC("read " << all_myinpsecs_flat.size() << " from OT");
 	unflatten(all_myinpsecs_flat, all_myinputsecs, geom);
 	//D(myinputsecs);
 	vector<GarbledCircuit_p> gcc(L);
@@ -415,11 +453,10 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	}
 
 	check_sync();
-
 	vector_perm<GarbledCircuit_p> verify_gcc(gcc, choices);
 	// TODO: verify
 
-	GCircuitEval geval;
+
 	vector_perm<GarbledCircuit_p> eval_gcc =
 			verify_gcc.negate_perm();
 
@@ -445,17 +482,19 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 		}
 	}
 
-	bit_vector output0(LL);
-	long time_start = currentTimeMillis();
+	long time_eval_start = currentTimeMillis();
+	bench_printf("communication time %0.3f\n", (time_eval_start-ot_end)/1000.0);
 
+	uint expected_outputs = fmt.mapping.at("output.bob").bits.size();
+	bit_vector output0;
 #if USE_THREADS
 	ThreadPool pool(numCPUs()*2);
 	CircuitEvaluator *evaluators[LL];
 	for (int n=0; n<LL; ++n) {
 		//fprintf(stderr, "eval circuit %u\n", n);
-		for (uint q=0; q<gcirc_input[n].size(); ++q) {
-			//D(gcirc_input[n][q]);
-		}
+//		for (uint q=0; q<gcirc_input[n].size(); ++q) {
+//			D(gcirc_input[n][q]);
+//		}
 		evaluators[n] = new CircuitEvaluator(
 				n, eval_gcc[n], &gcirc_input[n]);
 		pool.submit(evaluators[n]);
@@ -463,31 +502,63 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	}
 	pool.stopWait();
 	for (int n=0; n<LL; ++n) {
-
-		printf("received %d outputs", evaluators[n]->circ_out.size());
+		if (evaluators[n]->circ_out.size() != expected_outputs)
+			throw ProtocolException(
+					string_printf("circuit should have %d output",
+							expected_outputs).c_str());
+		DF("received %d outputs", evaluators[n]->circ_out.size());
+		if (n==0) {
+			output0 = evaluators[n]->circ_out;
+		} else {
+			if (evaluators[n]->circ_out != output0)
+				throw ProtocolException(
+						string_printf(
+								"detected differing outputs in circuit %d", n).c_str());
+		}
 		bool success = false;
 		for (uint j=0; j<evaluators[n]->circ_out.size(); ++j) {
 			if (evaluators[n]->circ_out[j])
 				success = true;
 		}
-		printf(": %d\n", success);
+		DF(": %d\n", success);
+		if (!success)
+			throw ProtocolException(
+					string_printf("failed circuit %d", n).c_str());
 
-		output0[n] = success;
 		delete evaluators[n];
 	}
+
 #else
+	// TODO: this is all wrong
+	GCircuitEval geval;
 	for (int n=0; n<LL; ++n) {
 		bit_vector circ_out = geval.eval(*eval_gcc[n], gcirc_input[n]);
-		if (circ_out.size() != 1)
-			throw ProtocolException("circuit should have 1 output");
-		output0[n] = circ_out[0];
+
+		if (circ_out.size() != expected_outputs)
+			throw ProtocolException(
+					string_printf("circuit should have %d output",
+							expected_outputs).c_str());
+		bool succ = false;
+		for (int i=0; i<circ_out[i]; ++i) {
+			if (circ_out[i])
+				succ = true;
+		}
 	}
 #endif
 
-	long time_eval = currentTimeMillis();
-	fprintf(stderr, "evaled %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
-				LL, (time_eval-time_start)/1.0e3, (time_eval-time_start)/(1.0e3*LL));
-	check_sync();
+	long time_eval_end = currentTimeMillis();
+	bench_printf("evaled %d circuits in %0.3f secs  (%0.3f s per circuit)\n",
+				LL, (time_eval_end-time_eval_start)/1.0e3,
+				    (time_eval_end-time_eval_start)/(1.0e3*LL));
+	bench_printf("server done in %0.3f seconds\n", (time_eval_end-time_start)/1000.0);
+	//check_sync();
+	//long time_end = currentTimeMillis();
+	bench_printf("online time %0.3f seconds\n", (time_eval_end-ot_online_start)/1000.0);
+
+	cerr << endl << "----------------------------" << endl;
+	cerr << benchmark_buffer;
+	cerr << "----------------------------" << endl << endl;
+
 	return output0;
 }
 

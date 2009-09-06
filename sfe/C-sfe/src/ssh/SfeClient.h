@@ -36,15 +36,17 @@ public:
 	SfeClient(string passw0) {
 		password = passw0;
 	}
+
 	string salt;
 
 	void start() {
 		Dio("start");
-		waiting = false;
+		waitingForIO = true;
 		if (useSeperateSocket) {
-			waiting = true;
+			waitingForIO = true;
 		}
 		startProtoThread();
+		DC("returning from start()");
 	}
 
 	void go() {
@@ -60,6 +62,10 @@ public:
 			out = bob->getOutput();
 			out->flush();
 		} else {
+			out = authOut;
+			out->flush();
+			in = authIn;
+
 //			out = new ObjectOutputStream(authOut);
 //			out.flush();
 //			in = new ObjectInputStream(authIn);
@@ -70,6 +76,12 @@ public:
 	}
 
 	void go2(DataOutput *out, DataInput *in) {
+		if (password.empty()) {
+			fprintf(stderr, "empty password\n");
+			failure_flag = true;
+			done_flag = true;
+			return;
+		}
 		// pre-crypt
 		DC("pre-crypt circuit");
 		Circuit_p cc;
@@ -81,7 +93,7 @@ public:
 		if (!useMD5) {
 			string fmtfile = string("/etc/dropbear/priveq")+rstr+".fmt";
 			string circfile = string("/etc/dropbear/priveq")+rstr+".circ";
-			printf("circuit: %s\n", (string("/etc/dropbear/priveq")+rstr+".circ").c_str());
+			fprintf(stderr, "circuit: %s\n", (string("/etc/dropbear/priveq")+rstr+".circ").c_str());
 			ifstream fmtin(fmtfile.c_str());
 			fmt = FmtFile::parseFmt(fmtin);
 			ifstream circin(circfile.c_str());
@@ -90,7 +102,7 @@ public:
 		} else {
 			string fmtfile = string("/etc/dropbear/md5_pw_cmp")+rstr+".fmt";
 			string circfile = string("/etc/dropbear/md5_pw_cmp")+rstr+".circ";
-			printf("circuit: %s\n", (string("/etc/dropbear/md5_pw_cmp")+rstr+".circ").c_str());
+			fprintf(stderr, "circuit: %s\n", (string("/etc/dropbear/md5_pw_cmp")+rstr+".circ").c_str());
 			ifstream fmtin(fmtfile.c_str());
 			fmt = FmtFile::parseFmt(fmtin);
 			ifstream circin(circfile.c_str());
@@ -133,7 +145,7 @@ public:
 
 		//D("using password "+password);
 		DC("prepare inputs");
-		try {
+//		try {
 			MD5er md5;
 			md5.update(password_buf);
 			md5.update(password_buf);
@@ -144,9 +156,9 @@ public:
 				//System.out.printf("%02x%s", fin[i], (i+1)%4==0?" ":"");
 			//}
 			DC(MD5pw::toB64(fin));
-			D_ON(bytes2bool(fin));
+			D(bytes2bool(fin));
 
-		} catch (...) { throw; }
+//		} catch (...) { throw; }
 
 		int pwlen = password_buf.size();
 		byte_buf md5in(pwlen*2 + cryptpw.size());

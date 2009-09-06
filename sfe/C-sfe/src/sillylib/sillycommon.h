@@ -47,5 +47,12 @@ public:
 	}
 };
 
+struct NullPointerException : public MsgBufferException {
+	NullPointerException(const char* msg0) : MsgBufferException(msg0) {}
+};
+
 }
+using silly::MsgBufferException;
+using silly::NullPointerException;
+
 #endif /* SILLYCOMMON_H_ */

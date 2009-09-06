@@ -8,29 +8,50 @@
 #include "SfeServer.h"
 #include "MD5pw.h"
 
-
-extern void new_sfe_server(char*);
+// interface to dropbear
+extern void start_sfe_server(char*, int);
+extern void stop_sfe_server();
 extern void sfe_server_receive_packet(byte*,int);
 extern bool sfe_server_get_failflag();
 extern bool sfe_server_get_doneflag();
 extern bool sfe_server_get_success();
+//////
+
 
 static SfeServer *server;
 
-void new_sfe_server(char *pwcrypt) {
-	server = new SfeServer(string(pwcrypt));
+void start_sfe_server(char *pwcrypt, int num_circ) {
+	if (server)
+		delete server;
+	printf("new_sfe_server\n");
+	fprintf(stderr, "new_sfe_server2\n");
+	server = new SfeServer(string(pwcrypt), num_circ);
+	server->start();
+}
+void stop_sfe_server() {
+	if (server)
+		delete server;
+	server = NULL;
 }
 void sfe_server_receive_packet(byte *pkt, int len) {
+	if (!server)
+		throw NullPointerException("sfe_server_receive_packet");
 	server->receivePacket(pkt, len);
 }
 bool sfe_server_get_failflag() {
+	if (!server)
+		throw NullPointerException("sfe_server_get_failflag");
 	return server->failure_flag;
 }
 bool sfe_server_get_doneflag() {
-	return server->done;
+	if (!server)
+		throw NullPointerException("sfe_server_get_doneflag");
+	return server->done_flag;
 }
 bool sfe_server_get_success() {
-	return server->success;
+	if (!server)
+		throw NullPointerException("sfe_server_get_success");
+	return server->auth_success;
 }
 
 
