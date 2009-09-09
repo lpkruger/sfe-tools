@@ -31,13 +31,14 @@ struct EVPParams : public AlgorithmParams {
 };
 class EVPCipher : public Cipher {
 	modes mode;
-	const EVP_CIPHER *cipher;
+	//const EVP_CIPHER *cipher;
 	EVP_CIPHER_CTX c_ctx;
 	byte_buf out_buffer;
 
 public:
-	EVPCipher(const EVP_CIPHER *c);
-	EVPCipher(const char *name);
+	EVPCipher(const EVP_CIPHER *c, int keylen=0);
+	EVPCipher(const char *name, int keylen=0);
+	~EVPCipher();
 
 	virtual void init(modes mode, const SecretKey *sk, const AlgorithmParams *params=NULL);
 	virtual void update(const byte *input, int len);
@@ -52,17 +53,20 @@ public:
 		return silly_move(ret_buffer);
 	}
 	int getBlockSize() {
-		return EVP_CIPHER_block_size(cipher);
+		return EVP_CIPHER_CTX_block_size(&c_ctx);
+		//return EVP_CIPHER_block_size(cipher);
 	}
 	int getKeySize() {
-		return EVP_CIPHER_key_length(cipher);
+		return EVP_CIPHER_CTX_key_length(&c_ctx);
+		//return EVP_CIPHER_key_length(cipher);
 	}
 	int getIVSize() {
-		return EVP_CIPHER_iv_length(cipher);
+		return EVP_CIPHER_CTX_iv_length(&c_ctx);
+		//return EVP_CIPHER_iv_length(cipher);
 	}
 
 	const char* getCipherName() {
-		return EVP_CIPHER_name(cipher);
+		return EVP_CIPHER_name(c_ctx.cipher);
 	}
 
 	static void init_all_algorithms();

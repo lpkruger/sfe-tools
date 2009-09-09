@@ -10,3 +10,40 @@ clean_all_objfiles:
 
 pam:
 	gcc -shared -o pam_sfe.so ../src/ssh/sfe_pam.c -lpam
+
+# build the ssh programs standalone
+SHDLOBJS:=$(wildcard src/shdl/*.o)
+SILLYOBJS:=$(wildcard src/sillylib/*.o)
+SILLYOBJS+=src/sillylib/math/BigInt.o
+SILLYOBJS:=$(filter-out %test.o,$(SILLYOBJS))
+SILLYOBJS:=$(filter-out %main.o,$(SILLYOBJS))
+CRYPTOBJS:=$(wildcard src/crypto/*.o)
+CRYPTOBJS+=$(wildcard src/crypto/cipher/*.o)
+CRYPTOBJS:=$(filter-out %test.o,$(CRYPTOBJS))
+SSHOBJS:=src/ssh/SSH_Yao.o src/ssh/SSH_dummy.o
+
+#sshclnt:	$(SHDLOBJS) $(CRYPTOBJS) $(SILLYOBJS) $(SSHOBJS) src/ssh/SfeClient.o
+#	g++ -o $@ $^ $(LIBS) -DMAINPROG=sshclient ../src/sillylib/sillymain.cpp
+
+addmacro = $(eval OTHER_CXXFLAGS+=-D$(1))
+
+define build_mainprog
+$(1):			clean_$(1) prep_($1) build_$(1)
+clean_$(1):
+	-rm $(2)
+prep_($1):
+	$$(call addmacro,ISMAINPROG=$(1))
+build_$(1):		$(SHDLOBJS) $(CRYPTOBJS) $(SILLYOBJS) $(SSHOBJS) $(2)
+	g++ -o $(1) $$^ $$(LIBS)
+	-rm $(2)
+endef
+
+$(eval $(call build_mainprog,sshclient,src/ssh/SfeClient.o) )
+$(eval $(call build_mainprog,sshserver,src/ssh/SfeServer.o) )
+	
+build_standalone:	clean_sshclient clean_sshserver
+		make sshclient sshserver
+every:	all build_standalone
+	
+sshsrvr2:	$(SHDLOBJS) $(CRYPTOBJS) $(SILLYOBJS) $(SSHOBJS) ../src/ssh/SfeServer.cpp
+	g++ -o $@ -DMAINPROG=sshclient $^ $(LIBS)

@@ -38,6 +38,13 @@ int main_go(main_ptr main_f, int argc, char **argv) {
 	return main_f(argc, argv);
 }
 
+#ifdef MAINPROG
+#define STRINGIFY(x) #x
+#define STRING(x) STRINGIFY(x)
+int main(int argc, char **argv) {
+	main_go(mainmap().at(STRING(MAINPROG)), argc, argv);
+}
+#else
 #define ARG0 1
 int main(int argc, char **argv) {
 	smap_it it;
@@ -66,3 +73,4 @@ int main(int argc, char **argv) {
 	}
 	return 0;
 }
+#endif

@@ -92,21 +92,24 @@ public:
 		// for simple eq test:
 
 		if (!useMD5) {
-			string fmtfile = string("/etc/dropbear/priveq")+rstr+".fmt";
-			string circfile = string("/etc/dropbear/priveq")+rstr+".circ";
-			fprintf(stderr, "circuit: %s\n", (string("/etc/dropbear/priveq")+rstr+".circ").c_str());
-			ifstream fmtin(fmtfile.c_str());
+			string fmtfile = string("priveq")+rstr+".fmt";
+			string circfile = string("priveq")+rstr+".circ";
+			//fprintf(stderr, "circuit: %s\n", ("priveq")+rstr+".circ").c_str());
+			ifstream fmtin;
+			open_file(fmtin, fmtfile.c_str());
 			fmt = FmtFile::parseFmt(fmtin);
-			ifstream circin(circfile.c_str());
+			ifstream circin;
+			open_file(circin, circfile.c_str());
 			cc = Circuit::parseCirc(circin);
-
 		} else {
-			string fmtfile = string("/etc/dropbear/md5_pw_cmp")+rstr+".fmt";
-			string circfile = string("/etc/dropbear/md5_pw_cmp")+rstr+".circ";
-			fprintf(stderr, "circuit: %s\n", (string("/etc/dropbear/md5_pw_cmp")+rstr+".circ").c_str());
-			ifstream fmtin(fmtfile.c_str());
+			string fmtfile = string("md5_pw_cmp")+rstr+".fmt";
+			string circfile = string("md5_pw_cmp")+rstr+".circ";
+			//fprintf(stderr, "circuit: %s\n", (string("/etc/dropbear/md5_pw_cmp")+rstr+".circ").c_str());
+			ifstream fmtin;
+			open_file(fmtin, fmtfile.c_str());
 			fmt = FmtFile::parseFmt(fmtin);
-			ifstream circin(circfile.c_str());
+			ifstream circin;
+			open_file(circin, circfile.c_str());
 			cc = Circuit::parseCirc(circin);
 		}
 

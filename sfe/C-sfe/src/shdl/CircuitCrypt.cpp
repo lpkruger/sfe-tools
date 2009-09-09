@@ -105,8 +105,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash) {
 //		Input_p inp = dynamic_pointer_cast<Input>(gate->inputs[i]);
 //		if (inp.to_ptr())
 		Input_p inp = dynamic_cast<Input*>(gate->inputs[i]);
-		if (inp)
-		{
+		if (inp) {
 			int var = inp->var;
 			egate->inputs[i] = var;
 			secretmap_t::iterator sec_it = secrets.find(var);

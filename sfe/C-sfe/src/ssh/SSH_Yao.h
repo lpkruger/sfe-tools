@@ -23,6 +23,33 @@ using crypto::Random;
 using crypto::SecureRandom;
 using crypto::cipher::PseudoRandom;
 
+#include <errno.h>
+static const char *circ_path[] = { "/etc/dropbear/", "/home/louis/sfe/", "/u/l/p/lpkruger/research/sfe/" };
+static void open_file(ifstream &in, const char *fname) {
+	string str;
+	for (uint i=0; i<sizeof(circ_path)/sizeof(const char*); ++i) {
+		str = string(circ_path[i]) + fname;
+		//cerr << "try: " << str << endl;
+		in.open(str.c_str());
+		if (in.is_open()) {
+			cerr << "open: " << str << endl;
+			return;
+		}
+	}
+	cerr << "cannot open file " << fname << endl;
+	throw new IOException(ENOENT, fname);
+}
+
+struct FlushDataInput : public BufferedDataInput {
+	DataOutput *out;
+	FlushDataInput(DataInput *under, DataOutput *out0) :
+		BufferedDataInput(under), out(out0) {}
+	virtual int tryRead(byte *c, int len) {
+		out->flush();
+		return BufferedDataInput::tryRead(c, len);
+	}
+};
+
 class SSHYao {
 protected:
 	DataOutput *out;
@@ -58,7 +85,9 @@ public:
 		out->writeInt(sync_const);
 		if (no_check_sync) {
 			in->skip(4);
+			out->flush();
 		} else {
+			out->flush();
 			int magic = in->readInt();
 			if (magic != sync_const)
 				throw ProtocolException("protocol synchronization failure");

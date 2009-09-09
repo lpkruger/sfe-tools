@@ -65,8 +65,9 @@ static int _main(int argc, char **argv) {
 		//				(server_sock.getInputStream()));
 
 
-		out_raw = server_sock->getOutput();
-		in_raw = server_sock->getInput();
+		out_raw = new BufferedDataOutput(server_sock->getOutput());
+		in_raw = new FlushDataInput(server_sock->getInput(), out_raw.to_ptr());
+
 
 	} catch (std::out_of_range) {
 		printf("sshclient to port pw\n");
@@ -75,6 +76,7 @@ static int _main(int argc, char **argv) {
 	SfeClient cli(pw);
 	try {
 		cli.go2(out_raw.to_ptr(), in_raw.to_ptr());
+		out_raw->flush();
 	} catch (std::exception &ex) {
 		printf("exception %s : %s\n", typeid(ex).name(), ex.what());
 		return 1;

@@ -22,19 +22,35 @@ namespace io {
 // IO stuff
 
 
-struct IOException : public ErrnoException {
-	typedef ErrnoException super;
-	IOException(int err=-1) : super(err) {}
+struct IOException : public ErrnoException, public MsgBufferException {
+	IOException(int err0=-1, const char *msg0="") : ErrnoException(err0), MsgBufferException(msg0) {
+		if (err0>-1) {
+			int len = strlen(msg);
+			if (len < buflen-16) {
+				const char *msg2 = ErrnoException::what();
+				msg[len] = ':';
+				msg[len+1] = ' ';
+				strncpy(msg+len+2, msg2, buflen-len-2);
+				msg[buflen-1]='\0';
+			}
+		}
+	}
+	IOException(const char *msg0) : ErrnoException(-1), MsgBufferException(msg0) {}
+	virtual const char *what() const throw() {
+		return MsgBufferException::what();
+	}
 };
+
 struct EOFException : public IOException {
+	EOFException() : IOException() {}
 	const char *what() const throw () {
 		return "<end of file>";
 	}
 };
-struct ProtocolException : public IOException, public MsgBufferException {
-	ProtocolException(const char* msg0) : MsgBufferException(msg0) {}
+struct ProtocolException : public IOException {
+	ProtocolException(const char* msg0) : IOException(msg0) {}
 	virtual const char* what() const throw() {
-		return MsgBufferException::what();
+		return IOException::what();
 	}
 };
 
@@ -45,6 +61,7 @@ protected:
 public:
 	ulong total;
 	DataOutput() : total(0) {}
+
 	virtual ~DataOutput() {}
 	virtual void flush() {}
 	virtual void close() {}
@@ -99,6 +116,38 @@ protected:
 	}
 };
 
+class BufferedDataOutput : public DataOutput {
+	DataOutput *under;
+	byte_buf buffer;
+	int pos;
+public:
+	BufferedDataOutput(DataOutput *u0, int bufsize=32*1024) : under(u0), pos(0) {
+		buffer.resize(bufsize);
+	}
+protected:
+	virtual int tryWrite(const byte* c, int len) {
+		int free = buffer.size() - pos;
+		if (free == 0) {
+			flush();
+			free = buffer.size();
+		}
+		int l = std::min(len, free);
+		memcpy(&buffer[pos], c, l);
+		pos += l;
+		return l;
+	}
+	virtual void flush() {
+		if (pos>0)
+			under->write(buffer, 0, pos);
+		pos = 0;
+	}
+	virtual void close() {
+		flush();
+		byte_buf().swap(buffer);
+		under->close();
+	}
+};
+
 class ostreamDataOutput : public DataOutput {
 	std::ostream &out;
 
@@ -118,12 +167,16 @@ protected:
 	virtual int tryRead(byte* c, int len) = 0;
 public:
 	ulong total;
+
 	DataInput() : total(0) {}
 	virtual ~DataInput() {}
+	virtual void close() {};
+
 	virtual void skip(int len) {
 		byte c[len];
 		readFully(c, len);
 	}
+
 	int read(byte* c, int len) {
 		return tryRead(c, len);
 	}
@@ -187,6 +240,44 @@ protected:
 	}
 };
 
+class BufferedDataInput : public DataInput {
+	DataInput *under;
+	byte_buf buffer;
+	int off;
+	int pos;
+public:
+	BufferedDataInput(DataInput *u0, int bufsize=32*1024) : under(u0), off(0), pos(0) {
+		buffer.resize(bufsize);
+	}
+protected:
+	virtual int tryRead(byte* c, int len) {
+		int nread = std::min(len, pos-off);
+		if (pos>off) {
+			memcpy(c, &buffer[off], nread);
+			len -= nread;
+			c += nread;
+			off += nread;
+		}
+		if (len > 0) {
+			pos = off = 0;
+			if (len >= (int)buffer.size()) {
+				nread += under->read(c, len);
+			}  else {
+				pos += under->read(&buffer[0], buffer.size());
+				if (pos > 0) {
+					nread += tryRead(c, len);
+				}
+			}
+		}
+		return nread;
+	}
+	virtual void close() {
+		byte_buf().swap(buffer);
+		under->close();
+
+	}
+};
+
 class FDDataOutput : public DataOutput {
 	int fd;
 public:
@@ -243,7 +334,7 @@ public:
 //	}
 //}
 
-template<class T, class A=std::allocator<T> > inline void writeVector(DataOutput *out, std::vector<T,A> &vec) {
+template<class T, class A> inline void writeVector(DataOutput *out, std::vector<T,A> &vec) {
 	D("write vector of objects");
 	out->writeInt(vec.size());
 	for (uint i=0; i<vec.size(); ++i) {
@@ -262,7 +353,7 @@ inline void writeVector(DataOutput *out, byte_buf &vec) {
 	out->write(&vec[0], vec.size());
 }
 
-template<class T, class A=std::allocator<T> > inline void readVector(DataInput *in, std::vector<T,A> &vec) {
+template<class T, class A> inline void readVector(DataInput *in, std::vector<T,A> &vec) {
 	D("read vector of BigInt");
 	int len = in->readInt();
 	vec.resize(len);

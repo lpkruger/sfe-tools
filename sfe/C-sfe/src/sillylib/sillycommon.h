@@ -30,17 +30,19 @@ public:
 			return "<unspecified error>";
 		return strerror(errnum);
 	}
-	unsigned int getErrno() {
+	unsigned int getErrno() const {
 		return errnum;
 	}
 };
 
 class MsgBufferException : public virtual std::exception {
-	char msg[512];
+protected:
+	static const int buflen = 1024;
+	char msg[buflen];
 public:
 	MsgBufferException(const char* msg0) {
-		strncpy(msg, msg0, 512);
-		msg[511] = '\0';
+		strncpy(msg, msg0, buflen);
+		msg[buflen-1] = '\0';
 	}
 	virtual const char* what() const throw() {
 		return msg;

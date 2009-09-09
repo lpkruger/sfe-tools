@@ -83,8 +83,8 @@ static int _main(int argc, char **argv) {
 		listen = new ServerSocket(port);
 		client_sock = listen->accept();
 		//long startTime = System.currentTimeMillis();
-		out_raw = client_sock->getOutput();
-		in_raw = client_sock->getInput();
+		out_raw = new BufferedDataOutput(client_sock->getOutput());
+		in_raw = new FlushDataInput(client_sock->getInput(), out_raw.to_ptr());
 
 	} catch (std::out_of_range) {
 		printf("sshserver port [numcircs] [pwcrypt]\n");

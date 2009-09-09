@@ -157,7 +157,7 @@ void silly::net::Socket::connect(const char* host, const char* port) {
 	hints.ai_flags = 0;
 	hints.ai_protocol = 0;          /* Any protocol */
 
-	s = getaddrinfo(host, port, &hints, &result);
+	s = ::getaddrinfo(host, port, &hints, &result);
 	if (s != 0) {
 		throw UnknownHostException(misc::string_printf("getaddrinfo: %s\n", gai_strerror(s)).c_str());
 	}
@@ -181,13 +181,80 @@ void silly::net::Socket::connect(const char* host, const char* port) {
 		::close(sfd);
 	}
 
-	freeaddrinfo(result);           /* No longer needed */
+	::freeaddrinfo(result);           /* No longer needed */
 
 	if (rp == NULL) {               /* No address succeeded */
 		throw ConnectException("Could not connect");
 	}
 
 }
+
+#include <netinet/in.h>
+void silly::net::ServerSocket::bind(const char *port) {
+	struct addrinfo hints;
+	struct addrinfo *result, *rp;
+	int s;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+	hints.ai_socktype = SOCK_STREAM; /* TCP socket */
+	hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
+	hints.ai_protocol = 0;          /* Any protocol */
+	hints.ai_canonname = NULL;
+	hints.ai_addr = NULL;
+	hints.ai_next = NULL;
+
+	s = ::getaddrinfo(NULL, port, &hints, &result);
+	if (s != 0) {
+		throw SocketException(misc::string_printf("getaddrinfo: %s\n", gai_strerror(s)).c_str());
+	}
+
+	/* getaddrinfo() returns a list of address structures.
+             Try each address until we successfully bind(2).
+             If socket(2) (or bind(2)) fails, we (close the socket
+             and) try the next address. */
+
+	for (rp = result; rp != NULL; rp = rp->ai_next) {
+		sfd = ::socket(rp->ai_family, rp->ai_socktype,
+				rp->ai_protocol);
+		if (sfd == -1)
+			continue;
+
+		int on = 1;
+		::setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+
+		if (::bind(sfd, rp->ai_addr, rp->ai_addrlen) == 0)
+			break;                  /* Success */
+
+			::close(sfd);
+	}
+
+	if ( ::listen(sfd, LISTENQ) < 0 ) {
+		::freeaddrinfo(result);
+		throw BindException("can't listen server socket");
+	}
+
+	freeaddrinfo(result);           /* No longer needed */
+
+	if (rp == NULL) {               /* No address succeeded */
+		throw BindException("Could not bind\n");
+	}
+	/* Read datagrams and echo them back to sender */
+}
+#if 0
+			//struct sockaddr_storage peer_addr;
+			//socklen_t peer_addr_len;
+
+			s = getnameinfo((struct sockaddr *) &peer_addr,
+					peer_addr_len, host, NI_MAXHOST,
+					service, NI_MAXSERV, NI_NUMERICSERV);
+			if (s == 0)
+				printf("Received %ld bytes from %s:%s\n",
+						(long) nread, host, service);
+			else
+				fprintf(stderr, "getnameinfo: %s\n", gai_strerror(s));
+
+
 
 silly::net::ServerSocket::ServerSocket(short port) {
 	struct sockaddr_in servaddr;  /*  socket address structure  */
@@ -220,13 +287,14 @@ silly::net::ServerSocket::ServerSocket(short port) {
 		throw BindException("can't listen server socket");
 	}
 }
+#endif
 
 silly::net::Socket* silly::net::ServerSocket::accept() {
-	int conn_s;                /*  connection socket         */
-	if ( (conn_s = ::accept(list_s, NULL, NULL) ) < 0 ) {
+	int fd;                /*  connection socket         */
+	if ( (fd = ::accept(sfd, NULL, NULL) ) < 0 ) {
 		throw SocketException("can't accept connection");
 	}
-	return new Socket(conn_s);
+	return new Socket(fd);
 }
 
 

@@ -15,11 +15,8 @@ namespace silly {
 namespace net {
 
 
-struct SocketException : public io::IOException, private MsgBufferException {
-	SocketException(const char* msg0) : MsgBufferException(msg0) {}
-	virtual const char* what() const throw() {
-		return MsgBufferException::what();
-	}
+struct SocketException : public io::IOException {
+	SocketException(const char* msg0) : IOException(errno, msg0) {}
 };
 struct ConnectException : public SocketException {
 	ConnectException(const char* msg0) : SocketException(msg0) {}
@@ -75,15 +72,28 @@ public:
 #define LISTENQ 1024
 
 class ServerSocket {
-	int list_s;                /*  listening socket          */
+	int sfd;                /*  listening socket          */
 public:
-	ServerSocket(short port);
+
+	ServerSocket(const char* port) {
+		bind(port);
+	}
+	ServerSocket(int port) {
+		bind(port);
+	}
+	void bind(const char* port);
+
+	void bind(int port) {
+		char buf[16];
+		sprintf(buf, "%d", port);
+		bind(buf);
+	}
 	Socket* accept();
 
 	void close() {
-		if (list_s>=0) {
-			::close(list_s);
-			list_s = -1;
+		if (sfd>=0) {
+			::close(sfd);
+			sfd = -1;
 		}
 	}
 

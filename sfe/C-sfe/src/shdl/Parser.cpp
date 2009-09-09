@@ -70,7 +70,7 @@ Circuit_p Circuit::parseCirc(istream &in) {
 				continue;
 			//DC("read line: " << line);
 			string comment;
-			uint comment_pos = line.find("//");
+			size_t comment_pos = line.find("//");
 			if (comment_pos != string::npos) {
 				comment = line.substr(comment_pos+2);
 				if (!comment.empty() && comment[0]==' ')

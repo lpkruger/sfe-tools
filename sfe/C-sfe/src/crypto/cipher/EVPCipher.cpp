@@ -37,19 +37,40 @@ void crypto::throwCipherError(const char* localerr) {
 	throw CipherException(errstr);
 }
 // Takes key, number of key gen rounds as the arguments
-EVPCipher::EVPCipher(const EVP_CIPHER *c) : cipher(c) {}
+EVPCipher::EVPCipher(const EVP_CIPHER *c, int keylen) {
+	EVP_CIPHER_CTX_init(&c_ctx);
+	if (!EVP_EncryptInit_ex(&c_ctx,c, NULL, NULL, NULL))
+		throwCipherError();
+	if (keylen)
+		if (!EVP_CIPHER_CTX_set_key_length(&c_ctx, keylen))
+			throwCipherError();
+}
 
-EVPCipher::EVPCipher(const char* ciphername) {
-	cipher = EVP_get_cipherbyname(ciphername);
-	if (!cipher) {
+EVPCipher::EVPCipher(const char* ciphername, int keylen) {
+	const EVP_CIPHER *c = EVP_get_cipherbyname(ciphername);
+	if (!c) {
 		//throw CipherException(string_printf("Unknown cipher %s", ciphername).c_str());
+		throwCipherError();
+	}
+	EVP_CIPHER_CTX_init(&c_ctx);
+	if (!EVP_EncryptInit_ex(&c_ctx,c, NULL, NULL, NULL))
+		throwCipherError();
+	if (keylen)
+		if (!EVP_CIPHER_CTX_set_key_length(&c_ctx, keylen))
+			throwCipherError();
+}
+
+EVPCipher::~EVPCipher() {
+
+	if (!EVP_CIPHER_CTX_cleanup(&c_ctx)) {
+		//throw CipherException("error in EVP_CIPHER_CTX_cleanup");
 		throwCipherError();
 	}
 }
 
 void EVPCipher::init(modes mode, const SecretKey *sk, const AlgorithmParams *param0) {
 	out_buffer.clear();
-	EVP_CIPHER_CTX_init(&c_ctx);
+	//EVP_CIPHER_CTX_init(&c_ctx);
 	if (!sk)
 		throw CipherException("key is NULL");
 	const CipherKey *key = dynamic_cast<const CipherKey*> (sk);
@@ -80,9 +101,9 @@ void EVPCipher::init(modes mode, const SecretKey *sk, const AlgorithmParams *par
 		keyiv.insert(keyiv.end(), pKey->begin(), pKey->end());
 		if (params->IV)
 			keyiv.insert(keyiv.end(), pIV->begin(), pIV->end());
-		key_buf.resize(cipher->key_len);
-		iv_buf.resize(cipher->iv_len);
-		uint ret = EVP_BytesToKey(cipher, md, params->salt,
+		key_buf.resize(c_ctx.cipher->key_len);
+		iv_buf.resize(c_ctx.cipher->iv_len);
+		uint ret = EVP_BytesToKey(c_ctx.cipher, md, params->salt,
 				&keyiv[0], keyiv.size(), params->rounds, &key_buf[0], &iv_buf[0]);
 		if (ret != key_buf.size())
 			throw CipherException(string_printf("error in EVP_BytesToKey %d != %d", ret, key_buf.size()).c_str());
@@ -92,7 +113,7 @@ void EVPCipher::init(modes mode, const SecretKey *sk, const AlgorithmParams *par
 	int ret;
 	switch(mode) {
 	case ENCRYPT_MODE:
-		ret = EVP_EncryptInit_ex(&c_ctx, cipher, NULL, &pKey->at(0), pIV ? &pIV->at(0) : NULL);
+		ret = EVP_EncryptInit_ex(&c_ctx, c_ctx.cipher, NULL, &pKey->at(0), pIV ? &pIV->at(0) : NULL);
 		if (!ret) {
 			//throw throw CipherException("error in EVP_EncryptInit_ex");
 			throwCipherError();
@@ -100,7 +121,7 @@ void EVPCipher::init(modes mode, const SecretKey *sk, const AlgorithmParams *par
 
 		break;
 	case DECRYPT_MODE:
-		ret = EVP_DecryptInit_ex(&c_ctx, cipher, NULL, &pKey->at(0), pIV ? &pIV->at(0) : NULL);
+		ret = EVP_DecryptInit_ex(&c_ctx, c_ctx.cipher, NULL, &pKey->at(0), pIV ? &pIV->at(0) : NULL);
 		if (!ret) {
 			//throw CipherException("error in EVP_DecryptInit_ex");
 			throwCipherError();
@@ -114,7 +135,7 @@ void EVPCipher::init(modes mode, const SecretKey *sk, const AlgorithmParams *par
 
 
 void EVPCipher::update(const byte *in, int inl) {
-	byte out[inl + cipher->block_size - 1];
+	byte out[inl + c_ctx.cipher->block_size - 1];
 	int outl = 0;
 	int ret = EVP_CipherUpdate(&c_ctx, out, &outl, in, inl);
 	if (!ret) {
@@ -127,18 +148,13 @@ void EVPCipher::update(const byte *in, int inl) {
 }
 
 byte_buf EVPCipher::doFinal(const byte *input, int inl) {
-	byte out[cipher->block_size];
+	byte out[c_ctx.cipher->block_size];
 	int outl = 0;
 	update(input, inl);
 	int ret = EVP_CipherFinal_ex(&c_ctx, out, &outl);
 	//printf("final %d\n", outl);
 	if (!ret) {
 		//throw CipherException("error in EVP_CipherFinal_ex");
-		throwCipherError();
-	}
-	ret = EVP_CIPHER_CTX_cleanup(&c_ctx);
-	if (!ret) {
-		//throw CipherException("error in VP_CIPHER_CTX_cleanup");
 		throwCipherError();
 	}
 	out_buffer.insert(out_buffer.end(), &out[0], &out[outl]);
