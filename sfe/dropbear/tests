@@ -1,6 +1,7 @@
 #!/bin/bash
 killall dropbear
 set -x
+make 
 sh make-cpp || exit 1
 JLIBDIR=$(echo $JAVA_HOME/jre/lib/*/client)
 export LD_LIBRARY_PATH=$JLIBDIR
@@ -8,5 +9,5 @@ CMD="./dropbear -F -E -p 2222 -d dropbear_dss_host_key -r dropbear_rsa_host_key"
 
 #valgrind --log-file=ssh-server-%p.valg --trace-children=yes --suppressions=/home/louis/sfe/C-sfe/valgrind.suppressions --leak-check=full --track-origins=yes --gen-suppressions=all $CMD
 
-$CMD
-#gdb -x debug_server 
+#$CMD
+gdb -x debug_server 

@@ -25,6 +25,8 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
+#include <pthread.h>
+
 #include "includes.h"
 #include "options.h"
 #include "buffer.h"
@@ -127,6 +129,8 @@ struct sshsession {
 	buffer *writepayload; /* Unencrypted payload to write - this is used
 							 throughout the code, as handlers fill out this
 							 buffer with the packet to send. */
+	pthread_cond_t  writequeue_cond;
+    pthread_mutex_t writequeue_lock;
 	struct Queue writequeue; /* A queue of encrypted packets to send */
 	buffer *readbuf; /* Encrypted */
 	buffer *decryptreadbuf; /* Post-decryption */

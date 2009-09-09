@@ -552,7 +552,15 @@ void encrypt_packet() {
 
 	/* enqueue the packet for sending */
 	buf_setpos(writebuf, 0);
+
+	int err;
+	if (!!(err = pthread_mutex_lock(&ses.writequeue_lock))) {
+		dropbear_exit("can't acquire lock in encrypt_packet");
+	}
 	enqueue(&ses.writequeue, (void*)writebuf);
+	pthread_cond_broadcast(&ses.writequeue_cond);
+	pthread_mutex_unlock(&ses.writequeue_lock);
+
 
 	/* Update counts */
 	ses.kexstate.datatrans += writebuf->len;

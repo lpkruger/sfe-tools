@@ -83,7 +83,10 @@ void common_session_init(int sock_in, int sock_out, char* remotehost) {
 	ses.recvseq = 0;
 
 	initqueue(&ses.writequeue);
-
+	memset(&ses.writequeue_lock, 0, sizeof(ses.writequeue_lock));
+	memset(&ses.writequeue_cond, 0, sizeof(ses.writequeue_cond));
+	pthread_mutex_init(&ses.writequeue_lock, NULL);
+	pthread_cond_init(&ses.writequeue_cond, NULL);
 	ses.requirenext = SSH_MSG_KEXINIT;
 	ses.dataallowed = 1; /* we can send data until we actually 
 							send the SSH_MSG_KEXINIT */
@@ -127,7 +130,43 @@ void common_session_init(int sock_in, int sock_out, char* remotehost) {
 	TRACE(("leave session_init"))
 }
 
+void write_thread() {
+	fd_set readfd, writefd;
+	int err;
+	if (!!(err = pthread_mutex_lock(&ses.writequeue_lock))) {
+		dropbear_exit("can't acquire lock in write_thread");
+	}
+	for(;;) {
+		FD_ZERO(&writefd);
+		FD_ZERO(&readfd);
+
+		if (ses.sock_out != -1 && !isempty(&ses.writequeue)) {
+			FD_SET(ses.sock_out, &writefd);
+		}
+
+		if (ses.dataallowed) {
+			setchannelfds(&readfd, &writefd);
+		}
+
+
+		//printf("here in thread\n");
+		/* process session socket's incoming/outgoing data */
+		if (ses.sock_out != -1) {
+			if (FD_ISSET(ses.sock_out, &writefd) && !isempty(&ses.writequeue)) {
+				write_packet();
+			}
+		}
+		pthread_cond_wait(&ses.writequeue_cond, &ses.writequeue_lock);
+
+	}
+}
+
 void session_loop(void(*loophandler)()) {
+
+	pthread_t thread;
+	if (pthread_create(&thread, NULL, &write_thread, NULL)) {
+		dropbear_exit("Terminated by signal");
+	}
 
 	fd_set readfd, writefd;
 	struct timeval timeout;
@@ -144,10 +183,13 @@ void session_loop(void(*loophandler)()) {
 		if (ses.sock_in != -1) {
 			FD_SET(ses.sock_in, &readfd);
 		}
+
+		// writequeue FD_SET was here
 		if (ses.sock_out != -1 && !isempty(&ses.writequeue)) {
 			FD_SET(ses.sock_out, &writefd);
 		}
-		
+
+
 		/* We get woken up when signal handlers write to this pipe.
 		   SIGCHLD in svr-chansession is the only one currently. */
 		FD_SET(ses.signal_pipe[0], &readfd);
@@ -165,6 +207,9 @@ void session_loop(void(*loophandler)()) {
 		if (val < 0 && errno != EINTR) {
 			dropbear_exit("Error in select");
 		}
+
+		//printf("here in main thread\n");
+		pthread_cond_broadcast(&ses.writequeue_cond);
 
 		if (val <= 0) {
 			/* If we were interrupted or the select timed out, we still
@@ -186,12 +231,8 @@ void session_loop(void(*loophandler)()) {
 		/* check for auth timeout, rekeying required etc */
 		checktimeouts();
 
-		/* process session socket's incoming/outgoing data */
-		if (ses.sock_out != -1) {
-			if (FD_ISSET(ses.sock_out, &writefd) && !isempty(&ses.writequeue)) {
-				write_packet();
-			}
-		}
+		/*//// process session socket's incoming/outgoing data */
+
 
 		if (ses.sock_in != -1) {
 			if (FD_ISSET(ses.sock_in, &readfd)) {
