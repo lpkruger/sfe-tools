@@ -18,6 +18,11 @@
 #include <stdint.h>
 #include "mem/counter.h"
 
+#ifdef __INTEL_COMPILER
+#pragma warning (push)
+#pragma warning (disable: 411)
+#endif
+
 namespace std {
 struct nullptr_t {
 	template<class T>
@@ -28,6 +33,10 @@ struct nullptr_t {
 	void* const __dummy_zero_value;
 };
 }
+
+#ifdef __INTEL_COMPILER
+#pragma warning (pop)
+#endif
 
 const std::nullptr_t nullptr = {0};
 

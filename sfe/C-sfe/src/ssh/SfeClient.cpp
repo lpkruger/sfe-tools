@@ -35,7 +35,6 @@ bool sfe_client_get_failflag() {
 	return client->failure_flag;
 }
 
-
 static int _main(int argc, char **argv) {
 	silly::mem::count_printer<byte_buf>   bytebuf_cnt;
 	silly::mem::count_printer<SFEKey>  cipherkey_cnt;

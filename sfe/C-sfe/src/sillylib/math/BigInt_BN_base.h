@@ -25,6 +25,18 @@ namespace bigint {
 using std::vector;
 using std::string;
 
+class BigNum_ctx {
+	static __thread BN_CTX *the_ctx;
+
+public:
+	operator BN_CTX* () const {
+		if (!the_ctx)
+			the_ctx = BN_CTX_new();
+		return the_ctx;
+	}
+};
+
+
 typedef silly::mem::basic_ptr<const BIGNUM> BNcPtr;
 
 #define BI_VIRTUAL //virtual
@@ -75,35 +87,28 @@ private:
 	void setDefaultBnCtx();
 
 protected:
-	BN_CTX *bn_ctx;
+	//BN_CTX *bn_ctx;
+	BigNum_ctx bn_ctx;
 public:
 
 //	const static BigInt ZERO;
 //	const static BigInt ONE;
 //	const static BigInt TWO;
 
-	BigInt_BN_Base(ulong nn=0, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+	BigInt_BN_Base(ulong nn=0) {
 		_init();
-		if (!bn_ctx)
-			setDefaultBnCtx();
 		operator=(nn);
 	}
-	BigInt_BN_Base(long nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
-
-		if (!bn_ctx)
-			setDefaultBnCtx();
+	BigInt_BN_Base(long nn) {
+		_init();
 		operator=(nn);
 	}
-	BigInt_BN_Base(uint nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+	BigInt_BN_Base(uint nn) {
 		_init();
-		if (!bn_ctx)
-			setDefaultBnCtx();
 		operator=(nn);
 	}
-	BigInt_BN_Base(int nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+	BigInt_BN_Base(int nn) {
 		_init();
-		if (!bn_ctx)
-			setDefaultBnCtx();
 		operator=(nn);
 	}
 
@@ -111,17 +116,14 @@ public:
 	//explicit BigInt(const stupid::Wrap<const BIGNUM*>& nnn, bool takeown=true, BN_CTX *ctx = NULL) : bn_ctx(ctx) {}
 	//  const BIGNUM *nn = nnn;	// workaround silly 0 -> ptr cast
 
-	BigInt_BN_Base(const BIGNUM *nn, BN_CTX *ctx = NULL) : bn_ctx(ctx) {
+	BigInt_BN_Base(const BIGNUM *nn) {
 		_init();
-		if (!bn_ctx)
-			setDefaultBnCtx();
 		BN_copy(*this, nn);
 	}
 
 	//////// copy constructor: do not delete
 	BigInt_BN_Base(const BigInt_BN_Base &b) {
 		_init();
-		bn_ctx = b.bn_ctx;
 		operator=(b);
 	}
 	////////
@@ -130,7 +132,6 @@ public:
 	BigInt_BN_Base(BigInt_BN_Base &&b) {
 		_init();
 		_swap(b);
-		bn_ctx = b.bn_ctx;
 	}
 	BigInt_BN_Base& operator= (BigInt_BN_Base &&b) {
 		BN_zero(*this);

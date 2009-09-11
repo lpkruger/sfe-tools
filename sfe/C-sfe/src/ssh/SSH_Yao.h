@@ -64,7 +64,6 @@ public:
 		no_fast_sync = (opt!=NULL && strcmp(opt, "0"));
 		opt = getenv("NOCHECKSYNC");
 		no_check_sync = (opt!=NULL && strcmp(opt, "0"));
-
 	}
 	void setStreams(DataInput *in0, DataOutput *out0) {
 		in = in0;

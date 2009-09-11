@@ -12,8 +12,9 @@
 #include <string.h>
 //#define DEBUG 1
 #include <vector>
+#include <stdexcept>
 #include "bigint.h"
-//#include "sillydebug.h"
+#include "sillydebug.h"
 
 // this isn't really necessary, enable it if you want
 #undef USE_PTR_MEMBER_FN
@@ -123,7 +124,7 @@ class arena {
 	arena (const arena &);            // No copying
 	arena &operator= (const arena &); // No copying
 public:
-	arena(size_t size) {	// constructed this way, the header is elsewhere
+	arena(size_t size) {	// if constructed this way, the header is elsewhere
 		char *bb = reinterpret_cast<char*>(::malloc(size));
 		base = bottom = bb;
 		top = ceiling = reinterpret_cast<this_that_fn_object*>(bb+size);
@@ -155,6 +156,7 @@ public:
 			::free(aa);
 		} else {
 			DF("delete called on unhosted arena %08lx  base=%08lx", (ulong)aa, (ulong)base);
+			::operator delete(aa);
 		}
 	}
 	void dump(bool mem=false) {
@@ -176,14 +178,32 @@ public:
 
 	}
 
+	bool isInside(void *ptr) {
+		return ptr>=base && ptr<ceiling;
+	}
+
+	bool can_allocate(size_t size) {
+		if (bottom + size + sizeof(this_that_fn_object) >= (char*) top) {
+			return false;
+		}
+		return true;
+	}
+
 	void* allocate(size_t size) {
 		DF("allocate @ %08lx  %d", (ulong) bottom, size);
+		if (!can_allocate(size))
+			return NULL;
+
 		void* loc = bottom;
 		bottom += size;
 		return loc;
 	}
+
+
 	void* allocate(size_t size, this_that_function destructor_fn) {
 		void *loc = allocate(size);
+		if (!loc)
+			return NULL;
 		if (destructor_fn.notNull()) {
 			registerDestructor(loc, destructor_fn);
 		}
@@ -195,6 +215,7 @@ public:
 		(--top)->set(obj, destructor_fn);
 	}
 
+#ifdef USE_PTR_MEMBER_FN
 	template<class T> void* allocateWithDestructor() {
 		typedef void (T::*myMemberFunc)();
 		myMemberFunc destructor = &(T::~T);
@@ -203,7 +224,7 @@ public:
 		return allocate(sizeof(T), destructor_fn);
 	}
 
-#ifdef USE_PTR_MEMBER_FN
+
 	// this may not work?
 	template<class T> T* newWithDestructor(voidMemberFunc destructor) {
 		typedef void (T::*myMemberFunc)();
@@ -214,9 +235,12 @@ public:
 	}
 #endif
 
+
 	template<class T> T* newWithDestructor(void (*destructor)(T*)) {
 		this_that_function destructor_fn = reinterpret_cast<voidFunc>(destructor);
 		void *loc = allocate(sizeof(T), destructor_fn);
+		if (!loc)
+			return NULL;
 		T *o = new (loc) T();
 		return o;
 	}
@@ -232,7 +256,7 @@ public:
 		return callDestructor;
 	}
 	template<class T> static inline typename destructoid<T>::type getArrayDestructor() {
-		return destructArray;;
+		return destructArray;
 	}
 
 	template<class T> static void destructArray(T* ptr) {
@@ -251,9 +275,9 @@ public:
 #endif
 	}
 
-	template<class T> static T* callConstructor() {
-		return new T();
-	}
+//	template<class T> static T* callConstructor() {
+//		return new T();
+//	}
 
 	template<class T> T* newWithDestructor() {
 		void (*destructor)(T*) = arena::callDestructor;
@@ -288,37 +312,127 @@ public:
 	}
 };
 
-void* operator new (size_t bytes, arena *a) {
+inline void* operator new (size_t bytes, arena *a) {
 	DF("operator new arena %08lx  %d", (ulong)a, bytes);
 	void* ptr = a->allocate (bytes);
+	if (!ptr)
+		throw std::bad_alloc();
 	return ptr;
 }
 template<class T>
-void* operator new (size_t bytes, arena *a, void (*destructor)(T*)) {
-	void* ptr = operator new(bytes, a);
-	a->registerDestructor(ptr, (voidFunc) destructor);
+inline void* operator new (size_t bytes, arena *a, void (*destructor)(T*)) throw() {
+	void* ptr = a->allocate(bytes, (voidFunc) destructor);
+	if (!ptr)
+		throw std::bad_alloc();
 	return ptr;
 }
-void* operator new[] (size_t bytes, arena *a) {
+template<class T>
+inline void* operator new (size_t bytes, arena *a, T* dummy) throw() {
+	void (*destructor)(T*) = arena::callDestructor;
+	void* ptr = a->allocate(bytes, (voidFunc) destructor);
+	if (!ptr)
+		throw std::bad_alloc();
+	return ptr;
+
+}
+inline void* operator new[] (size_t bytes, arena *a) {
 #ifndef __GNUC__		// non-portable, gcc stores arrays in a particular way
 	throw std::bad_alloc;
 #else
 	DF("operator new[] arena %08lx  %d", (ulong)a, bytes);
 	void* ptr = a->allocate (bytes+sizeof(size_t));
+	if (!ptr)
+		throw std::bad_alloc();
 	size_t *iptr = reinterpret_cast<size_t*>(ptr);
 	*iptr = bytes;
 	return iptr+1;
 #endif
 }
 template<class T>
-void* operator new[](size_t bytes, arena *a, void (*destructor)(T*)) {
+inline void* operator new[](size_t bytes, arena *a, void (*destructor)(T*)) {
 	void* ptr = operator new[](bytes, a);
+	if (!ptr)
+		throw std::bad_alloc();
 	char* p = (char*) ptr;
 	a->registerDestructor(p+sizeof(size_t), (voidFunc) destructor);
 	return ptr;
 }
 
 
+class growable_arena {
+	//vector<arena*> arenas;
+	int arenas_curr;
+	arena *arenas[4096];
+
+	//const static size_t chunksize = 16*1024*1024;
+#define chunksize (16u*1024*1024)
+public:
+	growable_arena() : arenas_curr(-1) {
+		grow();
+	}
+	arena* a() {
+		//return arenas[arenas.size()-1];
+		return arenas[arenas_curr];
+	}
+	void dump(bool mem=false) {
+		a()->dump(mem);
+	}
+	arena* grow(size_t size=0) {
+		printf("new arena %lu\n", (ulong) size);
+		//arenas.push_back(arena::makeArena(std::max(chunksize, size+1024)));
+		arenas[++arenas_curr] = arena::makeArena(std::max(chunksize, size+1024));
+		return a();
+	}
+	void* allocate(size_t size) {
+		//printf("allocate %lu\n", (ulong) size);
+		void *ptr = a()->allocate(size);
+		if (!ptr) {
+			ptr = grow(size)->allocate(size);
+		}
+		return ptr;
+	}
+	void* allocate(size_t size, this_that_function fn) {
+		printf("allocate-d %lu\n", (ulong) size);
+		void *ptr = a()->allocate(size, fn);
+		if (!ptr) {
+			ptr = grow(size)->allocate(size, fn);
+		}
+		return ptr;
+	}
+	bool isInside(void *ptr) {
+		//for (uint i=0; i<arenas.size(); ++i) {
+		for (uint i=0; i<=arenas_curr; ++i) {
+			if (arenas[i]->isInside(ptr))
+				return true;
+		}
+		return false;
+	}
+	template<class T> T* newWithDestructor(void (*destructor)(T*)) {
+		return  a()->newWithDestructor(destructor);
+	}
+
+	~growable_arena() {
+		//for (uint i=0; i<arenas.size(); ++i) {
+		for (uint i=0; i<=arenas_curr; ++i) {
+			arenas[i]->destroyAll();
+		}
+	}
+};
+
+inline void* operator new (size_t bytes, growable_arena *a) throw() {
+	DF("operator new arena %08lx  %d", (ulong)a, bytes);
+	void* ptr = a->allocate (bytes);
+	return ptr;
+}
+template<class T>
+inline void* operator new (size_t bytes, growable_arena *a, void (*destructor)(T*)) throw() {
+	return a->allocate(bytes, (voidFunc) destructor);
+}
+template<class T>
+inline void* operator new (size_t bytes, growable_arena *a, T* dummy) throw() {
+	void (*destructor)(T*) = arena::callDestructor;
+	return a->allocate(bytes, (voidFunc) destructor);
+}
 
 //inline void* operator new[] (arena &a, size_t bytes) { // This function is bad news
 //  return a.allocate (bytes, sizeof (double));
@@ -359,8 +473,9 @@ static int _main_arenatest(int argc, char **argv) {
 	AA *a2 = new (arena1, arena::getDestructor<AA>()) AA();
 	AA *a3 = new (arena2) AA();
 	arena1->registerDestructor(a3, arena::getDestructor<AA>());
+	AA *a4 = new (arena1, (AA*)0) AA();
 
-	AA *a4 = arena2->newWithDestructor<AA>();
+	AA *a5 = arena2->newWithDestructor<AA>();
 	AA *aaa[4] = {a1,a2,a3,a4};
 	arena1->dump();
 	//arena1->destroyAll();
@@ -480,4 +595,4 @@ static int _main_typetest(int argc, char **argv) {
 //#undef DF
 //#undef DC
 //#undef DD
-#endif /* SILLYMEM3_H_ */
+#endif /* SILLYMEM_ARENA_H_ */

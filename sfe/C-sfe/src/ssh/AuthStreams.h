@@ -64,6 +64,37 @@ public:
 
 };
 
+class AuthOutputStream2 : public DataOutput {
+	typedef BytesDataOutput super;
+public:
+	byte_buf buf;
+	AuthStreams *streams;
+	boolean flush_flag;
+    boolean closed;
+
+    byte_buf real_buf;
+	AuthOutputStream2(AuthStreams *str) : flush_flag(false), closed(false) {
+		streams = str;
+	}
+
+	virtual int tryWrite(const byte* c, int len) {
+		real_buf.insert(real_buf.end(), c, c+len);
+		if (real_buf.size() > 250*1024)
+			flush();
+		return len;
+	}
+
+	virtual void flush() {
+		if (real_buf.size() > 0) {
+			ssh_writePacket(&real_buf[0], real_buf.size());
+			real_buf.clear();
+		}
+	}
+    virtual void close() {
+    	flush();
+    	closed = true;
+    }
+};
 
 class AuthOutputStream : public BytesDataOutput {
 	typedef BytesDataOutput super;
@@ -97,7 +128,7 @@ struct AuthStreams : public Runnable {
 	// there will be 2 threads: One is Pure Java and executes the protocol,
 	// the other is called from native code and goes back and forth
 	AuthInputStream *authIn;
-	AuthOutputStream *authOut;
+	AuthOutputStream2 *authOut;
 	Thread *protocolThread;
 
 	byte_buf inputbytes;
@@ -108,7 +139,7 @@ struct AuthStreams : public Runnable {
 
 	AuthStreams() : failure_flag(false), done_flag(false), inputbytesunread(0), waitingForIO(false) {
 		authIn = new AuthInputStream(this);
-		authOut = new AuthOutputStream(this);
+		authOut = new AuthOutputStream2(this);
 		protocolThread = NULL;
 	}
 
@@ -303,6 +334,9 @@ inline void AuthInputStream::skip(int len) {
 	synch.notifyAll();
 }
 inline int AuthInputStream::tryRead(byte* b, int blen) {
+	if (dynamic_cast<AuthOutputStream2*>(streams->authOut))
+		streams->authOut->flush();
+
 	Lock synch(streams->mux);
 
 	while ((streams->inputbytesunread<0 || streams->inputbytes.empty()) && !streams->done_flag) {

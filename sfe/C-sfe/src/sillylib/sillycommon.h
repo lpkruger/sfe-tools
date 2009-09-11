@@ -57,4 +57,11 @@ struct NullPointerException : public MsgBufferException {
 using silly::MsgBufferException;
 using silly::NullPointerException;
 
+
+//// some handy optimization macros
+#define _likely(x) __builtin_expect(x, 1)
+#define _unlikely(x) __builtin_expect(x, 0)
+#define _CONST __attribute__ ((const))
+#define _PURE __attribute__ ((pure))
+
 #endif /* SILLYCOMMON_H_ */

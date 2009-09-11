@@ -11,10 +11,7 @@
 //const BigInt BigInt::ONE(1);
 //const BigInt BigInt::TWO(2);
 
-void silly::bigint::BigInt_BN_Base::setDefaultBnCtx() {
-	static BN_CTX *default_bn_ctx = BN_CTX_new();
-	bn_ctx = default_bn_ctx;
-}
+__thread BN_CTX* bigint::BigNum_ctx::the_ctx = NULL;
 
 #if 0
 static BigInt test() {

@@ -30,7 +30,7 @@ using silly::misc::toHexString;
 static void usage() {
 	printf("usage: cipher enc/dec algname key datastring\n");
 	printf("       cipher list\n");
-	printf("       cipher random key bytes [algname]\n");
+	printf("       cipher rand key bytes [algname]\n");
 	_exit(1);
 }
 
@@ -46,6 +46,8 @@ static void list() {
 		printf("%s ", list[i].c_str());
 	printf("\n");
 }
+
+#include "../BlumBlumShub.h"
 
 // usage: cipher enc/dec name data-string
 static int _main(int argc, char **argv) {
@@ -64,10 +66,26 @@ static int _main(int argc, char **argv) {
 		if (args.at(0) == "rand") {
 			byte_buf key = byte_buf(args.at(1).begin(), args.at(1).end());
 			EVPCipher *cipher = NULL;
+			crypto::Random *randp;
 			if (args.size() > 3) {
-				cipher = new EVPCipher(args.at(3).c_str());
+				if (args[3] == "blum") {
+					randp = new crypto::BlumBlumShub(512, key);
+				} else {
+					cipher = new EVPCipher(args.at(3).c_str());
+					randp = new PseudoRandom(key, cipher);
+				}
+			} else {
+				randp = new PseudoRandom(key);
 			}
-			PseudoRandom rand(key, cipher);
+
+			crypto::Random &rand = *randp;
+			if (args.at(2) == "binstream") {
+				for (;;) {
+					byte_buf out(16*1024);
+					rand.getBytes(out);
+					std::cout.write((char*)&out[0], out.size());
+				}
+			}
 			byte_buf out(strtol(args.at(2).c_str(), NULL, 0));
 			rand.getBytes(out);
 			printf("rand: %s\n", toHexString(out).c_str());

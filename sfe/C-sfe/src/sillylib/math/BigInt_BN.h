@@ -37,11 +37,11 @@ class BigInt : public BigInt_BN_Base {
 public:
 
 	////////////////////////////////////////////
-	BigInt(ulong nn=0, BN_CTX *ctx = NULL) : super(nn,ctx) {}
-	BigInt(long nn, BN_CTX *ctx = NULL) : super(nn,ctx) {}
-	BigInt(uint nn, BN_CTX *ctx = NULL) : super(nn,ctx) {}
-	BigInt(int nn, BN_CTX *ctx = NULL) : super(nn,ctx) {}
-	BigInt(const BIGNUM *nn, BN_CTX *ctx = NULL) : super(nn,ctx) {}
+	BigInt(ulong nn=0) : super(nn) {}
+	BigInt(long nn) : super(nn) {}
+	BigInt(uint nn) : super(nn) {}
+	BigInt(int nn) : super(nn) {}
+	BigInt(const BIGNUM *nn) : super(nn) {}
 	//////// copy constructor: do not delete
 	BigInt(const BigInt_BN_Base &b) : super(b) {}
 	////////
@@ -155,10 +155,15 @@ public:
 	}
 
 	BigInt nextProbablePrime() const {
+		BigInt tmp(2);
+		if (*this < tmp)
+			return tmp;
 		BigInt r(*this);
+		if (!r.testBit(0))
+			BN_sub_word(r, 1);
 		do {
-			BN_add_word(r, 1);
-		} while (!BN_is_prime(r, 128, NULL, bn_ctx, NULL));
+			BN_add_word(r, 2);
+		} while (!BN_is_prime_fasttest(r, BN_prime_checks, NULL, bn_ctx, NULL, 1));
 		return r;
 	}
 
@@ -268,7 +273,7 @@ public:
 
 	static BigInt genPrime(int bits) {
 		BigInt ret;
-		BIGNUM *n =	BN_generate_prime(ret, 129, false, NULL, NULL, NULL, NULL);
+		BIGNUM *n =	BN_generate_prime(ret, bits, false, NULL, NULL, NULL, NULL);
 		if (!n)
 			throw math_exception("error generating prime number");
 		return ret;
@@ -360,6 +365,13 @@ public:
 		ulong rem = BN_mod_word(*this, m);
 		*this = rem;
 		return rem;
+	}
+	BigInt& powThis(BNcPtr b) {
+		BN_exp(*this, *this, b, bn_ctx);
+		return *this;
+	}
+	BigInt& powThis(ulong b) {
+		return powThis(BigInt(b));
 	}
 	BigInt& modMultiplyThis(BNcPtr b, BNcPtr m) {
 		BN_mod_mul(*this, *this, b, m, bn_ctx);
@@ -466,6 +478,8 @@ public:
 	}
 
 	static BigInt toPosBigInt(const byte_buf &buf) {
+		if (buf.empty())
+			return BigInt();
 		BigInt ret;
 		BN_bin2bn(&buf[0], buf.size(), (BIGNUM*) ret.ptr());
 		return ret;

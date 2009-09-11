@@ -59,7 +59,7 @@ byte_buf SFECipher::decrypt(const SFEKey *key, const byte_buf &data) {
 		dec[i] = (data[i] ^ xkey[i]);
 	}
 	uint len = dec[dec.size() - 1];
-	if (len > dec.size() - 1 || len < 0)
+	if (len > dec.size() - 1)
 		throw bad_padding("Invalid data range");
 	for (uint i=len; i<dec.size()-1; ++i) {
 		if (dec[i] != 0)

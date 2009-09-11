@@ -176,9 +176,9 @@ private:
 		timer.tv_nsec += (milsec%1000)*1000000;
 		timer.tv_sec +=  milsec/1000 + (timer.tv_nsec/1000000000);
 		timer.tv_nsec %= 1000000000;
-		err = pthread_cond_timedwait(&cond, &mux, &timer);
-		if (err != ETIMEDOUT)
-			throwIfError(err);
+		int err2 = pthread_cond_timedwait(&cond, &mux, &timer);
+		if (err2 != ETIMEDOUT)
+			throwIfError(err2);
 	}
 	void notify() {
 		ConditionVar::notify();
@@ -398,18 +398,18 @@ public:
 };
 
 // this would normally be a static variable
-class ThreadLocal {
+class PrimitiveThreadLocal {
 	pthread_key_t key;
 
 public:
 	typedef void (*destructor_function)(void*);
-	ThreadLocal() : key(0) {
+	PrimitiveThreadLocal() : key(0) {
 		 throwIfError(pthread_key_create(&key, NULL));
 	}
-	ThreadLocal(destructor_function func) : key(0) {
+	PrimitiveThreadLocal(destructor_function func) : key(0) {
 		throwIfError(pthread_key_create(&key, func));
 	}
-	~ThreadLocal() {
+	~PrimitiveThreadLocal() {
 		throwIfError(pthread_key_delete(key));
 	}
 
@@ -420,6 +420,26 @@ public:
 		throwIfError(pthread_setspecific(key, value));
 	}
 };
+
+template<class T>
+class ThreadLocal : private PrimitiveThreadLocal {
+	typedef PrimitiveThreadLocal super;
+
+public:
+	ThreadLocal() : super(&destroy) {}
+
+	static void destroy(T *p) {
+		delete p;
+	}
+	operator T*() {
+		T* p = static_cast<T*>(get());
+		if (!p) {
+			set(new T());
+		}
+		return p;
+	}
+};
+
 
 //#define SYNCHRONIZE(mutex) Lock mutex##_lock(&mutex)
 }
