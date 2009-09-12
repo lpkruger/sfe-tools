@@ -122,6 +122,8 @@ inline void readObject(DataInput *in, boolean_secrets &secr) {
 	readObject(in, secr.s1);
 }
 
+struct GarbledCircuit;
+typedef wise_ptr<GarbledCircuit> GarbledCircuit_p;
 
 struct GarbledCircuit : public Reclaimer<GarbledGate>{
 
@@ -145,10 +147,17 @@ struct GarbledCircuit : public Reclaimer<GarbledGate>{
 
 	byte_buf hashCircuit() const;
 	void writeCircuit(DataOutput *out) const;
-	static wise_ptr<GarbledCircuit> readCircuit(DataInput *in);
+	static GarbledCircuit_p readCircuit(DataInput *in);
 
 };
 
-typedef wise_ptr<GarbledCircuit> GarbledCircuit_p;
+
+// some utility functions
+string getDefaultDir(const string &f);
+
+void get_circuits(const char* prefix, vector<GarbledCircuit_p> &gcc,
+		vector<vector<boolean_secrets> > &inp_secs,	vector<byte_buf> &seeds, uint num, uint max);
+
+
 
 #endif /* GARBLEDCIRCUIT_H_ */

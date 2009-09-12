@@ -104,7 +104,8 @@ public:
 
 class SSHYaoSender : public SSHYao {
 public:
-	void go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs);
+	void go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs,
+			const string &circ);
 };
 
 #endif /* SSHMULTIYAO_H_ */

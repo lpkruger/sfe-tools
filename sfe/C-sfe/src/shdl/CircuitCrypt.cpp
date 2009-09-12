@@ -158,7 +158,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash) {
 				throw null_pointer("s1 is null");
 #endif
 
-			thisKey = SFEKey_p(crypto::cipher::xxor(*thisKey,
+			thisKey = SFEKey_p(crypto::cipher::xxor_10(*thisKey,
 					((i >> (egate->arity-j-1) & 0x1) == 0) ? *inpsecs[j][0] : *inpsecs[j][1],
 							CIPHER));
 		}

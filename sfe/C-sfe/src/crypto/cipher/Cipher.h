@@ -112,7 +112,7 @@ public:
 	}
 
 	byte_buf getEncoded() const {
-		return silly_move(byte_buf(*buf));
+		return *buf;
 	}
 	byte_buf *getRawBuffer() const {
 		return buf;

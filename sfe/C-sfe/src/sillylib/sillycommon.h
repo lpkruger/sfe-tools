@@ -64,4 +64,17 @@ using silly::NullPointerException;
 #define _CONST __attribute__ ((const))
 #define _PURE __attribute__ ((pure))
 
+
+// some hand NOP template constrainst
+template<class T, class B> struct Derived_from {
+	static void constraints(T* p) { B* pb = p; }
+	Derived_from() { void(*p)(T*) = constraints; }
+};
+
+template<class T1, class T2> struct Can_copy {
+	static void constraints(T1 a, T2 b) { T2 c = a; b = a; }
+	Can_copy() { void(*p)(T1,T2) = constraints; }
+};
+
+
 #endif /* SILLYCOMMON_H_ */

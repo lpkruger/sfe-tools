@@ -80,6 +80,20 @@ public:
 	}
 };
 
+struct ownable {
+	bool isOwned;
+	ownable() : isOwned(false) {}
+};
+
+template<class T, class U>
+inline void takeOwnership(Reclaimer<T> &r, U *p) {
+	if (!p->isOwned) {
+		p->isOwned = true;
+		r.add_garbage(p);
+	}
+}
+
+
 }
 }
 #endif /* RECLAIM_H_ */

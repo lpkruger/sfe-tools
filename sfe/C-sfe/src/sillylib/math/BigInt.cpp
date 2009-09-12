@@ -11,7 +11,13 @@
 //const BigInt BigInt::ONE(1);
 //const BigInt BigInt::TWO(2);
 
-__thread BN_CTX* bigint::BigNum_ctx::the_ctx = NULL;
+using namespace silly::mem;
+using namespace bigint;
+
+__thread BN_CTX* BigNum_ctx::the_ctx = NULL;
+
+copy_counter BigInt_BN_Base::counter("BigInt_BN");
+count_printer<bigint::BigInt_BN_Base> BigInt_BN_count_printer;
 
 #if 0
 static BigInt test() {

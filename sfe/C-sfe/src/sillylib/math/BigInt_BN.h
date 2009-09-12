@@ -32,12 +32,16 @@ namespace bigint {
 //#define BI_VIRTUAL //virtual
 //#define BI_BASE : public BigIntBase
 
+//#define RETURN_RET	return silly_move(ret)
+#define RETURN_RET	return ret
+
 class BigInt : public BigInt_BN_Base {
 	typedef BigInt_BN_Base super;
 public:
 
 	////////////////////////////////////////////
-	BigInt(ulong nn=0) : super(nn) {}
+	BigInt() : super() {}
+	BigInt(ulong nn) : super(nn) {}
 	BigInt(long nn) : super(nn) {}
 	BigInt(uint nn) : super(nn) {}
 	BigInt(int nn) : super(nn) {}
@@ -74,121 +78,121 @@ public:
 	////////////////////////////////////////////
 
 	BigInt mod(BNcPtr m) const {
-		BigInt r;
-		BN_mod(r, *this, m, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_mod(ret, *this, m, bn_ctx);
+		RETURN_RET;
 	}
 	ulong mod(ulong m) const {
 		return BN_mod_word(*this, m);
 	}
 	BigInt modInverse(BNcPtr m) const {
-		BigInt r;
-		BN_mod_inverse(r, *this, m, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_mod_inverse(ret, *this, m, bn_ctx);
+		RETURN_RET;
 	}
 	BigInt modMultiply(BNcPtr b, BNcPtr m) const {
-		BigInt r;
-		BN_mod_mul(r, *this, b, m, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_mod_mul(ret, *this, b, m, bn_ctx);
+		RETURN_RET;
 	}
 	BigInt modDivide(BNcPtr b, BNcPtr m) const {
-		BigInt r;
-		BN_mod_inverse(r, b, m, bn_ctx);
+		BigInt ret;
+		BN_mod_inverse(ret, b, m, bn_ctx);
 		// TODO check return for NULL
-		BN_mod_mul(r, *this, r, m, bn_ctx);
-		return r;
+		BN_mod_mul(ret, *this, ret, m, bn_ctx);
+		RETURN_RET;
 	}
 	BigInt modPow(BNcPtr b, BNcPtr m) const {
-		BigInt r;
-		BN_mod_exp(r, *this, b, m, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_mod_exp(ret, *this, b, m, bn_ctx);
+		RETURN_RET;
 	}
 
 	BigInt add(BNcPtr b) const {
-		BigInt r;
-		BN_add(r, *this, b);
-		return r;
+		BigInt ret;
+		BN_add(ret, *this, b);
+		RETURN_RET;
 	}
 	BigInt add(ulong b) const {
-		BigInt r(*this);
-		BN_add_word(r, b);
-		return r;
+		BigInt ret(*this);
+		BN_add_word(ret, b);
+		RETURN_RET;
 	}
 	BigInt subtract(BNcPtr b) const {
-		BigInt r;
-		BN_sub(r, *this, b);
-		return r;
+		BigInt ret;
+		BN_sub(ret, *this, b);
+		RETURN_RET;
 	}
 	BigInt subtract(ulong b) const {
-		BigInt r(*this);
-		BN_sub_word(r, b);
-		return r;
+		BigInt ret(*this);
+		BN_sub_word(ret, b);
+		RETURN_RET;
 	}
 	BigInt multiply(BNcPtr b) const {
-		BigInt r;
-		BN_mul(r, *this, b, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_mul(ret, *this, b, bn_ctx);
+		RETURN_RET;
 	}
 	BigInt multiply(ulong b) const {
-		BigInt r(*this);
-		BN_mul_word(r, b);
-		return r;
+		BigInt ret(*this);
+		BN_mul_word(ret, b);
+		RETURN_RET;
 	}
 	BigInt pow(BNcPtr b) const {
-		BigInt r;
-		BN_exp(r, *this, b, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_exp(ret, *this, b, bn_ctx);
+		RETURN_RET;
 	}
 	BigInt pow(ulong b) const {
 		return pow(BigInt(b));
 	}
 
 	BigInt divide(BNcPtr b) const {
-		BigInt r;
-		BN_div(r, NULL, *this, b, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_div(ret, NULL, *this, b, bn_ctx);
+		RETURN_RET;
 	}
 	BigInt divide(ulong b) const {
-		BigInt r(*this);
-		BN_div_word(r, b);
-		return r;
+		BigInt ret(*this);
+		BN_div_word(ret, b);
+		RETURN_RET;
 	}
 
 	BigInt nextProbablePrime() const {
-		BigInt tmp(2);
-		if (*this < tmp)
-			return tmp;
-		BigInt r(*this);
-		if (!r.testBit(0))
-			BN_sub_word(r, 1);
+		BigInt ret(2);
+		if (*this < ret)
+			RETURN_RET;
+		ret = *this;
+		if (!ret.testBit(0))
+			BN_sub_word(ret, 1);
 		do {
-			BN_add_word(r, 2);
-		} while (!BN_is_prime_fasttest(r, BN_prime_checks, NULL, bn_ctx, NULL, 1));
-		return r;
+			BN_add_word(ret, 2);
+		} while (!BN_is_prime_fasttest(ret, BN_prime_checks, NULL, bn_ctx, NULL, 1));
+		RETURN_RET;
 	}
 
 	static BigInt random(BNcPtr max) {
-		BigInt r;
-		BN_rand_range(r, (BIGNUM*) max.ptr());
-		return r;
+		BigInt ret;
+		BN_rand_range(ret, (BIGNUM*) max.ptr());
+		RETURN_RET;
 	}
 	static BigInt random(int bits, int top=-1, bool oddnum=false) {
 		// top: -1 for any number, 0 for top-bit 1, 1 for top-bits 11
-		BigInt r;
-		BN_rand(r, bits, top, oddnum);
-		return r;
+		BigInt ret;
+		BN_rand(ret, bits, top, oddnum);
+		RETURN_RET;
 	}
 
 	BigInt gcd(BNcPtr b) {
-		BigInt r;
-		BN_gcd(r, *this, b, bn_ctx);
-		return r;
+		BigInt ret;
+		BN_gcd(ret, *this, b, bn_ctx);
+		RETURN_RET;
 	}
 
 	BigInt negate() const {
-		BigInt r(*this);
-		BN_set_negative(r, !r.isNegative());
-		return r;
+		BigInt ret(*this);
+		BN_set_negative(ret, !ret.isNegative());
+		RETURN_RET;
 	}
 	bool isNegative() const {
 		return BN_is_negative((const BIGNUM*)*this);
@@ -219,19 +223,19 @@ public:
 		BigInt ret;
 		BN_bin2bn(&aa[0], aa.size(), ret);
 		BN_set_negative(ret, isNegative() ^ b.isNegative());
-		return ret;
+		RETURN_RET;
 
 	}
 
 	BigInt shiftLeft(int n) const {
 		BigInt ret;
 		BN_lshift(ret, *this, n);
-		return ret;
+		RETURN_RET;
 	}
 	BigInt shiftRight(int n) const {
 		BigInt ret;
 		BN_rshift(ret, *this, n);
-		return ret;
+		RETURN_RET;
 	}
 
 	bool testBit(int n) const {
@@ -240,14 +244,22 @@ public:
 	BigInt setBit(int n) const {
 		BigInt ret(*this);
 		BN_set_bit(ret, n);
-		return ret;
+		RETURN_RET;
+	}
+	BigInt& setBitThis(int n) {
+		BN_set_bit(*this, n);
+		return *this;
 	}
 	BigInt clearBit(int n) const {
 		BigInt ret(*this);
-		if (ret.testBit(n)) {
+		if (ret.testBit(n))
 			BN_clear_bit(ret, n);
-		}
-		return ret;
+		RETURN_RET;
+	}
+	BigInt& clearBitThis(int n) {
+		if (testBit(n))
+			BN_clear_bit(*this, n);
+		return *this;
 	}
 
 	bool equals(BNcPtr o) const {
@@ -276,19 +288,19 @@ public:
 		BIGNUM *n =	BN_generate_prime(ret, bits, false, NULL, NULL, NULL, NULL);
 		if (!n)
 			throw math_exception("error generating prime number");
-		return ret;
+		RETURN_RET;
 	}
 	string toHexString() const {
 		char *buf = BN_bn2hex(*this);
-		string str(buf);
+		string ret(buf);
 		OPENSSL_free(buf);
-		return str;
+		RETURN_RET;
 	}
 	string toString() const {
 		char *buf = BN_bn2dec(*this);
-		string str(buf);
+		string ret(buf);
 		OPENSSL_free(buf);
-		return str;
+		RETURN_RET;
 	}
 
 	// multilating operations
@@ -415,12 +427,12 @@ public:
 			return (unsigned long long)(long long) -1;
 		byte_buf buf = fromPosBigInt(*this, len);
 		uint offset = buf.size() - len;
-		unsigned long long ret = 0;
+		unsigned long long r = 0;
 		for (uint i=offset; i<buf.size(); ++i) {
-			ret <<= 8;
-			ret |= buf[i];
+			r <<= 8;
+			r |= buf[i];
 		}
-		return ret;
+		return r;
 	}
 	long toLong() {
 		const long minlong = long((ulong(-1L)>>1)+1);
@@ -470,19 +482,20 @@ public:
 	static byte_buf fromPosBigInt(BNcPtr num, int len=0) {
 		int reallen = BN_num_bytes(num);
 		if (len<reallen) len = reallen;
-		if (!len) return byte_buf(1, 0);
-		byte_buf ret(len);
+		byte_buf ret(1, 0);
+		if (!len) RETURN_RET;
+		ret.resize(len);
 		int offset = len-reallen;
 		BN_bn2bin(num, &ret[offset]);
-		return ret;
+		RETURN_RET;
 	}
 
 	static BigInt toPosBigInt(const byte_buf &buf) {
-		if (buf.empty())
-			return BigInt();
 		BigInt ret;
+		if (buf.empty())
+			RETURN_RET;
 		BN_bin2bn(&buf[0], buf.size(), (BIGNUM*) ret.ptr());
-		return ret;
+		RETURN_RET;
 	}
 	static byte_buf from2sCompBigInt(BNcPtr num, int len=0) {
 		int reallen = BN_num_bytes(num);
@@ -500,40 +513,44 @@ public:
 		}
 		if (len<reallen)
 				len = reallen;
+
+		byte_buf ret;
 		if (!BN_is_negative(num)) {
-			return fromPosBigInt(num, len);
+			ret = fromPosBigInt(num, len);
+			RETURN_RET;
 		}
 		BigInt n2(1);
 		n2.shiftLeftThis(len*8);
 		n2.addThis(num);
-		byte_buf ret = fromPosBigInt(n2, len);
-		return ret;
+		ret = fromPosBigInt(n2, len);
+		RETURN_RET;
 	}
 
 	static BigInt to2sCompBigInt(const byte_buf &buf) {
-		BigInt num = toPosBigInt(buf);
-		int len = num.byteLength();
-		if (!num.testBit(len*8-1))
-			return num;
+		BigInt ret = toPosBigInt(buf);
+		int len = ret.byteLength();
+		if (!ret.testBit(len*8-1))
+			RETURN_RET;
 
 		// it's negative
 		BigInt n2(1);
 		n2.shiftLeftThis(len*8);
-		n2.subtractThis(num);
+		n2.subtractThis(ret);
 		n2.negateThis();
-		return n2;
+		ret.swapWith(n2);
+		RETURN_RET;
 	}
 
 	static byte_buf MPIfromBigInt(BNcPtr num) {
 		byte_buf ret(BN_bn2mpi(num, NULL));
 		BN_bn2mpi(num, &ret[0]);
-		return silly_move(ret);
+		RETURN_RET;
 	}
 
 	static BigInt MPItoBigInt(const byte_buf &buf) {
 		BigInt ret;
 		BN_mpi2bn(&buf[0], buf.size(), ret);
-		return ret;
+		RETURN_RET;
 	}
 
 	static BigInt toPaddedBigInt(byte_buf buf) {
@@ -545,17 +562,18 @@ public:
 		if (ret[0] != 1)
 			throw math_exception("bignum not padded");
 		ret.erase(ret.begin());
-		return silly_move(ret);
+		RETURN_RET;
 	}
 
 	string toString(uint base=10) {
 		if (base<2 || base>36)
 			throw math_exception("toString only supports bases from 2 to 36");
-		if (BN_is_zero(ptr()))
-			return "0";
-		BigInt copy(*this);
-
 		string str;
+		if (BN_is_zero(ptr())) {
+			str = "0";
+			return str;
+		}
+		BigInt copy(*this);
 
 		while (!BN_is_zero(copy.ptr())) {
 			uint d = copy.mod(base);
@@ -669,6 +687,8 @@ OP1m(%=, modThis, CBI)
 #undef OP1c
 #undef OP1u
 #undef OP0c
+
+#undef RETURN_RET
 
 }
 }

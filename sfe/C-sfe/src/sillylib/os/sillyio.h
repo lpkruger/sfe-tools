@@ -124,6 +124,9 @@ public:
 	BufferedDataOutput(DataOutput *u0, int bufsize=32*1024) : under(u0), pos(0) {
 		buffer.resize(bufsize);
 	}
+	DataOutput *getUnder() {
+		return under;
+	}
 protected:
 	virtual int tryWrite(const byte* c, int len) {
 		int free = buffer.size() - pos;
@@ -248,6 +251,9 @@ class BufferedDataInput : public DataInput {
 public:
 	BufferedDataInput(DataInput *u0, int bufsize=32*1024) : under(u0), off(0), pos(0) {
 		buffer.resize(bufsize);
+	}
+	DataInput *getUnder() {
+		return under;
 	}
 protected:
 	virtual int tryRead(byte* c, int len) {

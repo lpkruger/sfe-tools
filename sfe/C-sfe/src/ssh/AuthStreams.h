@@ -293,8 +293,10 @@ struct AuthStreams : public Runnable {
     	try {
     		Dio("Thread starting...");
     		run_with_cleanup();
-    		Lock lock(mux);
-    		lock.notifyAll();
+    		try {
+    			Lock lock(mux);
+    			lock.notifyAll();
+    		} catch (ThreadException) {}
     	} catch (ProtocolException ex) {
     		fprintf(stderr,"protocol exception: %s\n", ex.what());
     	}

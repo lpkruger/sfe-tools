@@ -383,23 +383,142 @@ FmtFile FmtFile::parseFmt(istream &in) {
 #include "CircuitCrypt.h"
 #include "CircuitCryptPermute.h"
 #include "sillyio.h"
-
 #include "GCircuitEval.h"
+#include "../crypto/cipher/PseudoRandom.h"
 
-static int _main(int , char **) {
+string getDefaultDir(const string &f) {
+	char *home = getenv("HOME");
+	string dir;
+	if (home)
+		(dir = home) += "/.sfe/";
+	else
+		dir = ("./");
+	return (dir + f);
+}
+
+void get_circuits(const char* prefix, vector<GarbledCircuit_p> &gcc,
+		vector<vector<boolean_secrets> > &inp_secs,	vector<byte_buf> &seeds, uint num, uint max) {
+	for (uint n=0; n<max; ++n) {
+		if (gcc.size() > num)
+			return;
+		{
+			ostringstream ostr;
+			ostr << prefix << "." << n << ".grbl.bin";
+			ifstream fin(ostr.str().c_str());
+			if (!fin.is_open())
+				continue;
+			//cout << "read " << ostr.str() << endl;
+			silly::io::istreamDataInput ufdin(fin);
+			silly::io::BufferedDataInput fdin(&ufdin);
+			gcc.push_back(GarbledCircuit::readCircuit(&fdin));
+			fin.close();
+		}
+		{
+			ostringstream ostr;
+			ostr << prefix << "." << n << ".secr.bin";
+			ifstream fin(ostr.str().c_str());
+			if (!fin.is_open()) {
+				gcc.pop_back();
+				continue;
+			}
+			//cout << "read " << ostr.str() << endl;
+			silly::io::istreamDataInput ufdin(fin);
+			silly::io::BufferedDataInput fdin(&ufdin);
+			vector<boolean_secrets> inputSecrets;
+			readVector(&fdin, inputSecrets);
+			fin.close();
+			inp_secs.push_back(inputSecrets);
+		}
+		{
+			ostringstream ostr;
+			ostr << prefix << "." << n << ".seed.bin";
+			ifstream fin(ostr.str().c_str());
+			silly::io::istreamDataInput fdin(fin);
+			if (!fin.is_open()) {
+				gcc.pop_back();
+				inp_secs.pop_back();
+				continue;
+			}
+			//cout << "read " << ostr.str() << endl;
+			byte_buf seed;
+			readVector(&fdin, seed);
+			fdin.close();
+			seeds.push_back(seed);
+		}
+		cerr << "@";
+	}
+}
+void pre_generate(Circuit *cc, const char* prefix, int min, int max) {
+	ifstream fin;
+	ofstream fout;
+	crypto::SecureRandom rand;
+	byte_buf seed(128/8);
+	for (int n=min; n<=max; ++n)
+	{
+		ostringstream ostr;
+		ostr << prefix << "." << n << ".grbl.bin";
+		fin.open(ostr.str().c_str());
+		if (fin.is_open()) {
+			fin.close();
+			continue;
+		}
+		fin.close();
+		fout.open(ostr.str().c_str());
+		if (!fout.is_open()) {
+			continue;
+		}
+
+		rand.getBytes(seed);
+
+		CircuitCryptPermute crypt(new crypto::cipher::PseudoRandom(seed));
+		vector<boolean_secrets> inputSecrets;
+		Circuit_p copy = cc->deepCopy();
+		GarbledCircuit_p gcc = crypt.encrypt(*copy, inputSecrets);
+		copy = Circuit_p();
+		//cout << (&gcc) << endl;
+		cout << "write garbled circuit " << n << " to " << ostr.str() << endl;
+		{
+			silly::io::ostreamDataOutput fdout(fout);
+			gcc->writeCircuit(&fdout);
+			fout.close();
+		}
+		{
+			ostr.str("");
+			ostr.clear();
+			ostr << prefix << "." << n << ".secr.bin";
+			fout.open(ostr.str().c_str());
+			cout << "write input secrets " << n << " to " << ostr.str() << endl;
+			silly::io::ostreamDataOutput fdout(fout);
+			writeVector(&fdout, inputSecrets);
+			fout.close();
+		}
+		{
+			ostr.str("");
+			ostr.clear();
+			ostr << prefix << "." << n << ".seed.bin";
+			fout.open(ostr.str().c_str());
+			cout << "write seed " << n <<  " to " << ostr.str() << endl;
+			silly::io::ostreamDataOutput fdout(fout);
+			writeVector(&fdout, seed);
+			fout.close();
+		}
+	}
+}
+
+static int _main(int argc, char **argv) {
 	try {
 		cout << "1 " << 1 << " " << parseInt("1") << endl;
 		//shdl::shdltest();
 		// test fmtfile
-		ifstream fmtin("/home/louis/sfe/priveq.fmt");
+		//ifstream fmtin("/home/louis/sfe/priveq.fmt");
 		//ifstream fmtin("/home/louis/sfe/priveq2.fmt");
-		//ifstream fmtin("/home/louis/sfe/md5_pw_cmp.fmt");
+		ifstream fmtin("/home/louis/sfe/md5_pw_cmp.fmt");
 		FmtFile::parseFmt(fmtin);
 		cout << "Read fmt file" << endl;
 		// test circuit
-		ifstream in("/home/louis/sfe/priveq.circ");
+		//ifstream in("/home/louis/sfe/priveq.circ");
 		//ifstream in("/home/louis/sfe/priveq2.circ");
-		//ifstream in("/home/louis/sfe/md5_pw_cmp.circ");
+		ifstream in("/home/louis/sfe/md5_pw_cmp.circ");
 		Circuit_p cc = Circuit::parseCirc(in);
 
 		for (uint i=0; i<cc->outputs.size() ; ++i) {
@@ -411,7 +530,7 @@ static int _main(int , char **) {
 		vector<boolean_secrets> inputSecrets;
 		Circuit_p copy = cc->deepCopy();
 		GarbledCircuit_p gcc = crypt.encrypt(*copy, inputSecrets);
-		copy.unref();
+		copy = Circuit_p();
 		//cout << (&gcc) << endl;
 		cout << "write garbled circuit" << endl;
 		{
@@ -434,7 +553,7 @@ static int _main(int , char **) {
 				ifstream fin("gcircuit.bin");
 				silly::io::istreamDataInput fdin(fin);
 				gcc->reset();
-				gcc.free();
+				gcc = GarbledCircuit_p();
 				gcc = GarbledCircuit::readCircuit(&fdin);
 			}
 			{
@@ -455,6 +574,18 @@ static int _main(int , char **) {
 		for (uint i=0; i<circ_out.size(); ++i) {
 			cout << "output " << i << ": " << circ_out[i] << endl;
 		}
+
+		if (argc>1) {
+			int min = 1;
+			int max = strtol(argv[1], NULL, 10);
+			if (argc>2) {
+				min = max;
+				max = strtol(argv[2], NULL, 10);
+			}
+			pre_generate(cc.to_ptr(), getDefaultDir("/md5_pw_cmp").c_str(), min, max);
+
+
+		}
 	} catch (ParseException ex) {
 		cerr << ex.what() << endl;
 		throw;
@@ -462,6 +593,8 @@ static int _main(int , char **) {
 
 	return 0;
 }
+
+
 #include "sillymain.h"
 
 MAIN("shdlparse")

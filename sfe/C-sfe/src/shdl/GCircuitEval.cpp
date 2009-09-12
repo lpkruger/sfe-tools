@@ -79,7 +79,7 @@ bit_vector GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) {
 #if 0
 template<class T,class U> static inline T* map_get(const std::map<U,T*> &m, const U &key) {
 #if DEBUG_WISEPTR
-	std::D("map get: wise_ptr overload" << std::endl;
+	std::D("map get: wise_ptr overload" << std::endl);
 #endif
 	//DF("map has %d elements", m.size());
 	typedef typename map<U,T*>::const_iterator map_it;
@@ -134,7 +134,7 @@ byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,b
 		}
 		DC("lengths: " << ink->size() << "  " << ink2->size() << endl);
 
-		ink = new byte_buf(crypto::cipher::xxor(*ink, *ink2));
+		ink = new byte_buf(crypto::cipher::xxor_10(*ink, *ink2));
 		DC("ink from xxor: " << ink->size());
 		add_garbage(ink);
 		DC("newlens: " << ink->size() << "  " << ink2->size() << endl);

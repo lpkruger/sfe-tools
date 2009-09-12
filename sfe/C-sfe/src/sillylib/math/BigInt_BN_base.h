@@ -90,12 +90,16 @@ protected:
 	//BN_CTX *bn_ctx;
 	BigNum_ctx bn_ctx;
 public:
+	static copy_counter counter;
 
 //	const static BigInt ZERO;
 //	const static BigInt ONE;
 //	const static BigInt TWO;
 
-	BigInt_BN_Base(ulong nn=0) {
+	BigInt_BN_Base() {
+		_init();
+	}
+	BigInt_BN_Base(ulong nn) {
 		_init();
 		operator=(nn);
 	}
@@ -125,6 +129,8 @@ public:
 	BigInt_BN_Base(const BigInt_BN_Base &b) {
 		_init();
 		operator=(b);
+		counter.count_copy();
+		counter.uncount_eq();
 	}
 	////////
 
@@ -132,16 +138,19 @@ public:
 	BigInt_BN_Base(BigInt_BN_Base &&b) {
 		_init();
 		_swap(b);
+		counter.count_move();
 	}
 	BigInt_BN_Base& operator= (BigInt_BN_Base &&b) {
 		BN_zero(*this);
 		_swap(b);
+		counter.count_refeq();
 		return *this;
 	}
 #endif
 	//////// copy assignment: do not delete
 	BigInt_BN_Base& operator= (const BigInt_BN_Base &b) {
 		BN_copy(*this, b);
+		counter.count_eq();
 		return *this;
 	}
 	////////

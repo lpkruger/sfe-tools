@@ -47,6 +47,29 @@ inline SFEKey* xxor(const SecretKey &aa, const SecretKey &bb, const string &ciph
 	return new SFEKey(c, true);
 }
 
+static void xor10(uchar* c, const uchar* a, const uchar* b) {
+	uint64_t *r = (uint64_t*) c;
+	uint64_t *p = (uint64_t*) a;
+	uint64_t *q = (uint64_t*) b;
+	*r = (*p) ^ (*q);
+	uint16_t *r2 = (uint16_t*) (c+8);
+	uint16_t *p2 = (uint16_t*) (a+8);
+	uint16_t *q2 = (uint16_t*) (b+8);
+	*r2 = (*p2) ^ (*q2);
+}
+inline byte_buf xxor_10(const byte_buf &a, const byte_buf &b) {
+	byte_buf c(10);
+	xor10(&c[0], &a[0], &b[0]);
+	return silly_move(c);
+}
+
+inline SFEKey* xxor_10(const SFEKey &a, const SFEKey &b, const string &cipher) {
+	SFEKey *cc = new SFEKey(new byte_buf(10), true);
+	SFEKey &c = *cc;
+	xor10(&c.buf->operator[](0), &a.buf->operator[](0), &b.buf->operator[](0));
+	return cc;
+}
+
 
 class SFECipher : public Cipher {
 	SHA_CTX ctx;
@@ -105,12 +128,21 @@ private:
 
 class SFEKeyGenerator {
 	Random *rand;
+	bool toFree;
 public:
 	const static uint default_length = 80;
 	uint length;
 	SFEKeyGenerator(Random *r0) : rand(r0), length(default_length) {
-		if (!rand)
+		if (!rand) {
 			rand = new SecureRandom();
+			toFree = true;
+		} else {
+			toFree = false;
+		}
+	}
+	~SFEKeyGenerator() {
+		if (toFree)
+			delete rand;
 	}
 	void init(int length0) {
 		length = length0;

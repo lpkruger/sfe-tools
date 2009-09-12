@@ -14,29 +14,41 @@ namespace silly {
 namespace mem {
 
 #ifndef NOCOUNT
-struct copy_counter {
+class copy_counter {
+private:
 	const char *name;
 	int copy_count;
 	int move_count;
 	int eq_count;
 	int refeq_count;
+public:
 	copy_counter(const char *n) : name(n) {}
 	virtual void print_counter(FILE *fh = stderr) {
 		fprintf(fh, "%s:  con& %d   con&& %d\n=& %d   =&& %d\n",
 				name, copy_count, move_count, eq_count, refeq_count);
 	}
 	virtual ~copy_counter() {}
+
+	void count_copy() { ++copy_count; }
+	void count_move() { ++move_count; }
+	void count_eq() { ++eq_count; }
+	void count_refeq() { ++refeq_count; }
+	void uncount_eq() { --eq_count; }  // because sometimes ctors call
+	void uncount_refeq() { --refeq_count; } // operator=
 };
 
-struct object_counter : public copy_counter {
+class object_counter : public copy_counter {
 	int con_count;
 	int des_count;
+public:
 	object_counter(const char *n) : copy_counter(n) {}
 	void print_counter(FILE *fh = stderr) {
 		copy_counter::print_counter(fh);
 		fprintf(stderr, "con %d   des %d\n",
 				con_count, des_count);
 	}
+	void count_con() { ++con_count; }
+	void count_des() { ++des_count; }
 };
 template<class C>
 struct count_printer {
@@ -57,6 +69,8 @@ struct copy_counter {
 	void count_move() {}
 	void count_eq() {}
 	void count_refeq() {}
+	void uncount_eq() {}    // because sometimes ctors call
+	void uncount_refeq() {} // operator=
 };
 struct object_counter : public copy_counter {
 	object_counter(const char *n) : copy_counter(n) {}

@@ -111,6 +111,19 @@ template<class T> class wise_ptr {
 
 		}
 	}
+	Tcommon* unref0() {
+		Tcommon *cptr = cp;
+		if (!cptr)
+			return NULL;
+		if (--cptr->refcnt != 0) {
+			cptr = NULL;
+			DCC("unlinkd " << cp->p << " <- " << cp << " <- " << this <<
+					" " << cp->refcnt << std::endl);
+		}
+		cp = NULL;
+
+		return cptr;
+	}
 public:
 	explicit wise_ptr() {
 		cp = NULL;
@@ -220,24 +233,21 @@ public:
 		if (!cp)
 			return;
 
-		Tcommon *ptr = unref();
+		Tcommon *ptr = unref0();
 		if (ptr)
 			ptr->dealloc();
 	}
 
-	Tcommon* unref() {
-		Tcommon *cptr = cp;
-		if (!cptr)
-			return NULL;
-		if (--cptr->refcnt != 0) {
-			cptr = NULL;
-			DCC("unlinkd " << cp->p << " <- " << cp << " <- " << this <<
-					" " << cp->refcnt << std::endl);
+	T* unref() {
+		Tcommon *ptr = unref0();
+		if (ptr) {
+			T *p = ptr->p;
+			delete ptr;
+			return p;
 		}
-		cp = NULL;
-
-		return cptr;
+		return NULL;
 	}
+
 
 	void dump() const {}
 

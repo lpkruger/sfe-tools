@@ -55,7 +55,10 @@ bool sfe_server_get_success() {
 }
 
 
-
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+// because auto_ptr is deprecated.  How silly.
+#endif
 
 static int _main(int argc, char **argv) {
 	silly::mem::count_printer<byte_buf>   bytebuf_cnt;
@@ -66,10 +69,13 @@ static int _main(int argc, char **argv) {
 		args[i-1] = argv[i];
 	}
 
-	wise_ptr<ServerSocket> listen;
-	wise_ptr<Socket> client_sock;
-	wise_ptr<DataOutput> out_raw;
-	wise_ptr<DataInput> in_raw;
+	auto_ptr<ServerSocket> listen;
+	auto_ptr<Socket> client_sock;
+	auto_ptr<DataOutput> out;
+	auto_ptr<DataInput> in;
+	auto_ptr<DataOutput> out_s;
+	auto_ptr<DataInput> in_s;
+
 	string pw;
 	int num_circuits;
 	try {
@@ -80,19 +86,24 @@ static int _main(int argc, char **argv) {
 		pw = args.size() < 3 ? string("$1$G1tl1u3T$u86xxKN8OWDi.w29KF4PX.") //MD5("Q")
 				: args.at(2);
 		//cout << pw << endl;
-		listen = new ServerSocket(port);
-		client_sock = listen->accept();
+		listen = auto_ptr<ServerSocket>(new ServerSocket(port));
+		client_sock = auto_ptr<Socket>(listen->accept());
 		//long startTime = System.currentTimeMillis();
-		out_raw = new BufferedDataOutput(client_sock->getOutput());
-		in_raw = new FlushDataInput(client_sock->getInput(), out_raw.to_ptr());
+		out_s = auto_ptr<DataOutput>(client_sock->getOutput());
+		out = auto_ptr<DataOutput>(
+				new BufferedDataOutput(out_s.get()));
+		in_s = auto_ptr<DataInput>(client_sock->getInput());
+		in = auto_ptr<DataInput>(
+				new FlushDataInput(in_s.get(), out.get()));
 
 	} catch (std::out_of_range) {
 		printf("sshserver port [numcircs] [pwcrypt]\n");
 		return 2;
 	}
+
 	SfeServer serv(pw, num_circuits);
 	try {
-		serv.go2(out_raw.to_ptr(), in_raw.to_ptr());
+		serv.go2(out.get(), in.get());
 	} catch (std::exception &ex) {
 		printf("exception %s : %s\n", typeid(ex).name(), ex.what());
 		return 1;

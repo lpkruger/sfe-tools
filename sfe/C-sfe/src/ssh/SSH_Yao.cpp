@@ -237,7 +237,7 @@ struct CircuitCryptChecker : public Runnable {
 #define BENCHNAME ""
 #endif
 
-void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
+void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs, const string &circ) {
 	string benchmark_buffer(BENCHNAME("Client"));
 	FmtFile::VarDesc vars = fmt.getVarDesc();
 
@@ -245,19 +245,23 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	D(inputs);
 
 	int L = in->readInt();
-	vector<vector<boolean_secrets> > inputSecrets(L);
+	vector<vector<boolean_secrets> > inputSecrets;
 
 	long time_start = currentTimeMillis();
-
-	vector<GarbledCircuit_p> gcc(L);
-
+	vector<GarbledCircuit_p> gcc;
 	vector<byte_buf> prng_keys;
+
+	get_circuits(getDefaultDir(circ).c_str(), gcc, inputSecrets, prng_keys, L, 256);
+	int L_preread = gcc.size();
+
+	gcc.resize(L);
+	inputSecrets.resize(L);
 
 #if USE_THREADS
 	{
 		ThreadPool pool(numCPUs()*2);
 		CircuitCrypter *crypters[L];
-		for (int n=0; n<L; ++n) {
+		for (int n=L_preread; n<L; ++n) {
 			Random *rn;
 			if (use_prng) {
 				prng_keys.resize(L);
@@ -276,7 +280,7 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 		}
 		pool.stopWait();
 		//pool.waitIdle();
-		for (int n=0; n<L; ++n) {
+		for (int n=L_preread; n<L; ++n) {
 			delete crypters[n];
 		}
 
@@ -539,7 +543,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 		if (use_prng) {
 			readObject(in, gcc_hashes[n]);
 		} else {
-			gcc[n] = GarbledCircuit::readCircuit(in);
+			gcc[n] = GarbledCircuit_p(GarbledCircuit::readCircuit(in));
 			fast_sync();
 		}
 	}
@@ -547,14 +551,20 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	check_sync();
 
 	vector<int> choices;		// which ones to open
-	// TODO: choose randomly
-//	for (int i=2; i<L; ++i) {
-//		choices.push_back(i);
+//	for (int i=0; i<L; i+=2) {
+//		choices.push_back(i);	// for testing choose even numbers
 //	}
-	for (int i=0; i<L; i+=2) {
-		choices.push_back(i);	// for testing choose even numbers
+	{
+		SecureRandom rand;
+		int num_to_choose = L/2;
+		for (int i=0; i<L; ++i) {
+			if (((rand.getByte() & 0x01) && num_to_choose) || num_to_choose == L-i) {
+				choices.push_back(i);
+				--num_to_choose;
+			}
+		}
+		writeVector(out, choices);
 	}
-	writeVector(out, choices);
 
 	vector<byte_buf> chosen_prng_keys(use_prng ? choices.size() : 0);
 	vector<vector<boolean_secrets > > all_my_chosen_secrets(choices.size());
@@ -585,10 +595,8 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 
 	if (use_prng) {
 		check_sync();
-		vector_perm<GarbledCircuit_p> chosen_gcc(gcc, choices);
-		vector_perm<GarbledCircuit_p> eval_gcc(chosen_gcc.negate_perm());
 		for (uint n=0; n<eval_gcc.size(); ++n) {
-			eval_gcc[n] = GarbledCircuit::readCircuit(in);
+			eval_gcc[n] = GarbledCircuit_p(GarbledCircuit::readCircuit(in));
 			fast_sync();
 		}
 
@@ -766,7 +774,7 @@ static int _main(int argc, char **argv) {
 		DataInput *in = s->getInput();
 		SSHYaoSender cli;
 		cli.setStreams(in, out);
-		cli.go(cc, fmt, input_bits);
+		cli.go(cc, fmt, input_bits, "md5_pw_cmp");
 		delete out;
 		delete in;
 		delete s;
