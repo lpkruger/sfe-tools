@@ -108,7 +108,7 @@ void OTSender::online() {
 	if (PKM0.size() != M.size()) {
 		fprintf(stderr, "PKM0.size(%d) != M.size(%d)\n", PKM0.size(), M.size());
 		throw ProtocolException(
-				string_printf("PKM0.size(%d) != M.size(%d)\n", PKM0.size(), M.size()).c_str());
+				cstr_printf("PKM0.size(%d) != M.size(%d)\n", PKM0.size(), M.size()));
 	}
 
 	for (uint i=0; i<M.size(); ++i) {
@@ -164,7 +164,7 @@ BigInt_Vect OTChooser::online() {
 	// CHECK C.length = s.length
 	if (C.size() != s.size()) {
 		throw ProtocolException(
-				string_printf("C.size(%d) != s.size(%d)\n", C.size(), s.size()).c_str());
+				cstr_printf("C.size(%d) != s.size(%d)\n", C.size(), s.size()));
 	}
 	BigInt_Vect PKS0(s.size());
 	for (uint i=0; i<s.size(); ++i) {

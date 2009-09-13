@@ -107,6 +107,9 @@ public:
 string string_printf(const char *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
 
+#define cstr_printf(fmt, ...) \
+	string_printf(fmt, __VA_ARGS__).c_str()
+
 long currentTimeMillis();
 int numCPUs();
 

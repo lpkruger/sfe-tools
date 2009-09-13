@@ -18,6 +18,8 @@
 #include <sys/syscall.h>
 #define clock_gettime(X,Y)  syscall(__NR_clock_gettime, X, Y)
 
+#if !defined(DF)
+#define SILLYTHREAD_DEFINED_DF
 #if 1
 static inline void sillythread_dummy(...) {}
 #define DF sillythread_dummy
@@ -26,7 +28,7 @@ static inline void sillythread_dummy(...) {}
 //#ifndef SILLYDEBUG_H_
 void debug_printf(const char *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
-//#endif
+#endif
 #endif
 
 namespace silly {
@@ -536,6 +538,11 @@ public:
 		waitIdle();
 	}
 };
+
+#ifdef SILLYTHREAD_DEFINED_DF
+#undef SILLYTHREAD_DEFINED_DF
+#undef DF
+#endif
 
 }
 }

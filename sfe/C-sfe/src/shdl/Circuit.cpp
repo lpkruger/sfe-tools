@@ -28,11 +28,8 @@ void Circuit::calcDeps() {
 
     	for (uint i=0; i<gate->inputs.size(); ++i) {
     		GateBase_p inp = gate->inputs[i];
-//    		Gate_p inpg = dynamic_pointer_cast<Gate>(inp);
-//    		if (inpg.to_ptr())
-    		Gate_p inpg = dynamic_cast<Gate*>(inp);
-    		if (inpg)
-    		{
+    		if (!inp->isInput()) {
+    			Gate_p inpg = static_cast<Gate*>(inp);
     			stack.push_back(inpg);
     		}
     		inp->deps.insert(gate);
@@ -63,12 +60,9 @@ void Circuit::clearDeps() {
 
     	for (uint i=0; i<gate->inputs.size(); ++i) {
     		GateBase_p inp = gate->inputs[i];
-    		Gate_p inpg = dynamic_cast<Gate*>(inp);
 
-//    		Gate_p inpg = dynamic_pointer_cast<Gate>(inp);
-//    		if (inpg.to_ptr())
-    		if (inpg)
-    		{
+    		if (!inp->isInput()) {
+    			Gate_p inpg = static_cast<Gate*>(inp);
     			stack.push_back(inpg);
     		}
     		inp->deps.clear();

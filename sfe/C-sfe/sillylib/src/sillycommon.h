@@ -59,10 +59,11 @@ using silly::NullPointerException;
 
 
 //// some handy optimization macros
-#define _likely(x) __builtin_expect(x, 1)
+#define _likely(x) __builtin_expect(!!(x), 1)
 #define _unlikely(x) __builtin_expect(x, 0)
 #define _CONST __attribute__ ((const))
 #define _PURE __attribute__ ((pure))
+#define _QUICK __attribute__ ((regparm(3)))
 
 
 // some hand NOP template constrainst

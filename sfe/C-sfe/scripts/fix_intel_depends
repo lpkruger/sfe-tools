@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#perl_script=$(cat << END
+#END
+#)
+
+perl_script='s{([\w/]+)(\w+)\.d(:.*)\1\2\.cpp}{$1$2.d $1$2.o\3\1\2.cpp};'
+find ../Intel -name \*.d | xargs perl -i -p -e "$perl_script"

@@ -22,10 +22,10 @@ public:
 	virtual GarbledCircuit_p encrypt(Circuit &cc, vector<boolean_secrets> &inputsecrets);
 	virtual void reset();
 
-	virtual boolean_secrets genKeyPair(GateBase_p g);
+	virtual boolean_secrets genKeyPair(GateBase_p g) _QUICK;
 
-	boolean doFlip_rec(GateBase_p g);
-	static void permuteInput(bit_vector &tt, int arity, int pos);
+	boolean doFlip_rec(GateBase_p g) _QUICK ;
+	static void permuteInput(bit_vector &tt, int arity, int pos) _QUICK ;
 };
 
 #endif /* CIRCUITCRYPTPERMUTE_H_ */

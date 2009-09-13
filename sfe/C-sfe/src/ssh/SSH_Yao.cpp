@@ -7,10 +7,18 @@
 
 //#define DEBUG 1
 //#define DEBUG2 1
+#define USE_THREADS 4
 #include <algorithm>
 #include "SSH_Yao.h"
 
 #include "sillydebug.h"
+
+
+
+#if USE_THREADS
+#include "sillythread.h"
+using namespace silly::thread;
+#endif
 
 template<class T> inline void
 flatten(vector<vector<T> > &in, vector<T> &out, vector<int> &geom) {
@@ -97,11 +105,9 @@ static void test_eval(int n, GarbledCircuit &gcc, vector<boolean_secrets> &input
 	DF("test_eval %d %u\n", testlen, gcirc_input.size());
 }
 
-#define USE_THREADS 4
+
 
 #if USE_THREADS
-#include "../sillylib/sillythread.h"
-using namespace silly::thread;
 class CircuitCrypter : public Runnable {
 	NOCOPY(CircuitCrypter)
 
@@ -450,7 +456,7 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs, cons
 		}
 	}
 	writeVector(out, my_sent_secrets);
-	DF(stderr, "done\n");
+	DF("done\n");
 	long time_done = currentTimeMillis();
 	bench_printf("communication time %0.3f\n", (time_done-ot_finished)/1000.0);
 	bench_printf("client done in %0.3f seconds\n", (time_done-time_start)/1000.0);
@@ -512,12 +518,12 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	OTChooser chooser(allinputs, &ot);
 	chooser.setStreams(in, out);
 	long ot_start = currentTimeMillis();
-	DF(stderr, "OT precalc\n");
+	DF("OT precalc\n");
 	chooser.precalc();
 	long ot_precalc_end = currentTimeMillis();
 	check_sync();
 	long ot_online_start = currentTimeMillis();
-	DF(stderr, "OT online\n");
+	DF("OT online\n");
 	BigInt_Vect all_myotsecs_flat =
 			chooser.online();
 	long ot_end = currentTimeMillis();
@@ -660,16 +666,15 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 	for (int n=0; n<LL; ++n) {
 		if (evaluators[n]->circ_out.size() != expected_outputs)
 			throw ProtocolException(
-					string_printf("circuit should have %d output",
-							expected_outputs).c_str());
+					cstr_printf("circuit should have %d output",
+							expected_outputs));
 		DF("received %d outputs", evaluators[n]->circ_out.size());
 		if (n==0) {
 			output0 = evaluators[n]->circ_out;
 		} else {
 			if (evaluators[n]->circ_out != output0)
 				throw ProtocolException(
-						string_printf(
-								"detected differing outputs in circuit %d", n).c_str());
+				cstr_printf("detected differing outputs in circuit %d", n));
 		}
 		bool success = false;
 		for (uint j=0; j<evaluators[n]->circ_out.size(); ++j) {
@@ -679,7 +684,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 		DF(": %d\n", success);
 		if (!success)
 			throw ProtocolException(
-					string_printf("failed circuit %d", n).c_str());
+					cstr_printf("failed circuit %d", n));
 
 		delete evaluators[n];
 	}
@@ -692,8 +697,8 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 
 		if (circ_out.size() != expected_outputs)
 			throw ProtocolException(
-					string_printf("circuit should have %d output",
-							expected_outputs).c_str());
+					cstr_printf("circuit should have %d output",
+							expected_outputs));
 		bool succ = false;
 		for (int i=0; i<circ_out[i]; ++i) {
 			if (circ_out[i])

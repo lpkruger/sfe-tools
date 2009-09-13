@@ -15,6 +15,7 @@
 #include <string.h>
 //#include "../sillytype.h"
 #include <errno.h>
+#include "../sillycommon.h"
 
 namespace silly {
 namespace io {
@@ -57,7 +58,7 @@ struct ProtocolException : public IOException {
 
 class DataOutput {
 protected:
-	virtual int tryWrite(const byte* c, int len) = 0;
+	virtual int tryWrite(const byte* c, int len) _QUICK = 0;
 public:
 	ulong total;
 	DataOutput() : total(0) {}
@@ -110,7 +111,7 @@ public:
 	}
 
 protected:
-	virtual int tryWrite(const byte* c, int len) {
+	virtual int tryWrite(const byte* c, int len) _QUICK {
 		buf.insert(buf.end(), c, c+len);
 		return len;
 	}
@@ -128,7 +129,7 @@ public:
 		return under;
 	}
 protected:
-	virtual int tryWrite(const byte* c, int len) {
+	virtual int tryWrite(const byte* c, int len) _QUICK {
 		int free = buffer.size() - pos;
 		if (free == 0) {
 			flush();
@@ -155,7 +156,7 @@ class ostreamDataOutput : public DataOutput {
 	std::ostream &out;
 
 protected:
-	virtual int tryWrite(const byte* c, int len) {
+	virtual int tryWrite(const byte* c, int len) _QUICK {
 		 out.write ((const char*) c, len);
 		 return len;
 	}
@@ -167,7 +168,7 @@ public:
 
 class DataInput {
 protected:
-	virtual int tryRead(byte* c, int len) = 0;
+	virtual int tryRead(byte* c, int len) _QUICK = 0;
 public:
 	ulong total;
 
@@ -224,7 +225,7 @@ public:
 	uint pos;
 
 protected:
-	virtual int tryRead(byte* c, int len0) {
+	virtual int tryRead(byte* c, int len0) _QUICK {
 		uint len = len0;
 		if (buf.size()-pos > len) {
 			memcpy(c, &buf[pos], len);
@@ -256,7 +257,7 @@ public:
 		return under;
 	}
 protected:
-	virtual int tryRead(byte* c, int len) {
+	virtual int tryRead(byte* c, int len) _QUICK {
 		int nread = std::min(len, pos-off);
 		if (pos>off) {
 			memcpy(c, &buffer[off], nread);
@@ -290,7 +291,7 @@ public:
 	FDDataOutput(int fd0) : fd(fd0) {}
 
 protected:
-	virtual int tryWrite(const byte* c, int len) {
+	virtual int tryWrite(const byte* c, int len) _QUICK {
 		int n = ::write(fd, c, len);
 		if (n<0) {
 			throw IOException(errno);
@@ -304,7 +305,7 @@ public:
 	FDDataInput(int fd0) : fd(fd0) {}
 
 protected:
-	virtual int tryRead(byte* c, int len) {
+	virtual int tryRead(byte* c, int len) _QUICK {
 		int n = ::read(fd, c, len);
 		if (n<0) {
 			throw IOException();
@@ -320,7 +321,7 @@ public:
 	istreamDataInput(std::istream &in0) : in(in0) {}
 
 protected:
-	virtual int tryRead(byte* c, int len) {
+	virtual int tryRead(byte* c, int len) _QUICK {
 		 return in.readsome((char*) c, len);
 	}
 

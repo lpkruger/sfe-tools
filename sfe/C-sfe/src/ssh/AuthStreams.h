@@ -14,7 +14,7 @@
 //#define DEBUG2 1
 #include "sillyio.h"
 #include "sillytype.h"
-#include "../sillylib/os/sillythread.h"
+#include "sillythread.h"
 #include <string>
 
 #include "sillydebug.h"
@@ -59,7 +59,7 @@ public:
 		streams = str;
 	}
 
-	virtual int tryRead(byte* c, int len);
+	virtual int tryRead(byte* c, int len) _QUICK;
 	virtual void skip(int len);
 
 };
@@ -77,7 +77,7 @@ public:
 		streams = str;
 	}
 
-	virtual int tryWrite(const byte* c, int len) {
+	virtual int tryWrite(const byte* c, int len) _QUICK {
 		real_buf.insert(real_buf.end(), c, c+len);
 		if (real_buf.size() > 250*1024)
 			flush();
@@ -107,7 +107,7 @@ public:
 		streams = str;
 	}
 
-	virtual int tryWrite(const byte* c, int len);
+	virtual int tryWrite(const byte* c, int len) _QUICK;
 	virtual void flush();
     virtual void close();
 };

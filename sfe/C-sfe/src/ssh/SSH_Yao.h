@@ -44,7 +44,7 @@ struct FlushDataInput : public BufferedDataInput {
 	DataOutput *out;
 	FlushDataInput(DataInput *under, DataOutput *out0) :
 		BufferedDataInput(under), out(out0) {}
-	virtual int tryRead(byte *c, int len) {
+	virtual int tryRead(byte *c, int len) _QUICK {
 		out->flush();
 		return BufferedDataInput::tryRead(c, len);
 	}
@@ -61,7 +61,7 @@ public:
 	SSHYao() {
 		char *opt;
 		opt = getenv("NOFASTSYNC");
-		no_fast_sync = (opt!=NULL && strcmp(opt, "0"));
+		no_fast_sync = (opt==NULL || !strcmp(opt, "0"));
 		opt = getenv("NOCHECKSYNC");
 		no_check_sync = (opt!=NULL && strcmp(opt, "0"));
 	}

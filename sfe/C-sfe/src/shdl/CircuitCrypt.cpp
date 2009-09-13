@@ -46,19 +46,19 @@ GarbledCircuit_p CircuitCrypt::encrypt(Circuit &cc, vector<boolean_secrets> &inp
 
 	for (uint i=0; i<cc.outputs.size(); ++i) {
 		gcc.outputs[i] = encGate_rec(cc.outputs[i], gcc);
-		gcc.outputSecrets[i] = secrets.at(gcc.outputs[i]);
+		gcc.outputSecrets[i] = secrets[gcc.outputs[i]];
 
 		// special case
 		if (cc.outputs[i]->arity == 0) {
 			boolean val = cc.outputs[i]->truthtab[0];
 			gcc.outputSecrets[i][val ? 1 : 0] =
-					SFEKey_p(new SFEKey(&themap.at(cc.outputs[i])->truthtab[0]));
+					SFEKey_p(new SFEKey(&themap[cc.outputs[i]]->truthtab[0]));
 			// TODO: replace call to SFEKey constructor
 		}
 	}
 
 	for (uint i=0; i<cc.inputs.size(); ++i) {
-		inputSecrets[i] = secrets.at(i);
+		inputSecrets[i] = secrets[i];
 		DC("inpsec " << i << "  " << inputSecrets[i].s0->toHexString() <<
 				"  " << inputSecrets[i].s1->toHexString());
 
@@ -89,7 +89,8 @@ boolean_secrets CircuitCrypt::genKeyPair(GateBase_p) {
 	return ret;
 }
 
-int CircuitCrypt::encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash) {
+int CircuitCrypt::encGate_rec(Gate_p gate,
+		Reclaimer<GarbledGate> &trash) {
 	gatemap_t::iterator egate_it = themap.find(gate);
 	if (egate_it != themap.end())
 		return egate_it->second->id;
@@ -102,10 +103,8 @@ int CircuitCrypt::encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash) {
 	vector<boolean_secrets> inpsecs(egate->arity);
 
 	for (int i=0; i<egate->arity; ++i) {
-//		Input_p inp = dynamic_pointer_cast<Input>(gate->inputs[i]);
-//		if (inp.to_ptr())
-		Input_p inp = dynamic_cast<Input*>(gate->inputs[i]);
-		if (inp) {
+		if (gate->inputs[i]->isInput()) {
+			Input_p inp = static_cast<Input*>(gate->inputs[i]);
 			int var = inp->var;
 			egate->inputs[i] = var;
 			secretmap_t::iterator sec_it = secrets.find(var);
@@ -120,7 +119,7 @@ int CircuitCrypt::encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash) {
 					//dynamic_pointer_cast<Gate>(gate->inputs[i]));
 					dynamic_cast<Gate*>(gate->inputs[i]),
 					trash);
-			inpsecs[i] = secrets.at(egate->inputs[i]);
+			inpsecs[i] = secrets[egate->inputs[i]];
 		}
 	}
 

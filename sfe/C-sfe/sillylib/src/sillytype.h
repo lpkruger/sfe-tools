@@ -73,6 +73,8 @@ public:
 };
 
 
+//TODO: eventually, vector<bool> will be replaced with
+// std::dynamic_bitset in C++0x.  Watch for it.
 typedef vector<bool> bit_vector;
 
 template<class T, int dim> struct tensor {
@@ -203,6 +205,14 @@ public:
 using namespace silly::types;
 using silly::types::uint;
 
+// why not?
+#define LAMBDA(rtype, args, block) 				\
+	({struct lambda {static rtype f args block	\
+	}; &lambda::f;})
+
+//#define LAMBDA_o(rtype, args, block)
+//	({struct lambda {rtype operator() args block
+//	} lobj = {}; lobj;})
 
 
 #endif /* SILLYTYPE_H_ */

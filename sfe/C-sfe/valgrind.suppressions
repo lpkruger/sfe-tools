@@ -17,6 +17,19 @@
    ...
    fun:BN_MONT_CTX_set
 }
+{
+   OT Sender memory from crypto
+   Memcheck:Param
+   write(buf)
+   obj:/lib/ld-2.8.so
+   fun:_ZN5silly2io18BufferedDataOutput5flushEv
+   fun:_ZN8OTSender6onlineEv
+}
+{
+   OT Chooser
+   Memcheck:Cond
+   fun:_ZN13SSHYaoChooser2goEN5silly3mem8wise_ptrIN4shdl7CircuitEEERNS3_7FmtFileERKSt6vectorIbSaIbEE
+}
 
 {
    gc_eager_cond from Boehm

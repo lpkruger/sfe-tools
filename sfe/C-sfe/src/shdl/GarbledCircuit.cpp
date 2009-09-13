@@ -90,7 +90,7 @@ GarbledCircuit_p GarbledCircuit::readCircuit(DataInput *in) {
 		case 3:
 			tts = 8; break;
 		default:
-			throw ProtocolException(string_printf("Unexpected arity: %d", tts).c_str());
+			throw ProtocolException(cstr_printf("Unexpected arity: %d", tts));
 		}
 
 		gcc.allGates[i]->truthtab.resize(tts);

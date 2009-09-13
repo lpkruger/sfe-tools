@@ -76,7 +76,7 @@ struct boolean_secrets {
 		return !operator==(b);
 	}
 	SFEKey_p& operator[](int i) {
-		if (i!=0 && i!=1) {
+		if (_unlikely(i!=0 && i!=1)) {
 			throw bad_argument("secret must be 0 or 1");
 		}
 		if (i)

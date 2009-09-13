@@ -49,7 +49,7 @@ EVPCipher::EVPCipher(const EVP_CIPHER *c, int keylen) {
 EVPCipher::EVPCipher(const char* ciphername, int keylen) {
 	const EVP_CIPHER *c = EVP_get_cipherbyname(ciphername);
 	if (!c) {
-		//throw CipherException(string_printf("Unknown cipher %s", ciphername).c_str());
+		//throw CipherException(cstr_printf("Unknown cipher %s", ciphername));
 		throwCipherError();
 	}
 	EVP_CIPHER_CTX_init(&c_ctx);
@@ -106,7 +106,7 @@ void EVPCipher::init(modes mode, const SecretKey *sk, const AlgorithmParams *par
 		uint ret = EVP_BytesToKey(c_ctx.cipher, md, params->salt,
 				&keyiv[0], keyiv.size(), params->rounds, &key_buf[0], &iv_buf[0]);
 		if (ret != key_buf.size())
-			throw CipherException(string_printf("error in EVP_BytesToKey %d != %d", ret, key_buf.size()).c_str());
+			throw CipherException(cstr_printf("error in EVP_BytesToKey %d != %d", ret, key_buf.size()));
 		pKey = &key_buf;
 		pIV = &iv_buf;
 	}
@@ -128,7 +128,7 @@ void EVPCipher::init(modes mode, const SecretKey *sk, const AlgorithmParams *par
 		}
 		break;
 	default:
-		throw CipherException(string_printf("Unknown mode %d", mode).c_str());
+		throw CipherException(cstr_printf("Unknown mode %d", mode));
 	}
 	EVP_CIPHER_CTX_set_padding(&c_ctx, !params->nopadding);
 }

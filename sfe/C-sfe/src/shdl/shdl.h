@@ -282,7 +282,7 @@ public:
 	virtual bool eval(EvalState &state) {
 		map<int,bool>::iterator b = state.vals.find(id);
 		if (b == state.vals.end()) {
-			throw std::logic_error(string_printf("Input %d is undefined", id).c_str());
+			throw std::logic_error(cstr_printf("Input %d is undefined", id));
 			//TODO:
 		}
 		return b->second;

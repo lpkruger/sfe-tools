@@ -78,7 +78,7 @@ static int _main(int argc, char **argv) {
 			bit_vector ss(args.size() - 1);
 			for (uint i=1; i<args.size(); ++i) {
 				if (args[i]!="0" && args[i]!="1") {
-					throw bad_argument(string_printf("Bad s: %s", args[i].c_str()).c_str());
+					throw bad_argument(cstr_printf("Bad s: %s", args[i].c_str()));
 				}
 				ss[i-1] = args[i]=="1" ? true : false;
 			}
@@ -96,5 +96,5 @@ static int _main(int argc, char **argv) {
 	return 0;
 }
 
-#include "../sillylib/sillymain.h"
+#include "sillymain.h"
 MAIN("ottest");

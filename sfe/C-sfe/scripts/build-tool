@@ -1,0 +1,51 @@
+#!/bin/sh
+DIRS_base="Debug DebugOpt Release Intel"
+for i in $DIRS_base ; do
+  [ -d "$i" ] && DIRS="$DIRS $i"
+done
+
+if [ -z "$1" ] ; then
+  echo "$0 list|qclean|clean|build|all"
+  echo "apply to$DIRS"
+fi
+
+[ "$1" == "list" ] && { echo $DIRS; exit 0; }
+[ "$1" == "qclean" ] && { qclean=yes; }
+[ "$1" == "clean" ] && { qclean=yes; clean=yes; }
+[ "$1" == "build" ] && { build=yes; }
+[ "$1" == "symlink" ] && { symlnk=yes; }
+[ "$1" == "all" ] && { qclean=yes; clean=yes; build=yes; symlnk=yes; }
+
+if [ -d sillylib ] ; then
+  (
+    cd sillylib
+    sh ../$0 "$@"
+  )
+fi
+
+clean() {
+  find $1 -name \*.o -print -exec rm {} \;
+  find $1 -type l -print -exec rm {} \;
+}
+
+for i in $DIRS ; do
+  if [[ "$qclean" == "yes" ]] ; then
+    rm $i/core
+    rm $i/vgcore.*
+  fi
+  if [[ "$clean" == "yes" ]] ; then
+    clean $i
+    make -C $i symlinksclean
+    make -C $i clean
+  fi
+  if [[ "$build" == "yes" ]] ; then
+    make -C $i $MAKE_OPTS all || exit 1
+  fi
+  if [[ "$symlnk" == "yes" ]] ; then
+    make -C $i symlinks
+  fi
+done
+
+exit 0
+
+

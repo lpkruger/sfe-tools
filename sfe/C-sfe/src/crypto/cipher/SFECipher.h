@@ -23,7 +23,7 @@ typedef CipherKey SFEKey;
 inline byte_buf xxor(const byte_buf &a, const byte_buf &b) {
 	if (a.size() != b.size()) {
 		//print_backtrace();
-		throw bad_argument(silly::misc::string_printf("a.size(%d) != b.size(%d)", a.size(), b.size()).c_str());
+		throw bad_argument(silly::misc::cstr_printf("a.size(%d) != b.size(%d)", a.size(), b.size()));
 	}
 	byte_buf c(a.size());
 	for (uint i=0; i<a.size(); ++i) {

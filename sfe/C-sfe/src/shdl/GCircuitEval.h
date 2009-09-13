@@ -13,6 +13,8 @@
 #include "GarbledCircuit.h"
 #include "CircuitCrypt.h"
 
+typedef map<int, byte_buf*> buf_map;
+
 class GCircuitEval : public CircuitCrypt, public Reclaimer<byte_buf> {
 	GarbledGate_p getGate(int id, GarbledCircuit &gcc) {
 		// DEBUG:
@@ -22,7 +24,7 @@ class GCircuitEval : public CircuitCrypt, public Reclaimer<byte_buf> {
 
 		return gcc.allGates[id - gcc.nInputs];
 	}
-	byte_buf* eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int, byte_buf*> &vals);
+	byte_buf* eval_rec(GarbledGate_p g, GarbledCircuit &gcc, buf_map &vals);
 	//vector<byte_buf*> garbage;
 public:
 	GCircuitEval() : CircuitCrypt(NULL) {}

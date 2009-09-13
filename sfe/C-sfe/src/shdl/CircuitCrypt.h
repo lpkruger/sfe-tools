@@ -10,12 +10,14 @@
 
 #include <string>
 #include <map>
+//#include <tr1/unordered_map>
 #include "sillytype.h"
 #include "sillymem.h"
 #include "GarbledCircuit.h"
 #include "shdl.h"
 #include "../crypto/cipher/PseudoRandom.h"
 //#include "../crypto/SecureRandom.h"
+#include "sillystl.h"
 
 using namespace std;
 using crypto::Random;
@@ -25,13 +27,13 @@ protected:
 	Random *rand;
 
 private:
-	typedef map<int, GarbledGate_p> gateid_t;
+	typedef vector_map<int, GarbledGate_p> gateid_t;
 	gateid_t gateid;
 
 	typedef map<Gate_p, GarbledGate_p> gatemap_t;
 	gatemap_t themap;
 
-	typedef map<int, boolean_secrets > secretmap_t;
+	typedef vector_map<int, boolean_secrets> secretmap_t;
 	secretmap_t secrets;
 
 	int curId;
@@ -40,7 +42,7 @@ private:
 		return curId++;
 	}
 protected:
-	virtual boolean_secrets genKeyPair(GateBase_p g);
+	virtual boolean_secrets genKeyPair(GateBase_p g) _QUICK;
 
 	static const string CIPHER;
 	SFEKeyGenerator KG;
@@ -61,7 +63,8 @@ public:
 	}
 
 private:
-	int encGate_rec(Gate_p gate, Reclaimer<GarbledGate> &trash);
+	int encGate_rec(Gate_p gate,
+			Reclaimer<GarbledGate> &trash) _QUICK ;
 
 };
 #endif /* CIRCUITCRYPT_H_ */

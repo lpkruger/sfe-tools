@@ -491,7 +491,7 @@ static inline void test_basic_ptr() {
 	int *ip1 = &i;
 	basic_ptr<int> ib1 = ip1;
 	basic_ptr<int> ib2 = ib1;
-	basic_ptr<basic_ptr<int>> ibb = &ib1;
+	basic_ptr<basic_ptr<int> > ibb = &ib1;
 	int *ip2 = ibb->get();
 	ip2 = ib2;
 	ip2 = ib2+1;

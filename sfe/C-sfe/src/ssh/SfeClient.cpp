@@ -49,8 +49,10 @@ static int _main(int argc, char **argv) {
 	}
 
 	auto_ptr<Socket> server_sock;
-	auto_ptr<DataOutput> out_raw;
-	auto_ptr<DataInput> in_raw;
+	auto_ptr<DataOutput> out;
+	auto_ptr<DataInput> in;
+	auto_ptr<DataOutput> out_s;
+	auto_ptr<DataInput> in_s;
 	string pw;
 	try {
 		string to = args.at(0);
@@ -59,21 +61,12 @@ static int _main(int argc, char **argv) {
 
 		server_sock = auto_ptr<Socket>(new Socket(to.c_str(), port));
 
-		//long startTime = System.currentTimeMillis();
-		//	ByteCountOutputStreamSFE byteCount = new ByteCountOutputStreamSFE(
-		//			server_sock.getOutputStream());
-		//	ObjectOutputStream out_raw = new ObjectOutputStream(byteCount);
-		//	out_raw.flush();
-		//	ObjectInputStream in_raw = new ObjectInputStream
-		//		(new BufferedInputStream
-		//				(server_sock.getInputStream()));
-
-
-		out_raw = auto_ptr<DataOutput>(
-				new BufferedDataOutput(server_sock->getOutput()));
-		in_raw = auto_ptr<DataInput>(
-				new FlushDataInput(server_sock->getInput(),
-						out_raw.get()));
+		out_s = auto_ptr<DataOutput>(server_sock->getOutput());
+		out = auto_ptr<DataOutput>(
+				new BufferedDataOutput(out_s.get()));
+		in_s = auto_ptr<DataInput>(server_sock->getInput());
+		in = auto_ptr<DataInput>(
+				new FlushDataInput(in_s.get(), out.get()));
 
 
 	} catch (std::out_of_range) {
@@ -82,8 +75,8 @@ static int _main(int argc, char **argv) {
 	}
 	SfeClient cli(pw);
 	try {
-		cli.go2(out_raw.get(), in_raw.get());
-		out_raw->flush();
+		cli.go2(out.get(), in.get());
+		out->flush();
 	} catch (std::exception &ex) {
 		printf("exception %s : %s\n", typeid(ex).name(), ex.what());
 		return 1;

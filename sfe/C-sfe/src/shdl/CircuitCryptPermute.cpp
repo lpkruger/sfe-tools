@@ -15,6 +15,26 @@ void CircuitCryptPermute::reset() {
 	super::reset();
 }
 
+// permutes the truth table according to the variable pos being flipped
+inline void CircuitCryptPermute::permuteInput(bit_vector &tt, int arity, int pos) {
+
+	// "partial evaluation" of a single truth table
+	//bit_vector ntt(tt.size() >> 1);
+
+	int q = arity - 1 - pos;
+	int qq = 1 << q;
+
+	//int j=0;
+	for (uint i=0; i<tt.size(); ++i) {
+		if (((i>>q)&1) == 0) {
+			bool tmp = tt[i+qq];
+			tt[i+qq] = tt[i];
+			tt[i] = tmp;
+		}
+	}
+}
+
+
 GarbledCircuit_p CircuitCryptPermute::encrypt(Circuit &cc, vector<boolean_secrets> &inputsecrets) {
 //		String NOPADDING = "//NoPadding";
 //		try {
@@ -44,7 +64,6 @@ GarbledCircuit_p CircuitCryptPermute::encrypt(Circuit &cc, vector<boolean_secret
 		}
 	}
 	ret->use_permute = true;
-
 	return ret;
 }
 
@@ -93,25 +112,6 @@ bool CircuitCryptPermute::doFlip_rec(GateBase_p g) {
 	}
 
 	return f;
-}
-
-// permutes the truth table according to the variable pos being flipped
-void CircuitCryptPermute::permuteInput(bit_vector &tt, int arity, int pos) {
-
-	// "partial evaluation" of a single truth table
-	//bit_vector ntt(tt.size() >> 1);
-
-	int q = arity - 1 - pos;
-	int qq = 1 << q;
-
-	//int j=0;
-	for (uint i=0; i<tt.size(); ++i) {
-		if (((i>>q)&1) == 0) {
-			bool tmp = tt[i+qq];
-			tt[i+qq] = tt[i];
-			tt[i] = tmp;
-		}
-	}
 }
 
 

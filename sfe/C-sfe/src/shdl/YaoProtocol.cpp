@@ -28,12 +28,7 @@ void YaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	for (uint i=0; i<inputSecrets.size(); ++i) {
 		//if (myvars.who.find(i) != myvars.who.end()) {
 		if (vars.who.at(i) == "A") {
-#if __INTEL_COMPILER
-			myinpsecs.resize(myinpsecs.size()+1);
-#else
-			myinpsecs.push_back();
-#endif
-			myinpsecs[j] = inputSecrets[i][inputs[j]];
+			myinpsecs.push_back(inputSecrets[i][inputs[j]]);
 			++j;
 		}
 	}
@@ -62,8 +57,8 @@ bit_vector YaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) 
 	readVector(in, yourinpsecs);
 	uint ot_size = in->readInt();
 	if (ot_size != inputs.size())
-		throw new ProtocolException(string_printf(
-				"ot_size %d != inputs.size %d", ot_size, inputs.size()).c_str());
+		throw new ProtocolException(cstr_printf(
+				"ot_size %d != inputs.size %d", ot_size, inputs.size()));
 
 	PinkasNaorOT ot;
 	bit_vector inputs_copy(inputs);

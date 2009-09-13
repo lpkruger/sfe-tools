@@ -87,7 +87,7 @@ static int _main_dbtest(int argc, char **argv) {
 }
 
 
-#include "../sillylib/sillymain.h"
+#include "sillymain.h"
 MAINF("dbtest", _main_dbtest);
 
 

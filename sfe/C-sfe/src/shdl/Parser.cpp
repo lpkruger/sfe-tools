@@ -399,7 +399,7 @@ string getDefaultDir(const string &f) {
 void get_circuits(const char* prefix, vector<GarbledCircuit_p> &gcc,
 		vector<vector<boolean_secrets> > &inp_secs,	vector<byte_buf> &seeds, uint num, uint max) {
 	for (uint n=0; n<max; ++n) {
-		if (gcc.size() > num)
+		if (gcc.size() >= num)
 			return;
 		{
 			ostringstream ostr;
@@ -582,7 +582,7 @@ static int _main(int argc, char **argv) {
 				min = max;
 				max = strtol(argv[2], NULL, 10);
 			}
-			pre_generate(cc.to_ptr(), getDefaultDir("/md5_pw_cmp").c_str(), min, max);
+			//pre_generate(cc.to_ptr(), getDefaultDir("/md5_pw_cmp").c_str(), min, max);
 
 
 		}

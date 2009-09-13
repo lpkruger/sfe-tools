@@ -28,7 +28,7 @@ bit_vector GCircuitEval::eval(GarbledCircuit &gcc, vector<SecretKey_p> &insk) {
 	if (gcc.use_permute) {
 		C.setUsePadding(false);
 	}
-	map<int,byte_buf*> vals;
+	buf_map vals;
 	DF("adding %d input secrets", insk.size());
 	for (uint i=0; i<insk.size(); ++i) {
 		vals[i] = new byte_buf(insk[i]->getEncoded());
@@ -100,7 +100,7 @@ void D(map<int,byte_buf*> &m) {
 }
 #endif
 
-byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,byte_buf*> &vals) {
+byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, buf_map &vals) {
 	if (g->arity == 0) {
 		vals[g->id] = &g->truthtab[0];
 		return &g->truthtab[0];
@@ -108,7 +108,7 @@ byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,b
 
 	//byte_buf* ink = map_get(vals, g->inputs[0]);
 	byte_buf *ink = NULL;
-	map<int,byte_buf*>::iterator it = vals.find(g->inputs[0]);
+	buf_map::iterator it = vals.find(g->inputs[0]);
 	if (it != vals.end()) {
 		ink = it->second;
 	} else {
@@ -143,7 +143,7 @@ byte_buf* GCircuitEval::eval_rec(GarbledGate_p g, GarbledCircuit &gcc, map<int,b
 	int ttstart = 0;
 	if (gcc.use_permute) {
 		for (int i=0; i<g->arity; ++i) {
-			int bit = vals.at(g->inputs[i])->operator[](0) & 0x01;
+			int bit = vals[g->inputs[i]]->operator[](0) & 0x01;
 			ttstart = (ttstart << 1) | bit;
 		}
 	}

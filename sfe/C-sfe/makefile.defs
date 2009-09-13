@@ -1,12 +1,19 @@
 GPROF=#-pg
+IPROF=
+
 ICPC_WARNINGS=-wd981 -wd47 -wd68 -we411 -par-report1 -vec-report1
 OTHER_ICPCFLAGS=-DMAIN_OVERLOAD $(ICPC_WARNINGS) -march=core2 -mtune=core2 -ip -xT #-ipo
 
 RVALS=-DUSE_RVALREFS=1
-OTHER_CXXFLAGS=$(GPROF) -DMAIN_OVERLOAD $(RVALS) -pipe -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo -Wall -Wextra -Wno-unused-parameter -Wno-abi -Wuninitialized
+OTHER_CXXFLAGS=$(GPROF) -march=core2 -mtune=core2 -DMAIN_OVERLOAD $(RVALS) -pipe -fdiagnostics-show-option -fpermissive -Woverloaded-virtual -Wabi -Wctor-dtor-privacy -Wnon-virtual-dtor -Wreorder -Wsign-promo -Wall -Wextra -Wno-unused-parameter -Wno-abi -Wuninitialized
 
 LD_FLAGS = $(GPROF) 
 #-Wold-style-cast -Weffc++ -frepo -Wno-pmf-conversions
+
+# C++0x is deprecating vector<bool> in favor of std::dynamic_bitset
+# retain the old behavior until it is time to switch
+#OTHER_ICPCFLAGS += -DSTD_VECTOR_BOOL_SPECIAL=1
+OTHER_CXXFLAGS += -DSTD_VECTOR_BOOL_SPECIAL=1
 
 SUPER_CRAZY_WARNING_FLAGS = -Wall -Weffc++ -pedantic  \
     -pedantic-errors -Wextra  -Wall -Waggregate-return -Wcast-align \
