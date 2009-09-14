@@ -31,7 +31,7 @@
 <option id="gnu.cpp.compiler.option.include.paths.116324830" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/sillylib/include}&quot;"/>
 </option>
-<option id="gnu.cpp.compiler.option.other.other.660299914" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fpermissive" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.660299914" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x $(OTHER_CXXFLAGS)" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.327601252" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.lib.debug.1963124129" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.lib.debug">
@@ -499,7 +499,7 @@
 <option id="gnu.cpp.compiler.option.include.paths.1791447271" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/sillylib/include}&quot;"/>
 </option>
-<option id="gnu.cpp.compiler.option.other.other.1790668534" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fpermissive" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.1790668534" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x $(OTHER_CXXFLAGS)" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2111750272" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.lib.release.1146357641" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.lib.release">
@@ -968,7 +968,7 @@
 <option id="gnu.cpp.compiler.option.include.paths.579246211" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/sillylib/include}&quot;"/>
 </option>
-<option id="gnu.cpp.compiler.option.other.other.89701020" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fpermissive" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.89701020" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=gnu++0x $(OTHER_CXXFLAGS)" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1299325449" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.lib.release.1116379987" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.lib.release">
@@ -1437,7 +1437,7 @@
 <option id="gnu.cpp.compiler.option.include.paths.1777904110" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/sillylib/include}&quot;"/>
 </option>
-<option id="gnu.cpp.compiler.option.other.other.1585247320" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0" valueType="string"/>
+<option id="gnu.cpp.compiler.option.other.other.1585247320" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=c++0x $(OTHER_ICPCFLAGS)" valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.757753706" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool command="icc" id="cdt.managedbuild.tool.gnu.c.compiler.lib.release.1488182803" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.lib.release">

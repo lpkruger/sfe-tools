@@ -34,7 +34,7 @@ void* add_main(const char* name, main_ptr main_f) {
 
 
 
-int main_go(main_ptr main_f, int argc, char **argv) {
+static int main_go(main_ptr main_f, int argc, char **argv) {
 	return main_f(argc, argv);
 }
 
@@ -45,14 +45,28 @@ int main(int argc, char **argv) {
 	main_go(mainmap().at(STRING(MAINPROG)), argc, argv);
 }
 #else
-#define ARG0 1
-int main(int argc, char **argv) {
+
+static int usage() {
+	smap_it it;
+	smap &map = mainmap();
+
+	cout << "All programs:" << endl;
+	for (it=map.begin(); it!=map.end(); ++it) {
+		cout << it->first << endl;
+	}
+	return 1;
+}
+
+
+template<int ARG0>
+static int mainmain(int argc, char **argv)
+{
 	smap_it it;
 	smap &map = mainmap();
 	char *prog;
 
 	if (argc<2-ARG0) {
-		goto usage;
+		return usage();
 	}
 
 	prog = rindex(argv[1-ARG0], '/');
@@ -60,17 +74,18 @@ int main(int argc, char **argv) {
 
 	it = map.find(prog);
 	if (it == map.end()) {
+		if (ARG0 == 1) {
+			return mainmain<0>(argc, argv);
+		}
 		cout << "No such program " << prog << endl << endl;
-		goto usage;
+		return usage();
 	}
 
 	return main_go((it->second), argc-1+ARG0, argv+1-ARG0);
-
-	usage:
-	cout << "All programs:" << endl;
-	for (it=map.begin(); it!=map.end(); ++it) {
-		cout << it->first << endl;
-	}
-	return 0;
 }
+
+int main(int argc, char **argv) {
+	mainmain<1>(argc, argv);
+}
+
 #endif

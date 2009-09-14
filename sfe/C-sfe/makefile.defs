@@ -39,6 +39,7 @@ SUPER_CRAZY_WARNING_FLAGS = -Wall -Weffc++ -pedantic  \
 
 
 
+
 # include a main() program for main build
 #USER_OBJS += mycryptolib/ottest.o
 
@@ -52,9 +53,45 @@ SUPER_CRAZY_WARNING_FLAGS = -Wall -Weffc++ -pedantic  \
 
 #USER_OBJS += delete_special
 
+BUILDNAME := $(shell basename `pwd`)
+
 delete_special:
 	-rm src/ssh/SfeServer.?
 
 .PHONY: delete_special
 
 LIBS += $(LD_FLAGS)
+
+### begin: stupid workarounds
+c-sfe:	$(if $(or $(if $(MAKECMDGOALS),,empty),			\
+        $(findstring all,$(MAKECMDGOALS))),pre-build)
+
+main-build:
+	make c-sfe
+### end: stupid workarounds
+
+relink:
+	rm c-sfe
+	make pre-build main-build
+
+.DEFAULT_GOAL = all
+
+
+### begin: not for subprojects
+#ifeq (,$(or $(BUILD_SILLYLIB),$(...),$(...)))
+ifeq (,$(or $(BUILD_SILLYLIB)))
+clean:	subclean
+
+subclean:
+	make -C ../sillylib/$(BUILDNAME) clean
+
+../sillylib/$(BUILDNAME)/libsilly.a:
+	make -C ../sillylib/$(BUILDNAME) all
+
+# forward to sub-builds if necessary
+#%::
+#	$(if $(findstring /sillylib/,$@), 			\
+#	make -C ../sillylib/$(BUILDNAME) $(@F) )
+
+endif
+### end: not for subprojects

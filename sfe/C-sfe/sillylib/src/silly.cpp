@@ -74,7 +74,7 @@ string silly::misc::toBase64(const byte_buf &buf) {
 		*outp++ = '=';
 		break;
 	case 1:
-		yy |= buf[i]<<16;
+		yy = buf[i]<<16;
 		for (int j=0; j<2; ++j) {
 			*outp++ = (table[(yy>>18) & 0x3F]);
 			yy <<= 6;
@@ -159,7 +159,7 @@ void silly::net::Socket::connect(const char* host, const char* port) {
 
 	s = ::getaddrinfo(host, port, &hints, &result);
 	if (s != 0) {
-		throw UnknownHostException(misc::string_printf("getaddrinfo: %s\n", gai_strerror(s)).c_str());
+		throw UnknownHostException(misc::cstr_printf("getaddrinfo: %s\n", gai_strerror(s)));
 	}
 
 	/* getaddrinfo() returns a list of address structures.
@@ -206,7 +206,7 @@ void silly::net::ServerSocket::bind(const char *port) {
 
 	s = ::getaddrinfo(NULL, port, &hints, &result);
 	if (s != 0) {
-		throw SocketException(misc::string_printf("getaddrinfo: %s\n", gai_strerror(s)).c_str());
+		throw SocketException(misc::cstr_printf("getaddrinfo: %s\n", gai_strerror(s)));
 	}
 
 	/* getaddrinfo() returns a list of address structures.
@@ -357,4 +357,67 @@ void print_backtrace(int depth, const char *msg0){
 	}
 	free(strings);
 }
+
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+
+#define LAMBDA_oo(rtype, args, block)					\
+		({struct lambda {rtype operator() args block	\
+		} lobj = {}; lobj;})
+
+
+template<class F> int add_two(F f) {
+	return f()+2;
+}
+extern void add_those(int &a, int &b);
+
+#include <map>
+#include <set>
+void finny_test() {
+#if 0
+	void *x = ({struct foo {static void* bar()
+	{ return 0;}}; foo::bar();});
+
+	x = ({struct foo {} *y=0; y;});
+
+	void* (*func)() = ({struct foo {static void* bar()
+	{ return 0;}}; &foo::bar;});
+
+	void* (*func2)() = LAMBDA(void*, (), {return 0;});
+#endif
+	int three = LAMBDA(int, (), {return 3;}) () ;
+	int four = LAMBDA(int, (), {return 4;}) () ;
+	printf("%d %d\n", three, four);
+
+	int seven = add_two(LAMBDA(int, (), {return 5;}));
+	int eight = add_two(LAMBDA(int, (), {return 6;}));
+	printf("%d %d\n", seven, eight);
+
+	typedef bool (*cmp_t)(const char *a, const char *b);
+
+	std::set<const char*, cmp_t> stringset(
+			LAMBDA(bool, (const char *a, const char *b), {
+					return strcmp(a,b)<0;
+			})
+	);
+
+	stringset.insert("Charles Xavier");
+	stringset.insert("Alice");
+	stringset.insert("Bob");
+	stringset.insert("Oscar");
+	stringset.insert("Eve");
+	std::set<const char*, cmp_t>::iterator it;
+	for (it=stringset.begin(); it!=stringset.end(); ++it) {
+		printf("%s\n", *it);
+	}
+
+}
+
+static int _main(int, char**) {
+	finny_test();
+	return 0;
+}
+#include "sillymain.h"
+MAIN("finnytest")
 ///////////////////////////

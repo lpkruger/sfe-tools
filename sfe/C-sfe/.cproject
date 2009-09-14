@@ -47,15 +47,14 @@
 <tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.65717111" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 <tool commandLinePattern="${CPATH}${COMMAND} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.2069443753" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 <option id="gnu.cpp.link.option.libs.1082559710" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-<listOptionValue builtIn="false" value="silly"/>
 <listOptionValue builtIn="false" value="ssl"/>
 <listOptionValue builtIn="false" value="pthread"/>
 </option>
-<option id="gnu.cpp.link.option.flags.2016664239" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-rdynamic" valueType="string"/>
-<option id="gnu.cpp.link.option.paths.133091699" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/sillylib}/${ConfigName}&quot;"/>
+<option id="gnu.cpp.link.option.flags.2016664239" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="" valueType="string"/>
+<option id="gnu.cpp.link.option.paths.133091699" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
+<option id="gnu.cpp.link.option.userobjs.1278679417" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+<listOptionValue builtIn="false" value="../sillylib/${ConfigName}/libsilly.a"/>
 </option>
-<option id="gnu.cpp.link.option.userobjs.1278679417" name="Other objects" superClass="gnu.cpp.link.option.userobjs"/>
 <option id="gnu.cpp.link.option.other.1416337888" name="Other options (-Xlinker [option])" superClass="gnu.cpp.link.option.other" valueType="stringList">
 <listOptionValue builtIn="false" value="-rpath /home/louis/src/openssl-debug"/>
 </option>
@@ -1633,12 +1632,12 @@
 <tool id="cdt.managedbuild.tool.gnu.c.linker.exe.release.1244569637" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.release"/>
 <tool commandLinePattern="${CPATH}${COMMAND} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.release.17902308" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.release">
 <option id="gnu.cpp.link.option.libs.1036938165" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-<listOptionValue builtIn="false" value="silly"/>
 <listOptionValue builtIn="false" value="ssl"/>
 <listOptionValue builtIn="false" value="pthread"/>
 </option>
-<option id="gnu.cpp.link.option.paths.497958410" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/sillylib}/${ConfigName}&quot;"/>
+<option id="gnu.cpp.link.option.paths.497958410" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
+<option id="gnu.cpp.link.option.userobjs.611437098" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+<listOptionValue builtIn="false" value="../sillylib/${ConfigName}/libsilly.a"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.172966752" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -3215,12 +3214,12 @@
 <tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1626173813" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 <tool commandLinePattern="${CPATH}${COMMAND} ${FLAGS} ${OUTPUT_FLAG}${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1710746887" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 <option id="gnu.cpp.link.option.libs.850949925" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-<listOptionValue builtIn="false" value="silly"/>
 <listOptionValue builtIn="false" value="ssl"/>
 <listOptionValue builtIn="false" value="pthread"/>
 </option>
-<option id="gnu.cpp.link.option.paths.1074557868" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/sillylib}/${ConfigName}&quot;"/>
+<option id="gnu.cpp.link.option.paths.1074557868" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
+<option id="gnu.cpp.link.option.userobjs.291309568" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+<listOptionValue builtIn="false" value="../sillylib/${ConfigName}/libsilly.a"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1405737989" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -4797,13 +4796,13 @@
 <tool id="cdt.managedbuild.tool.gnu.c.linker.exe.release.290237267" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.release"/>
 <tool command="icpc" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.release.317348218" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.release">
 <option id="gnu.cpp.link.option.libs.1140979418" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-<listOptionValue builtIn="false" value="silly"/>
 <listOptionValue builtIn="false" value="ssl"/>
 <listOptionValue builtIn="false" value="pthread"/>
 </option>
-<option id="gnu.cpp.link.option.flags.226335165" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-g" valueType="string"/>
-<option id="gnu.cpp.link.option.paths.566121572" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-<listOptionValue builtIn="false" value="&quot;${workspace_loc:/c-sfe/sillylib}/${ConfigName}&quot;"/>
+<option id="gnu.cpp.link.option.flags.226335165" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="" valueType="string"/>
+<option id="gnu.cpp.link.option.paths.566121572" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
+<option id="gnu.cpp.link.option.userobjs.794711402" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+<listOptionValue builtIn="false" value="../sillylib/${ConfigName}/libsilly.a"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.410225758" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
