@@ -316,12 +316,14 @@ FmtFile FmtFile::parseFmt(istream &in) {
 
 	FmtFile fmt;
 	int outputNum = 0;
+	vector<string> spl;
 
 	while (!in.eof()) {
 		getline(in, line);
 		if (in.fail())
 			continue;
-		vector<string> spl = split(line, " ");
+		spl.clear();
+		spl = split(line, " ");
 		if (spl.size() < 5)
 			continue;
 		if (spl[2] != ("integer")) {

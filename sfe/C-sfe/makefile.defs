@@ -63,19 +63,26 @@ delete_special:
 LIBS += $(LD_FLAGS)
 
 ### begin: stupid workarounds
-c-sfe:	$(if $(or $(if $(MAKECMDGOALS),,empty),			\
-        $(findstring all,$(MAKECMDGOALS))),pre-build)
+.PHONY:	pre-build main-build post-build
+
+main-build c-sfe: |	$(if $(or $(if $(MAKECMDGOALS),,empty),			\
+        $(findstring pre-build,$(MAKECMDGOALS)),			\
+        $(findstring all,$(MAKECMDGOALS))			\
+		),pre-build)
 
 main-build:
-	make c-sfe
+	$(MAKE) c-sfe
+
 ### end: stupid workarounds
 
 relink:
-	rm c-sfe
-	make pre-build main-build
+	-rm c-sfe
+	$(MAKE) pre-build main-build
 
 .DEFAULT_GOAL = all
 
+# for funky eclipse-ness
+USD := $$
 
 ### begin: not for subprojects
 #ifeq (,$(or $(BUILD_SILLYLIB),$(...),$(...)))
@@ -83,15 +90,16 @@ ifeq (,$(or $(BUILD_SILLYLIB)))
 clean:	subclean
 
 subclean:
-	make -C ../sillylib/$(BUILDNAME) clean
+	$(MAKE) -C ../sillylib/$(BUILDNAME) clean
 
 ../sillylib/$(BUILDNAME)/libsilly.a:
-	make -C ../sillylib/$(BUILDNAME) all
+
+#	$(MAKE) -C ../sillylib/$(BUILDNAME) all
 
 # forward to sub-builds if necessary
 #%::
 #	$(if $(findstring /sillylib/,$@), 			\
-#	make -C ../sillylib/$(BUILDNAME) $(@F) )
+#	$(MAKE) -C ../sillylib/$(BUILDNAME) $(@F) )
 
 endif
 ### end: not for subprojects

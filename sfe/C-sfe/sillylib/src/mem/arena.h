@@ -378,9 +378,10 @@ public:
 		a()->dump(mem);
 	}
 	arena* grow(size_t size=0) {
-		printf("new arena %lu\n", (ulong) size);
+		printf("new arena %lu ", (ulong) size);
 		//arenas.push_back(arena::makeArena(std::max(chunksize, size+1024)));
 		arenas[++arenas_curr] = arena::makeArena(std::max(chunksize, size+1024));
+		printf("@ %lx\n", (ulong) arenas[arenas_curr]);
 		return a();
 	}
 	void* allocate(size_t size) {
@@ -401,7 +402,7 @@ public:
 	}
 	bool isInside(void *ptr) {
 		//for (uint i=0; i<arenas.size(); ++i) {
-		for (uint i=0; i<=arenas_curr; ++i) {
+		for (int i=0; i<=arenas_curr; ++i) {
 			if (arenas[i]->isInside(ptr))
 				return true;
 		}
@@ -413,7 +414,7 @@ public:
 
 	~growable_arena() {
 		//for (uint i=0; i<arenas.size(); ++i) {
-		for (uint i=0; i<=arenas_curr; ++i) {
+		for (int i=0; i<=arenas_curr; ++i) {
 			arenas[i]->destroyAll();
 		}
 	}
