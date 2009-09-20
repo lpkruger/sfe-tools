@@ -101,5 +101,7 @@ subclean:
 #	$(if $(findstring /sillylib/,$@), 			\
 #	$(MAKE) -C ../sillylib/$(BUILDNAME) $(@F) )
 
+include ../makefile.site
 endif
 ### end: not for subprojects
+

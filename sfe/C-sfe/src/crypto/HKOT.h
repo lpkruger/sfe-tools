@@ -1,4 +1,11 @@
 /*
+ * HKOT.h
+ *
+ *  Created on: Sep 20, 2009
+ *      Author: louis
+ */
+
+/*
  * KO.h
  *
  *  Created on: Aug 6, 2009
@@ -8,21 +15,23 @@
 #ifndef KO_H_
 #define KO_H_
 
-#include <openssl/bn.h>
-#include <openssl/sha.h>
-#include <openssl/rsa.h>
+#if 0
+
+#include "bigint.h"
 #include "sillytype.h"
 #include "sillyio.h"
 
 #include <vector>
-#include "DDB.h"
 
 namespace iarpa {
-namespace ko {
+namespace hkot {
 
 using namespace silly::io;
+using namespace silly::bigint;
 
-BigInt H(BNcPtr x);
+static inline BigInt H(const BigInt &x) {
+	return bigint::
+}
 byte_buf Gxor(const vector<BNcPtr> &x, const byte_buf &m);
 
 const static int L=8;	// security param
@@ -86,5 +95,6 @@ int test_ko(int argc, char **argv);
 }
 }
 
-#endif /* KO_H_ */
 
+#endif
+#endif /* HKOT_H_ */

@@ -23,17 +23,28 @@ public:
 	}
 
 };
-
 }
 }
 
+#define USE_OLD_BIGINT
+
+#ifndef USE_OLD_BIGINT
+// use new implementation
+#define BI BigInt_BN_Base
+#define BI2 BigInt
+#include "BigIntShape.h"
+#undef BI2
+#undef BI
+#else
 //#define BigInt BigInt_BN
 #include "BigInt_BN.h"
 //#undef BigInt
+#endif
 
 namespace silly {
 namespace bigint {
 
+typedef const BigInt CBigInt;
 //typedef BigInt_BN BigInt;
 
 typedef vector<BigInt> BigInt_Vect;

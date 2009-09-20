@@ -120,7 +120,7 @@ public:
 	//explicit BigInt(const stupid::Wrap<const BIGNUM*>& nnn, bool takeown=true, BN_CTX *ctx = NULL) : bn_ctx(ctx) {}
 	//  const BIGNUM *nn = nnn;	// workaround silly 0 -> ptr cast
 
-	BigInt_BN_Base(const BIGNUM *nn) {
+	BigInt_BN_Base(const BIGNUM *nn, bool) {
 		_init();
 		BN_copy(*this, nn);
 	}

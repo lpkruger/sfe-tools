@@ -155,7 +155,7 @@ static int _main(int argc, char **argv) {
 	BigInt M3 = d.decrypt(z3);
 	out("M3 = " << M3);
 	nl();
-	out("   3 * M = " << (M*3));
+	//out("   3 * M = " << BigInt(M*3).toString());
 	BigInt z_3 = e.add(e.add(z1,z2),z3);
 	out("z1+z2+z3 = " << z_3);
 	out("D(3 * z) = " << d.decrypt(z_3));

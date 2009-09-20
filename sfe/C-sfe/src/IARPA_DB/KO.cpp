@@ -35,7 +35,7 @@ static void readObject(DataInput *in, BigInt &a) {
 }
 
 BigInt iarpa::ko::Client::clientxfer1(CBigInt &w) {
-	BN_rand(rr.writePtr(), BN_num_bits(rsa_n.ptr()), 0, 0);
+	BN_rand(rr.to_writePtr(), BN_num_bits(rsa_n.to_ptr()), 0, 0);
 	BigInt Y = rr.modPow(rsa_e, rsa_n);
 	Y.modMultiplyThis(H(w), rsa_n);
 	return Y;
@@ -95,11 +95,11 @@ void iarpa::ko::Server::servercommit(DDB & ddb) {
 		const BigInt &m = it->second;
 		//printf("A: %s %s\n",BN_bn2dec(w),BN_bn2dec(m));
 
-		what[i] = H(w).modPow(rsa->d, rsa->n);
-		int mlen = BN_num_bytes(m.ptr());
+		what[i] = H(w).modPow(rsa_d(), rsa_n());
+		int mlen = BN_num_bytes(m.to_ptr());
 
 		byte_buf mm(mlen+L, 0);
-		BN_bn2bin(m.ptr(), &mm[L]);
+		BN_bn2bin(m.to_ptr(), &mm[L]);
 
 		ii = i;
 		BNcPtr vals[3] = {w, what[i], ii};
@@ -114,12 +114,12 @@ void iarpa::ko::Server::precompute(DDB &ddb) {
 }
 
 BigInt iarpa::ko::Server::serverxfer(CBigInt &Y) {
-	return Y.modPow(rsa->d, rsa->n);
+	return Y.modPow(rsa_d(), rsa_n());
 }
 
 void iarpa::ko::Server::online() {
-	writeObject(out, BigInt(rsa->n));
-	writeObject(out, BigInt(rsa->e));
+	writeObject(out, rsa_n());
+	writeObject(out, rsa_e());
 	BigInt Y;
 	readObject(in, Y);
 	BigInt X = serverxfer(Y);
@@ -133,7 +133,7 @@ BigInt iarpa::ko::H(BNcPtr x) {
 	BN_bn2bin(x, buf);
 	SHA1(buf, BN_num_bytes(x), md);
 	BigInt hh;
-	BN_bin2bn(md, SHA_DIGEST_LENGTH, hh.writePtr());
+	BN_bin2bn(md, SHA_DIGEST_LENGTH, hh.to_writePtr());
 	return hh;
 }
 

@@ -1,2 +1,3 @@
 BUILD_SILLYLIB := yes
 include ../../makefile.defs
+include ../../makefile.site
