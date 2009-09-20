@@ -365,7 +365,7 @@ class growable_arena {
 	arena *arenas[4096];
 
 	//const static size_t chunksize = 16*1024*1024;
-#define chunksize (16u*1024*1024)
+#define chunksize size_t(16u*1024*1024)
 public:
 	growable_arena() : arenas_curr(-1) {
 		grow();

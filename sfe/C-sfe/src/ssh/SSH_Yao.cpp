@@ -149,8 +149,9 @@ public:
 		test_eval(1000+n, **gcc, *inpsecs);
 		copy = cc->deepCopy();
 #else
-#define copy cc
 #endif
+
+		Circuit_p copy = cc->deepCopy();
 
 		if (use_permute) {
 			CircuitCryptPermute crypt(rand);
@@ -159,7 +160,6 @@ public:
 			CircuitCrypt crypt(rand);
 			*gcc = crypt.encrypt(*copy, *inpsecs);
 		}
-#undef copy
 		return NULL;
 	}
 };
@@ -175,13 +175,14 @@ struct CircuitCryptChecker : public Runnable {
 	const vector<boolean_secrets> &your_secrets;
 
 	string failure;
-	CircuitCryptChecker(int n0, Circuit_p copy0, const byte_buf &hash0, const byte_buf &key, const FmtFile::VarDesc &var0,
+	CircuitCryptChecker(int n0, Circuit_p cc0, const byte_buf &hash0, const byte_buf &key, const FmtFile::VarDesc &var0,
 			const vector<boolean_secrets> &my, const vector<boolean_secrets> &your) :
 				n(n0), check_hash(hash0), vars(var0), prng_key(key), my_secrets(my), your_secrets(your) {
-		cc = copy0;
+		cc = cc0;
 	}
 
 	void* run() {
+		cc = cc->deepCopy();
 		GarbledCircuit_p verify_gcc;
 		// checking all chosen circuits
 		vector<boolean_secrets> test_inpsecs;
@@ -280,7 +281,7 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs, cons
 			}
 
 			crypters[n] =
-					new CircuitCrypter(n, cc->deepCopy(), &gcc[n], &inputSecrets[n], rn);
+					new CircuitCrypter(n, cc, &gcc[n], &inputSecrets[n], rn);
 			pool.submit(crypters[n]);
 
 		}
@@ -578,7 +579,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 
 	//vector<vector<boolean_secrets> > all_check_input_secs(choices.size());
 
-	ThreadPool checkpool(numCPUs());
+	ThreadPool checkpool(1+numCPUs(), 6);
 	CircuitCryptChecker *checkers[choices.size()];
 
 	for (uint n=0; n<choices.size(); ++n) {
@@ -588,7 +589,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 		readVector(in, all_your_chosen_secrets[n]);
 
 		if (use_prng) {
-			checkers[n] = new CircuitCryptChecker(choices[n], cc->deepCopy(), gcc_hashes.at(choices[n]),
+			checkers[n] = new CircuitCryptChecker(choices[n], cc, gcc_hashes.at(choices[n]),
 					chosen_prng_keys[n], vars,
 					all_my_chosen_secrets[n], all_your_chosen_secrets[n]);
 
@@ -605,7 +606,8 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 			eval_gcc[n] = GarbledCircuit_p(GarbledCircuit::readCircuit(in));
 			fast_sync();
 		}
-
+		fprintf(stderr, "V");
+		checkpool.setPriority(1);
 		string failure;
 		checkpool.stopWait();
 		for (uint n=0; n<choices.size(); ++n) {

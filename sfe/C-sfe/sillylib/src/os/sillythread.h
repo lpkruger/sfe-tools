@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 #include "errno.h"
 
 //TODO: this is stupid
@@ -30,6 +31,10 @@ void debug_printf(const char *fmt, ...)
 	__attribute__ ((format (printf, 1, 2)));
 #endif
 #endif
+///tmp vvv
+//void debug_printf(const char *fmt, ...)
+//	__attribute__ ((format (printf, 1, 2)));
+///tmp ^^^
 
 namespace silly {
 namespace thread {
@@ -458,6 +463,7 @@ namespace silly {
 namespace thread {
 
 class ThreadPool {
+	volatile int niceValue;
 	Mutex pool_mux;
 	uint max;
 	vector<Thread*> threads;
@@ -468,18 +474,26 @@ class ThreadPool {
 		ThreadPool *pool;
 		WorkThread(ThreadPool *p0) : pool(p0) {
 			deleteOnTerm = true;
-			DF("worker thread %08x created", (uint)this);
+			DF("worker thread %08lx created", (ulong)this);
 		}
 		~WorkThread() {
-			DF("worker thread %08x deleted", (uint)this);
+			DF("worker thread %08lx deleted", (ulong)this);
 		}
 	public:
 		void* run() {
-			DF("worker thread %08x started", (uint)this);
+			DF("worker thread %08lx started", (ulong)this);
+			int mynice = pool->niceValue;
+			if (mynice) {
+				setpriority(PRIO_PROCESS, 0, mynice);
+				DF("set workthread priority to %d\n", mynice);
+			}
 			Runnable *job;
 			do {
 				job = NULL;
-				{
+				if (mynice != pool->niceValue) {
+					DF("thread exit to reset priority\n");
+					break;
+				} else {
 					Lock lock(pool->pool_mux);
 					if (!pool->workqueue.empty()) {
 						job = pool->workqueue.front();
@@ -487,7 +501,7 @@ class ThreadPool {
 					}
 				}
 				if (job) {
-					DF("worker thread %08x start job %08x", (uint)this, (uint)job);
+					DF("worker thread %08lx start job %08lx", (ulong)this, (ulong)job);
 					job->run();
 				}
 			} while (job);
@@ -498,29 +512,53 @@ class ThreadPool {
 						std::find(pool->threads.begin(),
 								pool->threads.end(), this);
 				pool->threads.erase(this_thread);
-				DF("worker thread %08x stopped", (uint)this);
+				DF("worker thread %08lx stopped", (ulong)this);
 				lock.notifyAll();
 			}
 
 			return NULL;
 		}
 	};
+	class MonitorThread : public Thread {
+		ThreadPool *pool;
+	public:
+		MonitorThread(ThreadPool *p) : pool(p) {}
+		void* run() {
+			Lock lock(pool->pool_mux);
+			while (!pool->stopping || !pool->workqueue.empty()) {
+				while (pool->threads.size() < pool->max && pool->threads.size() < pool->workqueue.size()) {
+					WorkThread *th = new WorkThread(pool);
+					pool->threads.push_back(th);
+					th->start();
+				}
+				lock.wait();
+			}
+			return NULL;
+		}
+	};
 public:
-	ThreadPool(uint n) : max(n), stopping(false) {
+	ThreadPool(uint n, int nice=0) : max(n), niceValue(nice), stopping(false) {
+		DF("ThreadPool size %d created\n", n);
 		threads.reserve(n);
+		(new MonitorThread(this))->start();
+	}
+	void setPriority(int n) {
+		niceValue = n;
 	}
 	void submit(Runnable *job) {
 		Lock lock(pool_mux);
-		DF("job submission received %08x", (uint)job);
+
+		DF("job submission received %08lx", (ulong)job);
 		if (stopping) {
 			throw ThreadException(ECANCELED);
 		}
 		workqueue.push(job);
-		if (threads.size() < max) {
-			WorkThread *th = new WorkThread(this);
-			threads.push_back(th);
-			th->start();
-		}
+		lock.notifyAll();
+//		if (threads.size() < max) {
+//			WorkThread *th = new WorkThread(this);
+//			threads.push_back(th);
+//			th->start();
+//		}
 	}
 	void stop() {
 		DF("Stopping pool");
@@ -530,7 +568,7 @@ public:
 	void waitIdle() {
 		DF("Waiting for idle");
 		Lock lock(pool_mux);
-		while (!threads.empty())
+		while (!workqueue.empty() || !threads.empty())
 			lock.wait();
 	}
 	void stopWait() {

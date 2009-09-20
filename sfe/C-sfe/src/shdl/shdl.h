@@ -92,13 +92,13 @@ public:
 
 class GateBase {
 protected:
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) = 0;
-	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *g, Reclaimer<GateBase> &trash) {
+	virtual GateBase* deepCopy0(map<const GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) const = 0;
+	virtual void deepCopy1(map<const GateBase*,GateBase_p> &mapping, GateBase *g, Reclaimer<GateBase> &trash) const {
 		g->id = id;
 	}
 
-	GateBase_p deepCopy(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
-		map<GateBase*,GateBase_p>::iterator it;
+	GateBase_p deepCopy(map<const GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) const {
+		map<const GateBase*,GateBase_p>::iterator it;
 		it = mapping.find(this);
 		if (it != mapping.end()) {
 			return it->second;
@@ -162,14 +162,14 @@ public:
 
 	Gate(int id0) : GateBase(id0) {}
 
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
+	virtual GateBase* deepCopy0(map<const GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) const {
 		Gate *gg = new Gate(id);
 		trash.add_garbage(gg);
 		deepCopy1(mapping, gg, trash);
 		return gg;
 	}
 
-	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg, Reclaimer<GateBase> &trash) {
+	virtual void deepCopy1(map<const GateBase*,GateBase_p> &mapping, GateBase *gg, Reclaimer<GateBase> &trash) const {
 		GateBase::deepCopy1(mapping, gg, trash);
 		Gate *g = (Gate*) gg;
 		g->arity = arity;
@@ -245,7 +245,7 @@ public:
 
 	Output(int id0) : Gate(id0) {}
 	Output(const Output& copy) : Gate(copy) {}
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
+	virtual GateBase* deepCopy0(map<const GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) const {
 		Output *g = new Output(id);
 		trash.add_garbage(g);
 		deepCopy1(mapping, g, trash);
@@ -268,13 +268,13 @@ public:
 	int var;
 	Input(int id0, int var0) : GateBase(id0), var(var0) {}
 
-	virtual GateBase* deepCopy0(map<GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) {
+	virtual GateBase* deepCopy0(map<const GateBase*,GateBase_p> &mapping, Reclaimer<GateBase> &trash) const {
 		Input *g = new Input(id, var);
 		trash.add_garbage(g);
 		return g;
 	}
 
-	virtual void deepCopy1(map<GateBase*,GateBase_p> &mapping, GateBase *gg, Reclaimer<GateBase> &trash) {}
+	virtual void deepCopy1(map<const GateBase*,GateBase_p> &mapping, GateBase *gg, Reclaimer<GateBase> &trash) const {}
 
 	string toString() {
 		return string("[Input ") + id + " (" + var + ") ]";
@@ -303,7 +303,7 @@ public:
 inline Circuit_p Circuit::deepCopy() const {
 	Circuit_p pNewCirc = Circuit_p(new Circuit());
 	Circuit& newCirc = *pNewCirc;
-	map<GateBase*,GateBase_p> mapping;
+	map<const GateBase*,GateBase_p> mapping;
 	newCirc.inputs.resize(inputs.size());
 	newCirc.outputs.resize(outputs.size());
 	for (uint i=0; i<inputs.size(); ++i) {
