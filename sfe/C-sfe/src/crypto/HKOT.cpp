@@ -9,8 +9,12 @@
 #include "SecureRandom.h"
 #include "cryptoio.h"
 #include "silly.h"
+#include "sillythread.h"
 
 using crypto::SecureRandom;
+
+using namespace silly::misc;
+using namespace silly::thread;
 
 namespace iarpa {
 namespace hkot {
@@ -77,7 +81,30 @@ BigInt Server::get_value(const byte_buf &key_in) {
 	return sum;
 }
 
-using silly::misc::currentTimeMillis;
+class ClientCrypter : public Runnable {
+	//NOCOPY(Crypter);
+	const PaillierEncKey &encKey;
+	CBigInt &ZERO;
+	CBigInt &ONE;
+	BigInt_Vect &cmx_i;
+	int block;
+public:
+	ClientCrypter(const PaillierEncKey &e, CBigInt &zero, CBigInt &one,
+			BigInt_Vect &cmx0, int bl0) :
+		encKey(e), ZERO(zero), ONE(one), cmx_i(cmx0), block(bl0) {}
+
+	void* run() {
+		for (int j=0; j<B; ++j) {
+			if (block == j)
+				cmx_i[j] = encKey.encrypt(ONE);
+			else
+				cmx_i[j] = encKey.encrypt(ZERO);
+		}
+		fprintf(stderr, "*");
+		return NULL;
+	}
+};
+
 
 void Client::precompute(const byte_buf &key_in) {
 	long time_start = currentTimeMillis();
@@ -88,24 +115,27 @@ void Client::precompute(const byte_buf &key_in) {
 	const BigInt ZERO(0);
 	const BigInt ONE(1);
 	cmx.resize(M);
+	ThreadPool pool(numCPUs()*2);
+	ClientCrypter *tasks[M];
 	for (int i=0; i<M; ++i) {
 		cmx[i].resize(B);
 		int block = getBlock(key, i);
-		for (int j=0; j<B; ++j) {
-			//std::cout << "(" << i << "," << j << ")";
-			if (block == j)
-				cmx[i][j] = encKey.encrypt(ONE);
-			else
-				cmx[i][j] = encKey.encrypt(ZERO);
-		}
-		fprintf(stderr, "*");
+		tasks[i] = new ClientCrypter(encKey, ZERO, ONE, cmx[i], block);
+		pool.submit(tasks[i]);
 		//std::cout << std::endl;
+	}
+	pool.stopWait();
+	for (int i=0; i<M; ++i) {
+//		std::cout << "(" << i << ",0) = " <<
+//			cmx[i][0].toHexString() << std::endl;
+		delete tasks[i];
 	}
 	fprintf(stderr, "\n");
 	long time_end = currentTimeMillis();
 	fprintf(stderr, "Precomputation done in %0.3f secs\n",
 			(time_end - time_start) / 1000.0);
 }
+
 
 //#define DBG_OT 1
 
@@ -129,6 +159,30 @@ BigInt Client::online() {
 
 }
 
+class ServerSummer : public Runnable {
+	//NOCOPY(ServerSummer);
+	const PaillierEncKey &enc;
+	const BigInt_Vect &cmx_i;
+	const BigInt_Vect &smx_i;
+public:
+	BigInt sum;
+
+	ServerSummer(const PaillierEncKey &e,
+			const BigInt_Vect &cmx0, const BigInt_Vect &smx0 ) :
+		enc(e), cmx_i(cmx0), smx_i(smx0) {}
+
+	void* run() {
+		for (int j=0; j<B; ++j) {
+			//std::cout << "(" << i << "," << j << ")";
+			BigInt prod = enc.multByPlain(cmx_i[j], smx_i[j]);
+			sum = j==0 ? prod :
+					enc.add(sum, prod);
+		}
+		fprintf(stderr, "*");
+		return NULL;
+	}
+};
+
 void Server::online() {
 	BigInt n, g;
 	readObject(in, n);
@@ -143,24 +197,27 @@ void Server::online() {
 	readVector(in, cmx);
 	std::cout << "server recv done" << std::endl;
 
-	BigInt sum(enc.encrypt(BigInt(0)));
+	ThreadPool pool(numCPUs()*2);
+	ServerSummer *tasks[M];
+
 	for (int i=0; i<M; ++i) {
-		for (int j=0; j<B; ++j) {
-			//std::cout << "(" << i << "," << j << ")";
-			BigInt prod = enc.multByPlain(cmx[i][j], smx[i][j]);
-			sum = enc.add(sum, prod);
+		tasks[i] = new ServerSummer(enc, cmx[i], smx[i]);
+		pool.submit(tasks[i]);
+	}
+	BigInt sum;
+	pool.stopWait();
+	for (int i=0; i<M; ++i) {
+		sum = i==0 ? tasks[i]->sum :
+				enc.add(sum, tasks[i]->sum);
 #if DBG_OT
-			std::cout << ": += " << decKey.decrypt(cmx[i][j]).toHexString() <<
-					" * " << smx[i][j].toHexString() <<	std::endl;
-			std::cout << ": += " << decKey.decrypt(prod).toHexString() <<
-				" = " << decKey.decrypt(sum).toHexString() << std::endl;
+		std::cout << i << ": += " <<
+		decKey.decrypt(tasks[i]->sum).toHexString() <<
+		" = " << decKey.decrypt(sum).toHexString() << std::endl;
 #endif
 
-
-		}
-		fprintf(stderr, "*");
-		//std::cout << std::endl;
+		delete tasks[i];
 	}
+
 	fprintf(stderr, "\n");
 
 	writeObject(out, sum);
