@@ -5,19 +5,21 @@
  *      Author: louis
  */
 
-#ifndef KO_H_
-#define KO_H_
+#ifndef KUROSAWAOGATA_H_
+#define KUROSAWAOGATA_H_
 
 #include <openssl/bn.h>
 #include <openssl/sha.h>
 #include <openssl/rsa.h>
 #include "sillytype.h"
 #include "sillyio.h"
+#include "bigint.h"
+using namespace silly::bigint;
 
 #include <vector>
-#include "DDB.h"
 
-namespace iarpa {
+namespace crypto {
+namespace ot {
 namespace ko {
 
 using namespace silly::io;
@@ -27,15 +29,15 @@ byte_buf Gxor(const vector<BNcPtr> &x, const byte_buf &m);
 
 const static int L=8;	// security param
 
-class Server {
+class Sender {
 	DataInput *in;
 	DataOutput *out;
 
 	RSA* rsa;
 	vector<byte_buf> mhat;
 public:
-	Server() {}
-	~Server() {
+	Sender() {}
+	~Sender() {
 		if (rsa != NULL) {
 			RSA_free(rsa);
 		}
@@ -45,21 +47,24 @@ public:
 		in = in0;
 		out = out0;
 	}
-	void precompute(DDB &ddb);
+
+	typedef map<BigInt, BigInt> bi_map_t;
+
+	void precompute(const bi_map_t &ddb);
 	void online();
 
 
 private:
-	void servercommit(DDB &);
+	void servercommit(const bi_map_t &);
 	BigInt rsa_e() const { return BigInt(rsa->e, true); }
 	BigInt rsa_d() const { return BigInt(rsa->d, true); }
 	BigInt rsa_n() const { return BigInt(rsa->n, true); }
 	BigInt serverxfer(CBigInt &Y);
 
-	friend int iarpa::ko::test_ko(int argc, char **argv);
+	friend int test_ko(int argc, char **argv);
 };
 
-class Client {
+class Chooser {
 	DataInput *in;
 	DataOutput *out;
 
@@ -78,13 +83,14 @@ private:
 	BigInt clientxfer1(CBigInt &w);
 	byte_buf clientxfer2(CBigInt &w, CBigInt &X, const vector<byte_buf> &mhat);
 
-	friend int iarpa::ko::test_ko(int argc, char **argv);
+	friend int test_ko(int argc, char **argv);
 };
 
 int test_ko(int argc, char **argv);
 
 }
 }
+}
 
-#endif /* KO_H_ */
+#endif /* KUROSAWAOGATA_H_ */
 

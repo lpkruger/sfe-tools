@@ -9,7 +9,7 @@
 #include "PIRServer.h"
 #include "AES.h"
 #include "Permutation.h"
-#include "../KO.h"
+#include "../../crypto/ot/KurosawaOgata.h"
 
 // Takes a set of database rows (a view), and builds a network "blob" of data.
 // The format of the data is:
@@ -224,9 +224,9 @@ int PIRServer::serveQuery(DataInput *clIn, DataOutput *clOut) {
   printf("initiating oblivious transfer on port %i\n", KOTPORT);
 
   // Now perform the oblivious transfer step with the client
-  ko::Server kotServer;
+  crypto::ot::ko::Sender kotServer;
   DDB ddb = makeKOTDatabase(database.getAttributeValues(attribute), k, *perm);;
-  kotServer.precompute(ddb);
+  kotServer.precompute(ddb.thedb);
   // Tell the client we're ready for the KOT
   clOut->writeByte(KOT_READY);
   // Wait for the client's KOT initiation...

@@ -10,7 +10,7 @@
 
 #include "CircuitCryptPermute.h"
 #include "sillyio.h"
-#include "../crypto/PinkasNaorOT.h"
+#include "../crypto/ot/PinkasNaorOT.h"
 #include "GCircuitEval.h"
 
 

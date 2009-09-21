@@ -6,8 +6,8 @@
  */
 
 #include "HKOT.h"
-#include "SecureRandom.h"
-#include "cryptoio.h"
+#include "random.h"
+#include "../cryptoio.h"
 #include "silly.h"
 #include "sillythread.h"
 
@@ -16,7 +16,8 @@ using crypto::SecureRandom;
 using namespace silly::misc;
 using namespace silly::thread;
 
-namespace iarpa {
+namespace crypto {
+namespace ot {
 namespace hkot {
 
 static inline byte_buf H(const byte_buf &x) {
@@ -51,7 +52,7 @@ static inline int getBlock(const byte_buf &k, int n) {
 	throw ProtocolException("unsupported block size");
 
 }
-void Server::precompute() {
+void Sender::precompute() {
 	SecureRandom rand;
 	byte_buf buf(Beta);
 	smx.resize(M);
@@ -68,7 +69,7 @@ void Server::precompute() {
 	}
 }
 
-BigInt Server::get_value(const byte_buf &key_in) {
+BigInt Sender::get_value(const byte_buf &key_in) {
 	const byte_buf key = H(key_in);
 	BigInt sum(0);
 	for (int i=0; i<M; ++i) {
@@ -81,7 +82,7 @@ BigInt Server::get_value(const byte_buf &key_in) {
 	return sum;
 }
 
-class ClientCrypter : public Runnable {
+class ChooserCrypter : public Runnable {
 	//NOCOPY(Crypter);
 	const PaillierEncKey &encKey;
 	CBigInt &ZERO;
@@ -89,7 +90,7 @@ class ClientCrypter : public Runnable {
 	BigInt_Vect &cmx_i;
 	int block;
 public:
-	ClientCrypter(const PaillierEncKey &e, CBigInt &zero, CBigInt &one,
+	ChooserCrypter(const PaillierEncKey &e, CBigInt &zero, CBigInt &one,
 			BigInt_Vect &cmx0, int bl0) :
 		encKey(e), ZERO(zero), ONE(one), cmx_i(cmx0), block(bl0) {}
 
@@ -106,7 +107,7 @@ public:
 };
 
 
-void Client::precompute(const byte_buf &key_in) {
+void Chooser::precompute(const byte_buf &key_in) {
 	long time_start = currentTimeMillis();
 	const byte_buf key = H(key_in);
 	SecureRandom rand;
@@ -116,11 +117,11 @@ void Client::precompute(const byte_buf &key_in) {
 	const BigInt ONE(1);
 	cmx.resize(M);
 	ThreadPool pool(numCPUs()*2);
-	ClientCrypter *tasks[M];
+	ChooserCrypter *tasks[M];
 	for (int i=0; i<M; ++i) {
 		cmx[i].resize(B);
 		int block = getBlock(key, i);
-		tasks[i] = new ClientCrypter(encKey, ZERO, ONE, cmx[i], block);
+		tasks[i] = new ChooserCrypter(encKey, ZERO, ONE, cmx[i], block);
 		pool.submit(tasks[i]);
 		//std::cout << std::endl;
 	}
@@ -139,9 +140,9 @@ void Client::precompute(const byte_buf &key_in) {
 
 //#define DBG_OT 1
 
-BigInt Client::online() {
-	ulong out_start = out->total;
-	ulong in_start = in->total;
+BigInt Chooser::online() {
+ 	ulong out_start = out->total;
+ 	ulong in_start = in->total;
 	long time_start = currentTimeMillis();
 	writeObject(out, decKey.encKey().n);
 	writeObject(out, decKey.encKey().g);
@@ -163,15 +164,15 @@ BigInt Client::online() {
 
 }
 
-class ServerSummer : public Runnable {
-	//NOCOPY(ServerSummer);
+class SenderSummer : public Runnable {
+	//NOCOPY(SenderSummer);
 	const PaillierEncKey &enc;
 	const BigInt_Vect &cmx_i;
 	const BigInt_Vect &smx_i;
 public:
 	BigInt sum;
 
-	ServerSummer(const PaillierEncKey &e,
+	SenderSummer(const PaillierEncKey &e,
 			const BigInt_Vect &cmx0, const BigInt_Vect &smx0 ) :
 		enc(e), cmx_i(cmx0), smx_i(smx0) {}
 
@@ -187,7 +188,7 @@ public:
 	}
 };
 
-void Server::online() {
+void Sender::online() {
 	BigInt n, g;
 	readObject(in, n);
 	readObject(in, g);
@@ -202,10 +203,10 @@ void Server::online() {
 	std::cout << "server recv done" << std::endl;
 
 	ThreadPool pool(numCPUs()*2);
-	ServerSummer *tasks[M];
+	SenderSummer *tasks[M];
 
 	for (int i=0; i<M; ++i) {
-		tasks[i] = new ServerSummer(enc, cmx[i], smx[i]);
+		tasks[i] = new SenderSummer(enc, cmx[i], smx[i]);
 		pool.submit(tasks[i]);
 	}
 	BigInt sum;
@@ -230,12 +231,13 @@ void Server::online() {
 
 }
 }
+}
 
 #include "silly.h"
 using namespace std;
 using namespace silly::misc;
 using namespace silly::net;
-int iarpa::hkot::test_ot(int argc, char **argv) {
+int crypto::ot::hkot::test_ot(int argc, char **argv) {
 	if (argc==1) {
 		cout << "A or B" << endl;
 		return 1;
@@ -245,7 +247,7 @@ int iarpa::hkot::test_ot(int argc, char **argv) {
 	byte_buf key(key_a, key_a+4);
 
 	if (!strcmp(argv[1], "A")) {
-		Client cc;
+		Chooser cc;
 
 		cout << "Key is: " << toHexString(key) << endl;
 		cc.precompute(key);
@@ -257,9 +259,9 @@ int iarpa::hkot::test_ot(int argc, char **argv) {
 		cout << "OT value: " <<
 				out.toHexString() << endl;
 	} else if (!strcmp(argv[1], "B")) {
-		Server ss;
+		Sender ss;
 		ss.precompute();
-		cout << "Server should say: " <<
+		cout << "Sender should say: " <<
 				ss.get_value(key).toHexString() << endl;
 		ServerSocket sock(1238);
 		Socket *s = sock.accept();
@@ -271,7 +273,7 @@ int iarpa::hkot::test_ot(int argc, char **argv) {
 }
 
 static int _main(int argc, char **argv) {
-	return iarpa::hkot::test_ot(argc, argv);
+	return crypto::ot::hkot::test_ot(argc, argv);
 }
 #include "sillymain.h"
 MAIN("hkottest")

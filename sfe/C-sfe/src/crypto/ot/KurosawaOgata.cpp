@@ -8,7 +8,7 @@
 //#undef _GLIBCXX_DEBUG
 #include <iostream>
 
-#include "KO.h"
+#include "KurosawaOgata.h"
 #include <string.h>
 #include <openssl/rc4.h>
 #include "sillyio.h"
@@ -34,14 +34,14 @@ static void readObject(DataInput *in, BigInt &a) {
 	a = BigInt::MPItoBigInt(buf);
 }
 
-BigInt iarpa::ko::Client::clientxfer1(CBigInt &w) {
+BigInt crypto::ot::ko::Chooser::clientxfer1(CBigInt &w) {
 	BN_rand(rr.to_writePtr(), BN_num_bits(rsa_n.to_ptr()), 0, 0);
 	BigInt Y = rr.modPow(rsa_e, rsa_n);
 	Y.modMultiplyThis(H(w), rsa_n);
 	return Y;
 }
 
-byte_buf iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<byte_buf> &mhat) {
+byte_buf crypto::ot::ko::Chooser::clientxfer2(CBigInt &w, CBigInt &X, const vector<byte_buf> &mhat) {
 	BigInt wwhat = X.modDivide(rr, rsa_n);
 	DD(printf("C: %s %s %s\n", wwhat.toHexString().c_str(), rr.toHexString().c_str(), X.toHexString().c_str()));
 
@@ -70,7 +70,7 @@ byte_buf iarpa::ko::Client::clientxfer2(CBigInt &w, CBigInt &X, const vector<byt
 	return byte_buf();
 }
 
-byte_buf iarpa::ko::Client::online(CBigInt &w) {
+byte_buf crypto::ot::ko::Chooser::online(CBigInt &w) {
 	readObject(in, rsa_n);
 	readObject(in, rsa_e);
 	BigInt Y = clientxfer1(w);
@@ -82,15 +82,15 @@ byte_buf iarpa::ko::Client::online(CBigInt &w) {
 	return clientxfer2(w, X, mhat);
 }
 
-void iarpa::ko::Server::servercommit(DDB & ddb) {
+void crypto::ot::ko::Sender::servercommit(const bi_map_t &thedb) {
 	rsa = RSA_generate_key(1024, 17, NULL, NULL);
-	int dbsize = ddb.thedb.size();
+	int dbsize = thedb.size();
 	vector<BigInt> what(dbsize);
 	mhat.resize(dbsize);
 	int i=0;
 	BigInt ii;
-	map<BigInt,BigInt>::iterator it;
-	for (it = ddb.thedb.begin(); it != ddb.thedb.end(); ++it) {
+	bi_map_t::const_iterator it;
+	for (it = thedb.begin(); it != thedb.end(); ++it) {
 		const BigInt &w = it->first;
 		const BigInt &m = it->second;
 		//printf("A: %s %s\n",BN_bn2dec(w),BN_bn2dec(m));
@@ -109,15 +109,15 @@ void iarpa::ko::Server::servercommit(DDB & ddb) {
 		++i;
 	}
 }
-void iarpa::ko::Server::precompute(DDB &ddb) {
-	servercommit(ddb);
+void crypto::ot::ko::Sender::precompute(const bi_map_t &db) {
+	servercommit(db);
 }
 
-BigInt iarpa::ko::Server::serverxfer(CBigInt &Y) {
+BigInt crypto::ot::ko::Sender::serverxfer(CBigInt &Y) {
 	return Y.modPow(rsa_d(), rsa_n());
 }
 
-void iarpa::ko::Server::online() {
+void crypto::ot::ko::Sender::online() {
 	writeObject(out, rsa_n());
 	writeObject(out, rsa_e());
 	BigInt Y;
@@ -127,7 +127,7 @@ void iarpa::ko::Server::online() {
 	writeVector(out, mhat);
 }
 
-BigInt iarpa::ko::H(BNcPtr x) {
+BigInt crypto::ot::ko::H(BNcPtr x) {
 	byte md[SHA_DIGEST_LENGTH];
 	byte buf[BN_num_bytes(x)];
 	BN_bn2bin(x, buf);
@@ -138,7 +138,7 @@ BigInt iarpa::ko::H(BNcPtr x) {
 }
 
 
-byte_buf iarpa::ko::Gxor(const vector<BNcPtr> &x, const byte_buf &m) {
+byte_buf crypto::ot::ko::Gxor(const vector<BNcPtr> &x, const byte_buf &m) {
 	byte_buf zz;
 
 	int totalsize=0;

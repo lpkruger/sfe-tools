@@ -9,7 +9,7 @@
 #define DEBUG
 #include "sillydebug.h"
 
-
+using namespace crypto::ot;
 
 
 void YaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
@@ -18,7 +18,7 @@ void YaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	GarbledCircuit_p gcc = crypt.encrypt(*cc, inputSecrets);
 	gcc->writeCircuit(out);
 	//cout << "write input secrets" << endl;
-	PinkasNaorOT ot;
+	pinkasnaor::OT ot;
 	FmtFile::VarDesc vars = fmt.getVarDesc();
 //		FmtFile::VarDesc myvars = vars.filter("A");
 //		FmtFile::VarDesc yourvars = vars.filter("B");
@@ -42,7 +42,7 @@ void YaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) {
 	}
 	out->writeInt(otvals.size());
 
-	OTSender sender(otvals, &ot);
+	pinkasnaor::Sender sender(otvals, &ot);
 	sender.setStreams(in, out);
 	sender.precalc();
 	sender.online();
@@ -60,9 +60,9 @@ bit_vector YaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs) 
 		throw new ProtocolException(cstr_printf(
 				"ot_size %d != inputs.size %d", ot_size, inputs.size()));
 
-	PinkasNaorOT ot;
+	pinkasnaor::OT ot;
 	bit_vector inputs_copy(inputs);
-	OTChooser chooser(inputs_copy, &ot);
+	pinkasnaor::Chooser chooser(inputs_copy, &ot);
 	chooser.setStreams(in, out);
 	chooser.precalc();
 	BigInt_Vect myinpsecs = chooser.online();

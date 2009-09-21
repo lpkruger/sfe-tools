@@ -9,7 +9,7 @@
 #define PAILLIER_H_
 
 #define _INLINE __attribute__((always_inline))
-#include "cipher/Cipher.h"
+#include "Cipher.h"
 #include "bigint.h"
 
 namespace crypto {

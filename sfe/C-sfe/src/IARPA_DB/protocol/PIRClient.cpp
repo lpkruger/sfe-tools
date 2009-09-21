@@ -9,7 +9,7 @@
 
 #include "PIRClient.h"
 #include "AES.h"
-#include "../KO.h"
+#include "../../crypto/ot/KurosawaOgata.h"
 
 using namespace std;
 
@@ -108,7 +108,7 @@ CSVDatabase PIRClient::queryServer(string attr, string val) {
   Socket s(srvaddr, KOTPORT);
   DataOutput *sKotOut = s.getOutput();
   DataInput *sKotIn = s.getInput();
-  ko::Client cli;
+  crypto::ot::ko::Chooser cli;
   cli.setStreams(sKotIn, sKotOut);
   byte_buf netKoResult = cli.online(StringUtility::bytes2BigInt((unsigned char *)val.c_str(), val.length()));
   // If netKoResult has not bytes, then a match was not found

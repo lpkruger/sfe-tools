@@ -6,7 +6,7 @@
  */
 
 #include "Paillier.h"
-#include "cryptoio.h"
+#include "../cryptoio.h"
 
 using namespace crypto::cipher;
 

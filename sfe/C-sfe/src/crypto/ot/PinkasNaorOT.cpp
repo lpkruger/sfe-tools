@@ -6,24 +6,23 @@
  */
 
 #include "PinkasNaorOT.h"
-#include "cryptoio.h"
+#include "../cryptoio.h"
 #include <openssl/sha.h>
 
 #undef DEBUG
 #include "sillydebug.h"
 
-PinkasNaorOT::PinkasNaorOT() {
+using namespace crypto::ot::pinkasnaor;
+
+OT::OT() {
 
 	QQQ = BigInt(2).pow(128).nextProbablePrime();
 			//BigInt::genPrime(129);
 	GGG = findGenerator(QQQ);
 }
 
-PinkasNaorOT::~PinkasNaorOT() {
 
-}
-
-BigInt PinkasNaorOT::findGenerator(const BigInt &p) {
+BigInt OT::findGenerator(const BigInt &p) {
 	// p should be prime
 	BigInt k = p-1;
 	BigInt x = 1;
@@ -45,7 +44,7 @@ BigInt PinkasNaorOT::findGenerator(const BigInt &p) {
 	return BigInt(2).modPowThis(x, p);
 }
 
-BigInt PinkasNaorOT::hash(const BigInt &p) {
+BigInt OT::hash(const BigInt &p) {
 	byte_buf md(20);
 	byte_buf in = BigInt::fromPosBigInt(p);
 	SHA1((const uchar*)(&in[0]), in.size(), (uchar*)(&md[0]));
@@ -55,12 +54,12 @@ BigInt PinkasNaorOT::hash(const BigInt &p) {
 	return BigInt::toPosBigInt(md);
 }
 
-void OTSender::go() {
+void Sender::go() {
 	precalc();
 	online();
 }
 
-void OTSender::precalc() {
+void Sender::precalc() {
 	BigInt &g = ot->GGG;
 	BigInt &q = ot->QQQ;
 	resize(C, M.size());
@@ -78,7 +77,7 @@ void OTSender::precalc() {
 	D(rr);
 	resize(PK,M.size(),2);
 }
-void OTSender::online() {
+void Sender::online() {
 	BigInt &q = ot->QQQ;
 	D("send C");
 	writeVector(out, C);
@@ -104,7 +103,7 @@ void OTSender::online() {
 	D(PK);
 	for (uint i=0; i<M.size(); ++i) {
 		for (int j=0; j<=1; ++j) {
-			E[i][j][1] = PinkasNaorOT::hash(PK[i][j].modPow(rr[i], q)).xxor(M[i][j]);
+			E[i][j][1] = OT::hash(PK[i][j].modPow(rr[i], q)).xxor(M[i][j]);
 			//D("PK[" + i + "," + j + "] = " + PK[i][j].modPow(r, q));
 		}
 	}
@@ -115,11 +114,11 @@ void OTSender::online() {
 	out->flush();
 }
 
-BigInt_Vect OTChooser::go() {
+BigInt_Vect Chooser::go() {
 	precalc();
 	return online();
 }
-void OTChooser::precalc() {
+void Chooser::precalc() {
 	BigInt &g = ot->GGG;
 	BigInt &q = ot->QQQ;
 	resize(k, s.size());
@@ -137,7 +136,7 @@ void OTChooser::precalc() {
 	}
 }
 
-BigInt_Vect OTChooser::online() {
+BigInt_Vect Chooser::online() {
 	//BigInt &g = ot->GGG;
 	BigInt &q = ot->QQQ;
 	D("read C");
@@ -172,7 +171,7 @@ BigInt_Vect OTChooser::online() {
 
 	BigInt_Vect ret(s.size());
 	for (uint i=0; i<s.size(); ++i) {
-		ret[i] = PinkasNaorOT::hash(E[i][s[i]][0].modPow(k[i], q)).xxor(E[i][s[i]][1]);
+		ret[i] = OT::hash(E[i][s[i]][0].modPow(k[i], q)).xxor(E[i][s[i]][1]);
 	}
 	return ret;
 }

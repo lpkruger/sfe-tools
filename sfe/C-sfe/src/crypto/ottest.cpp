@@ -11,8 +11,9 @@
 #include "silly.h"
 #include "sillysocket.h"
 #include "sillymem.h"
-#include "PinkasNaorOT.h"
+#include "ot/PinkasNaorOT.h"
 
+using namespace crypto::ot;
 using namespace std;
 using namespace silly;
 using net::Socket;
@@ -58,7 +59,7 @@ static int _main(int argc, char **argv) {
 		//			new ObjectInputStream(new BufferedInputStream
 		//					(s.getInputStream()));
 
-		PinkasNaorOT ot;
+		pinkasnaor::OT ot;
 
 		if (args[0] == ("A")) {
 			BigInt_Mtrx M;
@@ -70,7 +71,7 @@ static int _main(int argc, char **argv) {
 			M[2][0]=1003;
 			M[2][1]=83784;
 			printf("M.size %d\n", M.size());
-			OTSender sender(M, &ot);
+			pinkasnaor::Sender sender(M, &ot);
 			sender.setStreams(in.to_ptr(), out.to_ptr());
 			printf("M.size %d\n", M.size());
 			sender.go();
@@ -82,7 +83,7 @@ static int _main(int argc, char **argv) {
 				}
 				ss[i-1] = args[i]=="1" ? true : false;
 			}
-			OTChooser choos(ss, &ot);
+			pinkasnaor::Chooser choos(ss, &ot);
 			choos.setStreams(in.to_ptr(), out.to_ptr());
 			BigInt_Vect val = choos.go();
 			for (uint i=0; i<val.size(); ++i) {

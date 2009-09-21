@@ -8,11 +8,8 @@
 #include <vector>
 #include "silly.h"
 #include "DDB.h"
-#include "KO.h"
-
 
 using namespace iarpa;
-using namespace iarpa::ko;
 
 static const int test_sizes[] = { 1,2,3, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000 };
 static const int test_sizes_length = sizeof(test_sizes)/sizeof(int);
@@ -41,8 +38,11 @@ static const char* str(byte_buf &b) {
 }
 
 using silly::misc::currentTimeMillis;
+#include "../crypto/ot/KurosawaOgata.h"
+using namespace crypto::ot;
+using namespace silly::io;
 
-int iarpa::ko::test_ko(int argc, char **argv) {
+int crypto::ot::ko::test_ko(int argc, char **argv) {
 //	for (int i=0; i<argc; ++i) {
 //		printf("arg: %s\n", argv[i]);
 //	}
@@ -51,11 +51,11 @@ int iarpa::ko::test_ko(int argc, char **argv) {
 		DDB ddb;
 		iarpa_ko_populate_test_db(ddb, test_sizes[trial]);
 		ddb.put(str("foo"), str("bar"));
-		Server okS;
-		Client okC;
+		Sender okS;
+		Chooser okC;
 
 		long time1 = currentTimeMillis();
-		okS.servercommit(ddb);
+		okS.servercommit(ddb.thedb);
 		okC.rsa_n = okS.rsa_n();
 		okC.rsa_e = okS.rsa_e();
 		long time2 = currentTimeMillis();
@@ -83,7 +83,7 @@ int iarpa::ko::test_ko(int argc, char **argv) {
 
 
 static int _main_dbtest(int argc, char **argv) {
-	return iarpa::ko::test_ko(argc, argv);
+	return crypto::ot::ko::test_ko(argc, argv);
 }
 
 
@@ -114,7 +114,7 @@ static int _main_kotest(int argc, char **argv) {
 			s = new Socket("localhost", 5436);
 			DataOutput *out = s->getOutput();
 			DataInput *in = s->getInput();
-			iarpa::ko::Client cli;
+			ko::Chooser cli;
 			cli.setStreams(in, out);
 			byte_buf result = cli.online(BigInt(atoi(args[1].c_str())));
 			cout << toHexString(result) << endl;
@@ -127,8 +127,8 @@ static int _main_kotest(int argc, char **argv) {
 			args.at(1);
 			iarpa::DDB ddb;
 			iarpa_ko_populate_test_db(ddb, atoi(args[1].c_str()));
-			iarpa::ko::Server serv;
-			serv.precompute(ddb);
+			ko::Sender serv;
+			serv.precompute(ddb.thedb);
 			cout << "listening" << endl;
 			ServerSocket *ss = new ServerSocket(5436);
 			s = ss->accept();

@@ -213,9 +213,7 @@ public:
 			threadhadlock = true;
 			locked = true;
 		} else {
-			mux->acquire();
-			mux->owner = pthread_self();
-			locked = true;
+			lock();
 		}
 	}
 	Lock(Mutex &mux0) : mux(&mux0), locked(false), threadhadlock(false) {
@@ -223,9 +221,7 @@ public:
 			threadhadlock = true;
 			locked = true;
 		} else {
-			mux->acquire();
-			mux->owner = pthread_self();
-			locked = true;
+			lock();
 		}
 	}
 	~Lock() {
@@ -240,10 +236,12 @@ public:
 			mux->acquire();
 			mux->owner = pthread_self();
 			locked = true;
+			DF("acquire lock %x\n", mux->owner, &mux);
 		}
 	}
 	void unlock() {
 		if (locked) {
+			DF("release lock %x\n", mux->owner, &mux);
 			mux->owner = -1;
 			mux->release();
 			locked = false;
@@ -463,12 +461,15 @@ namespace silly {
 namespace thread {
 
 class ThreadPool {
-	volatile int niceValue;
 	Mutex pool_mux;
 	uint max;
+	volatile int niceValue;
 	vector<Thread*> threads;
 	queue<Runnable*> workqueue;
 	bool stopping;
+
+	class MonitorThread;
+	MonitorThread *monitor;
 
 	struct WorkThread : public Thread {
 		ThreadPool *pool;
@@ -524,15 +525,21 @@ class ThreadPool {
 	public:
 		MonitorThread(ThreadPool *p) : pool(p) {}
 		void* run() {
+
 			Lock lock(pool->pool_mux);
 			while (!pool->stopping || !pool->workqueue.empty()) {
-				while (pool->threads.size() < pool->max && pool->threads.size() < pool->workqueue.size()) {
+				while (pool->threads.size() <
+						std::min(pool->max, pool->workqueue.size())) {
 					WorkThread *th = new WorkThread(pool);
 					pool->threads.push_back(th);
 					th->start();
+					lock.notifyAll();
 				}
-				lock.wait();
+				if (!pool->stopping || !pool->workqueue.empty())
+					lock.wait();
 			}
+			pool->monitor = NULL;
+			lock.notifyAll();
 			return NULL;
 		}
 	};
@@ -540,8 +547,17 @@ public:
 	ThreadPool(uint n, int nice=0) : max(n), niceValue(nice), stopping(false) {
 		DF("ThreadPool size %d created\n", n);
 		threads.reserve(n);
-		(new MonitorThread(this))->start();
+		monitor = new MonitorThread(this);
+		monitor->start();
 	}
+	~ThreadPool() {
+		Lock lock(pool_mux);
+		while (monitor) {
+			lock.notifyAll();
+			lock.wait();
+		}
+	}
+
 	void setPriority(int n) {
 		niceValue = n;
 	}
@@ -564,6 +580,7 @@ public:
 		DF("Stopping pool");
 		Lock lock(pool_mux);
 		stopping = true;
+		lock.notifyAll();
 	}
 	void waitIdle() {
 		DF("Waiting for idle");

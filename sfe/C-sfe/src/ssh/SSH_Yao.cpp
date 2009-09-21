@@ -13,6 +13,7 @@
 
 #include "sillydebug.h"
 
+using namespace crypto::ot;
 
 
 #if USE_THREADS
@@ -356,10 +357,10 @@ void SSHYaoSender::go(Circuit_p cc, FmtFile &fmt, const bit_vector &inputs, cons
 	flatten(all_otvals, otvals, geom);
 
 	//out->writeInt(otvals.size());
-	PinkasNaorOT ot;
+	pinkasnaor::OT ot;
 
 	long ot_start = currentTimeMillis();
-	OTSender sender(otvals, &ot);
+	pinkasnaor::Sender sender(otvals, &ot);
 	sender.setStreams(in, out);
 	DF("OT precalc\n");
 	sender.precalc();
@@ -515,8 +516,8 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 
 	D("allinputs:");
 	D(allinputs);
-	PinkasNaorOT ot;
-	OTChooser chooser(allinputs, &ot);
+	pinkasnaor::OT ot;
+	pinkasnaor::Chooser chooser(allinputs, &ot);
 	chooser.setStreams(in, out);
 	long ot_start = currentTimeMillis();
 	DF("OT precalc\n");
@@ -579,7 +580,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 
 	//vector<vector<boolean_secrets> > all_check_input_secs(choices.size());
 
-	ThreadPool checkpool(1+numCPUs(), 6);
+	ThreadPool checkpool(1+numCPUs());
 	CircuitCryptChecker *checkers[choices.size()];
 
 	for (uint n=0; n<choices.size(); ++n) {
@@ -607,7 +608,7 @@ bit_vector SSHYaoChooser::go(Circuit_p cc, FmtFile &fmt, const bit_vector &input
 			fast_sync();
 		}
 		fprintf(stderr, "V");
-		checkpool.setPriority(1);
+		//checkpool.setPriority(1);
 		string failure;
 		checkpool.stopWait();
 		for (uint n=0; n<choices.size(); ++n) {

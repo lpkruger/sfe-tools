@@ -19,21 +19,25 @@ using namespace silly::io;
 using namespace silly::misc;
 using namespace bigint;
 
-class PinkasNaorOT {
+namespace crypto {
+namespace ot {
+namespace pinkasnaor {
+
+class OT {
 public:
 	BigInt QQQ;
 	BigInt GGG;
 public:
-	PinkasNaorOT();
-	PinkasNaorOT(BigInt q, BigInt g) : QQQ(q), GGG(g) {}
-	virtual ~PinkasNaorOT();
+	OT();
+	OT(CBigInt &q, CBigInt &g) : QQQ(q), GGG(g) {}
+	virtual ~OT() {}
 
 	static BigInt hash(const BigInt &m);
 	static BigInt findGenerator(const BigInt &p);
 };
 
-class OTSender {
-	PinkasNaorOT *ot;
+class Sender {
+	OT *ot;
 	DataInput *in;
 	DataOutput *out;
 
@@ -45,7 +49,7 @@ class OTSender {
 	BigInt_Vect rr;
 
 public:
-	OTSender(BigInt_Mtrx &M0, PinkasNaorOT *ot0) : ot(ot0) {
+	Sender(BigInt_Mtrx &M0, OT *ot0) : ot(ot0) {
 		M.swap(M0);
 		for (uint i=0; i<M.size(); ++i) {
 			if (M[i].size() != 2) {
@@ -64,8 +68,8 @@ public:
 	void online();
 };
 
-class OTChooser {
-	PinkasNaorOT *ot;
+class Chooser {
+	OT *ot;
 	DataInput *in;
 	DataOutput *out;
 
@@ -74,7 +78,7 @@ class OTChooser {
 	BigInt_Vect k;
 	BigInt_Mtrx PK;
 public:
-	OTChooser(bit_vector &s0, PinkasNaorOT *ot0) : ot(ot0) {
+	Chooser(bit_vector &s0, OT *ot0) : ot(ot0) {
 		s.swap(s0);
 	}
 
@@ -87,6 +91,10 @@ public:
 	void precalc();
 	BigInt_Vect online();
 };
+
+}
+}
+}
 
 #endif /* PINKASNAOROT_H_ */
 

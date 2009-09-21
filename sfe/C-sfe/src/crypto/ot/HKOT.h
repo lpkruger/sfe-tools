@@ -22,9 +22,10 @@
 #include "sillyio.h"
 
 #include <vector>
-#include "Paillier.h"
+#include "../cipher/Paillier.h"
 
-namespace iarpa {
+namespace crypto {
+namespace ot {
 namespace hkot {
 
 using namespace silly::io;
@@ -41,7 +42,7 @@ const static int M = 32;			// security param
 const static int Beta = 128/8;		// security param
 const static int HKeySz = 1024;		// security param, size of Paillier key
 
-class Server {
+class Sender {
 	DataInput *in;
 	DataOutput *out;
 
@@ -58,17 +59,17 @@ public:
 
 
 private:
-	friend int iarpa::hkot::test_ot(int argc, char **argv);
+	friend int test_ot(int argc, char **argv);
 };
 
-class Client {
+class Chooser {
 	DataInput *in;
 	DataOutput *out;
 
 	PaillierDecKey decKey;
 	BigInt_Mtrx cmx;
 public:
-	Client() : in(NULL), out(NULL), decKey(0,0,0,0) {}
+	Chooser() : in(NULL), out(NULL), decKey(0,0,0,0) {}
 
 	void setStreams(DataInput *in0, DataOutput *out0) {
 		in = in0;
@@ -78,11 +79,12 @@ public:
 	BigInt online();
 
 private:
-	friend int iarpa::hkot::test_ot(int argc, char **argv);
+	friend int test_ot(int argc, char **argv);
 };
 
 int test_ot(int argc, char **argv);
 
+}
 }
 }
 
