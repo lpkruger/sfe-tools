@@ -6,7 +6,7 @@
 #define RETURN_RET	return ret
 ///////////////////////////////
 
-BigInt xxor(const BigInt &b) const {
+BigInt xxor(const BigInt &b) const _PURE {
 	byte_buf aa = fromPosBigInt(me);
 	byte_buf bb = fromPosBigInt(b);
 
@@ -27,19 +27,19 @@ BigInt xxor(const BigInt &b) const {
 
 }
 
-bool isNegative() const {
+bool isNegative() const _PURE {
 	return BN_is_negative(cptr(me));
 }
-int byteLength() const {
+int byteLength() const _PURE {
 	return BN_num_bytes(me);
 }
-int bitLength() const {
+int bitLength() const _PURE {
 	return BN_num_bits(me);
 }
-bool testBit(int n) const {
+bool testBit(int n) const _PURE {
 	return BN_is_bit_set(me, n);
 }
-BigInt setBit(int n) const {
+BigInt setBit(int n) const _PURE {
 	BigInt ret(me);
 	BN_set_bit(ret, n);
 	RETURN_RET;
@@ -48,7 +48,7 @@ BigInt& setBitThis(int n) {
 	BN_set_bit(me, n);
 	return me;
 }
-BigInt clearBit(int n) const {
+BigInt clearBit(int n) const _PURE {
 	BigInt ret(me);
 	if (ret.testBit(n))
 		BN_clear_bit(ret, n);
@@ -59,7 +59,7 @@ BigInt& clearBitThis(int n) {
 		BN_clear_bit(me, n);
 	return me;
 }
-BigInt nextProbablePrime() const {
+BigInt nextProbablePrime() const _PURE {
 	BigInt ret(2);
 	if (me < ret)
 		RETURN_RET;
@@ -91,7 +91,7 @@ static BigInt genPrime(int bits) {
 	RETURN_RET;
 }
 
-static byte_buf fromPosBigInt(BNcPtr num, int len=0) {
+static byte_buf fromPosBigInt(BNcPtr num, int len=0) _PURE {
 	int reallen = BN_num_bytes(num);
 	if (len<reallen) len = reallen;
 	byte_buf ret(1, 0);
@@ -103,14 +103,14 @@ static byte_buf fromPosBigInt(BNcPtr num, int len=0) {
 }
 
 
-static BigInt toPosBigInt(const byte_buf &buf) {
+static BigInt toPosBigInt(const byte_buf &buf) _PURE {
 	BigInt ret;
 	if (buf.empty())
 		RETURN_RET;
 	BN_bin2bn(&buf[0], buf.size(), ptr(ret));
 	RETURN_RET;
 }
-static byte_buf from2sCompBigInt(BNcPtr num, int len=0) {
+static byte_buf from2sCompBigInt(BNcPtr num, int len=0) _PURE {
 	int reallen = BN_num_bytes(num);
 	if (!reallen)
 		++reallen;
@@ -139,7 +139,7 @@ static byte_buf from2sCompBigInt(BNcPtr num, int len=0) {
 	RETURN_RET;
 }
 
-static BigInt to2sCompBigInt(const byte_buf &buf) {
+static BigInt to2sCompBigInt(const byte_buf &buf) _PURE {
 	BigInt ret = toPosBigInt(buf);
 	int len = ret.byteLength();
 	if (!ret.testBit(len*8-1))
@@ -154,23 +154,23 @@ static BigInt to2sCompBigInt(const byte_buf &buf) {
 	RETURN_RET;
 }
 
-static byte_buf MPIfromBigInt(BNcPtr num) {
+static byte_buf MPIfromBigInt(BNcPtr num) _PURE {
 	byte_buf ret(BN_bn2mpi(num, NULL));
 	BN_bn2mpi(num, &ret[0]);
 	RETURN_RET;
 }
 
-static BigInt MPItoBigInt(const byte_buf &buf) {
+static BigInt MPItoBigInt(const byte_buf &buf) _PURE {
 	BigInt ret;
 	BN_mpi2bn(&buf[0], buf.size(), ret);
 	RETURN_RET;
 }
 
-static BigInt toPaddedBigInt(byte_buf buf) {
+static BigInt toPaddedBigInt(byte_buf buf) _PURE {
 	buf.insert(buf.begin(), 1);
 	return toPosBigInt(buf);
 }
-static byte_buf fromPaddedBigInt(BNcPtr num) {
+static byte_buf fromPaddedBigInt(BNcPtr num) _PURE {
 	byte_buf ret = fromPosBigInt(num);
 	if (ret[0] != 1)
 		throw math_exception("bignum not padded");
@@ -179,21 +179,21 @@ static byte_buf fromPaddedBigInt(BNcPtr num) {
 }
 
 
-std::string toHexString() const {
+std::string toHexString() const _PURE {
 	char *buf = BN_bn2hex(me);
 	std::string ret(buf);
 	OPENSSL_free(buf);
 	RETURN_RET;
 }
 
-std::string toString() const {
+std::string toString() const _PURE {
 	char *buf = BN_bn2dec(me);
 	std::string ret(buf);
 	OPENSSL_free(buf);
 	RETURN_RET;
 }
 
-std::string toString(uint base) const {
+std::string toString(uint base) const _PURE {
 	if (base<2 || base>36)
 		throw math_exception("toString only supports bases from 2 to 36");
 	std::string str;
@@ -216,7 +216,7 @@ std::string toString(uint base) const {
 	return str;
 }
 
-static BigInt parseString(const std::string &str, uint base=10) {
+static BigInt parseString(const std::string &str, uint base=10) _PURE {
 	if (str.size()==0)
 		throw math_exception("can't parse an empty string");
 	if (base<2 || base>36)

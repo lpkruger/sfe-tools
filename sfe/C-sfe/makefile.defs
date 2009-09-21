@@ -57,10 +57,11 @@ SUPER_CRAZY_WARNING_FLAGS = -Wall -Weffc++ -pedantic  \
 
 BUILDNAME := $(shell basename `pwd`)
 
-LIBS += $(LD_FLAGS)
-
 ### begin: not for subprojects
-#ifeq (,$(or $(BUILD_SILLYLIB),$(...),$(...)))
+#ifeq (,$(or $(BUILD_LIB),$(...),$(...)))
+ifeq (,$(BUILD_LIB))
+
+LIBS += $(LD_FLAGS)
 
 delete_special:
 	-rm src/ssh/SfeServer.?
@@ -89,7 +90,6 @@ relink:
 # for funky eclipse-ness
 USD := $$
 
-ifeq (,$(or $(BUILD_SILLYLIB)))
 clean:	subclean
 
 subclean:

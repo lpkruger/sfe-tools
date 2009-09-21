@@ -78,118 +78,118 @@ public:
 	}
 	////////////////////////////////////////////
 
-	BigInt mod(BNcPtr m) const {
+	BigInt mod(BNcPtr m) const _PURE{
 		BigInt ret;
-		BN_mod(ret, *this, m, bn_ctx);
+		BN_nnmod(ret, *this, m, bn_ctx);
 		RETURN_RET;
 	}
-	ulong mod(ulong m) const {
+	ulong mod(ulong m) const _PURE {
 		return BN_mod_word(*this, m);
 	}
-	BigInt modInverse(BNcPtr m) const {
+	BigInt modInverse(BNcPtr m) const _PURE {
 		BigInt ret;
 		BN_mod_inverse(ret, *this, m, bn_ctx);
 		RETURN_RET;
 	}
-	BigInt modMultiply(BNcPtr b, BNcPtr m) const {
+	BigInt modMultiply(BNcPtr b, BNcPtr m) const _PURE {
 		BigInt ret;
 		BN_mod_mul(ret, *this, b, m, bn_ctx);
 		RETURN_RET;
 	}
-	BigInt modDivide(BNcPtr b, BNcPtr m) const {
+	BigInt modDivide(BNcPtr b, BNcPtr m) const _PURE {
 		BigInt ret;
 		BN_mod_inverse(ret, b, m, bn_ctx);
 		// TODO check return for NULL
 		BN_mod_mul(ret, *this, ret, m, bn_ctx);
 		RETURN_RET;
 	}
-	BigInt modPow(BNcPtr b, BNcPtr m) const {
+	BigInt modPow(BNcPtr b, BNcPtr m) const _PURE {
 		BigInt ret;
 		BN_mod_exp(ret, *this, b, m, bn_ctx);
 		RETURN_RET;
 	}
 
-	BigInt add(BNcPtr b) const {
+	BigInt add(BNcPtr b) const _PURE {
 		BigInt ret;
 		BN_add(ret, *this, b);
 		RETURN_RET;
 	}
-	BigInt add(ulong b) const {
+	BigInt add(ulong b) const _PURE {
 		BigInt ret(*this);
 		BN_add_word(ret, b);
 		RETURN_RET;
 	}
-	BigInt subtract(BNcPtr b) const {
+	BigInt subtract(BNcPtr b) const _PURE {
 		BigInt ret;
 		BN_sub(ret, *this, b);
 		RETURN_RET;
 	}
-	BigInt subtract(ulong b) const {
+	BigInt subtract(ulong b) const _PURE {
 		BigInt ret(*this);
 		BN_sub_word(ret, b);
 		RETURN_RET;
 	}
-	BigInt multiply(BNcPtr b) const {
+	BigInt multiply(BNcPtr b) const _PURE {
 		BigInt ret;
 		BN_mul(ret, *this, b, bn_ctx);
 		RETURN_RET;
 	}
-	BigInt multiply(ulong b) const {
+	BigInt multiply(ulong b) const _PURE {
 		BigInt ret(*this);
 		BN_mul_word(ret, b);
 		RETURN_RET;
 	}
-	BigInt pow(BNcPtr b) const {
+	BigInt pow(BNcPtr b) const _PURE {
 		BigInt ret;
 		BN_exp(ret, *this, b, bn_ctx);
 		RETURN_RET;
 	}
-	BigInt pow(ulong b) const {
+	BigInt pow(ulong b) const _PURE {
 		return pow(BigInt(b));
 	}
 
-	BigInt divide(BNcPtr b) const {
+	BigInt divide(BNcPtr b) const _PURE {
 		BigInt ret;
 		BN_div(ret, NULL, *this, b, bn_ctx);
 		RETURN_RET;
 	}
-	BigInt divide(ulong b) const {
+	BigInt divide(ulong b) const _PURE {
 		BigInt ret(*this);
 		BN_div_word(ret, b);
 		RETURN_RET;
 	}
 
 
-	BigInt gcd(BNcPtr b) const {
+	BigInt gcd(BNcPtr b) const _PURE {
 		BigInt ret;
 		BN_gcd(ret, *this, b, bn_ctx);
 		RETURN_RET;
 	}
 
-	BigInt negate() const {
+	BigInt negate() const _PURE {
 		BigInt ret(*this);
 		BN_set_negative(ret, !ret.isNegative());
 		RETURN_RET;
 	}
 
-	BigInt shiftLeft(int n) const {
+	BigInt shiftLeft(int n) const _PURE {
 		BigInt ret;
 		BN_lshift(ret, *this, n);
 		RETURN_RET;
 	}
-	BigInt shiftRight(int n) const {
+	BigInt shiftRight(int n) const _PURE {
 		BigInt ret;
 		BN_rshift(ret, *this, n);
 		RETURN_RET;
 	}
 
 
-	bool equals(BNcPtr o) const {
+	bool equals(BNcPtr o) const _PURE {
 		if (to_ptr() == o)
 			return true;
 		return BN_cmp(*this, o) == 0;
 	}
-	bool equals(ulong n) const {
+	bool equals(ulong n) const _PURE {
 		if (n == ulong(-1L)) {
 			return equals(BigInt(n));
 		}
@@ -364,22 +364,22 @@ public:
 
 
 
-	bool operator< (BNcPtr b) const {
+	bool operator< (BNcPtr b) const _PURE {
 		return BN_cmp(*this, b)<0;
 	}
-	bool operator<= (BNcPtr b) const {
+	bool operator<= (BNcPtr b) const _PURE {
 		return BN_cmp(*this, b)<=0;
 	}
-	bool operator> (BNcPtr b) const {
+	bool operator> (BNcPtr b) const _PURE {
 		return BN_cmp(*this, b)>0;
 	}
-	bool operator>= (BNcPtr b) const {
+	bool operator>= (BNcPtr b) const _PURE {
 		return BN_cmp(*this, b)>=0;
 	}
-	bool operator== (BNcPtr b) const {
+	bool operator== (BNcPtr b) const _PURE {
 		return BN_cmp(*this, b)==0;
 	}
-	bool operator!= (BNcPtr b) const {
+	bool operator!= (BNcPtr b) const _PURE {
 		return BN_cmp(*this, b)!=0;
 	}
 

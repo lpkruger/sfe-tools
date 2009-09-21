@@ -72,7 +72,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/BigIntShape2.cpp|src/BigIntShape.cpp|experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -1656,7 +1656,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/BigIntShape2.cpp|src/BigIntShape.cpp|experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -3242,7 +3242,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/BigIntShape2.cpp|src/BigIntShape.cpp|experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -4849,7 +4849,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="src/BigIntShape2.cpp|src/BigIntShape.cpp|experimental|sillylib|src/sillylib|dropbear" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

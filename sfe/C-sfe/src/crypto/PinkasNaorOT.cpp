@@ -6,6 +6,7 @@
  */
 
 #include "PinkasNaorOT.h"
+#include "cryptoio.h"
 #include <openssl/sha.h>
 
 #undef DEBUG
@@ -53,22 +54,6 @@ BigInt PinkasNaorOT::hash(const BigInt &p) {
 	D(md);
 	return BigInt::toPosBigInt(md);
 }
-
-#if 1
-inline void writeObject(DataOutput *out, const BigInt &a) {
-	byte_buf buf = BigInt::MPIfromBigInt(a);
-	out->write(buf);
-}
-inline void readObject(DataInput *in, BigInt &a) {
-	int len = in->readInt();
-	byte_buf buf(len+4);
-	*reinterpret_cast<int*>(&buf[0]) = ntohl(len);
-	in->readFully(&buf[4], len);
-	//D(buf);
-	a = BigInt::MPItoBigInt(buf);
-}
-#endif
-
 
 void OTSender::go() {
 	precalc();

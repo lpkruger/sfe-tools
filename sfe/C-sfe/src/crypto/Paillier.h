@@ -8,6 +8,7 @@
 #ifndef PAILLIER_H_
 #define PAILLIER_H_
 
+#define _INLINE __attribute__((always_inline))
 #include "cipher/Cipher.h"
 #include "bigint.h"
 
@@ -17,7 +18,7 @@ namespace cipher {
 using namespace silly::bigint;
 
 // L function
-static BigInt L(const BigInt &u, const BigInt &n) {
+static inline BigInt L(const BigInt &u, const BigInt &n) {
 	return (u-1)/n;
 }
 
@@ -25,22 +26,41 @@ struct PaillierEncKey {
 	BigInt n;
 	BigInt g;
 	BigInt n2;
+	const BigInt E_ZERO;
 	//		public String toString() {
 	//			return "EncKey("+g+","+n+")";
 	//		}
-	PaillierEncKey(const BigInt &n0, const BigInt &g0) : n(n0), g(g0) {
+	PaillierEncKey(CBigInt &n0, CBigInt &g0) : n(n0), g(g0) {
 		n2 = n*n;
+		*const_cast<BigInt*>(&E_ZERO) = encrypt(0);
 	}
-	BigInt encrypt(BigInt &M) {
+	BigInt encrypt(CBigInt &M) const _INLINE {
 		BigInt r;
 		do {
 			r = BigInt::random(n2.bitLength()).mod(n2);
 		} while (!r.gcd(n).equals(1));
+		// while (! (r GCD n == 1));
 
 		return g.modPow(M, n2).modMultiply(r.modPow(n, n2), n2);
+		//return ((g^M) % n2)*((r^n) % n2) % n2;
 	}
-	BigInt add(const BigInt &x, const BigInt &y) {
+	// add in the encrypted domain
+	BigInt add(CBigInt &x, CBigInt &y) const _INLINE {
 		return x.modMultiply(y, n2);
+		// return (x*y) % n2;
+	}
+	// multiply encrypted x by unencrypted y
+	BigInt multByPlain(CBigInt &x, CBigInt &y) const _INLINE {
+		BigInt z = E_ZERO;
+		BigInt xx = x;
+		int len = y.bitLength();
+		for (int i=0; i<len; ++i) {
+			if (y.testBit(i)) {
+				z = add(z,xx);
+			}
+			xx = add(xx, xx);
+		}
+		return z;
 	}
 };
 
@@ -50,16 +70,14 @@ struct PaillierDecKey {
 	BigInt lambda;
 	BigInt u;
 	BigInt n2;
-	PaillierDecKey(BigInt n0, BigInt &g0, BigInt &lambda0, BigInt &u0) :
-		n(n0), g(g0), lambda(lambda0), u(u0) {
-		n2 = n*n;
-	}
+	PaillierDecKey(CBigInt &n0, CBigInt &g0, CBigInt &lambda0, CBigInt &u0) :
+		n(n0), g(g0), lambda(lambda0), u(u0), n2(n*n) {}
 
-	PaillierEncKey encKey() {
+	PaillierEncKey encKey() const {
 		return PaillierEncKey(n, g);
 	}
 
-	BigInt decrypt(BigInt &z) {
+	BigInt decrypt(CBigInt &z) const {
 		BigInt n2 = n.multiply(n);
 		return L(z.modPow(lambda, n2), n).multiply(u).mod(n);
 	}
@@ -72,98 +90,11 @@ public:
 	BigInt g;
 
 
-	static PaillierDecKey genKey(int nBits) {
-		BigInt p = BigInt::random(nBits).nextProbablePrime();
-		BigInt q;
-		do {
-			q = BigInt::random(nBits).nextProbablePrime();
-		} while (q == p);
-
-		//out("p=" + p + "  q=" + q);
-
-		// computer LCM(p-1, q-1)
-		BigInt pm1 = p-1;
-		BigInt qm1 = q-1;
-		BigInt gcd = pm1.gcd(qm1);
-		BigInt lambda = pm1/gcd*qm1;
-
-		BigInt n = p.multiply(q);
-		BigInt n2 = n.multiply(n);
-
-		BigInt g;
-		BigInt u;
-		do {
-			g = BigInt::random(n2.bitLength()).mod(n2);
-			u = L(g.modPow(lambda, n2), n);
-		} while (!g.gcd(n).equals(1) || !u.gcd(n).equals(1));
-		u = u.modInverse(n);
-
-		return PaillierDecKey(n, g, lambda, u);
-	}
+	static PaillierDecKey genKey(int nBits);
 };
 
-#define out(x) std::cout << x << std::endl
-#define nl() std::cout << std::endl
-	// test
-
-
-
 }
 }
 
-using namespace crypto::cipher;
-
-static std::ostream& operator<<(std::ostream &out, const BigInt& num) {
-	out << num.toString();
-	return out;
-}
-
-static int _main(int argc, char **argv) {
-	vector<string> args(argc-1);
-	for (int i=1; i<argc; ++i) {
-		args[i-1] = argv[i];
-	}
-
-	int nbits = strtol(args.at(0).c_str(), NULL, 0);
-
-	PaillierDecKey d = Paillier::genKey(nbits);
-
-	out("DecKey:"); // rpqyn
-	out("n = " << d.n);
-	out("lambda = " << d.lambda);
-	out("u = " << d.u);
-	nl();
-
-	PaillierEncKey e = d.encKey();
-	out("g = " << e.g);
-	out("n = " << e.n);
-	nl();
-
-
-	BigInt M = BigInt::random(d.n.bitLength()).mod(d.n);
-	out("M = " << M);
-	BigInt z1 = e.encrypt(M);
-	out("z1 = " << z1);
-	BigInt z2 = e.encrypt(M);
-	out("z2 = " << z2);
-	BigInt z3 = e.encrypt(M);
-	out("z3 = " << z3);
-	BigInt M1 = d.decrypt(z1);
-	out("M1 = " << M1);
-	BigInt M2 = d.decrypt(z2);
-	out("M2 = " << M2);
-	BigInt M3 = d.decrypt(z3);
-	out("M3 = " << M3);
-	nl();
-	//out("   3 * M = " << BigInt(M*3).toString());
-	BigInt z_3 = e.add(e.add(z1,z2),z3);
-	out("z1+z2+z3 = " << z_3);
-	out("D(3 * z) = " << d.decrypt(z_3));
-	nl();
-	return 0;
-}
-
-#include "sillymain.h"
-MAIN("pailliertest")
 
 #endif /* PAILLIER_H_ */
