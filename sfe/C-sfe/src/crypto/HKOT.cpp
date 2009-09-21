@@ -140,6 +140,8 @@ void Client::precompute(const byte_buf &key_in) {
 //#define DBG_OT 1
 
 BigInt Client::online() {
+	ulong out_start = out->total;
+	ulong in_start = in->total;
 	long time_start = currentTimeMillis();
 	writeObject(out, decKey.encKey().n);
 	writeObject(out, decKey.encKey().g);
@@ -155,6 +157,8 @@ BigInt Client::online() {
 	long time_end = currentTimeMillis();
 	fprintf(stderr, "Online protocol done in %0.3f secs\n",
 			(time_end - time_start) / 1000.0);
+	fprintf(stderr, "Wrote %lu bytes   Read %lu bytes\n",
+			out->total-out_start, in->total-in_start);
 	return value;
 
 }
@@ -245,7 +249,7 @@ int iarpa::hkot::test_ot(int argc, char **argv) {
 
 		cout << "Key is: " << toHexString(key) << endl;
 		cc.precompute(key);
-		cout << "precomputed" << endl;
+		//cout << "precomputed" << endl;
 		Socket *s = new Socket("localhost", 1238);
 
 		cc.setStreams(s->getInput(), s->getOutput());

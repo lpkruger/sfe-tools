@@ -36,8 +36,8 @@ using crypto::cipher::PaillierDecKey;
 
 const static int lgB = 4;
 const static int B = 1 << lgB;		// security param
-const static int M = 16;
-//const static int M = 32;			// security param
+//const static int M = 16;
+const static int M = 32;			// security param
 const static int Beta = 128/8;		// security param
 const static int HKeySz = 1024;		// security param, size of Paillier key
 
