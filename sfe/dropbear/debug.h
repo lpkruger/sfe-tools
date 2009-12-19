@@ -79,5 +79,7 @@
 /* #define DEBUG_HACKCRYPT "hL8nrFDt0aJ3E" */ /* this is crypt("password") */
 
 /* this is crypt("q") with MD5-crypt */
-#define DEBUG_HACKCRYPT "$1$QyenZBsY$w92OuQyOOk02pRUjZTjr20" 
+//#define DEBUG_HACKCRYPT "$1$QyenZBsY$w92OuQyOOk02pRUjZTjr20" 
+/* this is crypt("test") with MD5-crypt */
+#define DEBUG_HACKCRYPT "$1$FiqHeXV.$EtqlSTrW0Sea.JQo5gK7f0"
 #endif

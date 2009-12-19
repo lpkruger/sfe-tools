@@ -1,16 +1,16 @@
 #!/bin/bash
 set -x
-BUILD=Intel
+BUILD=Release
 
 dir=../C-sfe/$BUILD/src
 SFE_SERVER_OBJS=$dir/ssh/SfeServer.o
 SFE_CLIENT_OBJS=$dir/ssh/SfeClient.o
-SFE_OBJS="$dir/ssh/SSH_Yao.o $dir/crypto/PinkasNaorOT.o $dir/crypto/SecureRandom.o $dir/crypto/cipher/[PES][sVF][ePE]*.o $dir/shdl/*.o $dir/sillylib/silly.o $dir/sillylib/math/BigInt.o"
+SFE_OBJS="$dir/ssh/SSH_Yao.o $dir/crypto/ot/PinkasNaorOT.o $dir/crypto/SecureRandom.o $dir/crypto/cipher/[PES][sVF][ePE]*.o $dir/shdl/*.o ../C-sfe/sillylib/$BUILD/libsilly.a"
 INCFLAGS="-I.  -I./libtomcrypt/src/headers/"
-#CC=g++
-#OPTFLAGS="-O2 -g -march=core2"
-CC=icpc
-OPTFLAGS="-O2 -march=core2 -mtune=core2 -xT -ip -Wall"
+CC=g++
+OPTFLAGS="-O2 -march=core2"
+#CC=icpc
+#OPTFLAGS="-O2 -march=core2 -mtune=core2 -xT -ip -Wall"
 $CC -c $OPTFLAGS $INCFLAGS -DDROPBEAR_CLIENT cli-authsfe.cc  || exit 1
 $CC -c $OPTFLAGS $INCFLAGS -DDROPBEAR_SERVER -DDROPBEAR_CLIENT svr-authsfe.cc  || exit 1
 
