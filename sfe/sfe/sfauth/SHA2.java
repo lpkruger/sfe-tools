@@ -1,5 +1,8 @@
 package sfe.sfauth;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.security.MessageDigest;
 
 import sfe.sfdl.*;
@@ -12,20 +15,34 @@ public class SHA2 {
 	int variant;
 	int wordsize;
 	int blocklen;
+	int numrounds;
+	
+	long[] k;
 	
 	public SHA2(int n) {
 		variant = n;
+		blocklen = n*2;
 		switch(n) {
 		case 512:
 			wordsize = 64;
-			blocklen = 1024;
+			numrounds = 80;
 			break;
 		case 256:
 			wordsize = 32;
-			blocklen = 512;
+			numrounds = 64;
 			break;
 		default:
 			throw new RuntimeException("unknown SHA2: " + n);
+		}
+		
+		k = new long[numrounds];
+		for (int i=0; i<numrounds; ++i) {
+			if (wordsize == 32)
+				k[i] = (0xFFFFFFFFL) & (K_512[i] >>> 32);
+			else
+				k[i] = K_512[i];
+
+			//System.out.printf("%08x\n", k[i]);
 		}
 	}
 	
@@ -98,6 +115,12 @@ public class SHA2 {
 	 0x28db77f523047d84L, 0x32caab7b40c72493L, 0x3c9ebe0a15c9bebcL, 0x431d67c49c100d4cL,
 	 0x4cc5d4becb3e42b6L, 0x597f299cfc657e2aL, 0x5fcb6fab3ad6faecL, 0x6c44198c4a475817L };
 	
+	static final int roco_256_w[] = { 7, 18, 3, 17, 19, 10 };
+	static final int roco_256_h[] = { 2, 13, 22, 6, 11, 25 };
+	static final int roco_512_w[] = { 1, 8, 7, 19, 61, 6 };
+	static final int roco_512_h[] = { 28, 34, 39, 14, 18, 41 };
+	
+	
 	boolean[] Xor_tt = new boolean[8];
 	boolean[] Maj_tt = new boolean[8];
 	boolean[] Ch_tt = new boolean[8];
@@ -113,21 +136,6 @@ public class SHA2 {
 		    Ch_tt[i] = (x & y) ^ ((!x) & z);
 		}
 	}
-	//int id;
-	
-//	int[] r = {7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
-//			5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
-//			4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
-//			6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21};
-	
-	long[] k = new long[64];
-	{
-		for (int i=0; i<64; ++i) {
-			k[i] = (0xFFFFFFFFL) & (K_512[i] >>> 32);
-		
-			//System.out.printf("%08x\n", k[i]);
-		}
-	}
 	
 	public CircuitCompiler comp;
 	
@@ -138,7 +146,7 @@ public class SHA2 {
 			Circuit.GateBase[] e, Circuit.GateBase[] f,
 			Circuit.GateBase[] g, Circuit.GateBase[] h)
 	{
-		debug_output = new Circuit.GateBase[256];
+		debug_output = new Circuit.GateBase[variant];
 		Circuit.GateBase[][] nn = {h, g, f, e, d, c, b, a};
 		int offset = 0;
 		for (int i=0; i<nn.length; ++i) {
@@ -170,7 +178,6 @@ public class SHA2 {
 		}
 		
 		cc.outputs = new Circuit.Output[variant];
-		
 
 		h0 = new Circuit.Gate[wordsize];
 		h1 = new Circuit.Gate[wordsize];
@@ -183,13 +190,13 @@ public class SHA2 {
 		
 		if (variant == 512) {
 			comp.const2Gates(h0, 0x6a09e667f3bcc908L);
-			comp.const2Gates(h0, 0xbb67ae8584caa73bL);
-			comp.const2Gates(h0, 0x3c6ef372fe94f82bL);
-			comp.const2Gates(h0, 0xa54ff53a5f1d36f1L);
-			comp.const2Gates(h0, 0x510e527fade682d1L);
-			comp.const2Gates(h0, 0x9b05688c2b3e6c1fL);
-			comp.const2Gates(h0, 0x1f83d9abfb41bd6bL);
-			comp.const2Gates(h0, 0x5be0cd19137e2179L);
+			comp.const2Gates(h1, 0xbb67ae8584caa73bL);
+			comp.const2Gates(h2, 0x3c6ef372fe94f82bL);
+			comp.const2Gates(h3, 0xa54ff53a5f1d36f1L);
+			comp.const2Gates(h4, 0x510e527fade682d1L);
+			comp.const2Gates(h5, 0x9b05688c2b3e6c1fL);
+			comp.const2Gates(h6, 0x1f83d9abfb41bd6bL);
+			comp.const2Gates(h7, 0x5be0cd19137e2179L);
 		} else if (variant == 256) {
 			comp.const2Gates(h0, 0x6a09e667);
 			comp.const2Gates(h1, 0xbb67ae85);
@@ -205,38 +212,44 @@ public class SHA2 {
 	Circuit generateWithPrivEq(boolean include_R) {
 		int r_bits = include_R ? 128 : 0;
 		
-		initialize(512 + r_bits + 128);
-		for (int i=0; i<512; ++i) {
+		initialize(blocklen + r_bits + variant);
+		for (int i=0; i<blocklen; ++i) {
 			cc.inputs[i].setComment("input.alice.x$"+i);
 		}
 		if (include_R) {
 			for (int i=0; i<r_bits; ++i) {
-				cc.inputs[512+i].setComment("input.alice.r$"+i);
+				cc.inputs[blocklen+i].setComment("input.alice.r$"+i);
 			}
 		}
-		for (int i=0; i<128; ++i) {
-			cc.inputs[512+r_bits+i].setComment("input.bob.y$"+i);
+		for (int i=0; i<variant; ++i) {
+			cc.inputs[blocklen+r_bits+i].setComment("input.bob.y$"+i);
 		}
 		update(0);
 		
-		Circuit.GateBase[] lc = new Circuit.GateBase[128];
-		System.arraycopy(h0, 0, lc, 0, 32);
-		System.arraycopy(h1, 0, lc, 32, 32);
-		System.arraycopy(h2, 0, lc, 64, 32);
-		System.arraycopy(h3, 0, lc, 96, 32);
+		Circuit.GateBase[] lc = new Circuit.GateBase[variant];
+		Circuit.GateBase[][] nn = {h0, h1, h2, h3, h4, h5, h6, h7};
+		int offset = 0;
+		for (int i=0; i<nn.length; ++i) {
+			System.arraycopy(nn[i], 0, lc, offset, wordsize);
+			offset += wordsize;
+		}
+//		System.arraycopy(h0, 0, lc, 0, 32);
+//		System.arraycopy(h1, 0, lc, 32, 32);
+//		System.arraycopy(h2, 0, lc, 64, 32);
+//		System.arraycopy(h3, 0, lc, 96, 32);
 		//bit_reverse(lc);
 		
-		Circuit.GateBase[] rc = new Circuit.GateBase[128];
-		System.arraycopy(cc.inputs, 512+r_bits, rc, 0, 128);
+		Circuit.GateBase[] rc = new Circuit.GateBase[variant];
+		System.arraycopy(cc.inputs, blocklen+r_bits, rc, 0, variant);
 		
-		Gate eq = comp.createEqTest(128, lc, rc);
+		Gate eq = comp.createEqTest(variant, lc, rc);
 		
 		if (!include_R) {
 			cc.outputs = new Circuit.Output[] { new Circuit.Output(eq) };
 		} else {
 			cc.outputs = new Circuit.Output[r_bits];
 			for (int i=0; i<r_bits; ++i) {
-				cc.outputs[i] = new Circuit.Output(comp.newGate(eq, cc.inputs[512+i], comp.TT_AND()));
+				cc.outputs[i] = new Circuit.Output(comp.newGate(eq, cc.inputs[blocklen+i], comp.TT_AND()));
 			}
 		}
 		Optimizer opt = new Optimizer();
@@ -245,7 +258,7 @@ public class SHA2 {
 		return cc;
 	}
 	Circuit generate() {
-		initialize(512);
+		initialize(blocklen);
 		update(0);
 		return digest();
 	}
@@ -266,6 +279,11 @@ public class SHA2 {
 		for (int ch=0; ch<n.length; ++ch) {
 			for (int i=0; i<wordsize; ++i) {
 				cc.outputs[offset+i] = new Circuit.Output((Circuit.Gate) n[ch][i]);
+				/*
+				cc.outputs[offset+i] = new Circuit.Output(-10);
+				cc.outputs[offset+i].arity = 1;
+				cc.outputs[offset+i].inputs = new Circuit.GateBase[] { n[ch][i] };
+				cc.outputs[offset+i].truthtab = new boolean[] { false, true }; */
 				cc.outputs[offset+i].setComment("output.md$"+(offset+i));
 			}
 			offset += wordsize;
@@ -294,34 +312,38 @@ public class SHA2 {
 		Circuit.GateBase[] g = h6;
 		Circuit.GateBase[] h = h7;
 
-		//Extend the sixteen 32-bit words into sixty-four 32-bit words:
-		Circuit.GateBase[][] ww = new Circuit.GateBase[64][];
+		//Extend the sixteen 32/64-bit words into sixty-four/eighty words:
+		Circuit.GateBase[][] ww = new Circuit.GateBase[numrounds][];
 		for (int i=0; i<16; ++i) {
-			ww[i] = new Circuit.GateBase[32];
-			System.arraycopy(cc.inputs, input_offset+32*i, ww[i], 0, 32);
+			ww[i] = new Circuit.GateBase[wordsize];
+			System.arraycopy(cc.inputs, input_offset+wordsize*i, ww[i], 0, wordsize);
 			BitUtils.bit_reverse(ww[i]);
 		}
-		for (int i=16; i<64; ++i) {
+		int[] rc = (variant == 256 ? roco_256_w : roco_512_w);
+		
+		for (int i=16; i<numrounds; ++i) {
 			Circuit.Gate[] s0 = apply3(
-					right_rotate(ww[i-15], 7),
-					right_rotate(ww[i-15], 18),
-					right_shift(ww[i-15], 3),
+					right_rotate(ww[i-15], rc[0]),
+					right_rotate(ww[i-15], rc[1]),
+					right_shift(ww[i-15], rc[2]),
 					Xor_tt, "ww_s0_"+i);
 			Circuit.Gate[] s1 = apply3(
-					right_rotate(ww[i-2], 17),
-					right_rotate(ww[i-2], 19),
-					right_shift(ww[i-2], 10),
+					right_rotate(ww[i-2], rc[3]),
+					right_rotate(ww[i-2], rc[4]),
+					right_shift(ww[i-2], rc[5]),
 					Xor_tt, "s1_"+i);
 			Circuit.Gate[] tmp1 = createAdder(ww[i-16], s0, "w-16+s0 "+i);
 			Circuit.Gate[] tmp2 = createAdder(ww[i-7], s1, "w-7+s1 "+i);
 			ww[i] = createAdder(tmp1, tmp2, "w_"+i);
 		}
 
-		//dbg_out(a, b, c, d, e, f, g, h);
-		for (int i=0; i<64; ++i) {
-			Circuit.Gate[] kk = new Circuit.Gate[32];
+		
+		for (int i=0; i<numrounds; ++i) {
+			if (i==-1)
+				dbg_out(a, b, c, d, e, f, g, h);
+			Circuit.Gate[] kk = new Circuit.Gate[wordsize];
 			comp.const2Gates(kk, k[i]);
-			for (int j=0; j<32; ++j) {
+			for (int j=0; j<wordsize; ++j) {
 				if (kk[j]==null)
 					throw new RuntimeException("kk["+j+"] is null");
 				//System.out.println(kk[j]);
@@ -329,18 +351,20 @@ public class SHA2 {
 					throw new RuntimeException("ww["+j+"] is null");
 				//System.out.println(ww[j]);
 			}
-
+			
+			rc = (variant == 256 ? roco_256_h : roco_512_h);
+			
 			Circuit.Gate[] s0 = apply3(
-					right_rotate(a, 2),
-					right_rotate(a, 13),
-					right_rotate(a, 22),
+					right_rotate(a, rc[0]),
+					right_rotate(a, rc[1]),
+					right_rotate(a, rc[2]),
 					Xor_tt, "s0_"+i);
 			Circuit.Gate[] maj = apply3(a, b, c, Maj_tt, "maj_"+i);
 			Circuit.Gate[] t2 = createAdder(s0, maj, "t2_"+i);
 			Circuit.Gate[] s1 = apply3(
-					right_rotate(e, 6),
-					right_rotate(e, 11),
-					right_rotate(e, 25),
+					right_rotate(e, rc[3]),
+					right_rotate(e, rc[4]),
+					right_rotate(e, rc[5]),
 					Xor_tt, "s1_"+i);
 			Circuit.Gate[] ch = apply3(e, f, g, Ch_tt, "ch_"+i);
 			Circuit.Gate[] hPs1 = createAdder(h, s1, "h+s1 "+i);
@@ -368,14 +392,14 @@ public class SHA2 {
 	//if (i==60) debug_output = dbg_out(b,ff,www,kk);
 
 		
-		h0 = comp.createAdder(a, h0);
-		h1 = comp.createAdder(b, h1);
-		h2 = comp.createAdder(c, h2);
-		h3 = comp.createAdder(d, h3);
-		h4 = comp.createAdder(e, h4);
-		h5 = comp.createAdder(f, h5);
-		h6 = comp.createAdder(g, h6);
-		h7 = comp.createAdder(h, h7);
+		h0 = createAdder(a, h0, "a+h0");
+		h1 = createAdder(b, h1, "b+h1");
+		h2 = createAdder(c, h2, "c+h2");
+		h3 = createAdder(d, h3, "d+h3");
+		h4 = createAdder(e, h4, "e+h4");
+		h5 = createAdder(f, h5, "f+h5");
+		h6 = createAdder(g, h6, "g+h6");
+		h7 = createAdder(h, h7, "h+h7");
 	}
 
 	Circuit.Gate[] createAdder(Circuit.GateBase[] x, Circuit.GateBase[] y, String name) {
@@ -411,12 +435,12 @@ public class SHA2 {
 		return compute_sha2(cc, new boolean[][] { inputs });
 	}
 	public boolean[] compute_sha2(Circuit cc, boolean[][] inputz) {
-		boolean[] inputs3 = new boolean[512*inputz.length];
+		boolean[] inputs3 = new boolean[blocklen*inputz.length];
 		for (int i=0; i<inputz.length; ++i) {
 			boolean[] inputs = inputz[i];
 			boolean[] inputs2 = prepare_sha2_input(inputs);
 			
-			System.arraycopy(inputs2, 0, inputs3, 512*i, 512);
+			System.arraycopy(inputs2, 0, inputs3, blocklen*i, blocklen);
 		}
 		//Circuit cc = new MD5().generate();
 		//System.out.println(Base64.encodeBytes(bool2bytes(inputs2)));
@@ -430,10 +454,56 @@ public class SHA2 {
 		MessageDigest md = MessageDigest.getInstance("SHA-512");
 		byte[] out = md.digest(args[0].getBytes());
 		for (int i=0; i<out.length; ++i) {
-			System.out.printf("%02x%s",out[i], (((i+1)%4)==0?" ":""));
+			System.out.printf("%02x%s",out[i], (((i+1)%8)==0?" ":""));
 		}
 		System.out.println();
 		System.out.println(Base64.encodeBytes(out));
+		
+		
+		/////
+		Sha512 sha512 = new Sha512();
+		sha512.resetContext();
+		byte[] padding = Sha512.padBuffer(args[0].getBytes().length);
+		byte[] inbytes = new byte[1024/8];
+		System.arraycopy(args[0].getBytes(), 0, inbytes, 0, args[0].getBytes().length);
+		System.arraycopy(padding, 0, inbytes, args[0].getBytes().length, padding.length);
+		sha512.transform(inbytes, 0);
+		out = sha512.getResult();
+		for (int i=0; i<out.length; ++i) {
+			System.out.printf("%02x%s",out[i], (((i+1)%8)==0?" ":""));
+		}
+		System.out.println();
+		System.out.println(Base64.encodeBytes(out));
+		/////
+		
+		SHA2 sha2cc;
+		Circuit cc;
+		boolean[][] inputs;
+		
+		sha2cc = new SHA2(512);
+		cc = sha2cc.generate();
+		
+		PrintStream stdout = System.out;
+		FileOutputStream fos = new FileOutputStream("sha512.circ");
+		PrintStream pos = new PrintStream(new BufferedOutputStream(fos));
+		System.setOut(pos);
+		CircuitWriter.write(cc);
+		System.setOut(stdout);
+		pos.close();
+		
+		inputs = new boolean[][] { BitUtils.bytes2bool(args[0].getBytes()) };
+		out = BitUtils.bool2bytes(sha2cc.compute_sha2(cc, inputs));
+		for (int i=0; i<out.length; ++i) {
+			System.out.printf("%02x%s",out[i], (((i+1)%8)==0?" ":""));
+		}
+		System.out.println();
+		System.out.println(Base64.encodeBytes(out));
+
+		System.out.println();
+		
+//		if(true)
+//			return;
+		
 		
 		md = MessageDigest.getInstance("SHA-256");
 		out = md.digest(args[0].getBytes());
@@ -443,11 +513,11 @@ public class SHA2 {
 		System.out.println();
 		System.out.println(Base64.encodeBytes(out));
 		
-		/*
+		
 		Sha256 sha256 = new Sha256();
 		sha256.resetContext();
-		byte[] padding = Sha256.padBuffer(args[0].getBytes().length);
-		byte[] inbytes = new byte[512/8];
+		padding = Sha256.padBuffer(args[0].getBytes().length);
+		inbytes = new byte[512/8];
 		System.arraycopy(args[0].getBytes(), 0, inbytes, 0, args[0].getBytes().length);
 		System.arraycopy(padding, 0, inbytes, args[0].getBytes().length, padding.length);
 		sha256.transform(inbytes, 0);
@@ -457,15 +527,22 @@ public class SHA2 {
 		}
 		System.out.println();
 		System.out.println(Base64.encodeBytes(out));
-		*/
 		
 		
 //		MD5Test md5t = new MD5Test();
 //		md5t.Update(args[0].getBytes());
 //		System.out.println(Base64.encodeBytes(md5t.Final()));
-		SHA2 sha2cc = new SHA2(256);
-		Circuit cc = sha2cc.generate();
-		boolean[][] inputs = { BitUtils.bytes2bool(args[0].getBytes()) };
+		sha2cc = new SHA2(256);
+		cc = sha2cc.generate();
+		
+		fos = new FileOutputStream("sha256.circ");
+		pos = new PrintStream(new BufferedOutputStream(fos));
+		System.setOut(pos);
+		CircuitWriter.write(cc);
+		System.setOut(stdout);
+		pos.close();
+		
+		inputs = new boolean[][] { BitUtils.bytes2bool(args[0].getBytes()) };
 		out = BitUtils.bool2bytes(sha2cc.compute_sha2(cc, inputs));
 		for (int i=0; i<out.length; ++i) {
 			System.out.printf("%02x%s",out[i], (((i+1)%4)==0?" ":""));
