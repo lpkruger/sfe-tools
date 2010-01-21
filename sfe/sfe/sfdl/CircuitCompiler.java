@@ -783,12 +783,12 @@ public class CircuitCompiler implements Compile {
 	}
 
 	public void const2Gates(Gate[] g, long k) {
-		for (int i=0; i<32; ++i) {
+		for (int i=0; i<g.length; ++i) {
 			g[i] = newGate();
 			g[i].arity = 0;
 			g[i].inputs = new GateBase[0];
 			g[i].truthtab = new boolean[1];
-			if (0 != (k & (1<<i))) {
+			if (0L != (k & (1L<<i))) {
 				g[i].truthtab[0] = true;
 			}
 		}

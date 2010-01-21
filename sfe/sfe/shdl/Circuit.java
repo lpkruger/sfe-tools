@@ -127,12 +127,24 @@ public class Circuit {
 			int n = 0;
 			switch(arity) {
 			case 3:
+				if (inputs[2] == null) {
+					System.err.println(getComment());
+					write(System.err);
+				}
 				z = inputs[2].eval(state);
 				n = (z?1:0);
 			case 2:
+				if (inputs[1] == null) {
+					System.err.println(getComment());
+					write(System.err);
+				}
 				y = inputs[1].eval(state);
 				n += (y?1:0) << (arity - 2);
 			case 1:
+				if (inputs[0] == null) {
+					System.err.println(getComment());
+					write(System.err);
+				}
 				x = inputs[0].eval(state);
 				n += (x?1:0) << (arity - 1);
 			}
