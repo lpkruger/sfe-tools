@@ -226,6 +226,9 @@ public class Sha256
 	}
 */
 	
+	public static void dump(int a,int b,int c,int d,int e, int f, int g, int h) {
+		System.out.printf("%08x %08x %08x %08x %08x %08x %08x %08x\n", a,b,c,d,e,f,g,h);
+	}
 	// SHA specific methods ----------------------------------------------------
 
 	public static final int[] sha(int hh0, int hh1, int hh2,
@@ -241,6 +244,7 @@ public class Sha256
 		int F = hh5;
 		int G = hh6;
 		int H = hh7;
+		
 		int r, T, T2;
 
 		for (r = 0; r < 16; r++)
@@ -260,6 +264,9 @@ public class Sha256
 
 		for (r = 0; r < 64; r++)
 		{
+			if (r<-1)
+				dump(A,B,C,D,E,F,G,H);
+			
 			T = (H
 					+ (((E >>> 6) | (E << 26)) ^ ((E >>> 11) | (E << 21)) ^ ((E >>> 25) | (E << 7)))
 					+ ((E & F) ^ (~E & G)) + k[r] + w[r]);
