@@ -9,9 +9,10 @@ import sfe.shdl.*;
 import sfe.util.*;
 
 public class SHA2pw {
-	static byte[] testsalt = "QyenZBsY" .getBytes();
-	static byte[] magic = "$1$".getBytes();
-	
+	//static byte[] testsalt = "QyenZBsY" .getBytes();
+	//static byte[] magic = "$1$".getBytes();
+	static byte[] testsalt = "TxtsgpEa".getBytes();
+	static byte[] magic = "$6$".getBytes();
 	static void print(byte[] q) {
 		System.out.println(new String(q));
 	}
@@ -31,12 +32,12 @@ public class SHA2pw {
 	}
 	public static void main(String[] args) throws Exception {
 		byte[] pw = args[0].getBytes();
-		String pwcr = md5_pw(pw, testsalt);
+		String pwcr = sha512_pw(pw, testsalt);
 		System.out.println(pwcr);
 		pwcr = pwcr.substring(pwcr.lastIndexOf('$')+1);
 		System.out.println(pwcr);
 		System.out.println(toB64(fromB64(pwcr)));
-		byte[] fin = md5_pw_999(pw, testsalt);
+		byte[] fin = sha512_pw_999(pw, testsalt);
 		
 		/*
 		MessageDigest md5 = MessageDigest.getInstance("MD5");
@@ -45,19 +46,19 @@ public class SHA2pw {
 		md5.update(fin);
 		fin = md5.digest();*/
 		
-		MD5 md5gen = new MD5();
+		SHA2 sha2gen = new SHA2(512);
 		/*
 		md5gen.initialize(2);
 		md5gen.update(0);
 		md5gen.update(0);
 		md5gen.update(1);
 		Circuit cc = md5gen.digest();*/
-		Circuit cc = md5gen.generate();
+		Circuit cc = sha2gen.generate();
 		PrintStream stdout = System.out;
 		
 		if (args[0].equals("generate")) {
-			System.out.println("Writing md5_std.circ");
-			FileOutputStream circout1 = new FileOutputStream("md5_std.circ");
+			System.out.println("Writing sha512_std.circ");
+			FileOutputStream circout1 = new FileOutputStream("sha512_std.circ");
 			System.setOut(new PrintStream(circout1));
 			CircuitWriter.write(cc);
 			circout1.close();
@@ -68,32 +69,32 @@ public class SHA2pw {
 		boolean[] in2 = BitUtils.bytes2bool(args[0].getBytes());
 		boolean[] in3 = BitUtils.bytes2bool(fin);
 		boolean[][] inputs = { in1, in2, in3 };
-		fin = BitUtils.bool2bytes(MD5.compute_md5(cc, concat(inputs)));
+		fin = BitUtils.bool2bytes(new SHA2(512).compute_sha2(cc, concat(inputs)));
 		System.out.println(new String(magic)+new String(testsalt)+"$"+toB64(fin));
 		
 		boolean use_R = true;
-		cc = md5gen.generateWithPrivEq(use_R);
+		cc = sha2gen.generateWithPrivEq(use_R);
 		cc.outputs[0].setComment("output.bob$0");
 		if (!use_R) {
 			boolean[] in4 = BitUtils.bytes2bool(fin);
 			//boolean[] in4 = new boolean[128];
-			boolean[][] eqinputs = { MD5.prepare_md5_input(concat(inputs)), in4 };
+			boolean[][] eqinputs = { new SHA2(512).prepare_sha2_input(concat(inputs)), in4 };
 			boolean[] out = cc.eval(concat(eqinputs));
 			System.out.println("eq: " + out[0]);
 		}
 		String rstr = use_R ? "_r" : "";
 		
 		if (args[0].equals("generate")) {
-			System.out.println("Writing md5_pw_cmp.circ");
-			FileOutputStream circout = new FileOutputStream("md5_pw_cmp"+rstr+".circ");
+			System.out.println("Writing sha512_pw_cmp.circ");
+			FileOutputStream circout = new FileOutputStream("sha512_pw_cmp"+rstr+".circ");
 			System.setOut(new PrintStream(circout));
 			CircuitWriter.write(cc);
 			circout.close();
-			System.out.println("Writing md5_pw_cmp.fmt");
-			FileOutputStream fmtout = new FileOutputStream("md5_pw_cmp"+rstr+".fmt");
+			System.out.println("Writing sha512_pw_cmp.fmt");
+			FileOutputStream fmtout = new FileOutputStream("sha512_pw_cmp"+rstr+".fmt");
 			System.setOut(new PrintStream(fmtout));
 			System.out.print("Alice input integer \"input.alice.x\" [");
-			for (int i=0; i<512; ++i) {
+			for (int i=0; i<1024; ++i) {
 				System.out.print(" "+i);
 			}
 			System.out.println(" ]");
@@ -103,7 +104,7 @@ public class SHA2pw {
 				r_bits = cc.outputs.length;
 				System.out.print("Alice input integer \"input.alice.r\" [");
 				for (int i=0; i<r_bits; ++i) {
-					System.out.print(" "+(512+i));
+					System.out.print(" "+(1024+i));
 				}
 				System.out.println(" ]");
 			}
@@ -111,7 +112,7 @@ public class SHA2pw {
 			
 			System.out.print("Bob input integer \"input.bob.y\" [");
 			for (int i=0; i<128; ++i) {
-				System.out.print(" "+(512+r_bits+i));
+				System.out.print(" "+(1024+r_bits+i));
 			}
 			System.out.println(" ]");
 			
@@ -219,12 +220,12 @@ public class SHA2pw {
 	}
     */
 	
-	public static byte[] md5_pw_999(byte[] pw, byte[] salt) {
+	public static byte[] sha512_pw_999(byte[] pw, byte[] salt) {
 		MessageDigest md;
 		MessageDigest finmd;
 		try {
-			 md = MessageDigest.getInstance("MD5");
-			 finmd = MessageDigest.getInstance("MD5");
+			 md = MessageDigest.getInstance("SHA-512");
+			 finmd = MessageDigest.getInstance("SHA-512");
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace(System.err);
 			throw new NullPointerException(e.getMessage());
@@ -281,12 +282,12 @@ public class SHA2pw {
 		return fin;
 	}
 	
-	public static String md5_pw(byte[] pw, byte[] salt) {
+	public static String sha512_pw(byte[] pw, byte[] salt) {
 		MessageDigest md;
 		MessageDigest finmd;
 		try {
-			 md = MessageDigest.getInstance("MD5");
-			 finmd = MessageDigest.getInstance("MD5");
+			 md = MessageDigest.getInstance("SHA-512");
+			 finmd = MessageDigest.getInstance("SHA-512");
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace(System.err);
 			throw new NullPointerException(e.getMessage());
