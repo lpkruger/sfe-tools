@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<DEFAULT item="y" tlversion="1.2.4"
+line0="{*Name*}"
+line1="{*Name*}">
+<Name type="Text" ref="y">Main</Name>
+<Chapter item="y"
+line0="Chapter {*Chapter*} {*Name*}"
+line1="Chapter {*Chapter*} {*Name*}"
+childtype="Text">
+<Chapter type="Number" format="##">1</Chapter>
+<Name type="Text" ref="y">Introduction</Name>
+<Text type="Text" lines="20">Privacy is becoming an important concern as computers increase in power and the Internet continues to grow [cra99, tur03]. More and more data is stored on machines that are connected to the Internet, directly or indirectly, and there are many examples in the newspapers today of privacy compromising activities such as phishing, data theft, and identity theft. There are also many other reasons why privacy should be protected, including business competition, respect of personal privacy, and government mandate, such as HIPPA laws [hippa] which mandate strict privacy among health-care professionals along with stiff penalties for violations.
+
+Despite these many concerns, there is also a conflicting desire to perform useful computations with data. Data is not useful unless it can be accessed and manipulated. Sometimes various parties would like to collaborate on research involving sensitive data. For example, genetic data is the subject of much current research, but it is considered private. Researchers with access to different patients' data may want to combine their knowledge in the search for new cures for diseases, yet not reveal the sensitive data to collaborating parties. Competing businesses may want to perform joint market research for mutual benefit, without revealing sensitive customer data. The challenge is how to balance these competing concerns, making data available for legitimate uses while preserving as much privacy as possible.
+
+There have been several methods developed so far for preserving personal privacy while permitting use of data. The most simple method, conceptually, is to replace identifying information, such as the name, social security number, and other sensitive data with random unique identifiers, and then using the transformed data for computation. If it is necessary to correlate the outputs of the computation with individuals, the data owner can do this, but other parties presumably can not. However, this method has been shown to be vulnerable to attacks that correlate the transformed data with information available from external sources to reconstruct the obfuscated data, thereby breaking the privacy protection [Malin04]. 
+
+Another method of preserving privacy is known as secure multiparty computation. This is a technique of performing computations on inputs supplied by multiple parties while provably maintaining privacy guarantees. If the computation is a function evaluation, then it is called secure function evaluation, or SFE. This is a technique which can address many of privacy concerns facing the modern age. The inputs to the function are partitioned among more than one party, and the function is computed collaboratively while preserving the privacy of each participant's individual inputs. In this case, privacy is considered preserved if no party learns any information that would affect their estimate of the probability distribution of another party's inputs, except for that which can be calculated by the parties' own inputs and the output of the joint function.
+
+Although SFE has provable privacy guarantees, its implementation tends to be very expensive for practical use in terms of time and space. The space expense manifests itself in network bandwidth used in the protocols. These expenses explain why SFE has not been used very much outside of the academic literature, despite the fact that was formally introduced many years ago[PLACEHOLDER]. There has been research in recent years to make SFE more practical. This research falls into two categories: general and function specific. General protocols allow any function expressed as a circuit computation to be evaluated securely. The Fairplay system [Fairplay] is a straightforward implementation of the Yao protocol, along with a supporting compiler that allows secure functions to be written in a more familiar functional programming notation. Kruger et al. [kruger06] showed how Ordered Binary Decision Diagrams (OBDD) can be used to produce a more efficient protocol for secure evaluation for certain functions. Function specific protocol design has produced secure protocols which perform dramatically better than general protocols. Privacy preserving data mining (PPDM) has been a major application driving such research [verykios04stateart]. Other protocols have been developed for various classes of functions such as polynomial evaluation [naor99otope] and string alignment algorithms such as edit distance [kruger07]. Also, the amount of time required for the computations has benefited greatly from Moore's law. I have shown that in some cases, the computation requirements of the most general protocols can be adequate for practical use when performed on today's fastest CPUs [kruger06]. 
+
+I propose to continue researching ways to improve the efficiency and practicality of privacy preserving protocols. My past work has looked at finding efficient protocols for specific classes of functions, in particular, one study analyzes several designs of a k-means clustering algorithm [kruger05], and another discusses ways to design efficient protocols for many dynamic programming problems [kruger07]. I have also investigated the use of alternate circuit representations using OBDDs to improve the performance of general purpose protocols and showed that they can be beneficial for certain functions [kruger06].
+
+I am proposing to continue the work suggested by these initial studies, and further investigate ways to improve the performance and simplify the task of constructing efficient privacy preserving protocols, culminating in an optimizing protocol compiler. In addition to the research results, I also plan to release the SFE compiler and supporting tools as a stimulus to expand future research in secure function evaluation.
+
+Specifically, I propose that my work will create the following contributions:
+
+• Protocols for other alternative representation of circuits. I will extend the previous work with OBDDs by creating hybrid circuits which compose sub-circuits represented as OBDDs with sub-circuits represented as Boolean circuits. I will also investigate whether extended OBDD models can be used to create additional efficiency improvements
+
+• Protocols for evaluating functions with controlled leakage of information. The question being answered is whether performance improvements can be achieved by loosening the privacy guarantees in a controlled way, by specifying which data may and may not leak.
+
+• A framework for analyzing a specific protocol and creating an equivalent protocol which is more efficient. This is analogous to the role played by an optimizing compiler for program code.
+
+• An example showing that SFE can is useful in other aspects of security where it has not previously been used. Specificaly, I will show how SFE can be used to implement a more secure authentication protocol in SSH.</Text>
+</Chapter>
+<Chapter item="y">
+<Chapter>2</Chapter>
+<Name>Oblivious Transfer</Name>
+</Chapter>
+<Chapter item="y">
+<Chapter>3</Chapter>
+<Name>Private Information Retrieval</Name>
+</Chapter>
+<Chapter item="y">
+<Chapter>4</Chapter>
+<Name>Homomorphic Encryption</Name>
+</Chapter>
+<Chapter item="y">
+<Chapter>5</Chapter>
+<Name>SFE Compiler</Name>
+</Chapter>
+<Chapter item="y">
+<Chapter>6</Chapter>
+<Name>Example: Password Authentication</Name>
+</Chapter>
+<Text item="n"
+line0="{*Name*}"
+line1="{*Name*}"
+childtype="Text">
+<Name type="Text" ref="y"></Name>
+<Text type="Text" lines="20"></Text>
+</Text>
+<ROOT item="n"
+line0="{*Name*}"
+line1="{*Name*}"
+childtype="DEFAULT">
+<Name type="Text" ref="y"></Name>
+</ROOT>
+</DEFAULT>
