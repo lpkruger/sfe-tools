@@ -69,7 +69,7 @@ bool server_sfeauth_send_payload(byte *buf, int length) {
 #endif
 
 void svr_auth_sfe() {
-  fprintf(stderr, "svr_auth_sfe\n");
+  fprintf(stderr, "start svr_auth_sfe\n");
 
   // copied from password authentication
 #ifdef HAVE_SHADOW_H
@@ -86,11 +86,20 @@ void svr_auth_sfe() {
 #endif
 
 #ifdef DEBUG_HACKCRYPT
-        //if (getuid() != 0) {
 	/* debugging crypt for non-root testing with shadows */
 	  char *hack = getenv("CRYPTPW");
 	  passwdcrypt = hack?hack:passwdcrypt;
-        //}
+
+	  if (strlen(passwdcrypt) <= 3) {
+		fprintf(stderr, "Could not read crypted password.\n");
+		fprintf(stderr, "You must ");
+		if (getuid() != 0) {
+		  fprintf(stderr, "either run as root, or ");
+		}
+		fprintf(stderr, "set the CRYPTPW environment variable\n");
+		send_msg_userauth_failure(0, 1);
+		return;
+	  }
 #endif
 
 	/* check for empty password - need to do this again here
@@ -105,7 +114,7 @@ void svr_auth_sfe() {
 
   // end copied from password authentication
 
-  fprintf(stderr, "svr_auth_sfe2\n");
+  //fprintf(stderr, "svr_auth_sfe2\n");
   
   char* num_circ_str = getenv("NUMCIRC");
   int num_circ = 0;

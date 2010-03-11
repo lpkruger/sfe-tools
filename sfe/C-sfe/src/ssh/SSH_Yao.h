@@ -24,7 +24,8 @@ using crypto::SecureRandom;
 using crypto::cipher::PseudoRandom;
 
 #include <errno.h>
-static const char *circ_path[] = { "/etc/dropbear/", "/home/louis/sfe/", "/u/l/p/lpkruger/research/sfe/" };
+static const char *circ_path[] = { "/etc/dropbear/", "/tmp/dropbear/", "./" };
+	// "/home/louis/sfe/", "/u/l/p/lpkruger/research/sfe/" };
 static void open_file(ifstream &in, const char *fname) {
 	string str;
 	for (uint i=0; i<sizeof(circ_path)/sizeof(const char*); ++i) {

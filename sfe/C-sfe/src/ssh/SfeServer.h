@@ -20,7 +20,7 @@
 #include "MD5pw.h"
 #include "SHA512pw.h"
 
-#define DC(x) std::cerr << x << std::endl;
+//#define DC(x) std::cerr << x << std::endl;
 
 using namespace silly::net;
 using namespace silly::misc;
@@ -85,17 +85,27 @@ public:
 	void go2(DataOutput *out, DataInput *in) {
 		long time = currentTimeMillis();
 		DC("using passwdcrypt " << passwdcrypt);
-		int method = passwdcrypt[1]-'0';
+		int method,hashbytes,dollar;
+		try {
+		method = passwdcrypt.at(1)-'0';
+		if (method!=6 && method!=1) {
+			cerr << "Only MD5 and SHA512 passwords are supported" << endl;
+			throw ProtocolException("unknown password method");
+		}
 		out->writeInt(method);
 		out->flush();
-		int hashbytes = (method==6 ? 64 : method==5 ? 32 : 16);
-		int dollar = passwdcrypt.rfind("$");
+		hashbytes = (method==6 ? 64 : method==5 ? 32 : 16);
+		dollar = passwdcrypt.rfind("$");
 		salt = passwdcrypt.substr(3,dollar-3);
 		DC("salt: " << salt);
 
 		cryptpw = method==6 ?
 				SHA512pw::fromB64(passwdcrypt.substr(dollar+1)) :
 					MD5pw::fromB64(passwdcrypt.substr(dollar+1));
+		} catch (std::out_of_range) {
+			cerr << "invalid password crypt: '" << passwdcrypt << "'" << endl;
+			throw ProtocolException("invalid password crypt");
+		}
 		DC("cryptpwlen " << cryptpw.size());
 		byte_buf tmp(hashbytes);
 		memcpy(&tmp[0], &cryptpw[0], hashbytes);

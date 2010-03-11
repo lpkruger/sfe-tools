@@ -12,7 +12,7 @@
 #include <string>
 #include "silly.h"
 #include "sillytype.h"
-#define DEBUG 1
+//#define DEBUG 1
 #include "sillydebug.h"
 using namespace silly::misc;
 /*

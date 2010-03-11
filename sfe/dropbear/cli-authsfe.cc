@@ -73,7 +73,7 @@ int cli_auth_sfe() {
       AUTH_METHOD_SFE_LEN);
   encrypt_packet();
 
-  fprintf(stderr, "cli_auth_sfe\n");
+  fprintf(stderr, "start cli_auth_sfe\n");
   start_sfe_client(password);
   inactive = false;
 

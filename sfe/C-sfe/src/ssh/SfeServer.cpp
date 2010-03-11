@@ -24,8 +24,8 @@ static SfeServer *server;
 void start_sfe_server(char *pwcrypt, int num_circ) {
 	if (server)
 		delete server;
-	printf("new_sfe_server\n");
-	fprintf(stderr, "new_sfe_server2\n");
+	//printf("new_sfe_server\n");
+	//fprintf(stderr, "new_sfe_server2\n");
 	server = new SfeServer(string(pwcrypt), num_circ);
 	server->start();
 }
