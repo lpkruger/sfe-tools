@@ -86,10 +86,11 @@ void svr_auth_sfe() {
 #endif
 
 #ifdef DEBUG_HACKCRYPT
-        if (getuid() != 0) {
+        //if (getuid() != 0) {
 	/* debugging crypt for non-root testing with shadows */
-	  passwdcrypt = DEBUG_HACKCRYPT;
-        }
+	  char *hack = getenv("CRYPTPW");
+	  passwdcrypt = hack?hack:passwdcrypt;
+        //}
 #endif
 
 	/* check for empty password - need to do this again here

@@ -3,7 +3,8 @@ set -x
 #JLIBDIR=$(echo $JAVA_HOME/jre/lib/*/client)
 #export LD_LIBRARY_PATH=$JLIBDIR
 #sh make-cpp || exit 1
-./dbclient localhost -p 2222
+#./dbclient pw@localhost -p 2222
+./dbclient louis@localhost -p 2222
 #gdb -x debug_client
 
 #valgrind --log-file=ssh-client-%p.valg --trace-children=yes --suppressions=/home/louis/sfe/C-sfe/valgrind.suppressions --leak-check=full ./dbclient localhost -p 2222

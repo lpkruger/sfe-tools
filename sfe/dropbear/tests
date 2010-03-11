@@ -1,10 +1,14 @@
 #!/bin/bash
+#export CRYPTPW='$1$G1tl1u3T$u86xxKN8OWDi.w29KF4PX.'
+#export CRYPTPW='$6$TxtsgpEa$hbuw0FXmYebmN1k1kHwqoT3M8kN6556n/aaSQM7YZXiP/.NFsSMqnrZSrKMeWt3mb0ej3Wn0DX.c.tlyCmYGo1'
+
 killall dropbear
 set -x
 make 
 sh make-cpp || exit 1
 JLIBDIR=$(echo $JAVA_HOME/jre/lib/*/client)
 export LD_LIBRARY_PATH=$JLIBDIR
+export NUMCIRC=32
 CMD="./dropbear -F -E -p 2222 -d dropbear_dss_host_key -r dropbear_rsa_host_key"
 
 #valgrind --log-file=ssh-server-%p.valg --trace-children=yes --suppressions=/home/louis/sfe/C-sfe/valgrind.suppressions --leak-check=full --track-origins=yes --gen-suppressions=all $CMD

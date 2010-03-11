@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.security.MessageDigest;
 
+import com.sun.org.apache.xpath.internal.axes.ReverseAxesWalker;
+
 import sfe.sfdl.*;
 import sfe.shdl.*;
 import sfe.shdl.Circuit.Gate;
@@ -225,22 +227,21 @@ public class SHA2 {
 			cc.inputs[blocklen+r_bits+i].setComment("input.bob.y$"+i);
 		}
 		update(0);
+
 		
 		Circuit.GateBase[] lc = new Circuit.GateBase[variant];
-		Circuit.GateBase[][] nn = {h0, h1, h2, h3, h4, h5, h6, h7};
+		Circuit.GateBase[][] nn = {h7, h6, h5, h4, h3, h2, h1, h0};
 		int offset = 0;
 		for (int i=0; i<nn.length; ++i) {
 			System.arraycopy(nn[i], 0, lc, offset, wordsize);
 			offset += wordsize;
-		}
-//		System.arraycopy(h0, 0, lc, 0, 32);
-//		System.arraycopy(h1, 0, lc, 32, 32);
-//		System.arraycopy(h2, 0, lc, 64, 32);
-//		System.arraycopy(h3, 0, lc, 96, 32);
-		//bit_reverse(lc);
+		} 
 		
 		Circuit.GateBase[] rc = new Circuit.GateBase[variant];
-		System.arraycopy(cc.inputs, blocklen+r_bits, rc, 0, variant);
+		//System.arraycopy(cc.inputs, blocklen+r_bits, rc, 0, variant);
+		for (int i=0; i<variant; ++i) {
+			rc[variant-1-i] = cc.inputs[blocklen+r_bits+i];
+		}
 		
 		Gate eq = comp.createEqTest(variant, lc, rc);
 		
@@ -279,11 +280,6 @@ public class SHA2 {
 		for (int ch=0; ch<n.length; ++ch) {
 			for (int i=0; i<wordsize; ++i) {
 				cc.outputs[offset+i] = new Circuit.Output((Circuit.Gate) n[ch][i]);
-				/*
-				cc.outputs[offset+i] = new Circuit.Output(-10);
-				cc.outputs[offset+i].arity = 1;
-				cc.outputs[offset+i].inputs = new Circuit.GateBase[] { n[ch][i] };
-				cc.outputs[offset+i].truthtab = new boolean[] { false, true }; */
 				cc.outputs[offset+i].setComment("output.md$"+(offset+i));
 			}
 			offset += wordsize;
@@ -460,7 +456,8 @@ public class SHA2 {
 		System.out.println(Base64.encodeBytes(out));
 		
 		
-		/////
+		
+		/* ///// 
 		Sha512 sha512 = new Sha512();
 		sha512.resetContext();
 		byte[] padding = Sha512.padBuffer(args[0].getBytes().length);
@@ -474,7 +471,7 @@ public class SHA2 {
 		}
 		System.out.println();
 		System.out.println(Base64.encodeBytes(out));
-		/////
+		*/ /////
 		
 		SHA2 sha2cc;
 		Circuit cc;
@@ -513,7 +510,7 @@ public class SHA2 {
 		System.out.println();
 		System.out.println(Base64.encodeBytes(out));
 		
-		
+		/*
 		Sha256 sha256 = new Sha256();
 		sha256.resetContext();
 		padding = Sha256.padBuffer(args[0].getBytes().length);
@@ -527,7 +524,7 @@ public class SHA2 {
 		}
 		System.out.println();
 		System.out.println(Base64.encodeBytes(out));
-		
+		*/
 		
 //		MD5Test md5t = new MD5Test();
 //		md5t.Update(args[0].getBytes());

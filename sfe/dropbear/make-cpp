@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-BUILD=Release
+BUILD=DebugOpt
 
 dir=../C-sfe/$BUILD/src
 SFE_SERVER_OBJS=$dir/ssh/SfeServer.o

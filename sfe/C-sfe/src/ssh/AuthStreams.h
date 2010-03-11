@@ -257,7 +257,7 @@ struct AuthStreams : public Runnable {
 #ifdef NDEBUG
 				fprintf(stderr, "<");
 #else
-				Dio(stderr, "returning to native");
+				Dio("returning to native");
 #endif
 				return;
 			}

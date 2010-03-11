@@ -8,6 +8,9 @@
 #ifndef SFESERVER_H_
 #define SFESERVER_H_
 
+//#define DEBUG2 1
+//#include "sillydebug.h"
+
 #include "AuthStreams.h"
 #include <string>
 #include "sillysocket.h"
@@ -15,6 +18,9 @@
 #include "../shdl/shdl.h"
 #include "SSH_Yao.h"
 #include "MD5pw.h"
+#include "SHA512pw.h"
+
+#define DC(x) std::cerr << x << std::endl;
 
 using namespace silly::net;
 using namespace silly::misc;
@@ -42,7 +48,7 @@ public:
 	SfeServer(const string &passwd0, int num_circ0 = 0) {
 		if (!num_circ0)
 			num_circ0 = num_circuits_default;
-		D("In SFE server");
+		DC("In SFE server");
 		passwdcrypt = passwd0;
 		num_circuits = num_circ0;
 		auth_success = false;
@@ -79,13 +85,20 @@ public:
 	void go2(DataOutput *out, DataInput *in) {
 		long time = currentTimeMillis();
 		DC("using passwdcrypt " << passwdcrypt);
+		int method = passwdcrypt[1]-'0';
+		out->writeInt(method);
+		out->flush();
+		int hashbytes = (method==6 ? 64 : method==5 ? 32 : 16);
 		int dollar = passwdcrypt.rfind("$");
 		salt = passwdcrypt.substr(3,dollar-3);
 		DC("salt: " << salt);
-		cryptpw = MD5pw::fromB64(passwdcrypt.substr(dollar+1));
+
+		cryptpw = method==6 ?
+				SHA512pw::fromB64(passwdcrypt.substr(dollar+1)) :
+					MD5pw::fromB64(passwdcrypt.substr(dollar+1));
 		DC("cryptpwlen " << cryptpw.size());
-		byte_buf tmp(16);
-		memcpy(&tmp[0], &cryptpw[0], 16);
+		byte_buf tmp(hashbytes);
+		memcpy(&tmp[0], &cryptpw[0], hashbytes);
 		cryptpw = tmp;
 		if (false) {
 			DC("crpw: ");
@@ -115,12 +128,13 @@ public:
 			open_file(circin, circfile.c_str());
 			cc = Circuit::parseCirc(circin);
 			bit_vector bvec = bytes2bool(cryptpw);
-			D(bvec);
-			D(vals);
+			//DC(bvec);
+			//DC(vals);
 			fmt.mapBits(bvec, vals, "input.bob.y");
 		} else {
-			string fmtfile = string("md5_pw_cmp")+rstr+".fmt";
-			string circfile = string("md5_pw_cmp")+rstr+".circ";
+			string hashname = string(method==6 ? "sha512" : method==5 ? "sha256" : "md5");
+			string fmtfile = hashname+("_pw_cmp")+rstr+".fmt";
+			string circfile = hashname+("_pw_cmp")+rstr+".circ";
 			//fprintf(stderr, "circuit: %s\n", (string("/etc/dropbear/md5_pw_cmp")+rstr+".circ").c_str());
 			ifstream fmtin;
 			open_file(fmtin, fmtfile.c_str());
@@ -130,9 +144,10 @@ public:
 			cc = Circuit::parseCirc(circin);
 
 			bit_vector bvec = bytes2bool(cryptpw);
-			D(bvec);
-			bit_reverse(bvec);
-			D(bvec);
+			//DC(bvec);
+			if (method==1)
+				bit_reverse(bvec);
+			//DC(bvec);
 			//D_ON(bvec);
 			//D_ON(vals);
 			fmt.mapBits(bvec, vals, "input.bob.y");

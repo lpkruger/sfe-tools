@@ -37,7 +37,10 @@ public class SHA2pw {
 		pwcr = pwcr.substring(pwcr.lastIndexOf('$')+1);
 		System.out.println(pwcr);
 		System.out.println(toB64(fromB64(pwcr)));
-		byte[] fin = sha512_pw_999(pw, testsalt);
+		byte[][] out999 = sha512_pw_999(pw, testsalt);
+		byte[] fin = out999[0];
+		byte[] p_bytes = out999[1];
+		byte[] s_bytes = out999[2];
 		
 		/*
 		MessageDigest md5 = MessageDigest.getInstance("MD5");
@@ -65,20 +68,27 @@ public class SHA2pw {
 			System.setOut(stdout);
 		}
 		
-		boolean[] in1 = BitUtils.bytes2bool(args[0].getBytes());
-		boolean[] in2 = BitUtils.bytes2bool(args[0].getBytes());
-		boolean[] in3 = BitUtils.bytes2bool(fin);
-		boolean[][] inputs = { in1, in2, in3 };
+		boolean[] in1 = BitUtils.bytes2bool(p_bytes);
+		boolean[] in2 = BitUtils.bytes2bool(s_bytes);
+		boolean[] in3 = BitUtils.bytes2bool(p_bytes);
+		boolean[] in4 = BitUtils.bytes2bool(fin);
+		
+//		boolean[] in1 = BitUtils.bytes2bool(args[0].getBytes());
+//		boolean[] in2 = BitUtils.bytes2bool(args[0].getBytes());
+//		boolean[] in3 = BitUtils.bytes2bool(testsalt);
+//		boolean[] in4 = BitUtils.bytes2bool(fin);
+		boolean[][] inputs = { in1, in2, in3, in4 };
 		fin = BitUtils.bool2bytes(new SHA2(512).compute_sha2(cc, concat(inputs)));
 		System.out.println(new String(magic)+new String(testsalt)+"$"+toB64(fin));
 		
-		boolean use_R = true;
+		boolean use_R = false;
 		cc = sha2gen.generateWithPrivEq(use_R);
 		cc.outputs[0].setComment("output.bob$0");
 		if (!use_R) {
-			boolean[] in4 = BitUtils.bytes2bool(fin);
+			boolean[] in5 = BitUtils.bytes2bool(fin);
 			//boolean[] in4 = new boolean[128];
-			boolean[][] eqinputs = { new SHA2(512).prepare_sha2_input(concat(inputs)), in4 };
+			boolean[][] eqinputs = { new SHA2(512).prepare_sha2_input(concat(inputs)), in5 };
+			//System.out.println(eqinputs[0].length + " " + eqinputs[1].length);
 			boolean[] out = cc.eval(concat(eqinputs));
 			System.out.println("eq: " + out[0]);
 		}
@@ -111,7 +121,7 @@ public class SHA2pw {
 	
 			
 			System.out.print("Bob input integer \"input.bob.y\" [");
-			for (int i=0; i<128; ++i) {
+			for (int i=0; i<512; ++i) {
 				System.out.print(" "+(1024+r_bits+i));
 			}
 			System.out.println(" ]");
@@ -220,135 +230,214 @@ public class SHA2pw {
 	}
     */
 	
-	public static byte[] sha512_pw_999(byte[] pw, byte[] salt) {
+	public static byte[][] sha512_pw_999(byte[] pw, byte[] salt) {
 		MessageDigest md;
-		MessageDigest finmd;
+		MessageDigest alt;
 		try {
 			 md = MessageDigest.getInstance("SHA-512");
-			 finmd = MessageDigest.getInstance("SHA-512");
+			 alt = MessageDigest.getInstance("SHA-512");
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace(System.err);
 			throw new NullPointerException(e.getMessage());
 		}
 		md.update(pw);
-		md.update(magic);
 		md.update(salt);
 		
+		alt.update(pw);
+		alt.update(salt);
+		alt.update(pw);
 		
-		finmd.update(pw);
-		finmd.update(salt);
-		finmd.update(pw);
-		byte[] fin = finmd.digest();
+		byte[] alt_result = alt.digest();
 		
 		//print(fin);
+		int cnt;
+		for (cnt = pw.length; cnt > 64; cnt -= 64) 
+			md.update(alt_result, 0, 64);
+		md.update(alt_result, 0, cnt);
 		
-		for (int pl = pw.length; pl>0; pl-=16) {
-			byte[] z = new byte[pl>16 ? 16 : pl];
-			System.arraycopy(fin, 0, z, 0, z.length);
-			md.update(z);
+		for (cnt = pw.length; cnt > 0; cnt >>= 1)
+			if ((cnt & 1) != 0)
+				md.update(alt_result, 0, 64);
+			else
+				md.update(pw);
+		
+		alt_result = md.digest();
+		alt.reset();
+		
+		/* For every character in the password add the entire password.  */
+		for (cnt = 0; cnt < pw.length; ++cnt)
+			alt.update(pw);
+
+		/* Finish the digest.  */
+		byte[] temp_result = alt.digest();
+		
+		alt.reset();
+
+		/* Create byte sequence P.  */
+		byte[] p_bytes = new byte[pw.length];
+		int cp = 0;
+		for (cnt = pw.length; cnt >= 64; cnt -= 64) {
+			System.arraycopy(temp_result, 0, p_bytes, cp, 64);
+			cp += 64;
 		}
+		System.arraycopy(temp_result, 0, p_bytes, cp, cnt);
 		
-		// weird thing 1
-		byte[] con0 = { 0 };
-		byte[] pw0 = { pw[0] };
-		for (int i = pw.length; i>0; i >>= 1) {
-			 md.update((i & 1)==1 ? con0 : pw0);
+		System.out.println(Base64.encodeBytes(p_bytes));
+		
+		/* For every character in the password add the entire password.  */
+		for (cnt = 0; cnt < 16 + alt_result[0]; ++cnt)
+			alt.update(salt);
+			
+		temp_result = alt.digest();
+
+		/* Create byte sequence S.  */
+		byte[] s_bytes = new byte[salt.length];
+		cp = 0;
+		for (cnt = salt.length; cnt >= 64; cnt -= 64) {
+			System.arraycopy(temp_result, 0, s_bytes, cp, 64);
+			cp += 64;
 		}
+		System.arraycopy(temp_result, 0, s_bytes, cp, cnt);
 		
-		fin = md.digest();
-		
-		// do 1000 MD5s, minus 1
-		for (int i=0; i<999; ++i) {
+		/* Repeatedly run the collected hash value through SHA512 to burn
+     CPU cycles.  */
+		for (int i=0; i<4999; ++i) {
 			md.reset();
 			if ((i & 1)!=0) { 
-				md.update(pw);
+				md.update(p_bytes);
 			} else { 
-				md.update(fin);
+				md.update(alt_result);
 			}
 			if ((i % 3)!=0) {
-				md.update(salt);
+				md.update(s_bytes);
 			}
 			if ((i % 7)!=0) {
-				md.update(pw);
+				md.update(p_bytes);
 			}
 			if ((i & 1)!=0) { 
-				md.update(fin);
+				md.update(alt_result);
 			} else {
-				md.update(pw);
+				md.update(p_bytes);
 			}
-			fin=md.digest();
-		}
-		
-		return fin;
+			alt_result = md.digest();
+		}		
+		return new byte[][] {alt_result, p_bytes, s_bytes};
 	}
 	
 	public static String sha512_pw(byte[] pw, byte[] salt) {
 		MessageDigest md;
-		MessageDigest finmd;
+		MessageDigest alt;
 		try {
 			 md = MessageDigest.getInstance("SHA-512");
-			 finmd = MessageDigest.getInstance("SHA-512");
+			 alt = MessageDigest.getInstance("SHA-512");
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace(System.err);
 			throw new NullPointerException(e.getMessage());
 		}
 		md.update(pw);
-		md.update(magic);
 		md.update(salt);
 		
+		alt.update(pw);
+		alt.update(salt);
+		alt.update(pw);
 		
-		finmd.update(pw);
-		finmd.update(salt);
-		finmd.update(pw);
-		byte[] fin = finmd.digest();
+		byte[] alt_result = alt.digest();
 		
 		//print(fin);
+		int cnt;
+		for (cnt = pw.length; cnt > 64; cnt -= 64) 
+			md.update(alt_result, 0, 64);
+		md.update(alt_result, 0, cnt);
 		
-		for (int pl = pw.length; pl>0; pl-=16) {
-			byte[] z = new byte[pl>16 ? 16 : pl];
-			System.arraycopy(fin, 0, z, 0, z.length);
-			md.update(z);
+		for (cnt = pw.length; cnt > 0; cnt >>= 1)
+			if ((cnt & 1) != 0)
+				md.update(alt_result, 0, 64);
+			else
+				md.update(pw);
+		
+		alt_result = md.digest();
+		alt.reset();
+		
+		/* For every character in the password add the entire password.  */
+		for (cnt = 0; cnt < pw.length; ++cnt)
+			alt.update(pw);
+
+		/* Finish the digest.  */
+		byte[] temp_result = alt.digest();
+		
+		alt.reset();
+
+		/* Create byte sequence P.  */
+		byte[] p_bytes = new byte[pw.length];
+		int cp = 0;
+		for (cnt = pw.length; cnt >= 64; cnt -= 64) {
+			System.arraycopy(temp_result, 0, p_bytes, cp, 64);
+			cp += 64;
 		}
+		System.arraycopy(temp_result, 0, p_bytes, cp, cnt);
 		
-		// weird thing 1
-		byte[] con0 = { 0 };
-		byte[] pw0 = { pw[0] };
-		for (int i = pw.length; i>0; i >>= 1) {
-			 md.update((i & 1)==1 ? con0 : pw0);
+		/* For every character in the password add the entire password.  */
+		for (cnt = 0; cnt < 16 + alt_result[0]; ++cnt)
+			alt.update(salt);
+			
+		temp_result = alt.digest();
+
+		/* Create byte sequence S.  */
+		byte[] s_bytes = new byte[salt.length];
+		cp = 0;
+		for (cnt = salt.length; cnt >= 64; cnt -= 64) {
+			System.arraycopy(temp_result, 0, s_bytes, cp, 64);
+			cp += 64;
 		}
+		System.arraycopy(temp_result, 0, s_bytes, cp, cnt);
 		
-		fin = md.digest();
-		
-		// do 1000 MD5s
-		for (int i=0; i<1000; ++i) {
+		/* Repeatedly run the collected hash value through SHA512 to burn
+     CPU cycles.  */
+		for (int i=0; i<5000; ++i) {
 			md.reset();
 			if ((i & 1)!=0) { 
-				md.update(pw);
+				md.update(p_bytes);
 			} else { 
-				md.update(fin);
+				md.update(alt_result);
 			}
 			if ((i % 3)!=0) {
-				md.update(salt);
+				md.update(s_bytes);
 			}
 			if ((i % 7)!=0) {
-				md.update(pw);
+				md.update(p_bytes);
 			}
 			if ((i & 1)!=0) { 
-				md.update(fin);
+				md.update(alt_result);
 			} else {
-				md.update(pw);
+				md.update(p_bytes);
 			}
-			fin=md.digest();
+			alt_result = md.digest();
 		}
 
 		StringBuilder sb = new StringBuilder();
-		sb.append(b64_from_24bit (fin[0], fin[6], fin[12], 4));
-		sb.append(b64_from_24bit (fin[1], fin[7], fin[13], 4));
-		sb.append(b64_from_24bit (fin[2], fin[8], fin[14], 4));
-		sb.append(b64_from_24bit (fin[3], fin[9], fin[15], 4));
-		sb.append(b64_from_24bit (fin[4], fin[10], fin[5], 4));
-		sb.append(b64_from_24bit ((byte)0, (byte)0, fin[11], 2));
-		
+		sb.append(b64_from_24bit (alt_result[0], alt_result[21], alt_result[42], 4));
+		sb.append(b64_from_24bit (alt_result[22], alt_result[43], alt_result[1], 4));
+		sb.append(b64_from_24bit (alt_result[44], alt_result[2], alt_result[23], 4));
+		sb.append(b64_from_24bit (alt_result[3], alt_result[24], alt_result[45], 4));
+		sb.append(b64_from_24bit (alt_result[25], alt_result[46], alt_result[4], 4));
+		sb.append(b64_from_24bit (alt_result[47], alt_result[5], alt_result[26], 4));
+		sb.append(b64_from_24bit (alt_result[6], alt_result[27], alt_result[48], 4));
+		sb.append(b64_from_24bit (alt_result[28], alt_result[49], alt_result[7], 4));
+		sb.append(b64_from_24bit (alt_result[50], alt_result[8], alt_result[29], 4));
+		sb.append(b64_from_24bit (alt_result[9], alt_result[30], alt_result[51], 4));
+		sb.append(b64_from_24bit (alt_result[31], alt_result[52], alt_result[10], 4));
+		sb.append(b64_from_24bit (alt_result[53], alt_result[11], alt_result[32], 4));
+		sb.append(b64_from_24bit (alt_result[12], alt_result[33], alt_result[54], 4));
+		sb.append(b64_from_24bit (alt_result[34], alt_result[55], alt_result[13], 4));
+		sb.append(b64_from_24bit (alt_result[56], alt_result[14], alt_result[35], 4));
+		sb.append(b64_from_24bit (alt_result[15], alt_result[36], alt_result[57], 4));
+		sb.append(b64_from_24bit (alt_result[37], alt_result[58], alt_result[16], 4));
+		sb.append(b64_from_24bit (alt_result[59], alt_result[17], alt_result[38], 4));
+		sb.append(b64_from_24bit (alt_result[18], alt_result[39], alt_result[60], 4));
+		sb.append(b64_from_24bit (alt_result[40], alt_result[61], alt_result[19], 4));
+		sb.append(b64_from_24bit (alt_result[62], alt_result[20], alt_result[41], 4));
+		sb.append(b64_from_24bit ((byte)0, (byte)0, alt_result[63], 2));
+
 		//if(true) return sb.toString();
 		if (true) return new String(magic)+new String(salt)+"$"+sb;
 		
@@ -377,46 +466,83 @@ public class SHA2pw {
 		return null;
 	}
 
-	static String toB64(byte[] fin) {
+	static String toB64(byte[] alt_result) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(b64_from_24bit (fin[0], fin[6], fin[12], 4));
-		sb.append(b64_from_24bit (fin[1], fin[7], fin[13], 4));
-		sb.append(b64_from_24bit (fin[2], fin[8], fin[14], 4));
-		sb.append(b64_from_24bit (fin[3], fin[9], fin[15], 4));
-		sb.append(b64_from_24bit (fin[4], fin[10], fin[5], 4));
-		sb.append(b64_from_24bit ((byte)0, (byte)0, fin[11], 2));
+		sb.append(b64_from_24bit (alt_result[0], alt_result[21], alt_result[42], 4));
+		sb.append(b64_from_24bit (alt_result[22], alt_result[43], alt_result[1], 4));
+		sb.append(b64_from_24bit (alt_result[44], alt_result[2], alt_result[23], 4));
+		sb.append(b64_from_24bit (alt_result[3], alt_result[24], alt_result[45], 4));
+		sb.append(b64_from_24bit (alt_result[25], alt_result[46], alt_result[4], 4));
+		sb.append(b64_from_24bit (alt_result[47], alt_result[5], alt_result[26], 4));
+		sb.append(b64_from_24bit (alt_result[6], alt_result[27], alt_result[48], 4));
+		sb.append(b64_from_24bit (alt_result[28], alt_result[49], alt_result[7], 4));
+		sb.append(b64_from_24bit (alt_result[50], alt_result[8], alt_result[29], 4));
+		sb.append(b64_from_24bit (alt_result[9], alt_result[30], alt_result[51], 4));
+		sb.append(b64_from_24bit (alt_result[31], alt_result[52], alt_result[10], 4));
+		sb.append(b64_from_24bit (alt_result[53], alt_result[11], alt_result[32], 4));
+		sb.append(b64_from_24bit (alt_result[12], alt_result[33], alt_result[54], 4));
+		sb.append(b64_from_24bit (alt_result[34], alt_result[55], alt_result[13], 4));
+		sb.append(b64_from_24bit (alt_result[56], alt_result[14], alt_result[35], 4));
+		sb.append(b64_from_24bit (alt_result[15], alt_result[36], alt_result[57], 4));
+		sb.append(b64_from_24bit (alt_result[37], alt_result[58], alt_result[16], 4));
+		sb.append(b64_from_24bit (alt_result[59], alt_result[17], alt_result[38], 4));
+		sb.append(b64_from_24bit (alt_result[18], alt_result[39], alt_result[60], 4));
+		sb.append(b64_from_24bit (alt_result[40], alt_result[61], alt_result[19], 4));
+		sb.append(b64_from_24bit (alt_result[62], alt_result[20], alt_result[41], 4));
+		sb.append(b64_from_24bit ((byte)0, (byte)0, alt_result[63], 2));
 		return sb.toString();
 	}
+
 	static byte[] fromB64(String str) {
-		byte[] z = new byte[16];
-		byte[] b = b24_from_64(str.substring(0, 4));
-		z[0] = b[0]; z[6] = b[1]; z[12] = b[2];
-		b = b24_from_64(str.substring(4, 8));
-		z[1] = b[0]; z[7] = b[1]; z[13] = b[2];
-		b = b24_from_64(str.substring(8, 12));
-		z[2] = b[0]; z[8] = b[1]; z[14] = b[2];
-		b = b24_from_64(str.substring(12, 16));
-		z[3] = b[0]; z[9] = b[1]; z[15] = b[2];
-		b = b24_from_64(str.substring(16, 20));
-		z[4] = b[0]; z[10] = b[1]; z[5] = b[2];
-		b = b24_from_64(str.substring(20));
-		z[11] = b[0];
+		byte[] z = new byte[64];
+		int pos = 0;
+		byte[] b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[0] = b[0]; z[21] = b[1]; z[42] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[22] = b[0]; z[43] = b[1]; z[1] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[44] = b[0]; z[2] = b[1]; z[23] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[3] = b[0]; z[24] = b[1]; z[45] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[25] = b[0]; z[46] = b[1]; z[4] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[47] = b[0]; z[5] = b[1]; z[26] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[6] = b[0]; z[27] = b[1]; z[48] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[28] = b[0]; z[49] = b[1]; z[7] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[50] = b[0]; z[8] = b[1]; z[29] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[9] = b[0]; z[30] = b[1]; z[51] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[31] = b[0]; z[52] = b[1]; z[10] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[53] = b[0]; z[11] = b[1]; z[32] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[12] = b[0]; z[33] = b[1]; z[54] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[34] = b[0]; z[55] = b[1]; z[13] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[56] = b[0]; z[14] = b[1]; z[35] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[15] = b[0]; z[36] = b[1];z[57] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[37] = b[0]; z[58] = b[1]; z[16] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[59] = b[0]; z[17] = b[1]; z[38] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[18] = b[0]; z[39] = b[1]; z[60] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[40] = b[0]; z[61] = b[1]; z[19] = b[2];
+		b = b24_from_64(str.substring(pos, pos+4)); pos+=4;
+		z[62] = b[0]; z[20] = b[1]; z[41] = b[2];
+		b = b24_from_64(str.substring(pos));
+		z[63] = b[0];
 		return z;
 	}
-	static byte[] fromB64_wrong(String str) {
-		byte[] zz = new byte[0];
-		int len = str.length();
-		for (int i=0; i<len; i+=4) {
-			String ss = str.substring(i, i+4>len ? i+2 : i+4);
-			byte[] bb = b24_from_64(ss);
-			byte[] zzz = new byte[zz.length + bb.length];
-			System.arraycopy(zz, 0, zzz, 0, zz.length);
-			System.arraycopy(bb, 0, zzz, zz.length, bb.length);
-			zz = zzz;
-		}
-		return zz;
-	}
-
+	
 	static byte[] b24_from_64(String s) {
 		int N = s.length();
 		int w = 0;

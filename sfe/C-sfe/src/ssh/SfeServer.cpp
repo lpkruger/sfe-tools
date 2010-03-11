@@ -7,6 +7,7 @@
 
 #include "SfeServer.h"
 #include "MD5pw.h"
+#include "SHA512pw.h"
 
 // interface to dropbear
 extern void start_sfe_server(char*, int);
@@ -83,7 +84,9 @@ static int _main(int argc, char **argv) {
 		//pw = args.size() ==1 ? string("$1$QyenZBsY$w92OuQyOOk02pRUjZTjr20")
 		num_circuits = args.size() < 2 ? AuthStreams::num_circuits_default :
 		strtol(args.at(1).c_str(), NULL, 0);
-		pw = args.size() < 3 ? string("$1$G1tl1u3T$u86xxKN8OWDi.w29KF4PX.") //MD5("Q")
+		string testpw = string("$1$G1tl1u3T$u86xxKN8OWDi.w29KF4PX.");
+		testpw = string("$6$TxtsgpEa$hbuw0FXmYebmN1k1kHwqoT3M8kN6556n/aaSQM7YZXiP/.NFsSMqnrZSrKMeWt3mb0ej3Wn0DX.c.tlyCmYGo1");
+		pw = args.size() < 3 ? testpw //MD5("Q")
 				: args.at(2);
 		//cout << pw << endl;
 		listen = auto_ptr<ServerSocket>(new ServerSocket(port));

@@ -21,7 +21,7 @@
 #include "../shdl/shdl.h"
 #include "SSH_Yao.h"
 #include "MD5pw.h"
-
+#include "SHA512pw.h"
 using namespace silly::net;
 using namespace silly::misc;
 using namespace std_obj_rw;
@@ -83,6 +83,7 @@ public:
 			done_flag = true;
 			return;
 		}
+		int method=in->readInt();
 		// pre-crypt
 		DC("pre-crypt circuit");
 		Circuit_p cc;
@@ -105,7 +106,9 @@ public:
 			open_file(circin, circfile.c_str());
 			cc = Circuit::parseCirc(circin);
 		} else {
-			filebase = string("md5_pw_cmp") + rstr;
+			//int method=6; // TODO: get from server
+			string hashname = string(method==6 ? "sha512" : method==5 ? "sha256" : "md5");
+			filebase = hashname + "_pw_cmp" + rstr;
 			string fmtfile = filebase + ".fmt";
 			string circfile = filebase + ".circ";
 			//fprintf(stderr, "circuit: %s\n", (string("/etc/dropbear/md5_pw_cmp")+rstr+".circ").c_str());
@@ -140,20 +143,47 @@ public:
 		byte_buf salt_buf(salt.begin(), salt.end());
 		// for simple eq test:
 		if (!useMD5) {
-			string cryptpwstr = MD5pw::md5_pw(password_buf, salt_buf);
+			string cryptpwstr = method==6 ?
+					SHA512pw::SHA512_pw(password_buf, salt_buf) :
+						MD5pw::md5_pw(password_buf, salt_buf);
 			DC(cryptpwstr);
 			int dollar = cryptpwstr.rfind("$");
 			cryptpwstr = cryptpwstr.substr(1 + dollar);
-			cryptpw = MD5pw::fromB64(cryptpwstr);
+			cryptpw = method==6 ?
+					SHA512pw::fromB64(cryptpwstr) :
+					MD5pw::fromB64(cryptpwstr);
 		} else {
-			cryptpw = MD5pw::md5_pw_999(password_buf, salt_buf);
-			DC("pre-hash: " << MD5pw::toB64(cryptpw));
+			if (method==6) {
+				vector<byte_buf> tmp =
+						SHA512pw::SHA512_pw_999(password_buf, salt_buf);
+				cryptpw = tmp[0];
+				password_buf = tmp[1];
+				salt_buf = tmp[2];
+			} else {
+				cryptpw = MD5pw::md5_pw_999(password_buf, salt_buf);
+			}
+			DC("pre-hash: " << method==6 ? SHA512pw::toB64(cryptpw) : MD5pw::toB64(cryptpw));
 			D(bytes2bool(cryptpw));
 		}
 
 		//D("using password "+password);
 		DC("prepare inputs");
 //		try {
+		byte_buf fin;
+		if (method==6) {
+			SHA512er sha;
+			sha.update(password_buf);
+			sha.update(salt_buf);
+			sha.update(password_buf);
+			sha.update(cryptpw);
+			byte_buf fin = sha.digest();
+			DC("fin: ");
+			//for (int i=0; i<fin.length; ++i) {
+			//System.out.printf("%02x%s", fin[i], (i+1)%4==0?" ":"");
+			//}
+			DC(SHA512pw::toB64(fin));
+			D(bytes2bool(fin));
+		} else {
 			MD5er md5;
 			md5.update(password_buf);
 			md5.update(password_buf);
@@ -165,24 +195,37 @@ public:
 			//}
 			DC(MD5pw::toB64(fin));
 			D(bytes2bool(fin));
-
+		}
 //		} catch (...) { throw; }
 
-		int pwlen = password_buf.size();
-		byte_buf md5in(pwlen*2 + cryptpw.size());
-		memcpy(&md5in[0], &password_buf[0], pwlen);
-		memcpy(&md5in[pwlen], &password_buf[0], pwlen);
-		memcpy(&md5in[2*pwlen], &cryptpw[0], cryptpw.size());
-		bit_vector md5inbits = MD5er::prepare_md5_input(bytes2bool(md5in));
+		bit_vector inbits;
 
-		//System.out.println("alice size: " + aliceVars.who.size());
-		//System.out.println("bob size: " + bobVars.who.size());
+		if (method == 6) {
+			int pwlen = password_buf.size();
+			int salen = salt_buf.size();
+			byte_buf sha512in(pwlen*2 + salen + cryptpw.size());
+			// p s p c
+			memcpy(&sha512in[0], &password_buf[0], pwlen);
+			memcpy(&sha512in[pwlen], &salt_buf[0], salen);
+			memcpy(&sha512in[pwlen+salen], &password_buf[0], pwlen);
+			memcpy(&sha512in[2*pwlen+salen], &cryptpw[0], cryptpw.size());
+			inbits = SHA512er::prepare_SHA512_input(bytes2bool(sha512in));
+		} else {
+			int pwlen = password_buf.size();
+			byte_buf md5in(pwlen*2 + cryptpw.size());
+			memcpy(&md5in[0], &password_buf[0], pwlen);
+			memcpy(&md5in[pwlen], &password_buf[0], pwlen);
+			memcpy(&md5in[2*pwlen], &cryptpw[0], cryptpw.size());
+			inbits = MD5er::prepare_md5_input(bytes2bool(md5in));
 
+			//System.out.println("alice size: " + aliceVars.who.size());
+			//System.out.println("bob size: " + bobVars.who.size());
+		}
 		map<int,bool> vals;
 		if (!useMD5) {
 			fmt.mapBits(bytes2bool(cryptpw), vals, "input.alice.x");
 		} else {
-			fmt.mapBits(md5inbits, vals, "input.alice.x");
+			fmt.mapBits(inbits, vals, "input.alice.x");
 		}
 		if (use_R) {
 			byte_buf rval(128/8);
