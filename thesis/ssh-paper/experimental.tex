@@ -1,0 +1,151 @@
+\input{ssh-paper/sfe-proto-fig}
+\section{Evaluation}
+\label{sec:eval}
+
+We modified an existing open-source SSH client and server to use each
+of the protocols described in Section~\ref{sec:proto}, and took
+several performance measurements to evaluate the feasibility of our
+approach. Our findings can be summarized as follows:
+\begin{itemize}
+\item Protocols that are secure in the semi-honest model, which is only 
+secure against passive adversaries, can be executed very quickly.
+\item Making the protocols secure against active adversaries
+increases authentication time substantially, depending on the size of
+the authentication circuit and the security parameter.  For example,
+calculating an MD5 hash using 90 circuits increases the authentication
+time from around 2 seconds to 12 seconds.  Although this may seem
+tedious for some users, we achieve a high level of security with only
+modest delays on inexpensive modern hardware.  We conclude that the technique
+can achieve a favorable balance between efficient practicality and high
+security.
+
+\item Due the simplicity of private equality testing, Protocol 1 (the Straw man protocol)
+can run extremely quickly even under the covert model at the expense
+of resisting impersonation by an adversary who has gained knowledge of
+a user's password hash.  If this security requirement can be relaxed
+(for example, in an environment where passwords are stored on the
+server using an identity hash, i.e. in plaintext) protocol 1 could be
+a useful as high-speed authentication protocol.
+\end{itemize}
+
+\subsection{Implementation}
+
+We implemented the protocols by modifying the Dropbear 0.52 SSH client
+and server to support a new authentication protocol, to which we
+assigned the name {}``sfeauth'' in the SSH authentication protocol
+namespace. The scheme used for incorporating the protocols into the
+SSH protocol is shown in Figure \ref{fig:sfeauth}. The Yao
+sub-protocol is conducted through the encrypted SSH tunnel using a
+reserved message which we dubbed
+\texttt{SSH\_MSG\_USERAUTH\_SFEMSG}. If at any time the server detects
+a cheating attempt by the client, the server fails the authentication
+and terminates the protocol.
+
+The MD5 and private equality circuits were implemented using a
+prototype circuit compiler we developed first described in
+\cite{1398071}, which also contains an embeddable implementation of
+the Yao {}``garbled circuit'' protocol. The protocol was extended
+using the techniques due to Lindell and Pinkas
+\cite{lindellpinkas-eurocrypt07} to add resistance to malicious
+parties in the covert model. The implementation also uses the
+oblivious transfer protocol due to Naor and Pinkas
+\cite{Naor-Pinkas:2001}.  All of the Yao protocol and authentication
+code was written in C++ and integrated with the Dropbear SSH
+client and server.
+
+\subsubsection{Optimizations}
+
+To improve performance of the protocols, we introduced several
+optimizations to our implementation.
+\begin{enumerate}
+\item The client computes the garbled circuits used in the
+authentication protocol in advance of the online protocol.  By
+precomputing and storing garbled circuits, the time spent in this CPU
+intensive step is removed from the user's perceived wait time to login
+to a server.
+\item We implemented an optimization described by 
+Goyal \textit{et al.}~\cite{goyalmohasselsmith-eurocrypt08}.  In
+constructing the garbled Yao circuits, the client generates a set of
+seeds for a cryptographically-secure pseudorandom number generator.
+The circuits are garbled using this PRNG, with one seed per circuit,
+and hashes of the circuits are sent in place of the whole circuits.
+After the server has chosen which circuits to evaluate, the seeds for
+the non-chosen circuits are revealed to the server, who then uses the
+PRNG to reconstruct the garbled circuit and verify the hash values,
+and only the circuits to be evaluated are transferred in full.  This
+saves many megabytes of wire communication, improving the overall
+protocol performance.
+\end{enumerate}
+
+The prototype SSH client and server, as well as further documentation,
+can be downloaded from our project
+website.\footnote{\url{http://www.cs.wisc.edu/~lpkruger/ssh}}
+
+
+\subsection{Experiments}
+
+We conducted several usage experiments to measure the performance of
+the authentication, and determine its feasibility in real
+settings. Note that the semi-honest version is not secure for
+real-world usage where the possibility of active malicious adversaries
+cannot be ruled out, but the experiment is useful to establish an
+upper bound for the potential performance with further
+optimization. The tests were performed over a local network using
+computers with eight core Intel Xeon processors and 8GB of RAM.
+
+The performance results of our experiments are shown in
+Table~\ref{table:performance}. The first row corresponds to the
+semi-honest version of the protocol, and is the time on which the
+\emph{ratio to semi-honest} column for other rows is based. The column
+titled \emph{probability of attack success} refers to the probability
+of a malicious client successfully convincing the server that he has
+the proper credentials to authenticate. This calculation is discussed
+in detail in section~\ref{sect:mainproto}. As our results indicate,
+the time required to complete the protocol increases linearly as the
+number of circuits increases, while the security guarantee increases
+exponentially in this measure. Note that for less than an order of
+magnitude increase over semi-honest implementation, sufficient
+security guarantees for many practical settings can be attained. These
+trends indicate that our technique is suitable for common use in real
+applications.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+{\it \# Circuits} & {\it Online Time (seconds)} & {\it Ratio to
+Semi-Honest} & {\it Probability of attack success} \\
+\hline\hline
+1 ({\it Semi-Honest}) & 0.52 & 1.0 & 100\% \\
+\hline
+30 & 3.99 & 7.7 & $1.86 \times 10^{-7}$\% \\
+\hline
+60 & 7.86 & 15.2 & $1.73 \times 10^{-16}$\% \\
+\hline
+90 & 12.35 & 23.8 & $1.62 \times 10^{-25}$\% \\
+\hline
+120 & 16.46 & 31.8 & $1.50 \times 10^{-34}$\% \\
+\hline
+150 & 20.57 & 39.6 & $1.40 \times 10^{-43}$\% \\
+\hline
+\end{tabular}
+\vspace{1em}
+\caption{Wall-clock performance and security guarantees for the
+optimized protocol in both semi-honest and covert settings. All times
+are given in seconds.}
+\label{table:performance}
+\end{table}
+
+We note that the performance is sensitive to available processing
+power due to the many cryptographic primitives employed.  For example,
+our implementation takes advantage of parallelization on multi-core
+processors to encrypt multiple circuits in parallel as the server
+performs its circuit verifications.  Due to the independence
+of the verification of each circuit, parallel scaling can be achieved that
+is extremely efficient with respect to available processors, potentially
+allowing high security authentication with minimal delays to clients on 
+server machines with enough processing power.
+
+Overall, we believe that the results we have achieved so far
+demonstrate the potential of this technique as a practical and secure
+addition to the body of research in secure password authentication.

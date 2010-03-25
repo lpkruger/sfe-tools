@@ -1,0 +1,573 @@
+%% \documentclass[12pt]{article}
+
+%% \usepackage{fullpage}
+%% \usepackage{times}
+
+%% %new environments
+%% \newtheorem{theorem}{Theorem}
+%% \newtheorem{lemma}[theorem]{Lemma}
+%% \newtheorem{corollary}[theorem]{Corollary}
+%% \newtheorem{definition}{Definition}
+%% \newtheorem{fact}{Fact}
+%% \newtheorem{example}{Example}
+
+
+%% \begin{document}
+
+\section{Protocols}
+\label{sec:proto}
+
+% Describe the sem-honest and malicious model
+% Explain why these are not the right model
+% Explain the covert model and why it is the right model
+% Define it in detail from the Aumann-Lindell paper (this can move to the appendix)
+
+We need a protocol that provides the following functionality: given
+the client's input $x$ (presumably the password) and the server's
+input $y$ (presumably hash of the password), the two parties would
+like to jointly compute whether $H(x) = y$, for some hash function
+$H$. In other words, we need to a protocol for the following
+functionality:
+\[
+(x,y) \; \longmapsto \; (\delta (H(x),y),\delta (H(x),y))
+\]
+Where $\delta (a,b)$ is equal to $1$ if $a = b$, otherwise it is
+$0$. The first question we must answer is: under which model should
+our protocol be secure? In the semi-honest model, the adversaries
+follow the correct protocol, but might try to infer additional
+information from the messages exchanged during the protocol. The
+classic protocol presented by Yao~\cite{yao-focs86} can be used to
+produce a protocol for our problem that is secure in the semi-honest
+model. An extensive treatment of Yao's protocol along with a proof of
+correctness is given in~\cite{lindellpinkas-jcs}. However, the
+semi-honest model is not suitable in our context, because SSH is
+frequently used over wide-area networks (WAN) where we cannot expect
+the parties to obey the semi-honest model. 
+
+In the malicious model the adversaries may behave arbitrarily, i.e.,
+lie about their inputs, abort, or not follow the instructions of the
+protocol. Given a protocol that is secure in the semi-honest model,
+the protocol can be transformed into a protocol secure in the malicious
+model~\cite{Goldreich:vol2,GMW:87}. However, the resulting protocols are
+very inefficient. Lindell and Pinkas~\cite{lindellpinkas-eurocrypt07}
+present a more efficient protocol that is based on the informal
+cut-and-choose technique for the two-party case that is secure in
+the malicious model. However, their protocol is also too slow for
+our purposes. Protocols that are secure in the semi-honest model are
+efficient but not secure in our context. On the other hand, protocols
+that are secure in the malicious model are too inefficient to be useful
+in our context.
+
+% We choose an
+% adversary model that lies between the semi-honest and the malicious
+% model -- the {\it covert model} introduced by 
+
+The adversary model we use in this paper is inspired by the \emph{covert
+model} of Aumann and Lindell~\cite{aumannlindell}.  In the covert model,
+any attempt to cheat by the malicious protocol participant ${\cal A}$
+is detected by the honest parties with probability at least $\epsilon$.
+In our model, we demonstrate that if a malicious SSH client cheats,
+then, with high probability, the SSH server either detects the cheating,
+or computes exactly the same result it would have computed if the client
+had not cheated.
+
+% We will now give a precise notion of security in the covert
+% model. Assume that that are $m$ parties $P_1,\cdots,P_m$ that want to
+% jointly compute $f \; = \; (f_1 (\vec{x}), \cdots , f_m (\vec{x}))$,
+% where $\vec{x}$ is the vector of inputs for the $m$ parties. Let
+% $\epsilon : \aleph \rightarrow [ 0,1 ]$. The \emph{ideal execution}
+% with respect to $\epsilon$\footnote{For ease of notation we
+% will write $\epsilon$ instead of $\epsilon (n)$ where $n$ is
+% the security parameter.} works as follows:
+% \begin{itemize}
+% \item The $i$-th party $P_i$ has input $x_i$. The length of the all the inputs
+% is the same is denoted by $n$. The adversary ${\cal A}$ also
+% receives an auxiliary input $z$. The adversary ${\cal A}$ controls
+% all parties whose index belongs to a certain set $I$. Parties $P_i$
+% ($i \in I$) are called corrupted.
+% 
+% \item Honest parties $P_i$ send their input $x_i$ to the trusted party
+% (TP). Corrupted parties $P_i$ ($i \in I$) that are controlled by the
+% adversary send an arbitrary input to the trusted party (this input
+% depends on the inputs of the corrupted party and the auxiliary input
+% $z$ of the adversary). The vector of inputs sent to the TP is denoted
+% by $\vec{x}$.
+% 
+% \item If a corrupted party sends ${\sf abort}_i$ to the TP as its
+% input, then the trusted party sends ${\sf abort}_i$ to all the honest
+% parties and halts. This simulates the behavior in the real protocol
+% that a malicious party can always abort the protocol. If a corrupted
+% party $P_i$ sends ${\sf corrupted}_i$ to the TP as its input, then the
+% $TP$ sends ${\sf corrupted}_i$ to all of the honest parties and
+% halts. This simulates the behavior in the real protocol of an
+% adversary that is always detected. If some corrupted parties send
+% ${\sf abort}$ and some send ${\sf corrupted}$, then the ${\sf abort}$
+% message takes precedence.
+% 
+% \item If a corrupted party $P_i$ sends ${\sf cheat}_i$ to the TP as
+% its input, then the trusted party sends the adversary all of the
+% honest parties' inputs and does the following:
+% 
+% \begin{enumerate}
+% \item With probability $\epsilon$, sends ${\sf corrupted}_i$ to the
+% adversary and all of the honest parties. This corresponds to the case
+% when the cheating party is detected.
+% 
+% \item With probability $1-\epsilon$, the $TP$ sends {\sf undetected}
+% to the adversary. In this case the adversary decides what outputs
+% $y_j$ each honest party $P_j$ ($j \not\in I$) receives.
+% \end{enumerate}
+% 
+% \end{itemize}
+% If no party receives {\sf abort}, {\sf corrupted}, or {\sf cheat}, the
+% ideal execution continues (note that that this corresponds to the
+% simulation in the semi-honest model). The TP computes $(f_1 (\vec
+% {x}), \cdots, f_m (\vec{x}))$ and sends $f_i (\vec{x})$ (for all $i
+% \in I$) to the adversary ${\cal A}$. Now the adversary gets to control
+% whether the honest party gets their output or not (this simulates the
+% fact in the real protocol an adversary can abort the protocol before
+% the honest parties get their output). For $i \in I$ the adversary
+% decides whether to send ${\sf abort}_i$ or {\sf continue}. If the TP
+% receives ${\sf abort}_i$ for any $i \in I$, it sends ${\sf abort}_i$
+% to all the honest parties. If the TP receives ${\sf continue}$ from
+% all parties $P_i$ for $i \in I$, then TP send $f_j (\vec{x})$ to all
+% honest parties $P_j$ ($j \not\in I$).  An honest party outputs whatever it
+% receives from the TP. The adversary ${\cal A}$ outputs an arbitrary
+% value that depends on the inputs of the parties it controls, the
+% auxiliary input $z$, and the messages it receives from the TP.
+% 
+% \begin{definition}
+% \rm Let $\pi$ be a $m$-party protocol that computes a function
+% $f$. Protocol $\pi$ is said to {\it securely compute} $f$ in the
+% presence of covert adversaries with $\epsilon$-deterrent if for every
+% non-uniform probabilistic polynomial-time adversary ${\cal A}$ for the
+% real model (which corresponds to the protocol $\pi$), there exists a
+% non-uniform probabilistic polynomial-time adversary ${\cal S}$ for the
+% ideal model (which was described earlier) such that for every $I
+% \subseteq [ m ]$:
+% \begin{eqnarray*}
+% \left\{ \mbox{IDEAL}^\epsilon_{f,{\cal S}(z),I} (\vec{x},n) \right\}_{\vec{x},z \in (\{ 0,1 \}^\star )^{m+1} , n\in \aleph} &
+% \stackrel{c}{\equiv} 
+% \left\{ \mbox{REAL}_{\pi,{\cal A}(z),I} (\vec{x},n) \right\}_{\vec{x},z \in (\{ 0,1 \}^\star )^{m+1} , n \in \aleph }
+% \end{eqnarray*}
+% \end{definition}
+
+
+\subsection{Protocol 1: Strawman Protocol}
+\label{subsec:protocol-1}
+
+Recall that the client ($C$) has the password $x=P$ and the server
+($S$) has the hash of the password $y=H(P)$. The protocol works as
+follows:
+\begin{itemize}
+\item Client hashes the password and obtains $x'=H(x)$.
+\item Client and server use protocol that is secure in the covert
+model from~\cite[Section 6.2]{aumannlindell} for the function $f(x',y)
+\; = \; \delta (x',y)$.
+\item After the protocol the client and server know whether their
+inputs are the same.
+\end{itemize}
+The protocol given in~\cite{aumannlindell} has several
+parameters. Note that the Naor-Pinkas $OT$ protocol provides
+unconditional security for the server. Therefore, we have the client
+send the garbled circuits to the server, so the server acts as chooser
+in the underlying $OT$-protocol. Moreover, if each bit of the server's
+input is split into $m$ bits and the cut-and-choose is performed over
+$l$ circuits, then the protocol is $\epsilon$-deterrent where
+$\epsilon = (1 - \frac{1}{l}) (1 - 2^{-m+1})$.
+
+The straw man protocol has a vulnerability which defeats the entire
+purpose of storing passwords on the server in the hashed form.  To
+successfully authenticate as a client in this protocol, it is
+sufficient to know only the hash of the password rather than the
+password itself.  First, this means that if the server is compromised,
+then the attacker can impersonate any client whose password was stored
+on the compromised server, even if these passwords were stored in a
+hashed form.  Second, if the server is malicious, then it can
+impersonate any client who successfully authenticates to it.
+
+Nevertheless, the straw man protocol may be useful in certain environments
+with relaxed security requirements.
+
+% Protocol 2
+% The hash function is incorporated in the circuit
+% Point out that this solves the vulnerability in protocol 1
+% Also explain that this can work with legacy servers that don't want to
+% change the hash for their passwords
+
+
+\subsection{Protocol 2: Main Protocol}
+\label{sect:mainproto}
+
+We now present our main protocol.  Recall that in the SSH context,
+there are two parties in the protocol: party 1 (client) has input $x$
+and party 2 (server) has input $y$. They want to jointly compute
+the functionality $(x,y) \longmapsto ( \delta (H(x) = y),\delta
+(H(x) = y))$ where $\delta_{H(x) = y}$ is equal to $1$ if $H(x) =
+y$; otherwise it is $0$. If client gets output of $1$, it means that
+client was authenticated by the server. The reader should interpret $x$
+as the password and $y$ as the hash of the password (in other words,
+the client should only be able to successfully authenticate if he knows
+the password whose hash matches what the server has).  The key idea is
+that the hash function $H$ is included in the functionality, which makes
+our protocol resilient against malicious servers impersonating clients
+(see Section~\ref{subsec:protocol-1}): knowledge of the password hash
+is \emph{not} sufficient to authenticate as the client.
+
+The following protocol description assumes that the reader is familiar
+with the basics of secure-function evaluation (such as garbled circuit
+construction and oblivious transfer).
+
+\begin{itemize}
+
+\item {\bf (Step 1)}  Client creates $l$ garbled circuits $C_1,\cdots,C_l$ of the  for $\delta (H(x), y)$. Let server's 
+input $y \; = \; y_1 \cdots y_m$ be $m$ bits. The wire keys corresponding
+to the $j$-bit of server's input for the $i$-th garbled circuit $C_i$
+is denoted by $k^0_{i,j}$ and $k^1_{i,j}$. Client sends circuits
+$C_1,C_2,\cdots,C_l$ to the server.
+
+\item {\bf (Step 2)} Client and server execute the $OT_1^2$ protocol $m$ times. In the $j$-th instance of $OT_1^2$ the
+client acts as a sender with inputs $k^0_{1,j} \| k^0_{2,j} \| \cdots
+\| k^0_{l,j}$ and $k^1_{1,j} \| k^1_{2,j} \| \cdots \| k^1_{l,j}$ and
+the server acts the chooser with input $y_j$ (the $j$-th bit of the
+input). Notice that concatenating the keys prevents the server from
+learning keys corresponding to different bits, e.g., server cannot
+learn keys $k^0_{1,j}$ and $k^1_{2,j}$.
+
+\item {\bf (Step 3)} Server chooses a random set $S \subseteq \{ 1,2, \cdots , l \}$ and sends $S$ to the client.
+
+\item {\bf (Step 4)} Client reveals wire keys for circuits $C_j$ such that $j \in S$ to the server (we call this step opening the
+circuits $C_j$ such that $j \in S$). Client also provides wire keys for its input $x$ for circuits $C_j$, $j \not\in S$.
+
+\item {\bf (Step 5)} If the circuits $C_j$ ($j \in S$) are not well-formed (the circuits do not compute $\delta (H(x),y)$ or the 
+keys are not consistent with what was sent in step 2), the server
+sends $0$ to the client. Server computes $C_j$ ($j \not\in S$) and
+obtains answers $o_j$ ($j \not\in S$). Server sends $\bigwedge_{j
+\not\in S} o_j$ to the client.
+
+\end{itemize}
+
+It is clear that if both client and server are honest, then the client
+will successfully authenticate to the server if and only if it has a
+password $x$ whose hash $H(x)$ is equal to the input of the server
+$y$. Some of the important features of our protocol are:
+
+\begin{itemize}
+
+\item 
+The server learns the wire keys corresponding to \emph{one input}.
+In other words, it is not possible for the server to evaluate circuit
+$C_i$ on input $x_1$ and circuit $C_j$ ($j \not= i$) on a different
+input $x_2$.  This is the rationale behind concatenating the wire keys
+in step 2 of the protocol.  It ensures that a malicious server cannot
+enter more than one password hash into the computation in an attempt to
+learn the client's input.
+
+\item 
+Assume that out of the $l$ garbled circuits $C_1, \cdots , C_l$ the
+circuits with index $j \in B$ (where $B \subseteq \{ 1,2, \cdots , l\}$)
+are not valid.  The only way the client's cheating is not detected is
+if $B$ is a subset of $\neg S$ (the complement of $S$), \ie, all invalid
+circuits are in the unopened set.
+
+\item 
+The server's response to the client is computed as the logical AND of the
+outputs of all unopened circuits (Step 5).  This exploits the essential
+feature of password authentication, namely, that the client receives a
+single bit from the server.
+
+As long as the password submitted by the client is wrong and at least
+\emph{one} of the unopened circuits is correct (\ie, it correctly
+computes the hash of the client's input and compares it for equality
+with the server's input), the server's answer will be $0$: ``failed
+authentication attempt.''  Therefore, a malicious client does not
+learn anything by submitting invalid circuits, unless \emph{all}
+unopened circuits are invalid.  The outputs of the invalid circuits are
+effectively hidden from the client by the output of a single correct
+circuit.  By contrast, the generic construction for the malicious
+model~\cite{lindellpinkas-eurocrypt07} requires that the majority of
+unopened circuits be correct to prevent information leakages.
+
+If the client's input is the correct password (\ie, its hash is equal
+to the server's input), then the client can compute the server's input
+on his own.  Therefore, the client cannot possibly learn anything from
+the protocol execution, except a single bit confirming that his input
+is correct.
+
+Observe that a malicious client who does not know the password will
+successfully authenticate (\ie, receive bit $1$ rather than $0$ as his
+output of the protocol) if and only if \emph{all} unopened circuits
+are invalid, \ie, the set of invalid circuits $B$ is exactly $\neg $S.
+Because $S$ is chosen randomly, the probability of this event is $2^{-l}$.
+
+\item
+There is no consistency check on the client's inputs.  A malicious client
+may input different passwords into different circuits.  Recall that with
+high probability, the unopened set contains at least one correct circuit.
+Clearly, submitting a wrong password to a correct circuit will result
+in authentication failure.  Therefore, the only situation in which
+the client will authenticate is if he consistently submits the correct
+password to every correctly formed, unopened circuit.  We argue that
+this is equivalent to knowing the correct password in the first place,
+\ie, submitting inconsistent inputs does not offer any benefits to a
+malicious client.
+
+If the client submits inconsistent inputs and authentication fails,
+the client does not learn which of the inputs were correct and which
+were incorrect.  Therefore, the client is still limited to a single
+password per authentication attempt.
+
+\end{itemize}
+
+We formally argue the protocol preserves the privacy of both parties'
+inputs.
+
+\noindent
+{\bf Client's privacy:} Assume that the client is honest and the
+server is controlled by an adversary ${\cal A}$.  ${\cal A}$'s view
+consists of the $l$ garbled circuits $C_1,\cdots,C_l$, messages
+received during the $m$ $OT_1^2$ protocols, all keys for $C_j$ ($j \in
+S )$, where $S \subseteq \{ 1,2, \cdots, l \}$ is chosen by ${\cal
+A}$), and keys corresponding to the client's input $x$ for circuits
+$C_j$ ($j \not\in S$). Assume that views corresponding to the $m$
+$OT_1^2$ protocols only reveal the secrets corresponding to the input
+$y$ of ${\cal A}$ (let the ${\cal A}$ input be $y = y_1 \cdots y_m$
+then the server learns $k^{y_k}_{j,k}$ $1 \leq j \leq l$ and $1 \leq k
+\leq m$). This follows from the privacy of the underlying
+oblivious-transfer protocol. For example, if one uses the Naor-Pinkas
+oblivious-transfer protocol, then we have the information-theoretic security
+for the server. Assuming that the encryption scheme used
+to construct the garbled circuits is semantically secure, revealing
+the wire keys for circuits $C_j$ $(j \in S)$ does not reveal any
+information about the client's input. Consider the circuits $C_j$ $(j
+\not\in S$). Server can evaluate this circuit on $(x,y)$ but learns
+nothing else. Consider an ensemble of garbled circuits $C'_j$ $(j
+\not\in S)$, 
+where $C'_j$ computes the constant function $\delta (H(x),y)$.\footnote{ We assume $C'_j$ is constructed from the same
+encryption scheme that was used to construct $C_1,\cdots,C_j$.}. If
+the encryption-scheme is semantically secure, then ${\cal A}$ cannot
+distinguish between circuits $C_j$ and $C'_j$ (for $j \not\in
+S$). Essentially ${\cal A}$ only learns whether hash of client's
+password is equal to its input and nothing else.
+
+\noindent
+{\bf Server's privacy:} First we give an informal sketch for server's
+privacy. Assume that server's input is $y$.  We now show that in order
+for a malicious client who does not know a password $x'$ such that
+$H(x') = y$, his probability of successful authentication to the
+server (or impersonation) is no better than $2^{-l}$. In other words,
+{\it the probability that a malicious client who does not know the
+pre-image of the server's input successfully impersonating a honest client is bounded
+by $2^{-l}$}. The use of even modestly large value of 
+parameter $l$ will make it more likely that the adversary can simply
+guess the password than to break the protocol. We consider this
+sufficient, but if desired, extremely large values of $l$ can be used
+to make the probability of breaking the protocol negligible, with a
+performance penalty linear in the value of $l$. 
+
+In particular, we show that that the protocol is secure unless the
+client perfectly guesses the subset $S$ of the $l$ circuits that
+the server will choose and prepares the encrypted circuits accordingly.
+
+It is sufficient to assume that the malicious client does not know
+the correct password. If the client knows the password then there
+is no information to be learned from the server that he does not already
+possess. There is no useful purpose to cheating the protocol, since
+he would achieve the desired outcome by executing it faithfully. In
+this case we simply do not care if the client cheats because he only
+hurts himself.
+
+There are three possible cases:
+\begin{itemize}
+\item {\bf (Case 1)} The client includes an invalid circuit in $S$. The server
+will detect this in and reject the authentication
+in step 5.
+
+\item {\bf (Case 2)} Every circuit in $S$ is correct and $\neg S$ (which
+denotes the complement of $S$) includes at least
+one valid circuit. When the server evaluates this circuit, it will
+evaluate to $0$ and the server will reject
+the authentication. Recall that if a circuit is valid, it will evaluate
+to $0$ on the inputs of the client and server because the client does not
+know the pre-image of the server's input.
+
+\item {\bf (Case 3)} Every circuit in $S$ is correct and every circuit
+in $\neg S$ is incorrect. We make no claims of correctness about this
+case. In particular, the client could have made every circuit in $\neg S$
+evaluate to $1$, in which case the server would accept the impersonating
+client as authentic.  
+
+\end{itemize}
+
+Since the server chooses the subset $S$ uniformly from the space of
+proper subsets, the probability of case 3 happening is $2^{-l}$.
+
+Assume that the server is honest and the
+client is malicious. The client is controlled by an
+adversary ${\cal A}$. We construct a simulator ${\sf Sim}$ which works
+in the ideal model. ${\sf Sim}$ acts as the server for ${\cal A}$.
+\begin{itemize}
+\item ${\cal A}$ sends $l$ copies of the garbled circuits $C_1,\cdots,C_l$ to ${\sf Sim}$.
+\item ${\sf Sim}$ acts as TP for ${\cal A}$ for the $m$ oblivious transfer protocols. ${\sf Sim}$ knows the
+inputs of ${\cal A}$ (which in the case of the honest client's are the wire keys corresponding to the 
+server's inputs).
+\item ${\sf Sim}$ chooses a random set $S_1 \subseteq \{ 1,2, \cdots, l \}$ and sends it to ${\cal A}$.
+
+\item ${\cal A}$ sends all the wire keys corresponding to circuits $C_j$ $(j \in S_1)$.
+
+\item ${\sf Sim}$ rewinds ${\cal A}$, and sends the complement of $S_1$ to ${\cal A}$. 
+${\cal A}$ sends all the wire keys corresponding to circuits $C_j$ $(j \not\in S_1)$. Note that after this
+step ${\sf Sim}$ knows the wire keys corresponding to all the garbled circuits $C_1,\cdots,C_l$.
+
+\item ${\sf Sim}$ rewinds ${\cal A}$, picks a random set $S \subseteq \{ 1,2,\cdots, l \}$, and
+sends it to ${\cal A}$. ${\cal A}$ sends wire keys corresponding to the circuits $C_j$ $(j \in S)$. 
+
+\item ${\cal A}$ provides the wire keys for all circuits $C_j$ ($j \not\in S)$. Note that since ${\sf Sim}$
+knows the wire keys for all the garbled circuits, it can now construct ${\cal A}$'s inputs $x_j$ to
+circuits $C_j$ ($j \not\in S$). If the inputs are inconsistent
+(\ie, not all equal to the same value), ${\sf Sim}$ sends $0$ to
+${\cal A}$. If all inputs $x_j$ ($j \not\in S$) are equal to $x$, then ${\sf Sim}$ sends
+$x$ to the TP. If TP returns $1$ (which means that ${\cal A}$ knew the pre-image of server's input), then
+${\sf Sim}$ sends $1$ to ${\cal A}$ (which essentially means that the malicious client was authenticated). 
+If TP returns $0$, we proceed to the next step.
+
+\item ${\sf Sim}$ checks the validity of all the circuits $C_j$ ($j \in S$). If any of these circuits is found to be invalid,
+then ${\sf Sim}$ sends $0$ to ${\cal A}$. Otherwise ${\sf Sim}$ sends $1$ to ${\cal A}$.
+\end{itemize}
+
+Assume that ${\cal A}$ does not know the pre-image corresponding to
+the server's input.  Suppose the inputs  $x_j$ ($j \not\in S$) are not
+equal. In this case, ${\cal A}$ receives $0$ from ${\sf Sim}$. We argue
+that in the real model ${\cal A}$ would receive $1$ only if it knows
+the pre-image corresponding to the server's input (a contradiction).
+The only way ${\cal A}$ receives a $1$ if all of his inputs into correctly
+formed, unopened circuits are pre-images of the server's input, which
+means ${\cal A}$ knew the pre-image of the server's input to begin with,
+contradicting our assumption.  Hence the views of ${\cal A}$ in the
+ideal and real world are the same when the inputs $x_j$ ($j \not\in S$)
+are not equal, unless all opened circuits are valid \emph{and} all of the
+unopened circuits are invalid (the probability of this event is $2^{-l}$).
+
+Now assume that inputs $x_j$ ($j \not\in S$) are all equal to $x$.
+Let $E_1$ be the event that a honest server denies authentication to
+${\cal A}$ in the real model, and $E_2$ be the event that ${\sf Sim}$
+denies authentication to ${\cal A}$ in the ideal model. Recall that
+denying authentication is tantamount to ${\cal A}$ receiving $0$. It is
+easy to see that if $E_1$ and $E_2$ are true, then the view of ${\cal A}$
+in the real model is indistinguishable from the view of ${\cal A}$ in
+the ideal model. The probability of event $E_1 \wedge E_2$ not happening
+is bounded by $2^{-l+1}$.
+
+We conclude that if the client does not know the pre-image of the server's
+input, then the probability that the view of ${\cal A}$ in the real model
+is indistinguishable from the view of ${\cal A}$ in the ideal model
+with probability atleast $1-2^{-l+1}$.  In other words, conditioned
+on the event that the malicious client does not know the pre-image of
+the server's input, the probability of the simulator failing is bounded
+by $2^{-l+1}$.  This model is very similar to the ``failed simulation''
+model given by Aumann and Lindell~\cite[Section 3.2]{aumannlindell}.
+
+\vspace{1ex}
+\noindent
+\textbf{Other attacks:}
+Observing an instance of our protocol yields no information that will be
+useful in subsequent instances of the protocol (\eg, it does not reveal
+the parties' inputs).  Therefore, our construction is secure against
+replay attacks.
+
+Consider a replay attack in which a malicious part (Eve) captures all
+messages exchanged between the client and the server.  Now Eve replays
+message from an old session to impersonate the client. This attack is
+thwarted because various steps in the protocol use fresh, randomly
+generated values.  For example, in each instance of the Naor-Pinkas
+oblivious-transfer protocol, the chooser (in our case the SSH server)
+generates a random value $k$ and sends $g^k$ or $\frac{C}{g^k}$ (where $g$
+is generator of the underlying group and $C$ is an element in the group).
+Therefore, observing the server's inputs to the protocol does not reveal
+the password hash, nor any information that can be used in subsequent
+sessions.
+
+% A man-in-the-middle attack (MITM) also does not yield any information
+% for the attacker because a transcript of our protocol does not reveal
+% the inputs of the parties or the session key.
+
+
+
+\subsection{Protocol 3: Adding key establishment}
+\label{sec:protod}
+
+In the context of SSH, client and server need to compare their inputs and
+also establish a session key if the comparison between their inputs is 
+successful.  The protocol is an easy extension of our main protocol.
+\begin{itemize}
+\item Client picks a random key $K$.
+\item Client and server execute a variation of the main protocol
+that computes the following functionality:
+\[
+((x,K),y) \; \mapsto \; (\mbox{\bf if} \; (H(x) = y) \;\; \mbox{\bf
+then} \;\; (K,K) \;\mbox{\bf else} \; (\bot,\bot))
+\]
+\end{itemize}
+
+A malicious client may pick key $K$ that is not truly random.  However,
+if the client is malicious, it can unencrypt and forward its messages to
+an adversary regardless of this. On the other hand, suppose the server is
+malicious. If the malicious server knows the hash $H(x)$ of the client's
+input $x$, then it knows the session key $K$. In this case, the server
+can again forward the unencrypted messages to the adversary. If the
+server does not know $H(x)$, then it cannot obtain the session key. In
+other words, adding the extra functionality of distributing session keys
+does not affect the security of protocol 2 (which only compares $H(x)$
+and $y$).
+
+
+%% Oblivious transfer $OT$ is a fundamental protocol in all these
+%% constructions. In an $OT$ protocol, a sender has two inputs
+%% $(x_0,x_1)$ and a receiver has an input bit $\sigma$. The sender
+%% receives no output and the receiver learns $x_\sigma$.  Moreover, the
+%% sender learns nothing about the chooser's bit $\sigma$ and the chooser
+%% learns nothing about the other input $x_{1-\sigma}$. We use the $OT$
+%% protocol due to Naor and Pinkas~\cite{Naor-Pinkas:2001}, which
+%% provides information-theoretic security for the chooser and
+%% computational security (based on the hardness of Diffie-Hellman) for
+%% the sender.
+
+%% In our implementation, we use the oblivious transfer (OT) protocol by
+%% Naor-Pinkas~\cite{}. This protocol provides information-theoretic
+%% security for the chooser and computational security (based on the
+%% Diffie-Hellman assumption) for the sender.  However, the
+%% information-theoretic security for the chooser creates a problem with
+%% a full simulation proof for the sender. We could use other OT
+%% protocols which enable full simulation. For example, Hazay and
+%% Lindell~\cite{Hazay-Lindell} present a fully simulatable OT protocol
+%% that is based on the Diffie-Hellman assumption but is fully
+%% simulatable.  Moreover, their protocol has computational complexity
+%% similar to the Naor-Pinkas protcol.  However, as of writing of the
+%% paper we have not implemented this modified OT protocol.
+
+\vspace{1ex}
+\noindent
+\textbf{Note on the oblivious transfer protocol.}
+In our implementation, we use the oblivious transfer (OT) protocol
+by Naor-Pinkas~\cite{Naor-Pinkas:2001}. This protocol provides
+information-theoretic security for the chooser (SSH server in our
+implementation) and computational security, based on the Diffie-Hellman
+assumption, for the sender (SSH client).  This OT protocol is a good
+choice for the SSH environment due to its efficiency.  As an alternative,
+we could have implemented our system using a fully simulatable oblivious
+transfer protocol such as, for example, the new Diffie-Hellman-based OT
+protocol by Hazay and Lindell~\cite{Hazay-Lindell} whose computational
+complexity is similar to the Naor-Pinkas protocol.  We leave an
+implementation of this OT protocol as part of our system to future work.
+
+% but it presents a slight technical problem: the proofs of security in
+% the covert model are based on simulatability, while information-theoretic
+% security for the chooser in the Naor-Pinkas protocol prevents the sender's
+% view of the protocol from being fully simulatable.  Note that this does
+% not imply that our construction is insecure.
+
+
+%% \bibliographystyle{plain} 
+%% \bibliography{somesh}
+
+%% \end{document}

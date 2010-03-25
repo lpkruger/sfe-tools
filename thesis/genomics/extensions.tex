@@ -1,0 +1,183 @@
+% \section{Extensions}
+% \label{sec:extensions}
+
+% Our protocol can be easily extended to compute the edit distance
+% between two strings even if the cost of delete, insert, and replace
+% operations are not $1$. We describe how our protocol can be extended
+% to yield a privacy-preserving version of the Smith-Waterman genome
+% sequence algorithm~\cite{Smith-Waterman}. We also describe how our
+% protocol suggests a strategy for constructing privacy-preserving
+% protocols for problems for which efficient dynamic-programming
+% algorithms exist.
+
+\section{Privacy-Preserving Smith-Waterman}
+
+We now give a privacy-preserving version of the Smith-Waterman algorithm
+for comparing genome sequences~\cite{Smith-Waterman}.  This algorithm is
+more sophisticated than the edit distance algorithm, because the cost of
+{\sf delete}, {\sf insert}, and {\sf replace} operations may no longer
+be equal to $1$, but determined by special functions.
+
+As before, let $\alpha$ and $\beta$ be two strings over the alphabet
+$\Sigma$. The Smith-Waterman algorithm uses a cost function $c$ and a gap
+function $g$.  The cost function $c: \Sigma \times \Sigma \rightarrow \Re$
+associates a cost $c(u,v)$ with each pair $(u,v)$. Typically, $c(u,v)$
+has the following form:
+\[
+c(u,v) \; = \; \left\{ 
+\begin{array}{lr}
+a & \mbox{if $u=v$} \\
+-b & \mbox{if $u \not= v$} 
+\end{array}
+\right.
+\]
+
+If a symbol is deleted or inserted, a special symbol ``$-$'' is inserted.
+For example, if the fourth symbol is deleted from $\mbox{CTGTTA}$ it is
+written as $\mbox{CTG$-$TA}$. A sequence of ``$-$'' is called a {\it gap}.
+Gaps are scored using a {\it gap function} $g$, which typically has an
+{\it affine} form:
+\begin{eqnarray*}
+g(k) & = & x + y (k-1)
+\end{eqnarray*}
+In the above equation $k$ is the size of the gap (number of consecutive
+``$-$'' in a sequence), while $x > 0$ and $y > 0$ are constants.
+
+Define $H(i,j)$ as the following equation:
+\[
+\max \{ 0 , \Delta (\alpha [ x \cdots i ], \beta [ y \cdots j ]) \; \;
+\mbox{for $1 \leq x \leq i$ and $1 \leq y \leq j$} \}
+\]
+Recall that $\alpha [ x \cdots i ]$ represents the string $\alpha
+[x] \alpha [x+1] \cdots \alpha [i]$. The distance between strings
+$\alpha [ x \cdots i ]$ and $\beta [ y \cdots j ]$ according to the cost
+function $c$ and gap function $g$ is denoted by $ \Delta (\alpha [ x
+\cdots i ], \beta [ y \cdots j ])$. The {\it Smith-Waterman} distance
+between the two strings $\alpha$ and $\beta$ (denoted by
+$\delta_{SW}(\alpha,\beta)$) is simply $H(n,m)$, where $n$ and $m$ are
+lengths of the two strings $\alpha$ and $\beta$. Values $H(i,0)$ and
+$H(0,j)$ are defined to be zero for $0 \leq i \leq n$ and $0 \leq j
+\leq m$. For $1 \leq i \leq n$ and $1 \leq j \leq m$, $H(i,j)$ is defined
+using the following recursive equation:
+\begin{eqnarray*}
+H(i,j) & = & \max \left[ 0 , \max_{1 \leq o \leq i} \{ H(i-o,j) - g(o) \}, \right. \\
+       &  & \left. \max_{1 \leq l \leq j} \{ H(i,j-l) - g(l) \} , H(i-1,j-1) + c(\alpha[i],\beta[j])   \right]
+\end{eqnarray*}
+
+We now adapt the privacy-preserving protocols for computing the edit
+distance to computing the Smith-Waterman distance.
+
+Protocol 1 translates directly: as before, it requires a single circuit
+$C_{H(i,j)}$ for computing $H(i,j)$ using the recursive equation.
+To use Protocol 2 for computing the Smith-Waterman distance,
+Alice and Bob must maintain a $(n+1) \times (m+1)$ matrix
+$H_A$ and $H_B$, respectively, with the following invariant:
+\begin{eqnarray*}
+H (i,j) & = & H_A (i,j) \oplus H_B (i,j)
+\end{eqnarray*}
+In phase $0$ Alice fills in $H_A (i,0)$ and $H_A (0,j)$ with random
+values and sends them to Bob. Bob fills $H_B (i,0)$ with $H_A(i,0)$
+and $H_B (0,j)$ with $H_A (0,j)$. Phase $2$ is exactly the same as in
+protocol $2$.  In phase $3$ we use a new circuit corresponding to
+recursive equation for $H(i,j)$ instead of $\CM$ we used for computing
+the edit-distance.  Protocol $3$ can also be easily adapted for
+computing the Smith-Waterman distance. The key observation is that if
+$H(i,j)$ lies on the grid, then the values used in the recursive
+equation
+\[
+\begin{array}{l}
+\{ H(i-o,j) \; \mid \; 1 \leq o \leq i \} \\
+\{ H(i,j-l)  \; \mid \; 1 \leq l \leq j \}
+\end{array}
+\]
+also lie on the grid. 
+
+
+\section{Privacy-Preserving Dynamic Programming}
+
+We now generalize the protocols of section~\ref{sec:protocols} to
+arbitrary dynamic programming problems.  Let ${\cal P}(x,y)$ be a problem
+with two inputs $x$ and $y$, \eg, in the edit-distance case, $x$ and
+$y$ are the two the strings. Typically, a dynamic-programming algorithm
+${\cal A}_{\cal P}$ for problem ${\cal P}$ has the following components:
+
+\noindent
+$\bullet$ A set $S$ of sub-problems and a dependency relation $R \subseteq S \times S$ between the
+sub-problems. Intuitively, $(s,s') \in R$ means that the sub-problem $s'$ depends on the sub-problem $s$.
+If there is a dependency between $s$ and $s'$, we write it as $s \rightarrow s'$.
+In the case of the problem of computing edit-distance between two strings $\alpha$ and $\beta$
+of length $n$ and $m$, the set of sub-problems is $[0,\cdots,n] \times [0,\cdots,m]$. For all sub-problems
+$(i,j)$ such that $i \not= 0$ and $j \not=0$, we have the following dependencies: 
+$(i-1,j) \rightarrow (i,j)$, $(i,j-1) \rightarrow (i,j)$, and $(i-1,j-1) \rightarrow (i,j)$.
+The {\it base sub-problems} are $s \in S$ such that they have no dependencies. For the edit-distance
+problem, the base sub-problems are: 
+\[
+\begin{array}{l}
+\{ (i,0) \; \mid \;  0 \leq i \leq n \} \\
+\{ (0,j) \; \mid \;  0 \leq j \leq m \} \\
+\end{array}
+\]
+We also assume that there is a unique root sub-problem ${\it root} \in S$ such that there does not
+exist a sub-problem that depends on ${\it root}$. For the edit-distance problem the unique root
+sub-problem is $(n,m)$. 
+
+\noindent
+$\bullet$ Each sub-problem $s$ is assigned a value ${\it val}(s)$. The goal is to compute 
+${\it val}({\it root})$.  The function ${\it val}$ from $S$ to
+$\Re$ assigns values to sub-problems, such that it satisfies the following properties:
+\begin{itemize}
+\item For all the base sub-problems $s \in S$, ${\it val}(s)$ is defined.
+\item Let $s \in S$ be a non-base sub-problem. Define ${\it pred}(s)$ as all the predecessors
+of $s$, i.e. the set ${\it pred}(s)$ is defined as $\{ s' \; \mid \;
+s' \rightarrow s \}$.  Assume that ${\it pred}(s)$ is equal to $\{ s_1
+, \cdots, s_k \}$.  There is a recursive function $f$ defining ${\it
+val}(s)$ in terms of ${\it val}(s_1), {\it val}(s_2), \cdots , {\it
+val}(s_k)$, $s(x)$, and $s(y)$, where $s(x)$ and $s(y)$ are parts of
+the input $x$ and $y$ that are relevant to the sub-problem $s$. In
+case of the edit-distance problem ${\it val} ((i,j))$ is equal to
+$D(i,j)$. The value for the base and non-base sub problems for the
+edit-distance problems are defined in equations~\ref{eqn:base-case}
+and~\ref{eqn:recursive} in Section~\ref{sec:edit-distance}.
+\end{itemize}
+
+
+Consider a problem ${\cal P}(x,y)$ with two inputs $x$ and $y$. Assume
+that problem ${\cal P}$ has a dynamic-programming algorithm ${\cal
+A}_{\cal P}$ with the space of sub-problems $S$. We describe of how we
+can design a privacy-preserving protocol for ${\cal P}(x,y)$, where
+Alice has input $x$ and Bob has input $y$.
+
+\noindent
+{\bf Protocol 1:} Recall that ${\it val}: S \rightarrow \Re$ assigns a
+value to each sub-problem. Let $s$ be a sub-problem and $C_s$ be the
+circuit with inputs $s(x)$ and $s(y)$ that computes ${\it
+val}(s)$. The circuit $C_s$ can be constructed using the recursive
+equation $f$ for defining the value of non-base sub-problems and the
+circuits for sub-problems $s'$ that are predecessors of $s$. Assume
+that we have constructed a circuit $C_{\it root}$ for the root
+sub-problem. Using the circuit $C_{\it root}$ and standard protocols,
+we can privately compute the ${\it val} ({\it root})$.
+
+\noindent
+{\bf Protocol 2:} In this protocol we randomly split ${\it val} (s)$
+for all sub-problems. We denote the two shares of ${\it val}(s)$ by
+${\it val}_A (s)$ and ${\it val}_B (s)$. Assume that we have randomly
+split ${\it val} (s)$ for all base sub-problems $s$. Consider a 
+sub-problem $s$ such that ${\it pred} (s) \; = \; \{ s_1 , \cdots, s_k \}$.
+Assume that we have computed random shares ${\it val}_A (s_i)$ and
+${\it val}_B (s_i)$ for ${\it val} (s_i)$ (where $1 \leq i \leq k$). Recall
+that we have the following recursive equation describing ${\it val} (s)$:
+\begin{eqnarray*}
+{\it val}(s) & = & f ( {\it val}(s_1),\cdots,{\it val} (s_k),s(x),s(y))
+\end{eqnarray*}
+Since we have computed the random shares for ${\it val}(s_i)$ ($1 \leq
+i \leq k$), we can compute the random shares of ${\it val} (s)$. At
+the end of the protocol, ${\it val}_A ({\it root}) \oplus {\it val}_B ({\it
+root})$ gives the desired result.
+
+\noindent
+{\bf Protocol 3:}
+Protocol 3 depends heavily on the structure of the space $S$ of
+sub-problems.  For example, for the edit-distance problem, Protocol 3
+fundamentally relies on the matrix structure of $S$.
+

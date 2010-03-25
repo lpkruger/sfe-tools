@@ -1,0 +1,61 @@
+\section{Edit Distance between Two Strings}
+\label{sec:edit-distance}
+
+
+Let $\alpha$ and $\beta$ be two strings over an alphabet $\Sigma$.
+Let the lengths of the two strings $\alpha$ and $\beta$ (denoted by $ \mid
+\alpha \mid $ and $ \mid \beta \mid $) be $n$ and $m$, respectively. The
+edit-distance between the two strings $\alpha$ and $\beta$ (denoted by
+$\delta (\alpha,\beta)$) is the minimum number of edit operations
+({\sf delete}, {\sf insert}, and {\sf replace}) needed to transform
+$\alpha$ into $\beta$. We will describe a dynamic programming
+algorithm to compute $\delta (\alpha,\beta)$, which executes in time
+$O(nm)$. The description of the algorithm for computing edit-distance
+is based on the discussion in~\cite{Gusfield}.
+
+Given a
+string $\alpha$, let $\alpha [1 \cdots i]$ denote the first $i$
+characters of $\alpha$.  The dynamic programming algorithm maintains a
+$(n+1) \times (m+1)$ matrix $D(0 \cdots n, 0 \cdots m)$, where
+$D(i,j)$ is the edit distance between $\alpha [1 \cdots i]$ and $\beta
+[1 \cdots j]$.
+
+
+For the
+base case, we have the following:
+\begin{eqnarray}
+\label{eqn:base-case}
+D(i,0) & = & i \;\; , \; 0 \leq i \leq n \\
+D(0,j) & = & j \;\; , \; 0 \leq j \leq m
+\end{eqnarray}
+Next we describe a recursive relationship between the value $D(i,j)$ 
+and the entries of $D$ with indices smaller than $i$ and $j$.
+The $(i,j)$-th entry $D(i,j)$ of the matrix is computed as follows:
+\begin{eqnarray}
+\label{eqn:recursive}
+D(i,j) & = & \mbox{min} [ D(i-1,j) + 1, D(i,j-1)+1, \nonumber \\
+       &  & D(i-1,j-1)+t(i,j) ]
+\end{eqnarray}
+where $t(i,j)$ is defined to have value $1$ if $\alpha (i) \not= \beta (j)$, and
+has value $0$ if $\alpha (i) = \beta (j)$. The $i$-th character of a string $\alpha$
+is denoted by $\alpha (i)$. The entire algorithm for computing edit distance is shown
+in Figure~\ref{fig:edit-distance-alg}.
+
+\begin{figure}
+\framebox{\parbox[c]{6.2in}{
+\begin{itemize}
+
+\item Compute $D(i,0)$ and $D(0,j)$ for $1 \leq i \leq n$ and $1 \leq j \leq m$ using
+equation~\ref{eqn:base-case}.
+
+\item Compute $D(i,j)$ for $1 \leq i \leq n$ and $1 \leq j \leq m$ in row major order
+using equation~\ref{eqn:recursive}. In other words, we first compute all entries for
+row $1$, then row $2$, and so on.
+
+\item The edit distance $\delta(\alpha,\beta)$ is equal to $D(n,m)$.
+\end{itemize}
+}}
+\caption{Algorithm for computing edit distance.}
+\label{fig:edit-distance-alg}
+\end{figure}
+

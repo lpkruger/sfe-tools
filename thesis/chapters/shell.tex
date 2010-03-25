@@ -1,0 +1,76 @@
+%% LyX 1.6.5 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[letterpaper]{geometry}
+\geometry{verbose,tmargin=1.1in,bmargin=1.1in,lmargin=1.1in,rmargin=1.1in}
+\setlength{\parskip}{\medskipamount}
+\setlength{\parindent}{0pt}
+\usepackage{color}
+\usepackage{verbatim}
+\usepackage{graphicx}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% The greyedout annotation environment
+\newenvironment{lyxgreyedout}{\textcolor[gray]{0.8}\bgroup}{\egroup}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
+\newenvironment{lyxcode}
+{\par\begin{list}{}{
+\setlength{\rightmargin}{\leftmargin}
+\setlength{\listparindent}{0pt}% needed for AMS classes
+\raggedright
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\normalfont\ttfamily}%
+ \item[]}
+{\end{list}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\linespread{1.2}
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+
+\title{Optimization of Secure Function Evaluation\textit{\normalsize }\\
+\textit{\normalsize Research Proposal for Ph.D Preliminary Exam}}
+
+
+\author{Louis Kruger\\
+University of Wisconsin Madison}
+
+\maketitle
+%
+\begin{comment}
+\tableofcontents{}
+\end{comment}
+{}
+
+\input{prelim-intro.tex}
+
+\input{background.tex}
+
+\input{mywork.tex}
+
+\input{ot_quad.tex}
+
+%
+\begin{comment}
+\input{newidea.tex}
+\end{comment}
+{}
+
+\input{ssh.tex}
+
+\input{timeline.tex}
+
+\bibliographystyle{plain}
+\bibliography{privacy,somesh,ssh,crypto}
+
+\end{document}

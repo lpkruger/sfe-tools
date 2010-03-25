@@ -1,0 +1,142 @@
+
+\section*{Appendix}
+\label{sec:appA}
+
+\subsection*{EKE}
+
+\emph{Encrypted Key Exchange} (EKE) was developed by Bellovin and
+Merritt to allow two parties to communicate using a weak secret, such
+as a low-entropy password~\cite{bellovin92}. Suppose $A$ and $B$ share
+such a secret, $P$, and that $A$ wishes to securely communicate
+message $M$ to $B$. Na\"ively, $A$ could use a symmetric cipher $E$
+with $P$ as the key, and send $E_P(M)$ to $B$; however, because $P$ is
+weak, this is subject to brute-force attack by an adversary who wishes
+to learn $M$. Instead, EKE uses a temporary asymmetric key pair to
+exchange a stronger shared symmetric key to use for the duration of
+the session. The steps of the protocol, simplified for clarity of
+presentation, are as follows:
+\begin{enumerate}
+\item $A$ generates a random asymmetric key pair $(E_A, D_A)$ and
+  sends the public key encrypted with the weak password, $E_P(E_A)$,
+  to $B$.
+\item $B$ generates a random symmetric key $R$, and sends
+  $E_P(E_A(R))$ to $A$.
+\item $A$ uses $S$ and $D_A$ to decrypt $R$, which is used as a strong
+  session key from this point on.
+\end{enumerate}
+In this protocol, the weak secret $P$ is used only to encrypt $E_A$
+and $E_A(R)$. Thus, it is critical that $E_A$ and $E_A(R)$ are
+essentially random, to thwart brute-force attacks on the keyspace of
+$R$.
+
+Central to the correct execution of this protocol is that both $A$ and
+$B$ have knowledge of $P$, and can use it to perform symmetric
+encryption. However, this violates our first and second assumptions,
+as current servers do not typically store user passwords in clear text
+for a number of reasons~\cite{lamport81}.
+
+\subsection*{AEKE}
+
+\emph{Augmented Encrypted Key Exchange} (AEKE) was developed by
+Bellovin and Merritt to relax the constraint in EKE that the server
+possess the shared secret $P$ in clear text~\cite{bellovin93}. Rather,
+in AEKE, it is assumed that the server possesses knowledge of a secure
+hash of the password, $H(P)$. The first part of AEKE proceeds exactly
+as in EKE, with the exception that all uses of $P$ in the protocol are
+replaced with uses of $H(P)$. However, $B$ must be able to verify that
+$A$ possesses the true shared secret $P$, and not merely its hash. To
+allow this, they conceptualize a new one-way function $F(P,R)$, where
+$R$ is the strong session key as in EKE, as well as a predicate
+$T(H(P),F(P,R),R)$. By requiring that $T$ evaluates to \emph{true} if
+and only if $H(P)$ and $F(P,K)$ are computed using the same shared
+secret $P$, they provide a mechanism for $B$ to verify that $A$ knows
+$P$. Thus, two additional steps are needed:
+\begin{enumerate}
+  \item[4.] $A$ sends $R(F(P,R))$ to $B$. This proves $A$'s ownership
+  of the original shared secret $P$, as $H(P)$ cannot be used to
+  calculate $F(P,R)$.
+  \item[5.] $B$ decrypts $A$'s message to obtain $F(P,R)$ and accepts
+  the identity of $A$ only if the $T$ predicate evaluates to
+  \emph{true}.
+\end{enumerate}
+Bellovin and Merritt proposed one practical scheme for instantiating
+$H$, $F$, and $T$ on real systems. By using the public key in a
+digital signature scheme to define $H(P)$, $A$ can compute $F(P,R)$ by
+signing $R$ with the corresponding private key. Evaluating $T$ then
+amounts to verifying the signature sent by $A$ with $H(P)$. However,
+it is improbable that the hashing methods in use on current servers
+can be used in this manner, so this algorithm fails to meet our first
+requirement.
+
+\subsection*{$\Omega$-Method}
+
+The $\Omega$-method was developed by Gentry \textit{et al.} as a way
+of hardening arbitrary password-based key exchange (PAKE) protocols
+against the event that the server is compromised~\cite{gentry06}. In
+other words, the $\Omega$-method allows any PAKE protocol
+$\mathcal{P}$ to operate under the assumption that the server stores
+only a hash of the user's password, $H(P)$. It works as follows:
+\begin{enumerate}
+\item $A$ and $B$ run $\mathcal{P}$ as they would normally,
+  substituting every occurrence of $P$ with $H(P)$. After running
+  $\mathcal{P}$, both parties possess a shared secret key $R$.
+\item $B$ derives a second session key $K'$ from $K$, and uses it to
+  send an encrypted secret key $D_A$ from an asymmetric key pair
+  $(D_A, F_A)$, to $A$: $E_{K'}(E_{P}(D_A))$
+\item $A$ receives $E_{K'}(E_{P}(D_A))$, derives $K'$ from $K$ in a
+  manner identical to $B$, and decrypts using $K'$ and $P$ to obtain
+  $D_A$. $A$ then signs a transcript of the protocol using the secret
+  key, and sends it to $B$:
+  $\mathsf{Sign}_{D_A}(\mathsf{transcript})$. The client then derives
+  the final session key $K''$ from $K$, to be used for the remainder
+  of the session.
+\item $B$ receives $\sigma =
+  \mathsf{Sign}_{D_A}(\mathsf{transcript})$, and uses $F_A$ to verify
+  it: $\mathsf{Verify}_{F_A}(\mathsf{transcript},$ $\sigma)$. If it
+  checks out, then $B$ knows that $A$ possesses $P$, and derives the
+  shared session key $K''$ to continue.
+\end{enumerate}
+The basic idea of the $\Omega$-method can be summarized as follows:
+$\mathcal{P}$ is run as normal, substituting $H(P)$ for $P$ as
+necessary, but afterward, $A$ must prove knowledge of $P$ such that
+$H(P)$ is in agreement with the $B$'s authentication records. However,
+the manner in which the method performs this requires the server to
+store a non-trivial amount of additional information in the form of an
+asymmetric key pair, so it fails to meet our first requirement.
+
+\subsection*{Multiple-Server}
+
+Ford and Kaliski~\cite{ford00} also consider the problem of using a
+weak password to bootstrap a secure means of communication, and the
+risk associated with storing some form of the password database on the
+server. Their approach consists of protecting passwords from server
+compromise by distributing trust across multiple servers, thereby
+eliminating the chance of total password compromise by infiltration of
+a single server. In their scheme, the client's weak password is used
+to derive a strong secret by means of multiple \emph{hardening
+servers}, and combines the result of the individual interactions into
+a strong secret that can be used for further communication. It works
+as follows:
+\begin{enumerate}
+\item For each of one or more servers $B_1, \ldots, B_n$, $A$ runs a
+  \emph{hardening protocol} to obtain a hardened password $R_i$ based
+  on the original weak password $P$. None of the servers learns either
+  the original password, or the hardened password.
+\item Using the set of hardened passwords $R_i, 0 \le i \le n$, $A$
+  derives a strong secret $K_i$ that is used to authenticate with
+  $B_i$. Additional strong secrets $K_{n+1}, \ldots, K_m$ can be
+  derived in a similar fashion, and used for future communications.
+\end{enumerate}
+Ford and Kaliski point out that \emph{all} of the servers must
+collaborate to determine whether $A$ has given the true password, and
+no strict subset of the servers alone can determine the additional
+strong secrets $K_{n+1}, \ldots, K_m$. They presented a hardening
+protocol based on discrete logarithm cryptography, and claim that it
+can be extended to elliptic curve cryptography~\cite{ford00}.
+
+Because of their reliance on multiple servers for basic security, it
+is clear that the approach of Ford and Kaliski~\cite{ford00}, as well
+as later approaches that are similar in
+nature~\cite{brainard03,mackenzie02}, fail to meet our first
+requirement of straightforward backwards compatibility with existing
+infrastructures.

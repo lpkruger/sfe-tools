@@ -1,0 +1,25 @@
+\begin{figure*}[t]
+  \centering
+
+  \begin{tabular}{|rcl|}
+    \hline
+    \underline{Client} & & \underline{Server} \\
+    $(U)$: username &
+    $\xrightarrow{\mathrm{\texttt{SSH\_MSG\_USERAUTH\_REQUEST}}(\texttt{"sfeauth"},U)}$ & \\
+    & $\xleftarrow{\mathrm{~~~~~~OT~choices~~~~~~}}$ & $H(\mathrm{password})$ \\
+    & $\xrightarrow{\mathrm{~~~~~~~OT~keys~~~~~~~~}}$ & \\
+    & $\xrightarrow{\mathrm{~~~~garbled~circuits~~~~}}$ & \\
+    & $\xleftarrow{\mathrm{~~~~~chosen~circuits~~~~~}}$ & \\
+    $\mathrm{password}$ & $\xrightarrow{\mathrm{~~~~~~~~~~keys~~~~~~~~~~}}$ & verify and evaluate \\
+    & & \\
+    & & \textbf{Success?} \\
+    \textit{Success} & $\xleftarrow{\mathrm{\texttt{SSH\_MSG\_USERAUTH\_SUCCESS}}}$ & If yes \\
+    \textit{Terminate} & $\xleftarrow{\mathrm{\texttt{SSH\_MSG\_USERAUTH\_FAILURE}}}$ &
+    If no \\
+    \hline
+  \end{tabular}
+
+  \caption{The SFE user authentication protocol 2.}
+  \label{fig:sfeauth}
+  \vspace{-1.5em}
+\end{figure*}

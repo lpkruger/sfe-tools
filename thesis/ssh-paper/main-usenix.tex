@@ -1,0 +1,54 @@
+\documentclass{usenixsubmit}
+
+\usepackage{fancyvrb}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{xspace}
+\usepackage{mdwlist}
+
+\let\oldbibliography\thebibliography
+\renewcommand{\thebibliography}[1]{%
+  \oldbibliography{#1}%
+  \setlength{\itemsep}{0pt}%
+}
+
+%Vitaly's macro
+\newcommand{\nb}[1]{\fbox{\parbox{3.1in}{#1}}}
+\newcommand{\ie}{\emph{i.e.}\xspace}
+\newcommand{\eg}{\emph{e.g.}\xspace}
+
+\newtheorem{definition}{Definition}
+
+\title{SSH Password Authentication Using Secure Function Evaluation}
+\author{Louis Kruger, Somesh Jha, Matt Fredrikson \\ University of Wisconsin \and
+Vitaly Shmatikov \\ University of Texas}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\input{abstract}
+
+\input{intro}
+
+\input{related}
+
+\input{ssh-overview}
+
+\input{protocols}
+
+\input{experimental}
+
+\input{conclusion}
+
+\bibliographystyle{abbrv}
+\bibliography{biblio}
+
+\input{appendix}
+
+\end{document}

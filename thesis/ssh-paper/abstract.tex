@@ -1,0 +1,23 @@
+\begin{abstract}
+Over the years, SSH has evolved from a secure alternative to telnet
+into a robust and extensible layered protocol that can serve as a
+secure transport layer for applications that need strong cryptographic
+security. Unfortunately, interactive password-based authentication
+remains one of the most popular choices for common SSH deployments,
+leaving opportunity for an active malicious adversary to either learn
+the client's password, or impersonate the server or
+client. \emph{Secure Password and Key Authentication} (SPAKA)
+protocols provide mutual authentication, and are designed to be
+resilient to these attacks. However, current SPAKA protocols impose
+specific requirements on the environments in which they are used,
+making them impractical for many common, widespread applications such
+as SSH. In this paper, we present a \emph{practical} protocol that
+provides equivalent guarantees to existing SPAKA protocols, but is
+suitable as a ``drop-in'' authentication module in existing
+deployments. To accomplish this, we use secure function evaluation
+(SFE) to compare the password credentials between the client and
+server, embedding computation of the hash function into the comparison
+protocol. We have implemented an SSH client and server that use this
+authentication protocol, and released an open-source version of the
+software that is freely available for download.
+\end{abstract}

@@ -1,0 +1,16 @@
+\section{Conclusion}
+
+In this paper, we have addressed the problem of providing secure
+mutual authentication for the SSH protocol, maintaining full backwards
+compatibility with existing server/client infrastructures as a primary
+design principle. Leveraging the unique flexibility of SFE to compute
+arbitrary hash functions within the protocol, we constructed a
+protocol that provides an identical set of security guarantees as
+previous work in the area, while remaining suitable as a ``drop-in''
+authentication module on nearly all existing servers. Furthermore, we
+demonstrated that a conservative set of optimizations to the protocol
+made it practical for common use from a performance standpoint. In the
+future, we intend to study further optimizations to certain parts of
+the protocol that improve performance without sacrificing security, as
+well as additional applications that could benefit from our basic
+technique.

@@ -1,0 +1,96 @@
+\section{Cryptographic Toolkit}
+\label{crypto}
+
+We will employ several standard cryptographic techniques.
+
+\vspace{1ex}
+\noindent
+\textbf{Oblivious transfer.}
+\emph{Oblivious transfer} was originally proposed by Rabin~\cite{R81}.
+Informally, a $1$-out-of-$n$ oblivious transfer (denoted as $OT_1^n$)
+is a protocol between two parties, the chooser and the sender.
+The sender's inputs into the protocol are $n$ values $v_1,\ldots,v_n$.
+The chooser's input is an index $i$ such that $1 \leq i \leq n$.
+As a result of the protocol, the chooser receives $v_i$, but does not
+learn anything about the rest of the sender's values.  The sender learns
+nothing.  Our protocols do not depend on a particular implementation of
+oblivious transfer; therefore, we simply assume that we have access to a
+cryptographic primitive implementing $OT_1^2$.  In our implementations,
+we rely on Fairplay~\cite{Fairplay} and the Naor-Pinkas oblivious transfer
+construction~\cite{Naor-Pinkas:2001}.
+
+\vspace{1ex}
+\noindent
+\textbf{Oblivious circuit evaluation.}
+\label{yao}
+We also employ two standard methods for secure circuit evaluation: Yao's
+``garbled circuits'' method and secure computation with shares.  Consider
+any (arithmetic or Boolean) circuit $C$, and two parties, Alice and Bob,
+who wish to evaluate $C$ on their respective inputs $x$ and $y$.  
+
+Yao's ``garbled circuits'' method was originally proposed in~\cite{Yao86}
+(a complete description and security proofs can be found in~\cite{LP04}).
+Informally, Alice securely transforms the circuit so that Bob can
+evaluate it without learning her inputs or the values on any internal
+circuit wire except the output wires.
+
+Alice does this by generating two random keys for each circuit wire,
+one representing $0$ on that wire, the other representing $1$.  The keys
+representing Alice's own inputs into the circuit she simply sends to
+Bob.  The keys representing Bob's inputs are transferred to Bob via the
+$OT_1^2$ protocol.  For each of Bob's input wires, Bob acts as the chooser
+using his input bit on that wire as his input into $OT_1^2$, and Alice
+acts as the sender with the two wire keys for that wire as her inputs
+into $OT_1^2$.  If Bob has a $q$-bit input into the circuit, then $q$
+instances of $OT_1^2$ are needed to transfer the wire keys representing
+his input, since each input bit is represented by a separate key.
+
+Alice produces the ``garbled'' truth table for each circuit gate in
+such a way that Bob, if he knows the wire keys representing the values
+on the gate input wires, can decrypt exactly one row of the garbled
+truth table and obtain the key representing the value of the output wire.
+For example, consider an AND gate whose input wires are $a$ and $b$,
+and whose output wire is $c$.  Let $k^0_a,k^1_a,k^0_b,k^1_b,k^0_c,k^1_c$
+be the random wire keys representing the bit values on these wires.
+The garbled truth table for the gate is a random permutation of
+the following four ciphertexts:
+$E_{k^1_a}(E_{k^0_b}(k^0_c))$,
+$E_{k^1_a}(E_{k^1_b}(k^1_c))$.
+$E_{k^0_a}(E_{k^1_b}(k^0_c))$,
+$E_{k^0_a}(E_{k^0_b}(k^0_c))$.
+Yao's protocol maintains the invariant that for every circuit wire,
+Bob learns \emph{exactly one} wire key.
+
+Because wire keys are random and the mapping from wire keys to values
+is not known to Bob (except for the wire keys corresponding to his own
+inputs), this does not leak any information about actual wire values.
+The circuit can thus be evaluated ``obliviously.''  For example, given
+the above table and the input wire keys $k^0_a$ and $k^1_b$ representing,
+respectively, $0$ on input wire $a$, and $1$ on input wire $b$, Bob
+can decrypt exactly one row of the table, and learn random key $k^0_c$
+representing $0$ (\ie, the correct result of evaluating the gate) on
+the output wire $c$.
+
+Observe that until Alice reveals the mapping, Bob does \emph{not}
+know which bits are represented by the wire keys he holds.  For the
+standard garbled circuit evaluation, Alice reveals the mapping only
+for the wires that represent the output of the entire circuit, but
+not for the intermediate wires.
+
+Several of our protocols rely on the representation of bit values on
+circuit wires by random keys.   These protocols use Yao's construction
+not as a ``black box'' implementation of secure circuit evaluation,
+but exploit its internal structure in a fundamental way.
+
+The second standard method is \emph{secure computation with shares}
+(SCWS)~\cite[Chapter 7]{Goldreich:vol2}.  This protocol maintains
+the invariant that, for every circuit wire $w$, Alice learns a random
+value $s$ and Bob learns $b_w - s$, where $b_w$ is the bit value of
+the wire.  Therefore, Alice's and Bob's shares add up to $b_w$, but
+because the shares are random, neither party knows the actual wire value.
+For each output wire of the circuit, Alice and Bob combine their shares to
+reconstruct the circuit output.  
+
+% Either Yao's ``garbled circuits'' method,
+% or SCWS can be used to securely and privately evaluate any circuit $C$.
+

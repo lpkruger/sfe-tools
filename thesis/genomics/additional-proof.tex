@@ -1,0 +1,34 @@
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{times}
+
+\begin{document}
+
+Assume that the result is true for $l'$ and $w'$ such that $l' \leq l$ and
+$w' \leq w$.  We will prove the result that for $l+1$ and $w$. Recall that
+we have to prove $D(i,j)$, can be expressed as a function of ${\it
+bottom}(D(i,j),l+1,w)$, ${\it left}(D(i,j),l+1,w)$, $ \alpha [ i-w+1
+\cdots i ]$, and $\beta [ j-l \cdots j]$.  The following three statements are true
+by induction hypothesis:
+\begin{itemize}
+\item $D(i-1,j)$ can be expressed as a function of ${\it
+bottom}(D(i-1,j),l+1,w-1)$, ${\it left}(D(i,j),l+1,w-1)$, $ \alpha [ i-w+1
+\cdots i-1 ]$, and $\beta [ j-l \cdots j]$
+
+\item $D(i,j-1)$ can be expressed as a function of ${\it
+bottom}(D(i,j-1),l,w)$, ${\it left}(D(i,j-1),l,w)$, $ \alpha [ i-w+1
+\cdots i ]$, and $\beta [ j-l \cdots j-1]$
+
+\item $D(i-1,j-1)$ can be expressed as a function of ${\it
+bottom}(D(i-1,j-1),l,w-1)$, ${\it left}(D(i-1,j-1),l,w-1)$, $ \alpha [ i-w+1
+\cdots i-1 ]$, and $\beta [ j-l \cdots j-1]$.
+\end{itemize}
+Notice that $D(i,j)$
+can be expressed in terms of $D(i-1,j)$, $D(i,j-1)$, $D(i-1,j-1)$, 
+$\alpha[i]$,  and $\beta[j]$. Now the result is clear by combining the
+the four statements mentioned above. Similarly, we can prove that $D(i,j)$, can be expressed as a function of ${\it
+bottom}(D(i,j),l,w+1)$, ${\it left}(D(i,j),l,w+1)$, $ \alpha [ i-w
+\cdots i ]$, and $\beta [ j-l+1 \cdots j]$.
+
+\end{document}

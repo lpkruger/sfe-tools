@@ -1,0 +1,107 @@
+\section{Related Work}
+\label{sec:related}
+
+\begin{figure*}[t]
+  \centering
+
+  \begin{tabular}{l|ccc}
+    & \textit{Legacy compatibility} & \textit{Secure password storage} & \textit{Mutual authentication} \\
+    \hline
+    EKE & \textit{\textbf{X}} & \textit{\textbf{X}} & \checkmark \\
+    AEKE & \textit{\textbf{X}} & \checkmark & \checkmark \\
+    $\Omega$-Method & \textit{\textbf{X}} & \checkmark & \checkmark \\
+    Multiple-Server & \textit{\textbf{X}} & \checkmark & \checkmark
+  \end{tabular}
+  
+  \caption{A comparison of existing SPAKA protocols. The protocols
+    listed are EKE~\cite{bellovin92}, AEKE~\cite{bellovin93},
+    $\Omega$-method~\cite{gentry06}, and
+    Multiple-Server~\cite{ford00}. There are a number of protocols in
+    the literature similar in nature to EKE and AEKE; these are
+    referenced in the text but left out of this table for the sake of
+    clarity.}
+  \label{tab:proto}
+%%  \vspace{-2.5em}
+\end{figure*}
+
+\textit{Secure Password and Key Authentication} (SPAKA) is a class of
+authentication protocols designed to guarantee confidentiality of
+secrets even against active malicious adversaries. There have been
+several SPAKA protocols proposed in the literature with varying
+properties. The first such protocol was described by Bellovin and
+Merritt~\cite{bellovin92}. This protocol, \emph{Encrypted Key
+Exchange} (EKE), was designed to allow two parties to communicate using
+a weak secret, such as an \emph{easily memorable} password. The
+authors observed that a standard symmetric cryptosystem keyed on the
+weak secret does not provide strong security, and instead proposed the
+use of a temporary asymmetric key pair to exchange a stronger shared
+symmetric key to use for the full duration of the session. The key
+element that makes this secure is that the bit strings which represent
+keys in several asymmetric schemes are essentially random, and so
+difficult to verify in a brute-force attack on the key exchange
+messages. Thus, this protocol provides a way of accomplishing basic
+mutual authentication, and satisfies requirement \textit{(3)} from our
+list. However, it does not satisfy \textit{(1)} or \textit{(2)}, as
+common deployments store only a hash of the client's password on the
+server. A number of subsequent protocols have the same properties in
+terms of our
+requirements~\cite{abdalla06,abdalla05,bellare00,boyko00,gentry05,mack00,zhang04},
+including a recent scheme by Abdalla \textit{et al.} proved secure in
+the universal composability model~\cite{abdalla08}, and one by Katz
+\textit{et al.} in the standard model~\cite{katz01,katz02}, which was
+later extended to additional cryptographic assumptions by Gennaro and
+Lindell~\cite{gennaro08,gennaro03}.
+
+Bellovin and Merritt developed \emph{Augmented Encrypted Key Exchange}
+(AEKE) \cite{bellovin93} to address these shortcomings by relaxing the
+requirement that the server possess knowledge of the client's password
+in clear text. Rather, they allow the server to possess only a hash of
+the password, which preserves the secrecy of the client's password in
+a scenario where the password database is compromised by an
+adversary. To prevent impersonation of the client by such an
+adversary, the protocol uses primitives that allow one party to verify
+that the other has knowledge of both the password and its hash, and
+proposed two schemes for selecting these primitives. The first scheme
+uses a class of \emph{commutative one-way hash functions}. However,
+there are no known families of commutative hash functions that possess
+the information-hiding properties required to guarantee the security
+of the protocol, making this scheme of theoretical interest only. The
+second scheme defines the hashed password stored by the server as the
+public key in a digital signature scheme. Then, to prove knowledge of
+the original password, the client signs the session key with the
+corresponding private key. For our purposes, AEKE implemented with
+this scheme satisfies requirements \textit{(2)} and \textit{(3)} from
+our list. However, correctly storing the public key on the server may
+require substantial changes to infrastructure, and violates
+requirement \textit{(1)}.
+
+More recently, Gentry \textit{et al.}~\cite{gentry06} proposed the
+$\Omega$-method for converting an arbitrary PAKE protocol that is
+\emph{not} resilient to server compromise into one that is secure in
+such a scenario. They proved the security of their method in the
+universal composability framework. However, all known feasible
+implementations of their method require the server to store additional
+information, namely a public/private key pair with the secret key
+encrypted. Thus, applying this method to one of the previously
+described protocols will result in a set of implementation constraints
+basically equivalent to AEKE~\cite{bellovin93}, and ultimately fail to
+satisfy requirement \textit{(1)}.
+
+Ford and Kaliski~\cite{ford00} presented a SPAKA protocol that
+protects the secrecy of the client's password against server
+compromise by distributing it among many servers. When
+the client authenticates, it interacts with each server to establish a
+set of strong secrets, after which the servers collaborate to validate
+the client's identity. A number of subsequent protocols adopt this
+basic functionality; MacKenzie \textit{et al.} generalize the protocol
+to a threshold setting~\cite{mackenzie02}, and Brainard \textit{et
+  al.} present a lightweight protocol that reduces the computation
+load on the client~\cite{brainard03}. While these protocols satisfy
+our security requirements (\textit{(2)} and \textit{(3)}), they have
+the obvious drawback of requiring a specific server-side architecture
+that may not be common in many settings, and thus fail to satisfy
+requirement \textit{(1)}.
+
+Further details on each type of protocol described in this
+section, as well as specific explanations of why they are not suited
+for the case of SSH authentication, are discussed in the appendix.

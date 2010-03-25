@@ -1,0 +1,70 @@
+\begin{flushleft}
+Assume that both parties' inputs include the $OBDD(f)$ for the Boolean
+function $f(x_{1},x_{2},\cdots,x_{n})$ with the ordering $x_{1}<x_{2}<\cdots<x_{n}$.
+Furthermore, Alice holds the inputs $(i_{1},\ldots,i_{k})$ corresponding
+to the first $k$ variables $x_{1},\ldots,x_{k}$, and Bob has the
+inputs $(i_{k+1},\ldots,i_{n})$.
+\par\end{flushleft}
+\begin{enumerate}
+\item Alice performs the following steps: 
+
+\begin{enumerate}
+\item She traverses the $OBDD(f)$ using her input $(i_{1},\cdots,i_{k})$,
+which results in a node $v_{init}$ at level $k$.
+\item She uniformly and independently at random creates $(n-k)$ pairs of
+secrets $(s_{1}^{0},s_{1}^{1}),\cdots,(s_{n-k}^{0},s_{n-k}^{1})$.
+In addition, for each node $v$ in the $OBDD(f)$ whose level is between
+$k$ and $n-1$, Alice also creates a secret $s_{v}$.
+\item She assigns a uniformly random label to each node whose level is between
+$k$ and $n$. We refer to the randomly assigned label of node $v$
+using the notation $label(v)$.
+\item Next, Alice augments $OBDD(f)$ with some number of dummy nodes (to
+ensure that Bob always traverses $n-k$ nodes in his phase of the
+protocol).
+\item Alice garbles all nodes whose level is between $k$ and $n-1$ in
+the following manner. Let $v$ be a node in $OBDD(f)$ such $k\leq{\it level}(v)\leq n-1$
+and define ${\it level}(v)=\ell$. The encryption of node $v$, denoted
+by $E^{(v)}$, is a label and a randomly ordered ciphertext pair \[
+\left(label(v)\,\,,\,\, E_{s_{v}\oplus s_{\ell-k+1}^{0}}(label(low(v))\,\|\, s_{{\it low}(v)})\,\,\,,\,\,\, E_{s_{v}\oplus s_{\ell-k+1}^{1}}(label(high(v))\,\|\, s_{{\it high}(v)})\right)\,\,\,,\]
+ where the labels are pre-pended to the secret with a separator symbol
+and the order of the ciphertexts is determined by a fair coin flip.
+Roughly speaking, the secrets corresponding to the $0$-successor
+and $1$-successor of node $v$ are encrypted with the secret corresponding
+to $v$ and its level.
+
+
+Note that dummy nodes have the same structure as normal nodes, except
+that the ciphertext pair contain encryptions of the same message since
+dummy nodes have the same $0$ and $1$-successors. Provided the encryption
+scheme is semantically secure, this poses no problem since the keys
+are chosen uniformly at random.
+
+Lastly, there are two terminal nodes of the form $(b,label(t_{b}))$
+for $b=0$ or $1$. Recall that $OBDD(f)$ has two terminal nodes,
+denoted as $0$ and $1$, that are at level $n$.
+
+\item Once Alice is done encrypting, she sends to Bob the encryption of
+all nodes whose level is between $k$ and $n$ and the secret $s_{v_{init}}$
+corresponding to node $v_{init}$ at level $k$. We called this the
+garbled OBDD.
+\end{enumerate}
+\item Bob performs the following steps: 
+
+\begin{enumerate}
+\item He engages in $n-k$ 1-out-of-2 oblivious transfers to obtain the
+secrets corresponding to his input. For example, if his input $i_{j}$
+is $0$, then he obtains the (level) secret $s_{j-k}^{0}$; otherwise,
+he obtains the secret $s_{j-k}^{1}$.
+\item Now Bob is ready to start his computation. Suppose $i_{k+1}=0$. With
+$s_{1}^{0}$ and $s_{v_{init}}$, he decrypts both ciphertexts in
+$E^{(v_{init})}$ and decides which gives the correct result by using
+the verifiable range property of the encryption scheme. Bob now has
+both $s_{{\it low}(v)}$ (the secret corresponding to the $0$-successor
+of $v_{init}$) and $label(low(v))$ (which tells Bob which encrypted
+node is used to evaluate his next input). Continuing this way, Bob
+eventually obtains a label corresponding to one of the terminal nodes,
+which determines the result of the OBDD on the shared inputs. Bob
+sends this result to Alice. 
+\end{enumerate}
+\end{enumerate}
+

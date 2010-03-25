@@ -1,0 +1,194 @@
+\section{Security Proofs}
+
+\newcommand{\view}{\mathsf{view}}
+\newcommand{\sot}{S^\mathsf{ot}}
+\newcommand{\mot}{S^\mathsf{min}}
+
+Our protocols are secure in the so called the \emph{semi-honest} model
+of secure computation, \ie, under the assumption that both participants
+faithfully follow the protocol specification.  To achieve security in
+the \emph{malicious} model, where participants may deviate arbitrarily
+from protocol specification, participants would need to commit to their
+respective inputs prior to protocol start and then prove in zero knowledge
+that they follow the protocol specification.  
+
+Since we use Yao's ``garbled circuits'' method as the underlying
+primitive, security in the malicious model, if needed, can be achieved as
+at constant cost~\cite{JS07}.  For practical usage scenarios, however, it
+is not clear whether security in the malicious model offers significant
+advantages over security in the semi-honest model.  For example, there
+is no external validation of the parties' inputs.  Even if the protocol
+forces each party to run the protocol on previously committed inputs,
+this does not guarantee that the inputs are not maliciously chosen in
+the first place.  In other words, a malicious party may simply commit
+to a ``bad'' input (deliberately chosen so that the result of the edit
+distance computation reveals some information about the other party's
+input) and pass all proofs.
+
+In general, we expect that our protocols will be used for tasks such as
+collaborative analysis of genome sequence in joint medical studies, where
+it is reasonable to assume that participants provide actual sequences
+as inputs into the protocol, and are not deliberately supplying fake
+sequences in an attempt to learn something about the other participant's
+data.
+
+Security of Protocol 1 follows directly from (i) security of subprotocols
+performed using standard methods for secure multi-party computation,
+and (ii) composition theorem for the semi-honest model~\cite[Theorem
+7.3.3]{Goldreich:vol2}.  Proofs are standard and omitted for brevity.
+
+Security of Protocol 2 is proved via a standard simulation in the
+semi-honest model.  For each protocol participant, we demonstrate the
+existence of an efficient simulator algorithm which, with access to
+this participant's input and output, produces a simulation which is
+computationally indistinguishable from this participant's ``view'' of
+the protocol (informally, a ``view'' is a record of sent and received
+messages).
+
+Let $\view_A(\alpha)$ (respectively, $\view_B(\beta)$) be Alice's
+(respectively, Bob's) view of the protocol when executed on input string
+$\alpha$ (respectively, $\beta$).  Each party's view consists of its
+respective input as well as all messages received by this party in the
+course of the protocol.  The output of the protocol is the edit distance
+$\delta(\alpha,\beta)$.  Because edit distance is a deterministic function
+of the parties' inputs, to prove security of the protocol it is sufficient
+to construct simulators $S_A$ and $S_B$ such that
+\[
+\begin{array}{rcl}
+\{S_A(\alpha,\delta(\alpha,\beta))\} 
+& \stackrel{c}{\equiv} &
+\{\view_A(\alpha)\} \\
+\{S_B(\beta,\delta(\alpha,\beta))\} 
+& \stackrel{c}{\equiv} &
+\{\view_B(\beta)\}
+\end{array}
+\]
+Here $\stackrel{c}{\equiv}$ stands for computational
+indistinguishability~\cite{GoldreichBookVol1}.
+
+As the building blocks for our simulator, we will use the simulators for
+Yao's ``garbled circuits'' protocols for evaluating the $\CE'$ and $\CM$
+circuits.  The difference between $\CE'$ and $\CE$ is that, unlike $\CE$,
+which outputs the wire key representing the result of equality testing
+(as opposed to the actual result), $\CE'$ outputs a single bit $\sigma$:
+$0$ if the values are equal, $1$ if they are not (\ie, $\CE'$ is the
+standard equality testing circuit).
+
+% Because the oblivious transfer protocol is assumed to be secure, there
+% exist simulators $\sot_A,\sot_B$ such that, for $i\in\{0,1\}$:
+% \[
+% \begin{array}{rcl}
+% \{\sot_A(i,x_i)\} 
+% & \stackrel{c}{\equiv} &
+% \{\view^{\mathsf{ot}}_A(i)\} \\
+% \{\sot_B(x_0,x_1,\perp)\} 
+% & \stackrel{c}{\equiv} &
+% \{\view^{\mathsf{ot}}_B(x_0,x_1)\}
+% \end{array}
+% \]
+% where $x_0,x_1$ are Bob's inputs into the $OT_1^2$ protocol,
+% $i$ is Alice's choice ($0$ or $1$), $\perp$ is the ``empty'' output
+% (it denotes that Bob does not receive any output from the protocol), and
+% $\view^{\mathsf{ot}}_A$ and $\view^{\mathsf{ot}}_B$ are, respectively,
+% Alice's and Bob's views of the $OT_1^2$ protocol.
+
+Security of the protocol for computing the $\CM$ circuit implies that
+there exist simulators $\mot_A,\mot_B$ such that:
+\[
+\begin{array}{rcl}
+\{\mot_A(x_1,x_2,x_3,r)\} 
+& \stackrel{c}{\equiv} &
+\{\view^{\mathsf{min}}_A(x_1,x_2,x_3,r)\} \\
+\{\mot_B(y_1,y_2,y_3,t,z)\} 
+& \stackrel{c}{\equiv} &
+\{\view^{\mathsf{min}}_B(y_1,y_2,y_3,t)\} \\
+\multicolumn{3}{l}{
+\mbox{where } z=\min(x_1 \oplus y_1 + 1,x_2 \oplus y_2 + 1,x_3 \oplus y_3+t) \oplus r
+}
+\end{array}
+\]
+
+The simulators for the parties' respective views of $\CE'$ are similar.
+
+
+\paragraph{Simulating Alice's view.}
+Simulation of Alice's view in Phase 0 is trivial.
+
+In Phase 1, Alice participates in multiple instances of secure
+evaluation of circuits $\CE$.  By security of Yao's ``garbled circuits''
+protocol~\cite{LP04}, there exist simulators for Alice's views of every
+instance of $\CE'$.  Since Alice's view of $\CE$ is exactly the same as
+her view of $\CE'$ (the only difference between the two circuits is their
+respective outputs for Bob), our simulator simply invokes the simulator
+for $\CE'$ to simulate Alice's view of each instance.
+
+Phase 2 consists of $n \times m$ iterations, one for each value of the
+$(i,j)$ pair.  Therefore, Alice's $\view_A$ of Protocol 2 is a composition
+of Alice's views of individual iterations $\view_A^{(i,j)}$.
+
+For all $(i,j)$ where either $i \neq n$, or $j \neq m$, $\view_A^{(i,j)}$
+is simply her view of the secure evaluation protocol for the circuit
+$\CM$.  To simulate Alice's view of the $\CM$ evaluation on the $(i,j)$
+instance, the simulator simply invokes the sub-simulator $\mot_A$ for
+this protocol.  Note that Alice receives no output from $\CM$.
+
+Finally, $\view_A^{(n,m)}$ contains an additional message $m_B$ from
+Bob at the very end of the protocol, which in the real execution
+enables Alice to reconstruct the output of the entire protocol,
+\ie, $\delta(\alpha,\beta)$.  Because the simulator has access to
+$\delta(\alpha,\beta)$, it simulates $m_B$ as $\delta(\alpha,\beta)-r_A$,
+where $r_A$ is Alice's fourth input into the $\CM$ circuit in the
+$(n,m)$ iteration.  Observe that in both the simulation and the real
+execution, the sum of $r$ and $m_B$ is equal to $\delta(\alpha,\beta)$.
+This completes the simulation of Alice's view.
+
+
+\paragraph{Simulating Bob's view.}
+Simulating Bob's view is a little more difficult.  The simulator
+maintains an internal table $M: \{0,1\}^r \rightarrow \{0,1\}$.
+In Phase 1, for each instance of circuit $\CE(i,j)$, our simulator
+invokes the sub-simulator for Bob's view of $\CE'(i,j)$ on Bob's input
+$\beta[j]$.  The output of the sub-simulator is the bit $\sigma(i,j)$,
+which represents whether $\alpha[i]=\beta[j]$ or not.  
+
+The simulator generates a random $r$-bit value $k(i,j)$, stores the
+mapping $M(k(i,j))=\sigma(i,j)$ in its internal table $M$, and sends
+$k(i,j)$ to Bob.  Now, in the real evaluation of $\CE$, Bob receives an
+$r$-bit wire key.  Because wire keys are generated uniformly at random,
+the simulated value $k(i,j)$ has exactly the same distribution as the
+real wire key, and Bob cannot distinguish between the key from the real
+execution and the simulation.
+
+In Phase 2, for each instance of circuit $\CM(i,j)$, the simulator runs
+on Bob's input $k(i,j)$, which is equal to the same random value that the
+simulator returned to Bob when simulating $\CE(i,j)$.  Bob's inputs are
+$D_B(i-1,j)$,$D_B(i,j-1)$,$D_B(i-1,j-1)$, and $k(i,j)$.  Our simulator
+invokes the sub-simulator $\mot_B(D_B(i-1,j),D_B(i,j-1),D_B(i-1,j-1),
+M(k(i,j)))$.  Observe that the fourth argument is the result of looking
+up $\sigma(i,j)$ corresponding to $k(i,j)$ in the simulator's internal
+table $M$.  Recall that $\sigma(i,j)$ is the result of the comparison
+between $\alpha[i]$ and $\beta[j]$.  The output of $\mot_B$ is returned
+to Bob.
+
+Finally, $\view_B^{(n,m)}$ contains an additional message $m_A$ from
+Alice at the very end of the protocol, which in the real execution
+enables Bob to reconstruct the output of the entire protocol,
+\ie, $\delta(\alpha,\beta)$.  Because the simulator has access to
+$\delta(\alpha,\beta)$, it simulates $m_A$ as $\delta(\alpha,\beta)-r_B$,
+where $r_B$ is the output of the $\mot_B$ sub-simulator in the $(n,m)$
+iteration.
+
+Indistinguishability of Bob's real and simulated views follows from the
+existence of simulators for $\CE'$ and $\CM$, and the fact that Bob
+cannot tell the difference between a wire key generated by Alice (in
+the real protocol) and a ``fake'' value of the same length generated
+randomly by the simulator (in the simulated protocol), since both are
+random values are drawn from the same distribution.
+
+% This sub-simulator requires the actual
+% minimum value as one of its inputs.  The simulator substitutes a random
+% value $r''$ for the actual minimum.  As in any protocol for securely
+% evaluating function $f(x,y)$ where Alice and Bob hold random shares of
+% $x$ and $y$~\cite{Goldreich:vol2}, Alice's share of the result is random
+% and independent of $f(x,y)$.  Therefore, the substitution is undetectable.
+

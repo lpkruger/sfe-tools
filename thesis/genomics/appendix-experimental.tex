@@ -1,0 +1,108 @@
+\section{Detailed Results for Protocols $1$ and $2$}
+\label{appendix:results} 
+
+
+
+As a preparation step, a specific circuit must be constructed for each
+problem instance.  We implemented a program which takes as its input a
+description of the problem instance and outputs a description in the
+Fairplay input language SHDL. Fairplay is able to take the SHDL
+description and output a circuit. Table~\ref{protocol1table} shows the
+network bandwidth (in bytes) and execution times (in seconds) for
+various problem instances. For problems of size greater than (25,25),
+the Fairplay compiler exhausted available memory and could not create
+the circuit. In this experiment, the circuits operate using $8$-bit
+integers bits, which allows for a maximum edit distance of 255. Results
+for Protocol 2 can be found in Table~\ref{protocol2table}.
+
+%
+\begin{table*}
+\begin{center}
+\begin{tabular}{|c||c|c|c|c|c|} \hline 
+Problem size & Bandwidth (Alice) & Bandwidth (Bob) & CPU (Alice) & CPU (Bob) & wall clock \\ \hline \hline 
+(25,25)& 4.38M & 10472 & 4.26 & 1.17 & 5.94 \\ \hline 
+(20,20)& 2.97 M & 8764 & 3.10 & 0.88 & 4.46 \\ \hline
+(16,16) &1.83 M & 7057 & 2.12 & 0.68 & 3.02 \\ \hline
+(12,12) & 0.96 M & 5348 & 1.30 & 0.54 & 1.92 \\ \hline 
+(8,8) & 0.37 M & 3633 & 0.74 & 0.39 & 1.12 \tabularnewline
+\hline
+\end{tabular}
+\end{center}
+
+
+\caption{Network bandwidth (in bytes) and timing measurements (in seconds) for protocol 1. (M refers to Megabytes)}
+\label{protocol1table}
+\end{table*}
+
+\begin{table*}
+\begin{centering}
+\begin{tabular}{|c||c|c|c|c|c|}
+\hline 
+Problem size &
+Bandwidth (Alice) &
+Bandwidth (Bob) &
+CPU (Alice) &
+CPU (Bob) &
+wall clock \tabularnewline
+\hline
+\hline 
+8x8 &
+717 k &
+68 k &
+3.03 &
+1.29 &
+4.05 \tabularnewline
+\hline 
+12x12 &
+1.60 M &
+154 k &
+5.96 &
+2.37 &
+7.68 \tabularnewline
+\hline 
+16x16 &
+3.36 M &
+315 k &
+11.5 &
+4.38 &
+14.7 \tabularnewline
+\hline 
+20x20 &
+5.26 M &
+492 k &
+17.5 &
+6.54 &
+22.1 \tabularnewline
+\hline 
+25x25 &
+8.21 M &
+769 k &
+26.8 &
+9.7 &
+33.7 \tabularnewline
+\hline 
+100x100 &
+171.1 M&
+32.0 M&
+519 &
+177 &
+649 \tabularnewline
+\hline
+\end{tabular}
+\par\end{centering}
+
+
+\caption{Network bandwidth (in bytes) and timing measurements (in seconds)
+for edit-distance Protocol 2 with various problem sizes. (k and M
+are kilobytes and megabytes respectively)}
+
+\label{protocol2table} 
+\end{table*}
+
+
+
+
+
+
+
+
