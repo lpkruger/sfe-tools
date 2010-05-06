@@ -261,17 +261,11 @@ Secure multiparty computation is the basis of the other approach.
 A survey of such techniques is presented in \cite{PinkasCryptoPPDM02}.
 This approach is the primary topic discussed here.
 
+\subsection{Password Authentication}
+Password authentication is a well-known means for accessing services as a user with a known
+identity.
 
 \subsection{Threat Models\label{sub:Threat-Models}}
-
-In the {}``malicious'' threat model, a badly behaving party is free
-to use any available methods to thwart the computation , including
-sending false or inconsistent messages at any step of the protocol.
-The malicious threat model naturally characterizes the malicious behavior
-that a secure protocol would need to protect against. If a protocol
-is shown to be secure in the malicious threat model, then we can reasonably
-assume that a malicious party or interloper will not be able to learn
-any private information by attacking the protocol.
 
 In the {}``semi-honest'' threat model, also known as {}``honest
 but curious'', or {}``passive'', a party to the computation is
@@ -292,6 +286,26 @@ adherence to the protocol. The semi-honest model may itself be a realistic
 model in certain cases, for example, when the parties communicating
 need to preserve privacy of data from one another, but also have a
 sufficient trust relationship not to intentionally cheat.
+
+In the {}``malicious'' threat model, a badly behaving party is free
+to use any available methods to thwart the computation , including
+sending false or inconsistent messages at any step of the protocol.
+The malicious threat model naturally characterizes the malicious behavior
+that a secure protocol would need to protect against. If a protocol
+is shown to be secure in the malicious threat model, then we can reasonably
+assume that a malicious party or interloper will not be able to learn
+any private information by attacking the protocol.
+
+In the {}``covert'' threat model, similar to the {}``malicious'' model,
+a badly behaving party is free to use any available methods to thwart the computation.
+Although the allowable behavior of the adversary is the same, the security
+guarentee is relaxed.  In particular, a protocol is considered secure
+in the covert model if the probability of the attacker not getting caught
+is small but non-negligable.  The covert model can be considered appropriate
+for real-world scenarios only when the consequences to the adversary for being
+caught are a significant deterrence to trying to cheat (i.e. loss of reputation,
+monetary or legal penalties, etc) compared to the benefit of a successful attack.
+\cite{aumannlindell}
 
 %
 \begin{comment}
