@@ -156,8 +156,9 @@ to values is not known to Bob (except for the wire keys corresponding
 to his own inputs), this does not leak any information about actual
 wire values. 
 \end{enumerate}
-After these steps the circuit can thus be evaluated obliviously. A complete
-description of Yao's method and security proofs can be found in \cite{Goldreich:vol2}.
+After these steps the circuit has been evaluated obliviously by Bob.  The final step is for Bob to send
+to Alice her output wire keys, from which she will learn Alice's designated outputs.
+A complete description of Yao's method and security proofs can be found in \cite{Goldreich:vol2}.
 
 \subsubsection{Secure Computation With Random Shares}
 
@@ -262,7 +263,7 @@ However, this approach suffers from the lack of formal security guarantee,
 and has been shown to be vulnerable to data correlation attacks \cite{Malin04}.
 Secure multiparty computation is the basis of the other approach.
 A survey of such techniques is presented in \cite{PinkasCryptoPPDM02}.
-This approach is the primary topic discussed here.
+This approach will be used in this thesis.
 
 \subsection{Password Authentication}
 Password authentication is a well-known means for accessing services as a user with a known
@@ -271,15 +272,16 @@ identity.
 \subsection{Threat Models\label{sub:Threat-Models}}
 
 In the {}``semi-honest'' threat model, also known as {}``honest
-but curious'', or {}``passive'', a party to the computation is
+but curious'', or {}``passive'', \cite{GMW87} a party to the computation is
 assumed to behave correctly and follow the protocol as prescribed.
 However, the party also runs additional probabilistic polynomially
 bounded computation on the side in order to learn information to which
 he is not entitled. A security proof using the semi-honest threat
 model implies that the protocol as designed does not {}``leak''
 information. The semi-honest model is an important theoretical tool
-despite the fact that it is weaker and does not capture the full range
-of malicious behaviors we would expect of an adversary. This is because
+despite the fact that it is weaker than the malicious model 
+and does not capture the full range
+of malicious behaviors we would expect of an adversary. It is useful because
 a protocol that has been proven secure in the semi-honest model can
 be extended in an automated way, using a protocol {}``compiler'',
 to a more secure protocol that is secure in the malicious model \cite{GMW87}.
@@ -288,9 +290,10 @@ protocol to force the parties to prove to one another their faithful
 adherence to the protocol. The semi-honest model may itself be a realistic
 model in certain cases, for example, when the parties communicating
 need to preserve privacy of data from one another, but also have a
-sufficient trust relationship not to intentionally cheat.
+pre-existing trust relationship sufficient to believe the other party
+will not maliciously attempt to cheat the protocol.
 
-In the {}``malicious'' threat model, a badly behaving party is free
+In the {}``malicious'' threat model, an adversarial party is free
 to use any available methods to thwart the computation , including
 sending false or inconsistent messages at any step of the protocol.
 The malicious threat model naturally characterizes the malicious behavior
@@ -300,13 +303,13 @@ assume that a malicious party or interloper will not be able to learn
 any private information by attacking the protocol.
 
 In the {}``covert'' threat model, similar to the {}``malicious'' model,
-a badly behaving party is free to use any available methods to thwart the computation.
-Although the allowable behavior of the adversary is the same, the security
-guarentee is relaxed.  In particular, a protocol is considered secure
+the adversary is also free to use any available methods to thwart the computation.
+Although the allowable behavior of the adversary is the same as in the malicious model, the 
+security guarentee is relaxed.  In particular, a protocol is considered secure
 in the covert model if the probability of the attacker not getting caught
 is small but non-negligable.  The covert model can be considered appropriate
 for real-world scenarios only when the consequences to the adversary for being
-caught are a significant deterrence to trying to cheat (i.e. loss of reputation,
+caught are a significant deterrence to trying to cheat (\ie loss of reputation,
 monetary or legal penalties, etc) compared to the benefit of a successful attack.
 \cite{aumannlindell}
 

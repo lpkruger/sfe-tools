@@ -26,6 +26,7 @@ for ((i=1; i<=pages; i+=bookn)) ; do
 #  acro="$acro $out"
 
   pdfImpose -verbose -dim 1x2 -layout $layout "$out"
+  mv "${out%.pdf}-up.pdf" "$out"
 done
 
 #eval $acro &
