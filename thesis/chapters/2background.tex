@@ -17,17 +17,18 @@ not learn any additional information about the rest of the Sender's
 values. The Sender learns nothing. 
 
 The Naor-Pinkas OT protocol \cite{NaorPinkas99}, based on discrete
-logarithms, is considered to be the most efficient OT protocol for
-practical use today. The performance characteristics of this protocol
-are discussed in section \ref{sub:Comparison-with-Naor-Pinkas}.
-
+logarithms, is a very efficient OT protocol that we have chosen for practical
+implementations.  The performance characteristics of this protocol
+are discussed in chapter \ref{sub:Comparison-with-Naor-Pinkas}.  We will also
+investigate other OT methods based on modular square roots in a later section.
 
 \subsubsection{Homomorphic Encryption}
 
 Homomorphic Encryption is a class of public key encryption algorithms
-that satisfies a homomorphism property. An additive homomorphic cipher
+that satisfies a homomorphism property.  If $E(x)$ is an encryption function
+for a cipher, then an additive homomorphic cipher
 satisfies $E(a+b)=E(a)\oplus E(b)$ where $\oplus$ is an efficiently
-computable operator that requires no secret information. Similarly,
+computable operator that requires no secret information.  Similarly,
 a multiplicative homomorphic cipher satisfies $E(ab)=E(a)\otimes E(b)$.
 Some of the most famous public key ciphers have the multiplicative
 homomorphic property, including the Elgamal cipher \cite{elgamal85}
@@ -46,12 +47,13 @@ encrypted messages to be modified, violating integrity constraints.
 \cite{jmsw02}. This leads to insecurity against
 \end{comment}
 {}\emph{adaptive chosen ciphertext} (CCA2) attacks \cite{bleichenbacher98chosen}.
-However, homomorphic encryption schemes have also found use in novel
+However, despite these concerns, homomorphic encryption schemes have found use in novel
 cryptographic applications such as secure voting \cite{benaloh94}. 
 \begin{description}
-\item [{Semantically~secure~additive~homomorphic~encryption.}] This
-is a cipher which satisfies certain properties that are useful in
-SFE protocols. Let $(G,E,D,M)$ be a public-key encryption scheme.
+\item [{Semantically-secure~additive~homomorphic~encryption.}] 
+A cipher is {\it semantically secure} if it satisfies certain properties.
+% that are useful in SFE protocols. 
+Let $(G,E,D,M)$ be a public-key encryption scheme.
 $E_{e}(m)$ and $D_{d}(c)$ are the encryption and decryption functions
 for plaintext $m$ and ciphertext $c$, with respect to a public/private
 key pair ($e,d)$. $G$ is a key generation function that can be used
@@ -86,13 +88,13 @@ $g$ in terms of $O(\log\alpha)$ invocations of the function $f$.
 There are several encryption schemes that satisfy these properties,
 of which Paillier's encryption scheme, based on composite residue
 classes, is the most widely used \cite{Paillier99}. In the Paillier
-cryptosystem, the message space is $m<n$, where $n=pq$ for $p$
+cryptosystem, the message space is all $m<n$, where $n=pq$ for $p$
 and $q$ prime. The ciphertext space is $E(m)<n^{2}$. Let $g<n^{2}$
 such that $g$ has order $n\alpha$. Using the public key $(g,n)$,
 the encryption function $E(m)=g^{m}r^{n}\left(\mbox{mod }n^{2}\right)$,
 for a random $r<n$. Using the private key $\lambda=\mbox{lcm}(p-1,q-1)$,
 the decryption function for ciphertext $c$ is $m=\frac{L\left(c^{\lambda}\mbox{ mod }n^{2}\right)}{L\left(g^{\lambda}\mbox{ mod }n^{2}\right)}\mbox{ mod }n$
-where $L(u)=\frac{u-1}{n}$ is a well defined function for $u\equiv1\;(\mbox{mod }n)$.
+where $L(u)=\frac{u-1}{n}$ is a well-defined function for $u\equiv1\;(\mbox{mod }n)$.
 Notice that $E(m_{1})\cdot E(m_{2})=g^{m_{1}}r_{1}^{n}g^{m_{2}}r_{2}^{n}=g^{m_{1}+m_{2}}(r_{1}r_{2})^{n}\in E(m_{1}+m_{2})$,
 which satisfies the additive homomorphic property. Further details
 can be found in \cite{Paillier99}.
@@ -107,20 +109,20 @@ respectively to jointly compute a function $f(x,y)$ while preserving
 the privacy of the two parties' respective inputs. At the end of the
 protocol, party $A$ only knows its input $x$ and the value of the
 function $f(x,y)$, and a similar condition holds for $B$. It was
-proved by Yao \cite{Yao86} and Goldreich, Micali, and Wigderson \cite{GMW87}
-that for a polynomially computable function $f$, there exists protocols
-for securely evaluating $f$ that executes in polynomial time. Both
+proven by Yao \cite{Yao86} and Goldreich, Micali, and Wigderson \cite{GMW87}
+that for any polynomially-computable function $f$, there exist protocols
+for securely evaluating $f$ that execute in polynomial time. Both
 proofs are constructive, and provide a method for transforming a Boolean
 circuit description of the function $f$ into a protocol for secure
-evaluation of $f$. These protocols are summarized here.
+evaluation of $f$. These protocols are summarized below.
 
 
 \subsubsection{Garbled Circuit Method \label{sub:Garbled-Circuit-Method}}
 
-Consider any Boolean circuit $C$, and two parties, Alice and Bob,
+Consider any Boolean circuit $C$, and two parties: Alice and Bob,
 who wish to evaluate $C$ on their respective inputs $x$ and $y$.
-In Yao's {}``garbled circuits'' method \cite{Yao86}, Alice securely
-transforms the circuit so that Bob can evaluate it obliviously, i.e.,
+In Yao's {}``garbled circuits'' method \cite{Yao86}, Alice transforms
+the circuit in such a way that Bob can evaluate it obliviously, i.e.,
 without learning Alice's inputs or the values on any internal circuit
 wire except the output wires. The steps are as follows:
 \begin{enumerate}
@@ -141,8 +143,8 @@ must not be used more than once, or Alice's privacy may be violated.
 \item Alice sends the keys corresponding to her own input wires to Bob.
 Bob obtains the keys corresponding to his input wires from Alice using
 an $OT_{2}^{1}$ protocol. For each of Bob's input wires, Bob acts
-as the chooser using his circuit input bit as his input into $OT_{2}^{1}$
-, and Alice acts as the sender with the two wire keys for that wire
+as the chooser using his corresponding input bit to the function as the choice 
+into $OT_{2}^{1}$ , and Alice acts as the sender with the two wire keys for that wire
 as her inputs into $OT_{2}^{1}$ .
 \item Bob evaluates the circuit. Because of the way that the garbled circuit
 is constructed, Bob, having one wire key for each gate input, can
@@ -152,9 +154,10 @@ the invariant that for every circuit wire, Bob learns exactly one
 wire key. Because wire keys are random and the mapping from wire keys
 to values is not known to Bob (except for the wire keys corresponding
 to his own inputs), this does not leak any information about actual
-wire values. The circuit can thus be evaluated obliviously. A complete
-description of Yao's method and security proofs can be found in \cite{Goldreich:vol2}.
+wire values. 
 \end{enumerate}
+After these steps the circuit can thus be evaluated obliviously. A complete
+description of Yao's method and security proofs can be found in \cite{Goldreich:vol2}.
 
 \subsubsection{Secure Computation With Random Shares}
 

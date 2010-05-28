@@ -25,7 +25,7 @@
 \usepackage{algorithm2e}
 \usepackage{graphicx}   % for includegraphics
 \usepackage{color}      % for "to do" command
-\usepackage{natbib}     % preferred bibliography style
+%\usepackage{natbib}     % preferred bibliography style
 \usepackage{makeidx}    % to make the index
 \usepackage{rotating}
 \usepackage{multirow}
@@ -59,7 +59,7 @@
 
 % my custom definitions
 \usepackage{custom-defs}
-\bibpunct{(}{)}{;}{a}{,}{,} % parens in citations instead of brackets for "natbib" style
+%\bibpunct{(}{)}{;}{a}{,}{,} % parens in citations instead of brackets for "natbib" style
 \makeindex
 
 %========================================================================
@@ -104,7 +104,8 @@
 
 %=======================================================================
 % Bibliography
-\bibliographystyle{plainnat}
+%\bibliographystyle{plainnat}
+\bibliographystyle{plain}
 \addcontentsline{toc}{chapter}{Bibliography}
 \begin{singlespace}
 \bibliography{general,crypto,privacy,smithw,somesh,vitaly,biblio}              % Make the bibliography

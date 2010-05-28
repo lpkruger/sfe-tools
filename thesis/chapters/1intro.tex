@@ -56,11 +56,11 @@ These concerns are not merely theoretical. In 2000, Ford Motor Explorer
 SUVs had a well publicized problem with their Firestone tires, in
 which the tire treads could fail under certain circumstances. At least
 271 deaths resulted \cite{NYTFordFirestone}. The problem resulted
-from the \emph{combination} of products: There were no problems with
+from the \emph{combination} of products, \ie there were no problems with
 the same tires in other vehicles, nor with Ford Explorers using other
 tires. It has been suggested that the crisis could have been averted
 using joint data-mining, however, due to business secrecy concerns,
-such research could only have been done using privacy preserving methods
+such research could only have been performed using privacy preserving methods
 \cite{VaidyaClifton:2002}.
 
 There have been several methods developed so far for preserving personal
@@ -80,15 +80,15 @@ computation}\cite{Yao86}. This is a technique of performing computations on inpu
 supplied by multiple parties while provably maintaining privacy guarantees.
 If the computation is a function evaluation, then it is called \emph{secure
 function evaluation}, or SFE. This is a technique which in theory can address
-many of the privacy concerns we face. The inputs to
+many privacy concerns. The inputs to
 the function are partitioned among more than one party, and the function
 is computed collaboratively while preserving the privacy of each participant's
 individual inputs. In this case, privacy is considered preserved if
 no party learns any information that would affect their estimate of
 the probability distribution of another party's inputs, except for
 that which can be calculated by the parties' own inputs and the output
-of the joint function. In comparison with other methods, only secure
-multiparty computation can be used to guarantee privacy when parties
+of the joint function. In comparison with other methods, secure
+multiparty computation is the only method that can be used to guarantee privacy when parties
 collaborate on joint computation. %
 \begin{comment}
 %
@@ -111,7 +111,7 @@ The space expense manifests itself in the large consumption of network
 bandwidth used in the protocols, and the time expense comes from repeated
 use of expensive cryptographic primitives, such as modular exponentiation.
 These expenses explain why SFE has not been frequently used outside
-of the academic literature, despite the fact that it was formally
+the academic realm, despite the fact that it was formally
 introduced in the literature in the early 1980s \cite{Y82}. There has
 been research in recent years to make SFE more practical. This research
 falls into two categories: general and function specific. General
@@ -120,15 +120,16 @@ be evaluated securely. The Fairplay system \cite{Fairplay} is a straightforward
 implementation of the Yao protocol \cite{Yao86}, presented in section
 \ref{sub:Garbled-Circuit-Method}, along with a supporting compiler
 that allows secure functions to be written in a more familiar functional
-programming notation. We showed
+programming notation. We demonstrated
 how \emph{Ordered Binary Decision Diagrams} (OBDD)  can be used to
 produce a more efficient protocol for secure evaluation for certain
-functions\cite{kruger06}. Function specific protocol design has produced secure protocols
+functions \cite{kruger06}. Function specific protocol design has produced secure protocols
 which perform dramatically better than general protocols. Privacy-preserving data mining (PPDM) has been a major application driving
 such research \cite{verykios04stateart}. Other protocols have been
 developed for various classes of functions such as polynomial evaluation
 \cite{naor99otope} and string alignment algorithms such as edit distance
-\cite{kruger07}.  Moore's law has been a factor as well which benefits privacy-preserving protocols.
+\cite{kruger07}.  Privacy-preserving protocols have benefitted from Moore's law as well,
+as increased computational power has sped up the basic cryptographic primitives involved.
 We have shown that in many
 cases, the computation requirements of general protocols
 can be adequate for practical use when performed on modern
@@ -149,11 +150,11 @@ to solving classic security problems with password authentication, using
 SFE to model the hashing functions used in traditional password schemes.
 \cite{kruger10}
 
-Our thesis statement is this:  SFE can be used for practical purposes today,
+Our thesis statement is that {\it SFE can be used for practical purposes today,
 enabling privacy-preserving computation to thrive in today's distributed
-world. In the rest of this document, we will demonstrate this thesis through
+world. } In the rest of this thesis, we will demonstrate this through
 practical examples of the use of SFE.  We will show how traditional algorithms
-can be adapted to preserve privacy, such as in the case of K-means clustering
+can be adapted to preserve privacy, such as in the case of k-means clustering
 and privacy preserving genomic algorithms.  We will show how cryptographic
 primitives suitable for real-time use can be developed by presenting an
 oblivious transfer protocol based on the modular square roots.  We will
