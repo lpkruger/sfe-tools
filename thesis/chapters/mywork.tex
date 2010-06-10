@@ -12,9 +12,9 @@ These tremendous slowdowns in the generic constructions highlight
 the need for optimizing SFE.
 
 There are various ways to approach the problem of designing optimized
-secure function evaluation protocols. My research to date has focused
+secure function evaluation protocols.  This thesis focuses
 on three general methodologies. From most specific to most general,
-three approaches I have looked at are algorithm specific, algorithm
+three approaches we have looked at are algorithm specific, algorithm
 \emph{class} specific, and a general approach that is applicable to
 all computable functions. The trade-off between these different approaches
 is a balance between performance and general applicability. This trade-off
@@ -136,20 +136,18 @@ to the root of the OBDD ${\cal O}_{A}$.
 \item The computation for Bob is exactly the same as that for Protocol 1.
 \end{enumerate}
 The results of this work demonstrated that OBDDs showed improved performance
-with secure evaluation of certain functions. However, the exponential
-blowup properties curtailed its usefulness in other functions tested,
-such as multiplication. There have been many generalizations of OBDDs
-intended to address these problems. An arithmetic-focused approach
-has been to extend OBDDs from the Boolean domain to the numeric domain,
-such as in \emph{binary moment diagrams} \cite{bryant94verification}
-and \emph{hybrid decision} \emph{diagrams} \cite{clarke95hybrid}.
-Another approach, \emph{binary expression diagrams} \cite{BoolExprDiagram},
-have composed BDD-style decision nodes with Boolean gates in the same
-circuit. I am proposing to continue the line of research begun here,
-and investigate whether these alternate circuit representations can
-yield efficient protocols for general purpose secure function evaluation
-that overcome the limitations of basic OBDDs.
+with secure evaluation of certain functions. 
 
+\section{Problem Specific: Protocol Optimization of Evaluating Hash Functions for Password Authentication}
+In our paper Secure Password Authentication Using SFE \cite{Kruger10}, we used some properties of the problem of
+authentication to transform the semi-honest protocol into an efficient protocol that is secure in the malicious model.  
+This protocol takes
+advantage of specific properties of the authentication problem and takes "shortcuts" to achieve efficiency.  Although
+these shortcuts would not be secure in a general SFE setting, we prove that these shortcuts are in fact secure in the 
+context of the authentication protocol presented.  This allows us to design a protocol in which a malicious adversary
+is thwarted with probability $1-2^-l$ where $l$ is a security parameter representing the number of semi-honest circuits.
+We show that on modern multicore processors, the authentication can be performed in a matter of seconds, which we believe is practical
+for interactive use between servers and authenticating users.
 
 \section{Class of Algorithm Specific: Protocol Optimization of Dynamic Programming}
 

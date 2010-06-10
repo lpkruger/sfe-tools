@@ -4,6 +4,9 @@ clean:
 	-rm -v thesis.[abilt][bdflou][cfglotx]
 	find . -name \*.aux -exec rm -v "{}" \;
 
+moreclean:	clean
+	rm thesis*.pdf
+
 thesis.aux:	thesis.tex
 	pdflatex thesis.tex
 	-bibtex thesis.aux
@@ -17,4 +20,5 @@ $(info )
 thesis.pdf:	thesis.tex thesis.aux ${depends}
 	pdflatex thesis.tex
 
-
+booklet:	thesis.pdf
+	sh splitpdf.sh thesis.pdf
