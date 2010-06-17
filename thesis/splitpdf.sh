@@ -1,6 +1,6 @@
 #set -x
 
-bookn=32
+bookn=24
 in="$1"
 
 #layout="${bookn}r,1r,2l,$((bookn-1))l"
