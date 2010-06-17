@@ -1,14 +1,18 @@
 
 \chapter{Techniques for Protocol Optimization}\label{sec:Techniques}
 
-Asymtotically, the time required to perform secure function evaluation
+Optimizing secure function evaluation to make it more practical for
+real world use will be the focus of this thesis.  Traditional methods
+for SFE, such as Yao's secure circuit evaluation protocol \cite{Yao86},
+are many orders of magnitude slower than the straightforward insecure evaluation of
+functions, with factors of thousands or more.  Asymtotically, the time
+required to perform secure function evaluation
 is equivalent to the time required to execute the function itself.
-For example, Yao's secure circuit evaluation protocol \cite{Yao86}
+For example, the Yao protocol
 requires time and communication linear in the number of circuit gates.
 However, the need to encrypt every gate with multiple keys, and to
-perform oblivious transfer on every circuit input creates enormous
-slowdowns, on the order of thousands compared to insecure evaluation.
-These tremendous slowdowns in the generic constructions highlight
+perform oblivious transfer on every circuit input is the cause of the enormous
+slowdowns.  These tremendous performance penalties in the generic constructions highlight
 the need for optimizing SFE.
 
 There are various ways to approach the problem of designing optimized
@@ -72,7 +76,7 @@ and billionaires' problems \cite{Yao86} OBDDs are not a universal
 solution, however, for other functions, such as multiplication, the
 OBDD can be far worse than the Boolean gate representation, due to
 exponential node explosion \cite{Bryant:BDD}. For the classes of
-functions in which the OBDD representation is efficient, our paper
+functions in which the OBDD representation is efficient, our thesis
 \cite{kruger06} shows that the protocol described next can perform
 2 to 4 times better than the classical Yao protocol.
 
@@ -139,13 +143,15 @@ The results of this work demonstrated that OBDDs showed improved performance
 with secure evaluation of certain functions. 
 
 \section{Problem Specific: Protocol Optimization of Evaluating Hash Functions for Password Authentication}
-In our paper Secure Password Authentication Using SFE \cite{Kruger10}, we used some properties of the problem of
+In chapter \ref{chapter:pw}, 
+%based on our paper Secure Password Authentication Using SFE \cite{Kruger10}, 
+we use some properties of the problem of
 authentication to transform the semi-honest protocol into an efficient protocol that is secure in the malicious model.  
 This protocol takes
 advantage of specific properties of the authentication problem and takes "shortcuts" to achieve efficiency.  Although
 these shortcuts would not be secure in a general SFE setting, we prove that these shortcuts are in fact secure in the 
 context of the authentication protocol presented.  This allows us to design a protocol in which a malicious adversary
-is thwarted with probability $1-2^-l$ where $l$ is a security parameter representing the number of semi-honest circuits.
+is thwarted with probability $1-2^{-l}$ where $l$ is a security parameter representing the number of semi-honest circuits.
 We show that on modern multicore processors, the authentication can be performed in a matter of seconds, which we believe is practical
 for interactive use between servers and authenticating users.
 
