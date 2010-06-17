@@ -1,0 +1,30 @@
+\section{Future Work}
+\label{sec:future}
+
+
+%% Say we should explore other representations and optimizations
+
+There are other optimizations to OBDDs that we have not explored in
+this paper. For example, adding negated edges to OBDDs can result in
+smaller structures for some Boolean functions.\footnote{Following
+a negated edge in an OBDD flips the value of the result.} Incorporating these
+optimizations in our protocol while preserving privacy is a direction
+for future work. There are several other OBDD-like representations
+developed by the computer-aided design and computer aided
+verification research communities, such as Binary Moment Diagrams
+(BMDs)~\cite{BMD} and  Hybrid Decision Diagrams (HDDs)~\cite{HDD}. For a
+certain class of functions, these representations are more succinct
+than OBDDs. For example, BMDs can efficiently represent integer
+multiplication, which cannot be represented efficiently at the
+bit-level with OBDDs. Extending our protocol for these representations
+is an important direction of future research. Our vision is to provide
+an option for all these representations in our system so that a user can
+choose the representation that is suitable for the problem.
+
+%% Applications
+
+OBDDs have been used for a variety of applications, such
+efficient filtering in publish-subscribe systems~\cite{Jha:ICSE},
+program analysis~\cite{Whaley}, and planning~\cite{Jensen}. In the future we
+will investigate whether our protocol can be extended to design
+privacy-preserving algorithms for these applications.

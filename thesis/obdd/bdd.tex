@@ -1,0 +1,114 @@
+\section{Ordered Binary Decision Diagrams (OBDDs)}
+\label{sec:OBDDs}
+
+{\it Ordered binary decision diagrams (OBDDs)}  are a canonical 
+representation for Boolean formulas~\cite{Bryant:BDD}. They are often
+substantially more compact than traditional normal forms, such as
+conjunctive normal form (CNF) and disjunctive normal form (DNF), and
+they can be manipulated efficiently. Therefore, they are widely used for a
+variety of applications in computer-aided design, including symbolic
+model checking, verification of combinational logic, and verification of
+finite-state concurrent systems~\cite{Clarke:book}.  A detailed
+discussion of OBDDs can be found in Bryant's seminal
+article~\cite{Bryant:BDD}.
+
+
+Given a Boolean function $f(x_1,x_2,\cdots,x_n)$ of $n$ variables
+$x_1, \cdots, x_n$ and a total ordering on the $n$ variables, the OBDD
+for $f$, denoted by $OBDD(f)$, is a rooted, directed acyclic graph
+(DAG) with two types of vertices: {\it terminal} and {\it nonterminal}
+vertices. $OBDD(f)$ also has the following components:
+\begin{itemize}
+\item Each vertex
+$v$ has a level, denoted by ${\it level}(v)$, between $0$ and $n$. There is a 
+distinguished vertex called  {\it root} whose level is $0$. 
+
+\item Each nonterminal vertex $v$ is labeled by a variable ${\it var}(v) \in \{ x_1,\cdots,x_n \}$ and 
+has two successors, ${\it low (v)}$ and ${\it high (v)}$. Each
+terminal vertex is labeled with either $0$ or $1$. There are only two terminal vertices 
+in an OBDD. Moreover, the labeling of vertices respects the total ordering $<$ on the
+variables, i.e., if $u$ has a nonterminal successor $v$, then ${\it var}(u) < {\it var}(v)$. 
+\end{itemize}
+Given an assignment ${\cal A} \; = \; \langle x_1 \leftarrow b_1,
+\cdots, x_n \leftarrow b_n \rangle$ to the variables $x_1,\cdots,x_n$
+the value of the Boolean function $f(b_1,\cdots,b_n)$ can be found by
+starting at the root and following the path where the edges on the
+path are labeled with $b_1, \cdots, b_n$. OBDDs can also be used to
+represent functions with finite range and domain. Let $g$ be a
+function of $n$ Boolean variables with output that can be encoded by
+$k$ Boolean variables. The function $g$ can be represented as an array
+of $k$ OBDDs where the $i$-th OBDD represents the Boolean function
+corresponding to the $i$-th output bit of $g$.  For the rest of the
+paper we will assume that the function $f$ is a Boolean function, but
+our protocols can be easily extended for the case of functions with a
+finite range. We will illustrate OBDDs with an example.
+\begin{example}
+\label{example:bdd}
+\rm
+Figure~\ref{fig:OBDD} shows the OBDD for the  function
+$f(x_1,x_2,x_3, x_4) \; = \; (x_1 \; = \; x_2) \wedge (x_3 \; = \;
+x_4)$ of four variables $x_1,x_2,x_3,x_4$ with the total ordering $x_1
+< x_2 < x_3 < x_4$.\footnote{OBDDs are sensitive to variable
+ordering, e.g., with the ordering $x_1 < x_3 < x_2 < x_4$ the OBDD for
+$(x_1 \; = \; x_2) \wedge (x_3 \; = \; x_4)$ has $11$ nodes.}  Notice that the ordering of
+the labels on the vertices on any path from the root to the terminals
+of the OBDD corresponds to the total ordering of the Boolean
+variables. Consider the assignment $\langle x_1 \leftarrow 1, x_2
+\leftarrow 1, x_3 \leftarrow 0, x_4 \leftarrow 0 \rangle$.  In the
+OBDD shown in Figure~\ref{fig:OBDD}, if we start at the root and
+follow the edges corresponding to the assignment, we end up at the
+terminal vertex labeled with $1$. Therefore, the value of $f(1,1,0,0)$
+is $1$.
+\end{example}
+
+\begin{figure}
+\begin{minipage}{3in}
+\centering
+\fbox{\epsfysize=3.2in \epsfbox{obdd/figures/bdd-fig1.pdf}}
+\caption{OBDD for the function $f(x_1,x_2,x_3, x_4) \; = \; (x_1 \; = \; x_2) \wedge (x_3 \; = \;
+x_4)$.}
+\label{fig:OBDD}
+\end{minipage}
+\hfill
+\begin{minipage}{3in}
+\centering
+\fbox{\epsfysize=2.5in \epsfbox{obdd/figures/bdd-fig2.pdf}}
+\caption{OBDD for the restriction $f \mid_{x_1 \leftarrow 1, x_3 \leftarrow 0}$ where
+ $f(x_1,x_2,x_3, x_4) \; = \; (x_1 \; = \; x_2) \wedge (x_3 \; = \;
+x_4)$.}
+\label{fig:OBDD-reduced}
+\end{minipage}
+\end{figure}
+
+
+One of the advantages of OBDDs is that they can be manipulated
+efficiently, i.e., given OBDDs for $f$ and $g$, OBDDs for $f \wedge
+g$, $f \vee g$, and $\neg f$ can be computed efficiently. We now
+describe an operation called {\it restriction}, which is used in our
+protocol.  Given a $n$ variable Boolean function
+$f(x_1,x_2,\cdots,x_n)$ and a Boolean value $b$, $f
+\mid_{x_i \leftarrow b}$ is a Boolean function of $n-1$ variables
+$x_1, \cdots, x_{i-1},x_{i+1},\cdots,x_n$ defined as follows:\\
+$f \mid_{x_i \leftarrow b} (x_1, \cdots, x_{i-1},x_{i+1},\cdots,x_n)$ is
+equal to \\ $f(x_1, \cdots, x_{i-1},b,x_{i+1},\cdots,x_n)$.
+Essentially $f \mid_{x_i \leftarrow b}$ is the function obtained by substituting
+the value $b$ for the variable $x_i$ in the function $f$. 
+Given the OBDD for $f$, the $OBDD$ for $f \mid_{x_i \leftarrow b}$ can
+be efficiently computed~\cite[Section 4]{Bryant:BDD}.  The restriction
+operation can be extended to multiple variables in a
+straightforward manner, e.g., $f \mid_{x_i \leftarrow b, x_j \leftarrow b'}$
+can be computed as $(f \mid_{x_i \leftarrow b}) \mid_{x_j \leftarrow b'}$. We
+explain the algorithm using our example; the reader is referred to~\cite{Bryant:BDD}
+for details. 
+Consider the function $f(x_1,x_2,x_3,x_4)$
+described in example~\ref{example:bdd}. The OBDD corresponding to $f
+\mid_{x_1 \leftarrow 1, x_3 \leftarrow 0}$ is shown in
+Figure~\ref{fig:OBDD-reduced}.  
+Since $x_1 \leftarrow 1$, the root of OBDD $(f\mid_{x_1 \leftarrow 1, x_3 \leftarrow 0})$
+is the left vertex labeled with $x_2$. Consider the two vertices $v_1$
+and $v_2$ labeled with $x_2$. If $v_1$ has an edge that points to the vertex labeled with $x_3$, then
+that edge is changed to point to the right vertex labeled with $x_4$ (because this is the vertex
+reached if $x_3$ is equal to $1$). 
+Notice that in the reduced OBDD shown in Figure~\ref{fig:OBDD-reduced}
+the vertices that are labeled with $x_1$ and $x_3$ have been eliminated. 
+

@@ -1,0 +1,118 @@
+\section{Introduction}
+\label{sec:intro}
+
+% Importance of Privacy has spurred interest in privacy-preserving
+% protocols.
+
+The ease and transparency of information flow on the Internet has
+heightened concerns of personal privacy~\cite{cra99,tur03}.  Various
+Internet activities, such as Web surfing, email, and other
+services leak sensitive information. As a result, there has been
+interest in developing technologies~\cite{p3p02,gwb97,rks+97} and
+protocols to address these concerns. In particular,
+privacy-preserving protocols~\cite{FPRS04,FNP04,LP02,NPS99} that allow
+multiple parties to perform joint computations without revealing their
+private inputs have been the subject of much interest.
+%Privacy-preserving protocols allow multiple parties with private
+%inputs to perform joint computation without revealing their
+%inputs.
+Our focus in this paper is on two party privacy-preserving protocols.
+
+
+
+% Secure function evaluation is a theoretical framework for privacy-preserving
+% protocols. Two research thrusts have emerged.
+% Making SFE more useable.
+% Designing special purpose privacy-preserving algorithms.
+One of the fundamental cryptographic primitives for designing
+privacy-preserving protocols is {\it secure function evaluation
+(SFE)}. A protocol for SFE enables two parties $A$ and $B$ with inputs
+$x$ and $y$ respectively to jointly compute a function $f(x,y)$ while
+preserving the privacy of the two parties (i.e., at the end of the
+protocol, party $A$ only knows its input $x$ and the value of the
+function $f(x,y)$, and similarly for $B$).  
+Yao showed that for a polynomial-time computable function $f$, there
+exists a SFE protocol that executes in polynomial
+time~\cite{GMW87,Yao:86} (details about this protocol can be found in
+Goldreich's book~\cite[Chapter 7]{Goldreich:vol2}). Yao's classic
+solution for SFE has been used to design privacy-preserving protocols
+for various applications~\cite{AMP04}.  The importance of Yao's
+protocol spurred researchers to design a compiler that takes a
+description of the function $f$ and emits code corresponding to Yao's
+protocol for secure evaluation of $f$. Such compilers, for example
+Fairplay~\cite{Fairplay}, enable wider applicability of SFE.
+MacKenzie {\it et al.}~\cite{Reiter:CCS:2003} implemented a compiler for
+generating secure two-party protocols for a restricted but important
+class of functions, which is particularly suited for applications
+where the secret key is protected using threshold
+cryptography. For most applications, the classic protocol for SFE is
+quite expensive, which has led researchers to develop more efficient
+privacy-preserving protocols for specific
+problems~\cite{FPRS04,FNP04,LP02,NPS99}.
+
+
+% Mention importance of BDDs and their applications.
+% Describe that it is graph-based data structure.
+% Describe our basic contribution.
+In the classic SFE protocol, the function $f$ is represented as
+circuit comprised of gates. Fairplay uses this circuit
+representation of $f$.  {\it Ordered Binary Decision Diagrams (OBDDS)}
+are a graph-based representation of Boolean functions that have been
+used in a variety of applications in computer-aided design, including
+symbolic model checking (a technique for verifying designs),
+verification of combinational logic, and verification of finite-state
+concurrent systems~\cite{Bryant:BDD,Clarke:book}.  OBDDs can be
+readily extended to represent functions with arbitrary domains and
+ranges.  
+
+Given an OBDD representation of the function to be jointly computed by
+the two parties, Yao's protocol can be directly used by first converting the OBDD into a circuit.
+Converting an OBDD to a circuit, however,
+incurs a blow-up in the number of gates required. To empirically
+measure this blowup, we implemented a compiler that takes an OBDD and
+converts it into a circuit description that can be used in Fairplay.
+On the average, this conversion from OBDD to circuit resulted in a
+increase in size by a factor of $10$. Details of this experiment can
+be found in Section~\ref{sec:experiments}.
+
+In this paper, we present a
+SFE algorithm that directly uses an OBDD representation of the
+function $f$ that the two parties want to jointly compute. The
+advantage of using an OBDD representation over the gate-representation
+is that OBDDs are more succinct for certain widely used classes of
+functions than the gate representation. For example, among other
+functions, our results show the OBDD representation is more efficient
+than the gate representation for 8-bit AND, 8-bit addition, and the
+millionaire's and billionaire's problems~\cite{Yao:86}.  As a result,
+our protocol has reduced bandwidth consumption over the classic Yao
+protocol implemented in Fairplay. Because processor speeds have
+increased at a more rapid pace than bandwidth availability over the
+past years, network bandwidth is likely to be the bottleneck for a number of applications. In particular, our
+protocols are especially useful for applications operating over
+networks with limited bandwidth, such as wireless and sensor networks.
+Furthermore, we have empirically confirmed this statement by
+implementing our protocol and comparing it with Fairplay.
+
+% List of contributions.
+This paper makes the following contributions:
+\begin{itemize}
+\item We present a SFE protocol that uses the OBDD representation of
+the function to be jointly computed by two parties. Our new protocol along with the
+correctness proof is provided in Section~\ref{sec:sfe-obdd}.
+
+\item 
+Experimental results based upon a prototype implementation of our
+protocol demonstrate that for certain functions, our
+implementation results in a smaller encrypted circuit than
+Fairplay. For example, for the classic millionaire's problem, our
+implementation reduces the bandwidth by approximately $45$\% over Fairplay.  Our
+implementation and experimental results are described in
+Section~\ref{sec:experiments}.
+\end{itemize}
+In summary, this paper presents a new SFE protocol that uses the OBDD representation.
+The OBDD representation is more efficient for several practical functions of 
+interest. For other functions, the circuit description (and therefore
+FairPlay) will be more efficient. This paper presents a generic alternative to 
+Boolean circuits that can be used when appropriate. 
+
+

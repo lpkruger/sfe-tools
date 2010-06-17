@@ -1,0 +1,422 @@
+\section{Experimental Evaluation}
+\label{sec:eval}
+
+This section looks at the feasibility of our solution by evaluating
+the cost of the protocol on real data-sets.  The goal of this study is
+to establish the cost of our privacy-preserving clustering algorithms
+on real applications. We principally seek to understand the
+performance and privacy tradeoffs inherent to the operation of the
+protocols.
+
+We evaluated three clustering algorithms. The {\it simple} scheme is
+used throughout as a baseline for our experiments.  This protocol
+implements the $k$-means clustering algorithm as described in
+section~\ref{sec:k-means}.  This algorithm does not use any
+privacy-preserving protocols.  This represents the nominal cost of
+clustering, and will be present in any $k$-means clustering approach,
+independent of if and how privacy is implemented.  Throughout this
+section {\it features} refer to the dimension of the vectors being
+clustered and each iteration of the $k$-means algorithm is referred to
+as {\it round}.  Our first privacy-preserving protocol (referred to as
+{\it OPE}) uses oblivious polynomial evaluation. This protocol is
+described in detail in Section~\ref{subsec:OPE}.  For oblivious
+polynomial evaluation we use the protocol presented by Naor and
+Pinkas~\cite{NaorPinkas99}. The next privacy-preserving protocol
+(referred to as {\it DPE}) uses homomorphic encryption scheme of
+Benaloh~\cite{Benaloh:94}. This protocol is described in detail in
+Section~\ref{subsec:homomorphic}.  
+
+\paragraph{Implementation.}
+Our system consists of approximately $3000$ lines of Java code, split
+up into a number of self-contained modules.  The $k$-means algorithm
+module implements actual clustering computations as described in
+Section 3.  During each iteration, this module calls the {\small\sf
+protocol} module to compute the cluster means for each dimension of
+the cluster.  The {\small\sf protocol} module sets up the framework of
+communication, and calls the specific protocol handlers with a common
+interface, depending on which protocol is selected. In the {\it
+simple} handler, Alice sends $(x,n)$ to Bob, who computes the cluster
+mean $\frac{x+y}{n+m}$ and sends it to Alice.  The OPE and DPE
+protocol handlers implement the protocols described in
+Sections~\ref{subsec:OPE} and~\ref{subsec:homomorphic}.
+
+The central results uncovered by this investigation include:
+
+\newcommand{\itembase}{\setlength{\itemsep}{-3pt}}
+
+\begin{enumerate}
+\itembase
+
+\item
+Clustering using DPE is two orders of magnitude more bandwidth
+efficient than OPE, and executes in 4.5 to 5 times less time.  This is
+largely due to bandwidth and computational costs associated with the
+oblivious transfers used by OPE.
+
+\item 
+Our protocols clustering with perfect fidelity; that is, the clusters
+resulting from our algorithms are identical to those reported by a
+$k$-means algorithm with no privacy for reasonable parameter choices.
+
+\item
+Small, medium, and large data-sets can be clustered efficiently.
+
+\item
+Costs scale linearly with feature and rounds.  The number of samples
+affects run-time only inasmuch as it increases the number of rounds
+toward convergence.
+
+\item
+Protocol parameters affect bandwidth usage by constant factor.
+Moreover, exponential increases in security or supported message space
+result in linear increases in execution run-times.
+
+\end{enumerate}
+
+\noindent
+We begin in the following section by exploring several real data-sets
+representative of expected environments.
+
+\subsection{Experimental Data}
+\label{sec:exdata}
+
+The validity of our experimental approach is partially dependent on
+the realism of our test data.  For this reason, we have obtained a
+collection of externally provided data-sets representing diverse
+applications.  All experiments described in this section use the
+{\it synthetic}, {\it river}, {\it robot}, and {\it speech} data-sets
+detailed below.
+
+We selected the elements of our {\it synthetic} data-set to enable
+testing and measure startup costs.  This data set includes 4 points
+uniformly distributed within a 6 dimensional space.  By design, the
+data clusters quickly into 4 "natural" clusters within 2 rounds under
+the $k$-means algorithm in all experiments.
+
+Originally used in the Computation Intelligence and Learning
+(COIL) competition, the {\it river} data-set describes 
+measurements of river chemical concentrations and algae
+densities~\cite{coil99}.  The river data was used to ascertain the
+summer algae growth of river water in temperate climates.  The
+clustered data is used to inform the relationship between the presence
+and concentrations of various chemicals in public waterways and algae
+growth.  The river contains 184 samples with 15 features per sample.
+
+The {\it robot} data-set~\cite{pion98} contains continuous senor
+readings from the Pioneer-1 mobile robot used for testing computer
+learning and conceptual development approaches.  Each of the 697
+samples contains 36 features from sensor arrays of the Pioneer-1
+mobile robot.  The samples were taken every 100ms and reflect the
+movements and changing environment in which the robot was tested.  The
+data has been clustered in prior use to recognize experiences with
+common outcomes.
+
+The {\it speech} data-set~\cite{jvow00} documents the measured voice
+characteristics of spoken Japanese vowels.  Nine male speakers uttered
+two Japanese vowels $/ae/$ repeatedly.  Sampled at 10kHz, the 640
+utterances resulted in 12 features of 5,687 samples.  This large
+data-set is used in the context of our experiments to evaluate the
+degree to which the proposed protocols scale with the size of the
+input data.  Similar data-sets are clustered frequently to help guide
+speech recognition software~\cite{kts99}.
+
+Each of the data-sets represents a singular corpus.  In contrast, our
+protocols are targeted for applications of clustering with two
+parties.  We model the two party case by randomly subdividing the
+samples into equal sized subsets and assigning them to each party.  In
+real environments the size of the sets may be vastly different.
+Our approximation approach ensures that this kind of asymmetry will be
+transparent to both parties both in execution and performance.  That
+is, the performance of the algorithm is largely independent of the
+number of samples.  However, as we shall see below, the number
+of features has tremendous effect on the cost of clustering.
+
+The last data set (called the {\it ping} data-set) was collected by
+us. The purpose of collecting this data was two fold:
+\begin{itemize}
+\item Test our clustering algorithm on a large data set. 
+\item Construct a data set that can be naturally partitioned to demonstrate that
+jointly clustering two data sets can produce significantly different
+results than individually clustering them. 
+\end{itemize}
+We setup two hosts
+(referred to as $A$ and $B$) to measure ICMP ping round-trip
+times. There were $4$ ping targets located around the world (one of
+the ping targets was on the same subnet as host $B$). On each host and
+for each ping target the pings were grouped in blocks of $200$. For
+each block, a $3$-tuple consisting of the following three values was
+generated: the average time to live (TTL), the average round-trip time
+(RTT), and fraction of lost packets (\%drop). We collected data over a
+period of $24$ hours and generated a data set consisting of $23872$
+data points, which were evenly divided between host $A$ and $B$. We
+ran our clustering algorithm on the joint data set, and data sets
+corresponding to hosts $A$ and $B$. 
+
+
+
+\subsection{Experimental Setup}
+\label{sec:exsetup}
+
+We use the architecture and code described earlier for the
+experiments described throughout.  All experiments are executed on a
+pair of 3Ghz machines with 2 gigabyte physical memory.  The
+experimental application is running on the Sun Microsystems Java
+Virtual Machine version 1.5~\cite{sun04} on the Tao Linux version 1.0
+operating system~\cite{tao04}.  The protocols are executed on a
+100Mbps unloaded LAN with a measured round-trip time of 0.2
+milliseconds.
+
+\begin{comment}
+Unless otherwise stated, the reported measurements represent the
+averages taken over 100 experiments.
+\end{comment}
+
+The experiments profile the additional cost of providing privacy in
+clustering sensitive data.  To this end, we focus on three metrics of
+cost and utility; {\it communication overhead}, {\it delay}, and {\it
+precision}.  Communication overhead records the amount of additional
+network bandwidth used by the privacy schemes over the simple schemes.
+Delay measures the additional time required to complete the
+clustering.
+
+Precision is used to measure the degree to which the approximated
+clustering diverge from those reported by a simple $k$-means
+algorithm, and is calculated as follows.  Let $X = \{x_1, \dots,
+x_n\}$ be the sample data set to be clustered.  $C_1 \subseteq 2^X$ is
+the clustering of $X$ by the simple algorithm, and $C_2 \subseteq 2^X$
+is the clustering returned by the OPE algorithm (the DPE metric is
+defined similarly in the obvious manner).  For each pair $(x_i,x_j)$
+such that $1 \leq i < j \leq n$ an error occurs if
+
+\vspace{-4pt}
+
+\itembase
+\begin{enumerate}
+\itembase
+\item 
+$x_i$ and $x_j$ are in the same cluster in $C_1$, but in $C_2$
+they are in different clusters.
+
+\item
+$x_i$ and $x_j$ in the same cluster in $C_2$, but in $C_1$
+they are in different clusters.
+\end{enumerate}
+
+\vspace{-4pt}
+
+\noindent
+The total number of errors is denoted $E$.  The maximum number of
+errors is $N = n(n-1)/2$.  The precision $P$ is given by $(N-E)/N$.
+
+Both OPE and DPE have unique parameters which dictate the performance
+and security of each protocol.  The performance of DPE is most
+effected by the size of the primes used to select the homomorphic
+encryption keys.  Small primes can be cryptanalyzed, and large ones
+can unnecessarily increase bandwidth use and computational costs.
+Like RSA, linear increases in the size of the primes should result in
+exponential security improvements.
+
+We use interval arithmetic to approximate real numbers (see
+appendix~\ref{sec:approximating-reals}).  The size of the message space in
+DPE and the finite-field in OPE are chosen to achieve the desired
+precision. In Benaloh's encryption scheme $r$ denotes the size of the
+message space. For efficiency reasons we choose $r=3^k$
+(see~\cite{Benaloh:94} for details). Two crucial parameters in the
+oblivious polynomial evaluation protocol of Naor and Pinkas are $D$,
+the degree of the masking polynomial and $M$, the total number of
+points used (details of this algorithm can be found
+in~\cite{NaorPinkas99}). The sender's masking polynomial $D$ has
+degree $k .  d$, where $d$ is the degree of the polynomial $P$
+being evaluated and $k$ is the security parameter.  Since in our
+algorithm the polynomial being evaluated is always linear, the
+security parameter is simply $D$.  Increasing $D$ strengthens the
+sender's security.  Only $D+1$ points are needed to interpolate, but
+the receiver sends $(D+1) . M$ pairs of values to the sender.  Out
+of each set of $M$ pairs, one of them is related to $\alpha$ (the
+point the polynomial is being evaluated on), and the other $M-1$
+values are random.  The $1$-out-of$M$ oblivious transfer protocol
+(denoted as $OT_1^M$) is repeated $D+1$ times to learn the required
+value.  So, increasing $M$ strengthens the receiver's security.
+Unless otherwise specified, we selected $D=7$ and $M=6$.  For brevity,
+we do not consider $D$ or $M$ further.
+
+\subsection{Results}
+\label{sec:exres}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+& & \multicolumn{3}{|c|}{\bf Communications Overhead}
+& \multicolumn{3}{|c|}{\bf Delay} \\
+\cline{3-8}
+\multicolumn{1}{|c|}{\bf Test} & {\bf Rounds} & & {\bf bytes} & {\bf percent}
+& & {\bf milliseconds} & {\bf percent} \\
+& & \raisebox{1.5ex}[0pt]{\bf bytes} & {\bf feature/rnd} & {\bf increase}
+& \raisebox{1.5ex}[0pt]{\bf milliseconds} & {\bf feature/rnd} & {\bf increase} \\
+\hline
+\hline
+\multicolumn{8}{|l|}{\bf\it Synthetic ({\it 4 samples, 6 features})} \\
+\hline
+Simple & 2 & 5959     & 0       & 0\%      & 168   & 0      & 0\% \\
+\hline
+OPE    & 2 & 1497823  & 124322 & 25035.48\%  & 10147 & 831.58 & 5939.88\%  \\
+\hline
+DPE    & 2 & 13580 & 635.08 & 127.89\% & 2135  & 163.9166667 & 1170.83\%  \\
+\hline
+\hline  
+\multicolumn{8}{|l|}{\bf\it River ({\it 184 samples, 15 features})} \\
+\hline
+Simple & 16 & 74574 & 0 & 0\% & 772 & 0 & 0\% \\
+\hline
+OPE & 16 & 29916457 & 124241.17 & 40116.47\% & 176133 & 730.67 & 22715.16\% \\
+\hline
+DPE & 16 & 234422 & 566.03 & 314.35\% & 38721 & 158.12 & 4915.67\% \\
+\hline
+\hline
+\multicolumn{8}{|l|}{\bf\it Robot ({\it 697 samples, 36 features})} \\
+\hline
+Simple & 8 & 94005 & 0 & 0\% & 1348 & 0 & 0\% \\
+\hline
+OPE & 8 & 36569040 & 126649.42 & 38801.16\% & 212776 & 734.125 & 15684.57\% \\
+\hline
+DPE & 8 & 269698 & 610.04 & 186.90\% & 47662 & 160.8125 & 3435.76\% \\
+\hline
+\hline
+\multicolumn{8}{|l|}{\bf\it Speech ({\it 5,687 samples, 12 features})} \\
+\hline
+Simple & 33 & 143479 & 0 & 0\% & 4198 & 0 & 0\% \\
+\hline
+OPE & 33 & 49359739 & 124183.48 & 34402.07\% & 294694 & 733.57 & 6919.87\% \\
+\hline
+DPE & 33 & 384644 & 509.00 & 268.08\% & 66101 & 156.3207071 & 1474.58\% \\
+\hline
+\hline
+\multicolumn{8}{|l|}{\bf\it Ping ({\it 28,392 samples, 3 features})} \\
+\hline
+Simple & 9 & 11644 & 0 & 0\% & 2765 & 0 & 0\% \\
+\hline
+OPE & 9 & 3429688 & 126594.2 & 29354.55\% & 23767 & 777.8519 &   759.566\% \\
+\hline
+DPE & 9 & 30633 & 703.29 & 163.07\% & 9694 & 256.63 & 250.59\% \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Experimental Results - resource and precision results from
+experiments over the three data sets.  The feature/round statistics
+show the costs of per feature clustering in a single round of the
+k-means algorithm, e.g., a single execution of the privacy preserving
+WAP protocol.}
+\label{tbl:results}
+\end{table}
+
+Our first battery of tests broadly profile the performance of OPE and
+DPE.  Shown in Table~\ref{tbl:results}, the most striking
+characteristic of these experiments is that they demonstrate that OPE
+protocols consume two orders of magnitude more network resources than
+the DPE protocols.  These costs can be directly attributed to the
+oblivious transfer algorithms whose primitive cryptographic operations
+require the transfer of many polynomials between hosts.  The total
+bandwidth costs scaled linearly for both OPE and DPE.  That is, the
+bandwidth costs per feature/round are relatively constant for the
+given data sets, where we observed 0.03\% variance in scaled bandwidth
+usage in OPE and 9.36\% in DPE.  Note that the bandwidth is ultimately
+of limited interest; the worst case experiment only consumes 47
+megabytes of bandwidth over two and a half minutes.  Hence, our
+protocols would have visible impact only the slowest or busiest
+networks.
+
+A chief feature illustrated by the timing measurements is that DPE is
+much more time and bandwidth efficient than OPE.  Surprisingly, DPE is
+4.5 to 5 times faster on all the data-sets for the selected
+parameters.  The reasons for this is that the underlying oblivious
+transfers incur large message exchanges between the two parties.
+Hence, in all experiments the limiting factors are bandwidth and
+computation.\footnote{Early implementations of our protocols were
+limited by the latency caused by many individual round-trips in the
+protocol.  We optimized these these by parallelizing exchanges, where
+possible.  This vastly improved protocol performance, and as a direct
+result, bandwidth and and computation have since emerged as the
+limiting factors.}  The efficiency of DPE with respect to OPE further
+shows fixed costs (startup) are likewise dominated by the underlying
+privacy preservation operations.  Further, like the bandwidth costs,
+the execution of each algorithm scale linearly with the number of
+features and rounds, where each feature round requires 730 and 160
+milliseconds for OPE and DPE to complete, respectively.
+
+The cost of privacy-preservation in large data-set clustering is
+noticeable.  For example, a large data-set containing 5687 samples and
+12 features takes DPE just 66 seconds to cluster, as opposed to the
+4.19 seconds required by its simple $k$-means counterpart.  Hence for
+this experiment, DPE algorithm incurs slowdown of a factor of 15 and the
+more expensive OPE a factor of 70.  These results are, for most
+applications, clearly within the bounds of acceptable performance.
+This is particularly encouraging in the face of past attempts; circuit
+implementations of vastly simpler operations (averaging very small
+collections of data points) took tens of seconds to
+complete~\cite{mnps04}.
+
+% precision
+
+For the parameters we selected the precision of our privacy-preserving
+algorithms (DPE and OPE) was $100\%$.  The reasons for this are
+two-fold.  The parameter choices for DPE resulted in a message space
+of $3^{40}$ values, which allowed us to map cluster means to 4 decimal
+places.  Moreover, the data range was small in all our data-sets.
+Hence, the error rounding caused by using interval arithmetic was
+inconsequential.  Note that in other environments, where the message
+space is required to be smaller (likely for performance reasons) or
+the range of data values is large, precision errors may be introduced.
+
+The costs of OPE grow slightly with increases in $D$ and $M$.  We
+experimented with varied parameters of $D$ and $M$ equal 5, 10, 15 on
+all the non-synthetic data-sets (for a total of 27 experiments) .  In
+all cases increased cost was nominal; the parameter sets slowed the
+performance of the algorithm down between 60\% and 190\% over a
+baseline experiment, i.e., $M=D=5$.  Again, these costs are a direct
+reflection of the costs of the underlying oblivious transfer.  Not
+shown, the bandwidth costs in DPE scale by a constant factor
+proportional to $D$ and $M$.
+
+\begin{figure}
+\begin{center}
+\fbox{\rotatebox{-90}{\epsfysize=3.2in \epsfbox{kmeans/figures/dpe-param.pdf}}}
+\caption{DPE runtime costs by message space - in {\it
+milliseconds}, the time to cluster the sample data-sets with various
+widths of $n$ message spaces.}
+\label{fig:dpe-param}
+\end{center}
+\end{figure}
+
+As illustrated in Figure~\ref{fig:dpe-param}, increases the size $n$
+(which is a product of two primes) in DPE has modest affect on the
+performance of the protocols.  Exponential increases in $n$ result in
+linear increases in message size.  Because the network is a limiting
+factor, such increases are, as shown, reflected in linear slowdowns.
+Hence, very large intervals or high precision clustering can be
+supported by small increases in bandwidth consumption.  As in OPE,
+bandwidth costs in DPE scale by a constant factor in these
+experiments, where each protocol exchange increases directly in
+proportion to the size of the primes.
+
+For the ping data set our clustering algorithm generated $4$ clusters,
+which correspond to the four target hosts. The centers for the four
+clusters are shown in Figure~\ref{fig:clusters}. As can be clearly
+seen from the results, clusters found by the algorithm using the joint
+data set are significantly different than the clusters found in the
+individual data sets. Therefore, if the goal is to estimate RTT, TTL,
+and \%drop for the target hosts to be used in networking applications
+(such as routing), then clustering on the joint data set is desirable.
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{|l|c|} \hline
+  & Cluster centers \\ \hline
+$A$ &  {\small $(241.76,32.69,0.18)$, $(48.00,75.87,0.58)$, $(243.00,59.81,0.15)$, $(64.00,0.19,0.00)$}\\ \hline
+$B$ &  {\small $(47.00,88.60,0.74)$, $(251.92,4.73,0.19)$, $(242.00,48.01,2.70)$, $(133.67,485.77,13.78)$}\\ \hline
+Joint & {\small $(245.26,28.73,0.60)$, $(47.51,82.13,0.66)$, $(133.67,485.77,13.78)$, $(64.00,0.186,0.00)$}  \\ \hline
+\end{tabular}
+\end{center}
+\caption{(TTL,RTT,\%drop) centers for the four clusters.}
+\label{fig:clusters}
+\end{figure}

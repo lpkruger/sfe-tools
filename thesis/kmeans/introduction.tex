@@ -1,0 +1,111 @@
+%% Importance of privacy
+%% cite laws and popular articles
+
+\section{Introduction}
+
+The ease and transparency of information flow on the Internet has
+heightened concerns of personal privacy~\cite{cra99,tur03}.  Web
+surfing, email, and other services constantly leak information about
+who we are and what we care about.  Many have accepted that some
+privacy will be lost in exchange for the benefits of digital
+services~\cite{tay03}.  However, in other domains privacy is so
+important that its protection is federally mandated~\cite{hippa}.
+Technologies for protecting privacy are
+emerging in response to these growing
+concerns~\cite{p3p02,gwb97,rks+97}.  Recently, more emphasis has been placed on preserving the
+privacy of user-data aggregations, e.g., databases of personal
+information.  Access to these  collections is, however, enormously
+useful.  It is from this balance between privacy and utility that the
+area of {\it privacy preserving data-mining}
+emerged~\cite{Agrawal-Srikant,Lindell-Pinkas}.
+
+
+%% Clustering description
+
+Unsupervised learning deals with designing classifiers from a set of
+unlabeled samples. A common approach for unsupervised learning is to
+first cluster or group unlabeled samples into sets of samples that are
+``similar'' to each other. Once the clusters have been constructed, we
+can design classifiers for each cluster using standard techniques
+(such as decision-tree
+learning~\cite{Mitchell:AI,Quinlan:86}). Moreover, clusters can also
+be used to identify features that will be useful for
+classification. There is significant research on privacy-preserving
+algorithms for designing
+classifiers~\cite{Agrawal-Srikant,Lindell-Pinkas}. This paper
+addresses the problem of privacy-preserving algorithms for clustering.
+
+
+%% Problem description
+
+Assume that Alice $A$ and Bob $B$ have two unlabeled samples $D_A$ and
+$D_B$. We assume that each sample in $D_A$ and $D_B$ has all the
+attributes, or the data sets are horizontally partitioned between $A$
+and $B$. Alice and Bob want to cluster the joint data set $D_A \cup
+D_B$ without revealing the individual items of their data sets (of
+course Alice only obtains the clusters corresponding to her data set
+$D_A$). In this paper, we assume that clustering the joint data set
+$D_A \cup D_B$ provides better results than individually clustering
+$D_A$ and $D_B$.  Using a large data set from the networking domain we also demonstrate
+that clustering the joint data set results in significantly different
+clusters than individually clustering the data sets (see end of
+section~\ref{sec:eval} for details). We present a privacy-preserving
+version of the $k$-means algorithm where only the cluster means at the
+various steps of the algorithm are revealed to Alice and Bob.
+
+
+%% Applications of clustering to medical informatics
+%% and intrusion detection
+
+There are several applications of
+clustering~\cite{pattern-classification}. Any application of
+clustering where there are privacy concerns is a possible candidate
+for our privacy-preserving clustering algorithm. For example, suppose
+network traffic is collected at two ISPs, and the two ISPs want to
+cluster the joint network traffic without revealing their individual
+traffic data. Our algorithm can be used to obtain joint clusters while
+respecting the privacy of the network traffic at the two ISPs. An
+application of clustering to network intrusion detection is presented
+by Marchette~\cite{Marchette99}.  Clustering has been used for
+forensics~\cite{Pouget:Dacier} and root-cause analysis for
+alarms~\cite{Julisch:TISSEC}. Clustering has also been used in
+bioinformatics. For example, Dhillon {\it et al.}~\cite{Dhillon:Bio}
+have used clustering to predict gene function. We believe that
+privacy-preserving clustering can be used in bioinformatics where the
+data sets are owned by separate organizations, who do not want to
+reveal their individual data sets.
+
+This paper makes the following contributions:
+
+\begin{itemize}
+\item We present the design and analysis of privacy-preserving $k$-means
+clustering algorithm for horizontally partitioned data (see
+Section~\ref{sec:k-means}). The crucial step in our algorithm is
+privacy-preserving of cluster means. We present two protocols for
+privacy-preserving computation of cluster means. The first protocol is
+based on oblivious polynomial evaluation and the second one on
+homomorphic encryption. These protocols are described in detail in
+Section~\ref{sec:WAP}.
+
+\item We have also have a JAVA implementation of our algorithm. 
+We believe that modular design of our implementation will enable other
+researchers to use our implementation. Our clustering tool is
+available by request.  We evaluated the two privacy-preserving
+clustering algorithms on real data sets. Our first conclusion is that
+privacy-preserving clustering is feasible. For example, for a large
+data set ($5,687$ samples and $12$ features) from the speech
+recognition domain our homomorphic-encryption-based algorithm took
+approximately $66$ seconds. We also observed that both in bandwidth
+efficiency and execution overhead algorithms based on homomorphic
+encryption performed better than the one based on oblivious polynomial
+evaluation. A detailed discussion of our evaluation is given in
+Section~\ref{sec:eval}.
+
+\end{itemize}
+
+
+
+
+%% Contributions of this paper
+
+

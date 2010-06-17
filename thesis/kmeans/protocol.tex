@@ -1,0 +1,266 @@
+\section{Privacy-Preserving Protocol for \\ the Weighted Average Problem}
+\label{sec:WAP}
+
+In the weighted average problem (WAP) we want to find
+a privacy-preserving protocol for the following functionality:
+\begin{eqnarray*}
+((x,n),(y,m)) & \longmapsto & (\frac{x+y}{n+m}, \frac{x+y}{n+m})
+\end{eqnarray*}
+Recall that a protocol for WAP was used in
+the privacy-preserving $k$-means algorithm (see Figure~\ref{fig:pp-k-means}).
+
+
+A simple strategy to address this problem is to first approximate the
+function $\frac{x+y}{n+m}$ by a circuit $C$, and then use standard
+constructions~\cite{Goldreich87,Goldreich:JACM:91,Yao86} to construct
+a privacy-preserving protocol.  Protocols constructed using this
+strategy have a very high computational overhead. Malkhi {\it et al.} 
+considered the cost of implementing these protocols in their work in
+the Fairplay system~\cite{mnps04}.  They found that the protocol was
+feasible for small circuits, e.g., a single $\wedge$-gate could be
+implemented in $410$ milliseconds, and more complex integer numerical
+functions could be implemented on the order of seconds.  They further
+showed the runtimes of these protocols grow quickly with the size of
+the input and complexity of the implemented function.  The most
+complex function discussed by the authors computed a median of two
+ten-element integer input sets.  This function took over $7$ seconds
+to execute in a LAN environment, and over $16$ seconds in an WAN
+environment.  The circuit for computing $\frac{x+y}{n+m}$ is
+significantly more complex. Hence, with a non-trivial data set, a
+single computation of cluster means may take several minutes to compute.  Note that
+the underlying costs of Fairplay are not artifacts of the design, but
+simply the cost of implementing the standard protocols; the reported
+costs were almost completely dominated with circuit setup and the
+necessary oblivious transfers.
+
+In this section, we present two privacy-preserving protocols for WAP
+that are more efficient than the standard protocols. The first
+protocol is based on oblivious polynomial evaluation and the second on
+homomorphic encryption. Similarity of WAP with a problem that occurs
+in protocols for generation of shared RSA
+keys~\cite{Boneh-Franklin-2001,Gilboa99} is discussed in
+appendix~\ref{sec:shared-RSA}.
+
+
+\subsection{Protocol based on oblivious polynomial evaluation}
+\label{subsec:OPE}
+
+We will first give a privacy-preserving protocol for a general problem,
+and then at the end of the subsection demonstrate how we can construct
+a privacy-preserving protocol for WAP.  Consider the following
+problem.
+
+\begin{definition}
+\rm
+Let ${\cal F}$ be a finite field. Party $1$ has two polynomials $P$
+and $Q$ with coefficients in ${\cal F}$. Party $2$ has two points
+$\alpha$ and $\beta$ in ${\cal F}$. Both parties want to compute
+$\frac{P(\alpha)}{Q(\beta)}$. In other words, we want to privately
+compute the following functionality:
+\begin{eqnarray*}
+((P,Q),(\alpha,\beta)) & \longmapsto & (\frac{P(\alpha)}{Q(\beta)},\frac{P(\alpha)}{Q(\beta)})
+\end{eqnarray*}
+We call this problem {\em private rational polynomial evaluation (PRPE)}.
+\end{definition}
+
+The protocol $\mathcal{P}_{PRPE}$
+uses a protocol for oblivious polynomial evaluation, which is defined below.
+
+\begin{definition}
+\rm
+Let $\mathcal{F}$ be a finite field.  The {\em oblivious polynomial
+evaluation} or {\em OPE} problem can be defined as follows: Alice
+$A$ has a polynomial $P$ over the finite field $\mathcal{F}$, and
+Bob $B$ has an element $x \in \mathcal{F}$. After executing the  protocol
+implementing OPE $B$ should {\em only know} $P(x)$ and $A$ should
+know nothing.
+\end{definition}
+
+A protocol to solve the OPE was  given by Naor and
+Pinkas~\cite{NaorPinkas99}.  Let $\mathcal{P}_{OPE}(P,\alpha)$ denote
+the privacy-preserving protocol for OPE. We provide a protocol
+$\mathcal{P}_{PRPE}((P,Q),(\alpha,\beta))$ for PRPE, which uses
+$\mathcal{P}_{OPE}(P,\alpha)$ as an oracle. The protocol is shown in
+Figure~\ref{fig:PRPE}. 
+
+\begin{figure}
+\framebox{\parbox[c]{6.5in}{
+{\bf (Step 1)} Party $1$ picks a random element $z \in \mathcal{F}$ and
+computes two new polynomials $zP$ and $zQ$. In other words,
+party $1$ ``blinds'' the polynomials $P$ and $Q$.
+\medskip\\
+{\bf (Step 2)} Party $2$ computes $z P(\alpha)$ and $z Q(\alpha)$ by
+invoking the protocol for OPE twice, i.e., invokes the 
+protocol $\mathcal{P}_{OPE}(zP,\alpha)$ and $\mathcal{P}_{OPE}(zQ,\beta)$.
+\medskip\\
+{\bf (Step 3)} Party $2$ computes $\frac{P(\alpha)}{Q(\beta)}$ by computing
+$\frac{z P(\alpha)}{z Q(\beta)}$ and sends it to party $1$.
+}}
+\caption{Protocol for PRPE.}
+\label{fig:PRPE}
+\end{figure}
+
+
+\begin{theorem}
+\rm
+\label{thm:privacy-PRPE}
+Protocol $\mathcal{P}_{PRPE}((P,Q)(\alpha,\beta)$ shown in Figure~\ref{fig:PRPE}
+is privacy-preserving protocol for PRPE.
+\end{theorem}
+{\bf Proof:} The views of the two parties are
+\begin{eqnarray*}
+\mbox{VIEW}_1^{\mathcal{P}_{PRPE}} (P,Q) & = & (P,Q,\frac{P(\alpha)}{Q(\beta)}) \\
+\mbox{VIEW}_2^{\mathcal{P}_{PRPE}} (\alpha,\beta) & = & (\alpha,\beta, z P(\alpha), z Q(\beta))
+\end{eqnarray*}
+The view of party $1$ consists of its input $(P,Q)$ and output $\frac{P(\alpha)}{Q(\beta)}$.
+Therefore, there is nothing to prove (see definition~\ref{def:privacy}, we can use
+$S_1$ as the identity function). The input and
+output of party $2$ are $(\alpha,\beta)$ and $\frac{P(\alpha)}{Q(\beta)}$ respectively.
+We have to show a PPTA $S_2$ such that
+$S_2 (\alpha,\beta,\frac{P(\alpha)}{Q(\beta)})$ and $\mbox{VIEW}_2^{\mathcal{P}_{PRPE}} (\alpha,\beta)$
+are statistically indistinguishable. Let $z'$ be a random element of $\mathcal{F}$ and $S_2 (\alpha,\beta,\frac{P(\alpha)}{Q(\beta)})$
+be defined as follows:
+\[
+(\alpha,\beta, z' \frac{P(\alpha)}{Q(\beta)},z')
+\]
+It is easy to see that the following two ensembles are statistically indistinguishable:
+\[
+\begin{array}{l}
+(\alpha,\beta, z' \frac{P(\alpha)}{Q(\beta)},z') \\
+(\alpha,\beta, z P(\alpha), z Q(\beta))
+\end{array}
+\]
+The reason is that if $z$ is a random element of $\mathcal{F}$ then $z
+Q(\beta)$ is a random element of $\mathcal{F}$ as well. Moreover, the
+ratio of the third and fourth elements in the view of party $2$ is
+$\frac{P(\alpha)}{Q (\beta)}$, i.e., the output and the third element
+of the view determine the fourth element of the view.
+
+Recall that $\mathcal{P}_{PRPE}$ uses the protocol $\mathcal{P}_{OPE}$.
+Using the composition theorem we conclude that $\mathcal{P}_{PRPE}$ 
+is privacy preserving.
+$\Box$
+
+\paragraph{Protocol for WAP.} First, we show that a protocol $\mathcal{P}_{PRPE}$ for PRPE can be
+used to solve WAP. Recall that in WAP party $1$ and party $2$ have inputs
+$(x,n)$ and $(y,m)$ respectively. In the invocation of $\mathcal{P}_{PRPE}$, party $1$
+constructs two polynomials $P(w) = w + x$ and $Q(w) = w + n$, and party $2$
+sets $\alpha = y$ and $\beta = m$. The output both parties receive is equal
+to $\frac{x+y}{n+m}$, which is the desired output. The proof of privacy
+for this protocol follows from Theorem~\ref{thm:privacy-PRPE} and the composition
+theorem.
+
+
+\subsection{Protocol based on homomorphic encryption}
+\label{subsec:homomorphic}
+
+Let $(G,E,D,M)$ be a encryption scheme (where $G$ is the function to
+generate public parameters, $E$ and $D$ are the encryption and
+decryption functions, and $M$ is the message space respectively) with
+the following properties:
+\begin{itemize}
+\item The encryption scheme $(G,E,D)$ is {\em semantically secure}~\cite{Goldwasser:Micali}.
+Essentially, an encryption scheme is semantically secure
+if an adversary gains no extra information by inspecting the ciphertext.
+This is formally defined in the appendix (see definition~\ref{def:semantic-secure}).
+
+
+\item  For all $m \in M$ and $\alpha \in M$, $m_1 \in E(m)$
+implies that $m_1^\alpha \in E(m \alpha)$. Encrypting the same
+message twice in a probabilistic encryption function can
+yield a different ciphertext, so $E(m)$ denotes the set of
+ciphertexts that can be obtained by encrypting $m$.\footnote{
+Of course, to successfully decrypt  two different messages
+$m$ and $m'$ sets $E(m)$ and $E(m')$ should be disjoint.}
+
+\item There is a computable function $f$ such that for all messages $m_1$ and $m_2$
+the following property holds:
+\begin{eqnarray*}
+f(E(m_1),E(m_2)) & = & E (m_1+m_2)
+\end{eqnarray*}
+\end{itemize}
+There are several encryption scheme that have the three properties
+mentioned above~\cite{Benaloh:94,Naccache-Stern,Paillier99}. In our
+implementation, we used the {\it dense probabilistic encryption (DPE)}
+scheme of Benaloh~\cite{Benaloh:94}. The semantic security of the
+scheme provided by Benaloh is based on the intractability of 
+deciding prime residuosity.
+
+
+
+Party $1$ and $2$
+have a pair of messages $(x,n)$ and $(y,m)$. The two parties want to
+jointly compute $\frac{x+y}{n+m}$ in a privacy-preserving way. Assume
+that party $1$ sets up a probabilistic encryption scheme $(G,E,D,M)$, and
+publishes the public parameters $G$. We also assume that the probabilistic
+encryption scheme $(G,E,D,M)$ satisfies the three properties given at the
+beginning of the section. The protocol $\mathcal{P}_H$ for WAP is shown
+in Figure~\ref{fig:protocol-homomorphic}.
+
+\begin{figure}
+\framebox{\parbox[c]{6.5in}{
+\begin{itemize}
+\item {\bf (Step 1)} Party $1$ encrypts $x$ and $n$ and sends the encrypted values $x_1 \in E(x)$
+and $n_1 \in E(n)$ to party $2$.
+
+\item {\bf (Step 2)} Party $2$ computes a random message $z \in M$, and encrypts $z \cdot y$ and $z \cdot m$ to obtain $z_1 \in E(z \cdot y)$
+and $z_2 \in E(z \cdot m)$.
+Party $2$ computes the following two messages and sends it to party $1$:
+\begin{eqnarray*}
+m_1 & = & f(x_1^z,  z_1) \\
+m_2 & = & f(n_1^z, z_2) \\
+\end{eqnarray*}
+{\bf Note:} In our implementation we use the homomorphic-encryption scheme by~\cite{Benaloh:94} 
+where $f$ is multiplication.
+
+\item {\bf (Step 3)} Using the two properties of the probabilistic encryption scheme $(G,E,D)$,
+we have the following:
+\begin{eqnarray*}
+m_1 & = & E(z \cdot x + z \cdot y) \\
+m_2 & = & E(z \cdot n + z \cdot m) \\
+\end{eqnarray*}
+Therefore, party $1$ can compute $ z (x+y)$ and $z (n+m)$, and hence can compute
+$\frac{x+y}{n+m}$. Party $1$ sends $\frac{x+y}{n+m}$ to party $2$. 
+\end{itemize}
+}}
+\caption{Protocol for WAP based on homomorphic encryption.}
+\label{fig:protocol-homomorphic}
+\end{figure}
+
+\begin{theorem}
+\label{thm:privacy-homomorphic}
+\rm
+Assume that the probabilistic encryption scheme $(G,E,D)$ has three
+properties mentioned at the beginning of this
+sub-section. $\mathcal{P}_H((x,n),(y,m))$ is a privacy-preserving
+protocol to compute$\frac{x+y}{n+m}$.
+\end{theorem}
+The proof of this theorem is straightforward and is given in
+appendix~\ref{appendix:definitions-proofs}. The basic intuition is
+that party $2$ cannot tell the difference between $E(x)$ and $E(n)$
+and encryption of two arbitrary messages.
+
+The complexity of encryption and decryption operations of a scheme
+$(G,E,D,M)$ depends on size of the message space $M$. Therefore, in
+order to keep the complexity low it is important that the size of the
+message space be small. However, in order to achieve adequate
+precision the message space should be large. Chinese remainder theorem
+(CRT) allows us to perform computation over smaller spaces and then
+reconstruct the result for a larger message space. Let
+$p_1,\cdots,p_m$ be $m$ small primes.  The two parties execute the
+protocol described above for $Z_{p_1}, \cdots, Z_{p_m}$. Party $1$
+receives $z (x+y)$ and $z (n+m)$ modulo $p_i$ (for $1 \leq i \leq
+m)$. CRT allows party $1$ to reconstruct $z (x+y)$ and $z (n+m)$
+modulo $N \; = \; \prod_{i=1}^m p_i$. This technique is also used by
+Gilboa~\cite{Gilboa99}.
+
+
+
+
+
+
+
+
+
+
+

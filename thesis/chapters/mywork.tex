@@ -144,9 +144,19 @@ with secure evaluation of certain functions, as will be discussed in chapter \re
 
 \section{Problem Specific: Protocol Optimization of Evaluating Hash Functions for Password Authentication}
 In chapter \ref{chapter:pw}, 
-%based on our paper Secure Password Authentication Using SFE \cite{Kruger10}, 
+based on our paper Secure Password Authentication Using SFE \cite{Kruger10}, 
 we use some properties of the problem of
 authentication to transform the semi-honest protocol into an efficient protocol that is secure in the malicious model.  
+This work presents a new solution to the "Secure Password and Key Authentication" (SPAKA) problem,
+which is the design of protocols to mutually authenticate a client to a server using
+\begin{enumerate}
+\item The client's knowledge of the password X, and
+\item The servers's knowledge of a one-way hash function h(X).
+\end{enumerate}
+The protocol must not leak any additional information or allow access if one of the parties
+is an inposter and does not know their expected credential.
+Our solution provides a property, unique among SPAKA protocols, that it can work with
+arbitrary and legacy hash functions used in commodity operating systems today.
 This protocol takes
 advantage of specific properties of the authentication problem and takes "shortcuts" to achieve efficiency.  Although
 these shortcuts would not be secure in a general SFE setting, we prove that these shortcuts are in fact secure in the 
@@ -162,7 +172,7 @@ secure protocols based on typical dynamic programming algorithms.
 Unlike the OBDD protocol discussed in the previous section, this is
 not an automatic tool for generating secure protocols, but rather
 a set of concepts that are applicable to designing secure protocols
-for evaluation dynamic programming algorithms. We illustrate these
+for evaluating dynamic programming algorithms. We illustrate these
 ideas with several example protocols for computing the edit distance
 problem, which is the minimum number of character insertions, deletions,
 and substitutions needed to change string $x$ to string $y$.
@@ -228,7 +238,7 @@ evaluation beyond problems of size $(25,25)$.
 The $k$-means algorithm is a common clustering technique in data
 mining. Suppose that we are given $n$ samples $x_{1},\cdots,x_{n}$,
 where each sample is a $m$-dimensional vector of real numbers. The
-problem is to assign the samples to $c$ clusters such a manner that
+problem is to assign the samples to $c$ clusters in such a manner that
 similar points are grouped together. Similarity is defined using a
 distance metric. The standard clustering algorithm maintains $c$
 means $\mu_{1},\cdots,\mu_{c}$. Initially, assume that the means
@@ -254,12 +264,13 @@ dots are cluster means.}
 \end{figure}
 
 
-We implemented protocols to securely evaluate this algorithm in \cite{kruger05},
+We implement protocols to securely evaluate this algorithm in chapter
+\ref{chapter:kmeans} based on our paper \cite{kruger05},
 and showed that a protocol based on homomorphic encryption was able
 to classify partitioned data sets with tens of thousands of data points
 in under two minutes, which is about 15 times slower than the protocol
-implemented in a straightforward way without privacy protection, and
-over 100 times faster than the same protocol built with Yao circuits.
+implemented without privacy protection, and over 100 times faster than the same protocol
+built with Yao circuits.
 
 
 \section{Other Optimizations}\label{sub:Other-Optimizations}
@@ -269,9 +280,10 @@ designated outputs for each party, and it is required that no extra
 information is learned by any party. This definition could be expanded
 to assign non-output values the labels {}``sensitive'' and {}``non-sensitive'',
 where the protocol is considered secure if no sensitive information
-is leaked. Since the overhead of privacy protection is substantial,
-I propose to research the of design secure protocols that use this
-relaxation of the problem definition to improve efficiency. 
+is leaked. 
+%Since the overhead of privacy protection is substantial,
+%I propose to research the of design secure protocols that use this
+%relaxation of the problem definition to improve efficiency. 
 
 In section \ref{sub:Primitives}, I presented many basic cryptographic
 primitives that are used in SFE. Improving the state of the art of
@@ -280,15 +292,18 @@ that make use of that primitive. Based on my experience with real
 implementations of SFE protocols, the oblivious transfer steps tend
 to be very expensive in terms of space and communication. Common oblivious
 transfer protocols are based on discrete logarithms, but other trapdoor
-functions may be used as well. One thing I propose to try is implementing
-Naor-Pinkas \cite{Noar-Pinkas:2001} using more compact representations,
-for example, with elliptic curve groups. I have recently developed
-a new $OT_{2}^{1}$ protocol, presented in section \ref{sec:OT-SquareRoots}.
-I also propose to prove its security and compare its performance with
-the Naor-Pinkas protocol. In particular, I conjecture that this protocol
-may require less communication overhead than other OT protocols.
+functions may be used as well. 
+%One thing I propose to try is implementing
+%Naor-Pinkas \cite{Noar-Pinkas:2001} using more compact representations,
+%for example, with elliptic curve groups. I have recently developed
+A new $OT_{2}^{1}$ protocol is presented in chapter \ref{sec:OT-SquareRoots}.
+and its security and performance are compared with the Naor-Pinkas protocol. 
+%In particular, I conjecture that this protocol
+%may require less communication overhead than other OT protocols.
 
 
+%
+\begin{comment}
 \section{An Efficient Protocol Design Framework}\label{sub:An-Efficient-Framework}
 
 Even with all these optimizations, protocols still must be hand-coded.
@@ -340,8 +355,6 @@ secure evaluation protocol. In cases where a computation is broken
 into multiple sub-protocols, I will prove that composition of these
 sub-protocols maintains the overall security of the protocol.
 
-%
-\begin{comment}
 \bibliographystyle{plain}
 \bibliography{somesh}
 

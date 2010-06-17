@@ -1,0 +1,245 @@
+
+\section{The $k$-means clustering algorithm}
+\label{sec:k-means}
+
+The $k$-means algorithm~\cite{pattern-classification,Llyod-82} is
+shown in Figure~\ref{fig:k-means}. Assume that we are given $n$
+samples $x_1,\cdots,x_n$, where each sample is a $m$-dimensional
+vector of real numbers. The number of clusters is $c$. The algorithm
+maintains $c$ means $\mu_1,\cdots,\mu_c$. Initially, assume that the
+means are assigned arbitrary values. A sample $x_i$ is deemed to be in
+the cluster $j$ if it is closest to the mean $\mu_j$, where mean of a
+cluster $\{x'_1,\cdots,x'_r \}$ is
+$\frac{x'_1+\cdots,x'_r}{r}$. Distance between two $m$-dimensional
+vectors $x$ and $y$ is given by $\sum_{j=1}^m (x[j] - y[j])^2$, where
+$x[j]$ is the $j$-th element of the vector $x$.  Other distance
+metrics~\cite[Chapter 10]{pattern-classification}, such as scatter
+metrics, can be used instead of the distance metric mentioned above.
+Each iteration of the $k$-means algorithms recomputes the means and
+reclassifies the samples. The algorithm terminates when it detects
+``no change'' in the means. The precise definition of ``no change''
+depends on the specific metric being used. We also assume that the
+initial cluster means are chosen randomly. There is some research on
+picking the initial cluster means~\cite{Initial:kmeans}. Various
+techniques for picking initial cluster means can be easily
+incorporated into our algorithm. This issue will not be discussed
+further in the paper.
+
+
+\begin{figure}
+\begin{center}
+\begin{programbox}
+\mbox{Algorithm ($k$-means clustering)}
+\BEGIN \mbox{initialize $n,c,\mathbf{\mu}_1,\cdots,\mathbf{\mu}_c$}
+	\DO \mbox{classify $n$ samples according to nearest $\mathbf{\mu}_i$, and }
+	    \mbox{recompute $\mathbf{\mu}_i$}
+	\mbox{{\bf \underline{until}} no change in $\mathbf{\mu}_i$'s}
+ \mbox{{\bf \underline{return}} $\mathbf{\mu}_1,\mathbf{\mu}_2,\cdots,\mathbf{\mu}_c$}
+\END
+\end{programbox}
+\end{center}
+\caption{The $k$-means clustering algorithm.}
+\label{fig:k-means}
+\end{figure}
+
+\subsection{Distributed $k$-means}
+
+Assume that Alice $A$ (party $1$) has $z$ samples $\{
+x_1,\cdots,x_{n_A} \}$, and Bob $B$ (party $2$) has $n-n_A$ samples
+$\{ x_{n_A + 1},\cdots,x_n \}$. Each party wants to jointly cluster
+their samples without revealing any private information. We are
+assuming that clustering the union of samples from the two parties is
+more desirable than clustering the two samples individually.
+
+Assume that there is a trusted third party $TTP$. $A$ and $B$ perform
+iterations locally. However, at each iteration the new cluster means
+$\mathbf{\mu}_i$s are computed by communicating with the $TTP$. Let
+$C_i^A$ and $C_i^B$ be the cluster corresponding to mean
+$\mathbf{\mu}_i$ for $A$ and $B$, respectively.  $A$ sends $c$-pairs
+$\langle (a_1,b_1), \cdots, (a_c,b_c) \rangle$ to $TTP$, where $a_i =
+\sum_{x_j \in C_i^A } x_j$ and $b_i = \mid C_i^A \mid$ ($a_i$ is the sum of
+samples in cluster $C_i^A$ and $b_i$ is the number of samples in the
+cluster $C_i^A$). Analogously, $B$ sends $c$-pairs $\langle (d_1,e_1),
+\cdots, (d_c,e_c) \rangle$ to the $TTP$, where $d_i = \sum_{x_j \in
+C_i^B } x_j$ and $e_i = \mid C_i^B \mid$. The $TTP$ computes the $c$
+means $\langle \mu_1, \cdots, \mu_c \rangle$ and sends them to $A$ and
+$B$, where $\mu_i = \frac{a_i+d_i}{b_i+e_i}$. We call this algorithm
+{\em distributed $k$-means} or $D_{\mbox{$k$-means}}$.
+
+\subsection{Assumptions}
+
+Our goal is to design a privacy-preserving $k$-means that does not
+use a TTP. Before we present such an algorithm, we state assumptions
+made in the design of our  privacy-preserving algorithm.
+
+\paragraph{Number of parties.} In this paper we only present the
+two party case. 
+
+\paragraph{The adversary model.} We assume a  semi-honest
+adversary (also called honest but curious adversary model)~\cite{GoldreichBookVol2}.
+There are standard constructions that transform a protocol that
+is secure in the semi-honest model and produce a protocol that is
+secure in a more general malicious model (these constructions are
+called ``semi-honest to malicious'' compilers, and details of these
+constructions can be found in~\cite{Goldreich:compiler:99}).
+
+\paragraph{Information disclosure.} Our privacy-preserving algorithm
+discloses the cluster means at the various steps to the two parties.
+Therefore, the computation of classifying samples according to the
+nearest cluster means can be performed locally. Therefore, the
+complexity of our privacy-preserving algorithm depends only on the
+number of steps taken by the $k$-means algorithm and the
+number of features, but not on the size of the data. This is a desirable property
+because usually the data sets to be clustered can be very large.
+
+\subsection{Privacy-preserving $k$-means}
+
+In order, to create a privacy-preserving version of $k$-means that does
+not use a TTP we have to devise a privacy-preserving protocol to
+compute the cluster means. Consider the computation of a single
+cluster mean $\mu_i$. Recall that in distributed $k$-means each
+party sends $(a_i,b_i)$ and $(d_i,e_i)$ to the TTP, which computes
+$\frac{a_i+d_i}{b_i+e_i}$; this is precisely the function for which
+we have to devise a privacy-preserving protocol. This problem can be
+formally defined as follows:
+
+\begin{definition}
+\rm
+The {\em weighted average problem (WAP)} is defined as follows:
+party $1$ has a pair $(x,n)$, where $x$ is a real number and $n$ is
+a positive integer. Similarly, party $2$ has pair $(y,m)$. They want
+to jointly compute $\frac{x+y}{n+m}$. In other words, we need a 
+privacy-preserving protocol for the following functionality:
+\begin{eqnarray*}
+((x,n),(y,m)) & \longmapsto & (\frac{x+y}{n+m}, \frac{x+y}{n+m})
+\end{eqnarray*}
+The notation shown above means that the first and second party provide
+inputs $(x,n)$ and $(y,m)$ to the protocol and both parties receive
+output $\frac{x+y}{n+m}$. Notice that WAP is different than the classical
+problem of computing the averages, where $n$ parties have a number and 
+they jointly want to compute the average without revealing their individual
+numbers. In the classical problem, the number of parties $n$ is known
+to all the parties. In WAP, the number of points $n$ and $m$ needs to
+be kept secret. 
+\end{definition}
+
+Let ${\cal P}_{WAP}$ be a privacy-preserving protocol for solving
+WAP. Two protocols for WAP are presented in Section~\ref{sec:WAP}.  In
+the privacy-preserving $k$-means algorithm (denoted as
+$PP_{\mbox{$k$-means}}$) $A$ and $B$ use ${\cal P}_{WAP}$ instead of
+the trusted third party $TTP$ to compute the cluster means
+$\mathbf{\mu}_i$s.  The algorithm is shown in
+Fig~\ref{fig:pp-k-means}. We only show the part of the algorithm
+executing at Alice's (party $1$) side. Bob (party $2$) will execute a
+similar algorithm at his side.
+
+\noindent
+{\bf Note:} Suppose that the initial clusters are picked randomly. For
+the privacy-preserving algorithm we need a protocol for two parties to
+jointly pick a common random vector. Such a protocol is called {\it
+coin-tossing into the well} and is based on commitment schemes
+(see~\cite[Section 7.4.3.1]{GoldreichBookVol2}).
+
+\begin{figure}
+\begin{center}
+\begin{programbox}
+\mbox{Algorithm $PP_{\mbox{$k$-means}}$ (privacy-preserving $k$-means clustering)}
+\BEGIN \mbox{initialize $n_A ,c,\mathbf{\mu}_1,\cdots,\mathbf{\mu}_c$}
+	\DO \mbox{classify $n_A$ samples according to nearest $\mathbf{\mu}_i$}
+	    \FOR i := 1 \TO c \STEP 1 \DO
+	     \mbox{Let $C_i^A$ be the $i$-th cluster}
+	     \mbox{Compute $a_i = \sum_{x_j \in C_i^A } x_j$ and $b_i = \mid C_i^A \mid$}
+	     \mbox{recompute $\mathbf{\mu}_i$ by invoking the protocol ${\cal P}_{WAP}$ }
+	    \OD
+	\mbox{{\bf \underline{until}} no change in $\mathbf{\mu}_i$}
+ \mbox{{\bf \underline{return}} $\mathbf{\mu}_1,\mathbf{\mu}_2,\cdots,\mathbf{\mu}_c$}
+\END
+\end{programbox}
+\end{center}
+\caption{The privacy-preserving $k$-means clustering algorithm.}
+\label{fig:pp-k-means}
+\end{figure}
+
+\subsection{Proof of Privacy}
+
+In this section we provide a proof of privacy for the protocol shown
+in Figure~\ref{fig:pp-k-means}.  The proof uses a semi-honest
+adversary model. Notice that in the distributed $k$-means algorithm
+$\mathcal{D}_{\mbox{$k$-means}}$ both parties only know their input
+and output.  Definition of privacy is based on the intuition that
+parties should learn nothing more from the messages used in
+privacy-preserving protocol, i.e., the messages received by a party
+during an execution of a privacy-preserving protocol can be
+``effectively computed'' by only knowing its input and output. This
+idea is formalized below:
+
+\begin{definition}
+\label{def:privacy}
+\rm
+Let $x$ and $y$ be inputs of the two parties and $\langle f_1 (x,y),
+f_2 (x,y) \rangle$ be the desired functionality, i.e., the first party
+wants to compute $f_1 (x,y)$ and the second wants to compute $f_2
+(x,y)$. Let $\Pi$ be a two-party protocol to compute $f$. The view
+of the first party after having participated in protocol $\Pi$ 
+(denoted by $\mbox{VIEW}_1^\Pi (x,y)$) is $(x,r,m_1, \cdots m_t)$, where
+$r$ are the random bits generated by party $1$ and $m_1, \cdots, m_t$ is the
+sequence of messages received by party $1$, while participating in protocol
+$\Pi$. The view $\mbox{VIEW}_2^\Pi (x,y)$ for the second party  is defined
+in an analogous manner.
+
+We say that $\Pi$ {\em privately computes} $f$ if there exists 
+probabilistic polynomial-time algorithms (PPTA), denoted by $S_1$ and $S_2$
+such that
+
+\begin{eqnarray*}
+\{ S_1 (x,f_1 (x,y)) \}_{x,y} & \equiv^s & \{ \mbox{VIEW}_1^\Pi (x,y) \}_{x,y} \\
+\{ S_2 (x,f_2 (x,y)) \}_{x,y} & \equiv^s & \{ \mbox{VIEW}_2^\Pi (x,y) \}_{x,y} \\
+\end{eqnarray*}
+
+In the equation given above, $\equiv^s$ denotes {\em statistically
+indistinguishable}.  Two probability ensembles $X = \{ X_w \}_{w \in
+S}$ and $Y = \{ Y_w \}_{w \in S}$ indexed by $S$ are statistically
+indistinguishable if for some negligible function $\mu : \aleph \mapsto
+[0,1]$ and all $w \in S$,
+\begin{eqnarray*}
+\sum_{\alpha} \mid Pr ( X_w = \alpha ) - Pr ( Y_w = \alpha ) \mid & < & \mu ( \mid w \mid )
+\end{eqnarray*}
+A function $\mu : \aleph \mapsto [0,1]$ is called {\it negligible}
+if for every positive polynomial $p$, and all sufficiently large $n$'s,
+$\mu (n) < \frac{1}{p(n)}$. There is a weaker notion of indistinguishability
+called {\em computationally indistinguishable}. We will use statistical
+indistinguishability throughout the paper, but all the results hold even if
+the weaker notion of indistinguishability is used. Detailed definitions of
+these concepts can be found in~\cite{GoldreichBookVol1,GoldreichBookVol2}. 
+
+\end{definition}
+
+The privacy-preserving $k$-means algorithm uses the privacy-preserving
+protocol ${\cal P}_{WAP}$ for the WAP. Assume that the two parties
+invoke the protocol ${\cal P}_{WAP}$ as an oracle, i.e., both parties
+write their respective inputs (in this case $(x,n)$ and $(y,m)$) and
+invoke the oracle which returns the result (in this case
+$\frac{x+y}{n+m}$). Recall that in the distributed $k$-means
+algorithms both parties learn the cluster means at various steps. If
+we use oracle calls to compute the cluster means, then the two parties
+also learn only the cluster means. So the views in the two cases are
+{\it identical}.  Hence, the conditions of
+definition~\ref{def:privacy} are trivially satisfied. However, there
+are additional messages exchanged in the protocol ${\cal P}_{WAP}$
+used to compute the cluster means. We need to ensure that nothing can
+be learned from these messages. The privacy of protocol shown in
+Figure~\ref{fig:pp-k-means} follows from the composition
+theorem~\cite{CanettiComposition} stated below ($g$ is the algorithm
+shown in Figure~\ref{fig:pp-k-means} and $f$ is the protocol ${\it
+P}_{WAP}$ to solve WAP described in Section~\ref{sec:WAP}):
+
+\begin{theorem}
+\label{thm:composition}
+{\rm (Composition Theorem for the semi-honest model):}
+Suppose that $g$ is privately reducible to $f$ and that there exists a protocol
+for privately computing $f$. Then there exists a protocol for privately
+computing $g$.
+\end{theorem}
+
+
+

@@ -1,0 +1,360 @@
+\section{Implementation and Experimental Results}
+\label{sec:experiments}
+
+In this section we describe various components of our
+implementation (called SFE-OBDD), which is based on protocol 2 described
+in Section~\ref{subsec:protocol2}. We also present experimental results comparing the
+performance of our implementation against Fairplay. 
+The following major conclusions can be drawn from our experimental
+investigation:
+\begin{itemize}
+\item The restriction operation used in protocol 2 can significantly
+reduce the size of the OBDD, which can lead to reduced bandwidth while
+executing the protocol. 
+
+\item Our OBDD protocol outperforms Fairplay circuit in terms of
+bandwidth in most functions in our benchmark.  However, some functions which
+have inefficient OBDD representations can perform far worse.
+
+\item Execution times of our implementation and Fairplay are dominated
+by the oblivious-transfer protocol. Since the oblivious-transfer
+component of our protocol and the protocol used by Fairplay is the
+same, with respect to execution times we did not observe as much
+improvement as in bandwidth.  
+
+\item Converting an OBDD into a circuit  results in a 
+blowup in size. We implemented a reverse compiler that takes an OBDD and
+converts it into a circuit description, which can be used in Fairplay.
+Typically this conversion from OBDD to circuit resulted in a
+blowup in size by a factor of $5-10$, depending on post-conversion
+optimizations.  However, if the original circuit is particularly inefficient, 
+it is possible for some gain to be achieved due to the canonical 
+representation property of OBDDs.
+
+\end{itemize}
+
+\subsection{Implementation}
+Our implementation consists of the following components:
+
+\begin{enumerate}
+\item An implementation of  protocol 2
+as described in Section~\ref{subsec:protocol2}.
+
+\item Fairplay uses the {\it secure hardware definition language (SHDL)} to
+describe circuits. Because we wanted to compare the performance of our
+protocol with the Yao circuit protocol on identical functions, 
+we implemented an OBDD compiler 
+that takes as input a file
+describing a function in SHDL, and produces the corresponding OBDD.
+Note that both the SHDL used by Fairplay and the BDD representation
+originate from the same high level SFDL description, this means that
+the OBDD and circuit are evaluating the same functions.
+\end{enumerate}
+
+For the cryptographic primitives we use exactly the same
+implementation as Fairplay. We use the 1-out-of-2 $(OT^{2}_{1})$
+proposed by Noar and Pinkas~\cite{Noar-Pinkas:2001}, and  the encryption
+function is $E_k (m)$ was ${\rm SHA-1}(k) \oplus (m \,\|\,0^n)$.
+
+
+Our OBDD compiler allows us to directly compare the efficiency of our
+implementation to Fairplay. The OBDD compiler takes as input a file
+containing an SHDL description and produces a file containing the
+description of the corresponding OBDD. This file can then be used as
+an input to the SFE protocol. Our compiler uses the
+JavaBDD~\cite{JavaBDD}, and BuDDy~\cite{BuDDy} libraries, which
+provide functions to construct and manipulate OBDDs. It is well known
+that the size of an OBDD can be sensitive to the ordering of
+variables~\cite{Bryant:BDD}. In some cases, variable ordering can make
+the difference between a OBDD that is linear versus exponential in the
+number of variables. Our SHDL to OBDD compiler allows the user to
+specify a particular variable ordering, which is useful if the user
+has domain knowledge about the function. If this is not practical, the
+compiler includes an optimizer that attempts to automatically find a
+variable ordering that yields an efficient OBDD, making use of
+heuristic functions built into the BuDDy library. Although in general
+finding the optimal variable ordering is
+NP-hard~\cite{Bollig-Wegener:1996}, we have found that in practice the
+optimizer can find good orderings for various functions we considered.
+
+
+\subsection{Experimental Results}
+
+We used various functions, some of which are included in the Fairplay
+distribution, as test
+cases to perform a comparison of the Fairplay protocol with our
+OBDD-based SFE protocol. The description of the functions are given
+in Figure~\ref{fig:descriptions}.  Each function was evaluated
+at several word sizes to evaluate scalability.
+
+\begin{figure*}
+\begin{tabular}{|c|p{6in}|}
+\hline 
+And&
+This is a circuit that computes the bitwise AND of two N bit numbers.
+Alice has N inputs, Bob has N inputs, and there are N bits of output.\tabularnewline
+\hline 
+Add&
+This is a circuit that computes the addition of two N bit numbers.
+Alice has N inputs, Bob has N inputs, and there are N bits of output.
+The high bit is discarded.\tabularnewline
+\hline 
+Eq&
+This is a simple equality comparator of two N-bit numbers.  There is
+one bit of output. \tabularnewline
+\hline
+Mul&
+This is a circuit that computes the unsigned multiplication of two
+N bit numbers. Alice has N inputs, Bob has N inputs, and there are
+N bits of output. The output is modulo $2^N$.  
+We were unable to test N=16 because of exponential blowup in the BDD
+\tabularnewline
+\hline 
+KDS&
+This is a circuit that implements a simply-keyed database lookup.
+Alice supplies N key/value pairs, and Bob supplies a key. The output
+is the value of that key, or 0 if the key is not found. The keys are
+${\tt log}_2(N)$ bits, and the data are 24 bits. 
+We were unable to test N=16 because of exponential blowup in the BDD.
+\tabularnewline
+\hline 
+Mil&
+This is the millionaire's problem. Alice and Bob each have and N bit integer
+as inputs, and there is 1 bit of output indicating if Alice's input is larger than Bob's.\tabularnewline
+\hline 
+Parity&
+Alice and Bob each have N-bits of input. They want to jointly compute the
+parity of their combined input bits.  There is one bit of output.\tabularnewline
+\hline
+\end{tabular}
+\caption{Description of the functions used in our experiments.  Each function
+was tested with N=4, N=8, and N=16 except where indicated}
+\label{fig:descriptions}
+\end{figure*}
+
+
+For each function, Figure~\ref{table:size} shows the sizes of the
+OBDDs and the corresponding circuit used by Fairplay. The size of an
+OBDD is the number of vertices in it. The size of a Fairplay circuit
+with $n_1$ gates of arity $1$, $n_2$ gates of arity $2$, and $n_3$
+gates of arity $3$ was computed as $2 \times n_1 + 4 \times n_2 + 8
+\times n_3$ (this represents the number of entries in the truth table
+for the circuit).  For the OBDDs, we show the sizes of the original
+OBDDs (in column marked as {\sf Original}), with the dummy nodes added
+(in column marked as {\sf Full}), and after Alice has performed the
+restriction operation on OBDDs with dummy nodes (in column marked as
+{\sf Res}). Recall that dummy nodes are added so that regardless of
+Alice's inputs Bob has to follow the same number of edges. In
+protocol~2 Alice computes the OBDD for restriction on its input of the
+function to be jointly computed for the variable. These operations are
+described in detail in Section~\ref{sec:sfe-obdd}. Two observations
+can be made from Figure~\ref{table:size}.
+\begin{itemize}
+\item Restriction can significantly reduce the size of
+the OBDD. For example, for the function Mil16  restriction
+reduces the size of the OBDD by more than half. 
+
+\item Notice that for all functions except MUL8, MUL16, KDS4, KDS8, and KDS16 the
+size of the OBDD after restriction is smaller than the size of the
+circuit used in Fairplay. This suggests the choice of when to use our
+system over Fairplay depends on the function to be computed. 
+\end{itemize}
+
+
+
+
+%
+\begin{figure}
+
+
+\begin{center}\begin{tabular}{|c||c|c|c||c|}
+\hline 
+&
+\multicolumn{3}{c||}{BDD}&
+FairPlay\tabularnewline
+&
+{\sf Original} &
+{\sf Full} &
+{\sf Res} &
+\tabularnewline
+\hline
+\hline 
+
+Add4 & 32 & 40 & 22 & 56 \tabularnewline \hline
+Add8 & 72 & 96 & 54 & 128 \tabularnewline \hline
+Add16 & 152 & 208 & 118 & 272 \tabularnewline \hline
+And4 & 14 & 18 & 10 & 24 \tabularnewline \hline
+And8 & 26 & 34 & 18 & 48 \tabularnewline \hline
+And16 & 50 & 66 & 34 & 96 \tabularnewline \hline
+Eq4 & 18 & 24 & 11 & 102 \tabularnewline \hline
+Eq8 & 27 & 41 & 18 & 230 \tabularnewline \hline
+Eq16 & 51 & 81 & 34 & 486 \tabularnewline \hline
+KDS4 & 416 & 578 & 466 & 356 \tabularnewline \hline
+KDS8 & 4084 & 7149 & 6283 & 780 \tabularnewline \hline
+KDS16 & * & * & * & 2244 \tabularnewline \hline
+MUL4 & 54 & 75 & 28 & 114 \tabularnewline \hline
+MUL8 & 1685 & 1800 & 1087 & 586 \tabularnewline \hline
+MUL16 & * & * & * & 2682 \tabularnewline \hline
+Mil4 & 24 & 34 & 22 & 52 \tabularnewline \hline
+Mil8 & 46 & 70 & 40 & 116 \tabularnewline \hline
+Mil16 & 94 & 150 & 90 & 244 \tabularnewline \hline
+parity4 & 18 & 18 & 10 & 30 \tabularnewline \hline
+parity8 & 34 & 34 & 18 & 62 \tabularnewline \hline
+parity16 & 66 & 66 & 34 & 126 \tabularnewline \hline
+
+\hline
+\end{tabular}\end{center}
+\caption{\label{table:size}Size of the OBDDs and the circuit used in Fairplay for
+functions shown in Figure~\ref{fig:descriptions}.  Values labeled "*" could
+not be converted to OBDDs because of exponential blowup.}
+
+\end{figure}
+
+
+
+
+Our experimental results were obtained using a pair of machines
+connected on a local $100$-megabit network.  The machines were
+configured with 3.0Ghz Intel Pentium4 processors, 1 gigabyte of
+memory, and the Centos Linux 4.0 operating system using a modified
+Linux 2.6.9 kernel.  For each function shown in
+Figure~\ref{fig:descriptions} we executed our OBDD-based and Fairplay
+code on a Sun Microsystems Java 1.5.0\_04 JVM. Alice was run on one
+machine, and Bob on the other.  For each execution, we measured the
+network bandwidth used (number of bytes transferred between Alice and
+Bob) and the execution time. The number reported for each trial is the
+average of three trials.  Figure~\ref{table:size-bandwidth} shows the
+size of the garbled OBDD and garbled circuit in bytes and the network
+bandwidth for our implementation and Fairplay. Recall that the
+garbled OBDD is the structure that Alice sends to Bob to
+evaluate. With respect to network bandwidth our implementation
+outperformed Fairplay for seven out of the nine functions. We have
+implemented a reverse compiler that takes as input an OBDD, and
+outputs an SHDL description of a boolean circuit to evaluate the OBDD.
+This is performed via a straightforward transformation that takes each
+node in the OBDD and produces corresponding 3-input MUX gate in the
+boolean circuit.  Then, an optimization pass is run using the same
+techniques described in~\cite{Fairplay}.  The column labeled as
+``Converted Fairplay'' in Figure~\ref{table:size-bandwidth} shows the size
+of the encrypted circuits produced by running the FairPlay protocol on
+the converted BDDs.  Note that in a few cases, the converted circuit
+is actually more efficient than the corresponding Fairplay circuit.  This occurs
+because FairPlay is not guaranteed to produce an optimal circuit from
+the function description. However, it is clear that our protocol that
+directly uses OBDD is much more efficient than the protocol produced
+by the reverse compiler.
+
+
+Figures~\ref{fig:OBDD-timing}
+and~\ref{fig:Fairplay-timing} show the execution times for SFE-OBDD and Fairplay.  The elapsed
+execution times (EET) are shown in the last column.  Columns 2-5 show
+the breakdown by sub-task, which are IPCG (initializations, parsing,
+and garbling), CC (circuit communication, Alice sending the garbled
+structure to Bob), OT (Oblivious Transfer, Bob obtaining secrets
+corresponding to its input),
+and EV (circuit evaluation, Bob evaluating the garbled structure). These sub-tasks were also used by the
+Fairplay paper~\cite{Fairplay}. In general, because the time for OT dominates
+the execution time, we only observe moderate improvement in SFE-BDD over Fairplay
+for execution times. 
+
+%
+\begin{figure*}
+
+
+\begin{center}\begin{tabular}{|c||c|c|c||c|c|}
+\hline 
+Function & \multicolumn{3}{c|}{\sf Size in bytes.} & \multicolumn{2}{c|}{\sf Bandwidth in bytes} \\ 
+	&  SFE-OBDD & Fairplay & Converted Fairplay & SFE-OBDD & Fairplay\\ \hline
+
+Add4 & 970 & 1915 & 5382 & 3604 & 4684 \tabularnewline \hline
+Add8 & 1979 & 4214 & 11408 & 6590 & 9000 \tabularnewline \hline
+Add16 & 3992 & 8821 & 23442 & 12557 & 17645 \tabularnewline \hline
+And4 & 739 & 1080 & 1866 & 3373 & 3849 \tabularnewline \hline
+And8 & 1206 & 2153 & 3140 & 5813 & 6938 \tabularnewline \hline
+And16 & 2134 & 4299 & 5546 & 10696 & 13117 \tabularnewline \hline
+Eq4 & 582 & 2977 & 2690 & 3214 & 5716 \tabularnewline \hline
+Eq8 & 828 & 6527 & 3918 & 5434 & 11240 \tabularnewline \hline
+Eq16 & 1324 & 13626 & 7012 & 9892 & 22295 \tabularnewline \hline
+KDS4 & 14966 & 12248 & 65946 & 51219 & 13984 \tabularnewline \hline
+KDS8 & 185282 & 25608 & 682333 & 261077 & 27838 \tabularnewline \hline
+MUL4 & 1108 & 3286 & 8354 & 3739 & 6052 \tabularnewline \hline
+MUL8 & 32206 & 15706 & 288317 & 36814 & 20493 \tabularnewline \hline
+Mil4 & 892 & 1662 & 4278 & 3524 & 4399 \tabularnewline \hline
+Mil8 & 1400 & 3542 & 8248 & 6012 & 8256 \tabularnewline \hline
+Mil16 & 2790 & 7306 & 16859 & 11356 & 15972 \tabularnewline \hline
+parity4 & 577 & 1092 & 3237 & 3209 & 3830 \tabularnewline \hline
+parity8 & 828 & 2181 & 6172 & 5438 & 6897 \tabularnewline \hline
+parity16 & 1324 & 4359 & 11983 & 9889 & 13033 \tabularnewline \hline
+
+\end{tabular}\end{center}
+
+\caption{\label{table:size-bandwidth}Size in bytes of the garbled OBDD, garbled circuit, and garbled circuit using the
+reverse compiler. Network bandwidth in  bytes.}
+
+\end{figure*}
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|} \hline
+Fn & IPCG &      CC &    OT &      Eval &     EET  \\ \hline
+
+Add4 & 13.75\% & 5.62\% & 79.69\% & 0.94\% & 0.32 \\ \hline
+Add8 & 13.08\% & 3.80\% & 82.07\% & 1.05\% & 0.47 \\ \hline
+Add16 & 11.39\% & 2.36\% & 84.42\% & 1.83\% & 0.76 \\ \hline
+And4 & 12.42\% & 5.73\% & 81.21\% & 0.64\% & 0.31 \\ \hline
+And8 & 9.38\% & 4.02\% & 85.94\% & 0.67\% & 0.45 \\ \hline
+And16 & 7.44\% & 2.75\% & 89.39\% & 0.41\% & 0.73 \\ \hline
+Eq4 & 12.66\% & 5.38\% & 81.33\% & 0.63\% & 0.32 \\ \hline
+Eq8 & 9.33\% & 3.90\% & 86.12\% & 0.65\% & 0.46 \\ \hline
+Eq16 & 8.97\% & 2.48\% & 88.14\% & 0.41\% & 0.72 \\ \hline
+KDS4 & 4.79\% & 0.95\% & 93.86\% & 0.40\% & 2.52 \\ \hline
+KDS8 & 10.91\% & 1.69\% & 87.13\% & 0.27\% & 5.50 \\ \hline
+MUL4 & 14.77\% & 5.23\% & 79.38\% & 0.62\% & 0.33 \\ \hline
+MUL8 & 31.80\% & 4.11\% & 63.45\% & 0.63\% & 0.63 \\ \hline
+Mil4 & 13.44\% & 5.62\% & 80.00\% & 0.94\% & 0.32 \\ \hline
+Mil8 & 11.37\% & 3.86\% & 84.12\% & 0.64\% & 0.47 \\ \hline
+Mil16 & 10.55\% & 3.03\% & 85.88\% & 0.53\% & 0.76 \\ \hline
+parity4 & 10.67\% & 4.78\% & 83.71\% & 0.84\% & 0.36 \\ \hline
+parity8 & 9.37\% & 3.92\% & 86.06\% & 0.65\% & 0.46 \\ \hline
+parity16 & 8.55\% & 2.62\% & 88.41\% & 0.41\% & 0.72 \\ \hline
+
+\end{tabular}
+\end{center}
+\caption{Elapsed execution time (EET) in seconds and their breakdowns into sub-tasks for
+SFE-OBDD.}
+\label{fig:OBDD-timing}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|} \hline
+Fn & IPCG &     CC &     OT &     Eval &     EET \\ \hline
+
+Add4 & 17.65\% & 19.00\% & 63.12\% & 0.23\% & 0.44 \\ \hline
+Add8 & 16.13\% & 15.96\% & 67.38\% & 0.53\% & 0.56 \\ \hline
+Add16 & 10.74\% & 9.67\% & 79.12\% & 0.48\% & 0.84 \\ \hline
+And4 & 11.92\% & 20.44\% & 67.40\% & 0.24\% & 0.41 \\ \hline
+And8 & 11.78\% & 16.07\% & 71.96\% & 0.19\% & 0.54 \\ \hline
+And16 & 9.78\% & 6.35\% & 83.48\% & 0.38\% & 0.79 \\ \hline
+Eq4 & 19.51\% & 11.85\% & 68.15\% & 0.49\% & 0.41 \\ \hline
+Eq8 & 15.44\% & 16.52\% & 67.68\% & 0.36\% & 0.56 \\ \hline
+Eq16 & 13.23\% & 9.84\% & 76.70\% & 0.23\% & 0.85 \\ \hline
+KDS4 & 33.33\% & 12.75\% & 53.33\% & 0.58\% & 0.34 \\ \hline
+KDS8 & 35.98\% & 11.92\% & 51.43\% & 0.66\% & 0.45 \\ \hline
+MUL4 & 21.89\% & 2.16\% & 75.41\% & 0.54\% & 0.37 \\ \hline
+MUL8 & 21.75\% & 7.99\% & 69.89\% & 0.37\% & 0.54 \\ \hline
+Mil4 & 38.27\% & 8.26\% & 53.28\% & 0.19\% & 0.53 \\ \hline
+Mil8 & 16.98\% & 9.25\% & 73.40\% & 0.38\% & 0.53 \\ \hline
+Mil16 & 18.78\% & 9.01\% & 71.99\% & 0.22\% & 0.92 \\ \hline
+parity4 & 20.78\% & 11.25\% & 67.73\% & 0.24\% & 0.41 \\ \hline
+parity8 & 49.55\% & 0.39\% & 49.94\% & 0.13\% & 0.77 \\ \hline
+parity16 & 14.63\% & 1.15\% & 83.97\% & 0.25\% & 0.79 \\ \hline
+
+
+\end{tabular}
+\end{center}
+\caption{Elapsed execution time (EET) in seconds and their breakdowns into sub-tasks for
+Fairplay.}
+\label{fig:Fairplay-timing}
+\end{figure}
+

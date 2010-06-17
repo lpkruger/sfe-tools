@@ -1,0 +1,48 @@
+\section{Related Work}
+
+Privacy issues in statistical databases have been thoroughly
+investigated~\cite{Wortman89,Denning:TODS:80}.  Recently
+privacy-preserving data mining has been a very active area of
+research.  Initial focus in this area was on construction of decision
+trees from distributed data
+sets~\cite{Agrawal-Srikant,Lindell-Pinkas}. There is also a
+significant body of research on privacy-preserving mining of
+association
+rules~\cite{Gehrke:2002,RizviHarista,VaidyaClifton:2002}. We will
+focus on existing work on privacy-preserving clustering.
+
+In general, there are two approaches for designing privacy-preserving
+machine learning algorithms. The first approach is to use
+transformations to perturb the data set before the algorithm is
+applied. This approach for designing privacy-preserving clustering
+algorithms is taken by several
+researchers~\cite{Klusch,MeruguGhosh,Oliveira}. A second approach to
+designing privacy preserving algorithms is to use algorithms from the
+secure-multiparty computation literature. The advantage of this
+approach over the perturbation approach is that formal guarantees of
+privacy can be given for these algorithms. This paper takes the latter
+approach. Vaidya and Clifton's~\cite{VaidyaClifton} work is closest to
+the one presented in this paper. Vaidya and Clifton present a
+privacy-preserving $k$-means algorithm for vertically-partitioned data
+sets. As already pointed out in the introduction, our paper considers
+clustering for horizontally-partitioned data. Vaidya and Clifton's
+algorithm is based on the secure-permutation algorithm of Du and
+Atallah~\cite{DuAtallah}. However, Vaidya and Clifton's algorithm has
+to execute Du and Atallah's protocol for every item in the data
+set. Therefore, their algorithm is not practical for large data sets.
+Moreover, Vaidya and Clifton did not perform an experimental
+evaluation of their algorithm.  By contrast, the complexity of our
+algorithm only depends on the number of steps taken by the $k$-means
+algorithm and the dimension of the data items. There are distributed
+clustering algorithms where the goal is to reduce communication
+costs~\cite{DhillonModha,Kargupta}.  These distributed clustering
+algorithms do not consider privacy. However, it will be interesting to
+investigate whether these algorithms can be made privacy preserving.
+
+In our implementation, we approximate real numbers using intervals
+(see appendix~\ref{sec:approximating-reals}).  Finite-precision
+approximation to functions may leak information. Feigenbaum {\it et
+al.}~\cite{Nissim:2001} show that approximations to functions can be
+made private by adding noise.
+
+
