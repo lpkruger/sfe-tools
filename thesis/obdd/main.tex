@@ -1,0 +1,45 @@
+\newenvironment{boxfig}[2]{\begin{figure}[#1]\fbox{\begin{minipage}{0.97\linewidth}
+                        \vspace{0.2em}
+                        \makebox[0.02\linewidth]{}
+                        \begin{minipage}{0.94\linewidth}
+            {\small{
+                        #2 }}
+                        \end{minipage}
+                        \vspace{0.2em}
+                        \end{minipage}}}{\end{figure}}
+
+\newenvironment{boxfig*}[2]{\begin{figure*}[#1]\fbox{\begin{minipage}{0.97\linewidth}
+                        \vspace{0.2em}
+                        \makebox[0.02\linewidth]{}
+                        \begin{minipage}{0.94\linewidth}
+            {\small{
+                        #2 }}
+                        \end{minipage}
+                        \vspace{0.2em}
+                        \end{minipage}}}{\end{figure*}}
+
+
+\newcommand{\alg}[1]{\ensuremath{\mathsf{#1}}}
+%\newcommand{\todo}[1]{\textbf{(todo: #1)}}
+
+\newcommand{\binset}{\{0,1\}}
+\newcommand{\rfrom}{\ensuremath{\stackrel{\mathrm{R}}{\gets}}}
+\newcommand{\from}{\ensuremath{{\gets}}}
+
+\chapter{Secure Function Evaluation with Ordered Binary Decision Diagrams}
+\label{chapter:obdd}
+
+\input{obdd/intro}
+\input{obdd/bdd}
+\input{obdd/bdd-protocol}
+\input{obdd/experimental}
+%\input{future}
+
+\begin{comment}
+\bibliographystyle{plain} 
+\bibliography{somesh,somesh-extra}
+
+\appendix
+\input{appendix-proofs}
+
+\end{comment}
