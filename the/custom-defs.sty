@@ -1,0 +1,65 @@
+% fixes bibliography bug
+\def\newblock{\hskip .11em plus .33em minus .07em}
+
+% misc. formatting shortcuts
+\newcommand{\vs}{vs.\ }
+\newcommand{\ie}{i.e.}
+\newcommand{\eg}{e.g.}
+\newcommand{\etal}{et~al.}
+\newcommand{\etc}{etc.}
+\newcommand{\etcetera}{et~cetera}
+\newcommand{\denovo}{de~novo}
+\newcommand{\iid}{i.i.d.\ }
+\newcommand{\naive}{na\"{i}ve}
+\newcommand{\Naive}{Na\"{i}ve}
+
+% \newcommand{\vs}{{\em vs.}\ }
+% \newcommand{\ie}{{\em i.e.}}
+% \newcommand{\eg}{{\em e.g.}}
+% \newcommand{\etal}{{\em et al.}}
+% \newcommand{\etc}{{\em etc.}}
+% \newcommand{\etcetera}{{\em et cetera}}
+% \newcommand{\denovo}{{\em de novo}}
+% \newcommand{\iid}{{\em i.i.d.}\ }
+% \newcommand{\naive}{na\"{i}ve}
+% \newcommand{\Naive}{Na\"{i}ve}
+
+\newcommand{\cal}{\mathcal}
+\newcommand{\newcite}{\citet}
+%\renewcommand{\cite}{\citep}
+\renewcommand{\ttdefault}{cmtt}
+
+\def\argmax{\mathop{\rm argmax}}
+
+
+
+\def\table{\singlespace\@float{table}}
+\def\figure{\singlespace\@float{figure}}
+
+%=======================================================================
+% Define macros for figure captions and table titles
+% stolen from the JMLR style files
+
+% Figurecaption prints the caption title flush left.
+\def\figurecaption#1#2{\noindent\hangindent 40pt
+                       \hbox to 36pt {\small\sl #1 \hfil}
+                       \ignorespaces {\small #2}}
+
+% Figurecenter prints the caption title centered.
+\def\figurecenter#1#2{\centerline{{\sl #1} #2}}
+\def\figurecenter#1#2{\centerline{{\small\sl #1} {\small #2}}}
+
+%  Allow ``hanging indents'' in long captions
+\long\def\@makecaption#1#2{
+    \singlespace                    % control spacing in double-space mode
+    \vskip 10pt 
+    \setbox\@tempboxa\hbox{#1: #2}
+    \ifdim \wd\@tempboxa >\hsize    % IF longer than one line:
+        \begin{list}{#1:}{
+        \settowidth{\labelwidth}{#1:}
+        \setlength{\leftmargin}{\labelwidth}
+        \addtolength{\leftmargin}{\labelsep}
+        }\item #2 \end{list}\par    % Output in quote mode
+    \else                           % ELSE  center.
+        \hbox to\hsize{\hfil\box\@tempboxa\hfil}  
+    \fi}

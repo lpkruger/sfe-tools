@@ -1,0 +1,85 @@
+% Improvements to the LaTeX "withesis" class, made by Burr Settles
+% Intended mainly for writing a CS Department PhD thesis.
+% Assumes compilation using pdflatex.
+
+
+% differences between "official" print and online PDF versions:
+%  - change documentclass command (below)
+%  - uncomment out "singlespace" (below)
+%  - comment out separator page that fixes TOC bug (withesis.cls, line 386)
+%  - uncomment "hyperref" commands for hyperlinked PDF (below)
+
+%=====================================================================
+% Document Style
+%=====================================================================
+
+% \documentclass[12pt,twoside]{withesis}      % for online PDF
+\documentclass[12pt]{withesis}              % for official version
+
+\newenvironment{lyxgreyedout}{\textcolor[gray]{0.8}\bgroup}{\egroup}
+
+
+% packages
+\usepackage{times}
+\usepackage{amssymb,amsmath} 
+\usepackage{algorithm2e}
+\usepackage{graphicx}   % for includegraphics
+\usepackage{color}      % for "to do" command
+%\usepackage{natbib}     % preferred bibliography style
+\usepackage{makeidx}    % to make the index
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{epsfig}
+
+% "hyperref" package for making section/citation references hyperlinks
+% note: run "make clean" if swtiching from hyperref to non-hyperref, and
+% vice versa, as they use different TOC file markups.
+
+% \usepackage{hyperref}
+% 
+% \definecolor{links}{rgb}{0.5,0,0} 
+% \definecolor{cites}{rgb}{0,0.5,0} 
+% \definecolor{urls}{rgb}{0,0,0.5} 
+% 
+% \hypersetup{
+%     bookmarks=true,         % show bookmarks bar?
+%     pdftitle={A PhD Thesis},
+%     pdfauthor={Buckingham M. Badger},
+%     pdfkeywords={machine learning, badgers, beer},
+%     pdfnewwindow=true,      % links in new window
+%     colorlinks=true,       % false: boxed links; true: colored links
+%     linkcolor=links,          % color of internal links
+%     citecolor=cites,        % color of links to bibliography
+%     % filecolor=black,      % color of file links
+%     urlcolor=urls           % color of external links
+% }
+
+
+% my custom definitions
+\usepackage{custom-defs}
+%\bibpunct{(}{)}{;}{a}{,}{,} % parens in citations instead of brackets for "natbib" style
+\makeindex
+
+%========================================================================
+%  Draft Control Commands:
+%========================================================================
+\pagestyle{thesis}
+
+%=======================================================================
+% Remove the following lines if appendix tables or figures are present.
+% The suppress writing the auxiliary information which appears in the
+% list of tables or list of figures.
+
+\noappendixtables                % Don't have appendix tables
+\noappendixfigures               % Don't have appendix figures
+
+%=======================================================================
+% End of Preamble, start of document
+\begin{document}
+% \singlespace                    % toggle single- or double-spaced version
+\include{frontmatter/prelude}   % title page, abstract, contents, etc.
+
+%=======================================================================
+
