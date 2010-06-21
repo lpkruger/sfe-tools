@@ -1,0 +1,39 @@
+default:	thesis.pdf
+
+TEXSOURCES=chapters/0intro.tex
+LYXSOURCES=chapters/1background.tex
+
+thesis.tex:	thesis.lyx proctex.pl $(LYXSOURCES)
+	-rm thesis.tex
+	lyx -e pdflatex thesis.lyx
+	mv thesis.tex thesis_.tex
+	cat header.tex > thesis.tex
+	perl -n proctex.pl thesis_.tex >> thesis.tex
+	perl -i -n -s proctex.pl -doprint chapters/1background.tex
+
+viewpdf:	thesis.pdf
+	acroread thesis.pdf
+
+pdf:		thesis.pdf
+
+thesis.aux:     thesis.tex
+	pdflatex thesis.tex
+	-bibtex thesis.aux
+	pdflatex thesis.tex
+	rm thesis.pdf
+
+#depends := $(wildcard *.tex) $(wildcard */*.tex)
+#$(info ${depends})
+#$(info )
+#thesis.pdf:     thesis.tex thesis.aux ${depends}
+
+thesis.pdf:     thesis.tex thesis.aux $(LYXSOURCES) $(TEXSOURCES)
+	pdflatex thesis.tex
+
+clean:
+	-rm -v thesis.[abilt][bdflou][cfglotx]
+	find . -name \*.aux -exec rm -v "{}" \;
+
+moreclean:      clean
+	rm thesis*.pdf
+

@@ -1,4 +1,4 @@
-#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -36,16 +36,69 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
 
-\begin_layout Part
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Section
 My Thesis
 \end_layout
 
+\begin_layout Plain Layout
+(this is Chapter 1)
+\end_layout
+
+\begin_layout Plain Layout
+This is going to be my thesis in Lyx:.
+ It is based on classic Yao garbled circuits 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Yao86"
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
-This is going to be my thesis.
+\begin_inset CommandInset include
+LatexCommand include
+filename "chapters/0intro.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand include
+filename "chapters/1background.lyx"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "privacy"
+options "plain"
+
+\end_inset
+
+
 \end_layout
 
 \end_body

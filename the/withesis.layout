@@ -1,0 +1,5 @@
+#% Do not delete the line below; configure depends on this
+#  \DeclareLaTeXClass[withesis]{article (withesis)}
+ 
+# Input general definitions
+Input stdclass.inc
