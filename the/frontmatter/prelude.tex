@@ -1,0 +1,74 @@
+% prelude.tex
+%   - titlepage
+%   - dedication
+%   - acknowledgments
+%   - table of contents, list of tables and list of figures
+%   - nomenclature
+%   - abstract
+%============================================================================
+
+\clearpage\pagenumbering{roman}  % This makes the page numbers Roman (i, ii, etc)
+
+% TITLE PAGE
+\title{Practical Secure Function Evaluation}
+\author{Louis P. Kruger}
+\date{2010}
+\dissertation
+\department{Computer Sciences}
+\maketitle
+
+% COPYRIGHT PAGE
+%   - To include a copyright page use \copyrightpage
+\copyrightpage
+
+% DEDICATION
+%\begin{dedication}
+%    \emph{For Mathis}
+%\end{dedication}
+
+%=============================================================================
+% UMI ABSTRACT
+%=============================================================================
+% The UMI abstract should begin with the author and title in a standard format.
+% After the author comes the advisor and university. After these lines comes
+% a bunch of double spaced text to make up the standard abstract.
+% After the abstract, the advisor's approval signature follows.
+% This page is not numbered and is delivered seperately to the thesis office.
+%=============================================================================
+
+%% UMI ABSTRACT
+% Noto:  choose to include UMI abstract
+    % \pagestyle{empty}   % Turns off page numbering
+    % \addtocounter{page}{-1} % Noto:  Subtract an ADDITIONAL page because my abstract goes two pages.
+    % \advisorname{Mark Craven}
+    % \advisortitle{Associate Professor}
+    % \begin{umiabstract}
+    %   \input{frontmatter/abstract}
+    % \end{umiabstract}
+    % \pagestyle{thesis} % Turns page numbering back on
+
+% REGULAR ABSTRACT
+%\begin{abstract}
+%    \singlespace
+%    \input{frontmatter/abstract}
+%\end{abstract}
+% ~\newpage
+
+% ACKNOWLEDGMENTS
+%\begin{acknowledgments}
+%    \singlespace
+%    \input{frontmatter/acknowledgments}
+%\end{acknowledgments}
+
+% CONTENTS, TABLES, FIGURES
+\tableofcontents
+\listoftables
+\listoffigures
+
+% NOMENCLATURE
+%\begin{nomenclature}
+%\input{frontmatter/nomenclature}
+%\end{nomenclature}
+
+\clearpage\pagenumbering{arabic} % This makes the page numbers Arabic (1, 2, etc)
+% \pagenumbering{arabic} % This makes the page numbers Arabic (1, 2, etc)
