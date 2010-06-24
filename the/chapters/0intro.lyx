@@ -1,0 +1,436 @@
+#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options false
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%
+\backslash
+chapter{Introduction}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Comment
+status open
+
+\begin_layout Quote
+As every man goes through life he fills in a number of forms for the record,
+ each containing a number of questions...
+ There are thus hundreds of little threads radiating from every man, millions
+ of threads in all.
+ If these threads were suddenly to become visible, the whole sky would look
+ like a spider's web, and if they materialized as rubber bands, buses; trams
+ and even people would all lose the ability to move, and the wind would
+ be unable to carry torn-up newspapers or autumn leaves along the streets
+ of the city.
+ They are not visible, they are not material, but every man is constantly
+ aware of their existence....
+ Each man, permanently aware of his own invisible threads, naturally develops
+ a respect for the people who manipulate the threads.
+\end_layout
+
+\begin_layout Quote
+--Alexander Solzhenitsyn, Cancer Ward, 1968.
+ 
+\end_layout
+
+\end_inset
+
+ Privacy and security are important concerns as computers increase in power
+ and the Internet continues to grow 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "cra99,tur03"
+
+\end_inset
+
+.
+ Everyday activities dealing with sensitive data are moving onto to the
+ Internet, such as credit card transactions, doctors accessing medical records,
+ and online banking.
+ As a result, more data is stored on machines that are connected to the
+ Internet, directly or indirectly, then ever before.
+ Sadly, there are many all-too-common examples in the news of privacy compromisi
+ng activities such as phishing, data theft, and identity theft.
+ New techniques are needed to deal with the many threats to privacy.
+ In addition to the misuse of data, there can be other consequences of privacy
+ violations, such as serious legal penalties for violation of HIPAA laws
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hippa"
+
+\end_inset
+
+, which mandate strict privacy requirements among health-care professionals.
+\end_layout
+
+\begin_layout Standard
+Despite these many privacy concerns, there is also a conflicting desire
+ to perform useful computations with sensitive data.
+ Data is not useful unless it can be accessed and manipulated.
+ Sometimes various parties would like to collaborate on research involving
+ this data.
+ For example, genetic data is the subject of much current research, but
+ it is considered private personal information.
+ Researchers with access to different patients' data may want to combine
+ their information resources in the search for new cures for diseases, without
+ revealing the actual sensitive information to the collaborating parties.
+ Competing businesses may want to jointly perform market research for mutual
+ benefit, without exposing their sensitive business data.
+ Therefore, the challenge is how to balance these competing concerns, making
+ data available for desirable uses while preserving as much privacy as possible.
+ By providing strong privacy guarentees, we enable new uses of sensitive
+ data.
+\end_layout
+
+\begin_layout Standard
+These concerns are not merely theoretical.
+ In 2000, Ford Motor Explorer SUVs had a well publicized problem with their
+ Firestone tires, in which the tire treads could fail under certain circumstance
+s.
+ At least 271 deaths resulted 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "NYTFordFirestone"
+
+\end_inset
+
+.
+ The problem resulted from the 
+\emph on
+combination
+\emph default
+ of products, 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+ie
+\end_layout
+
+\end_inset
+
+ there were no problems with the same tires in other vehicles, nor with
+ Ford Explorers using other tires.
+ It has been suggested that the crisis could have been averted using joint
+ data-mining, however, due to business secrecy concerns, such research could
+ only have been performed using privacy preserving methods 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "VaidyaClifton:2002"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+There have been several methods developed so far for preserving personal
+ privacy while permitting use of data.
+ The most simple method, conceptually, is to replace identifying information,
+ such as the name, social security number, and other sensitive data with
+ random unique identifiers, and then using the transformed data for computation.
+ If it is necessary to correlate the outputs of the computation with individuals
+, the data owner can do this, but other parties presumably can not.
+ However, this method has been shown to be vulnerable to attacks that correlate
+ the transformed data with information available from external sources to
+ reconstruct the obfuscated data, thereby breaking the privacy protection
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Malin04"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Another method for preserving privacy is known as 
+\emph on
+secure multiparty computation
+\emph default
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Yao86"
+
+\end_inset
+
+.
+ This is a technique of performing computations on inputs supplied by multiple
+ parties while provably maintaining privacy guarantees.
+ If the computation is a function evaluation, then it is called 
+\emph on
+secure function evaluation
+\emph default
+, or SFE.
+ This is a technique which in theory can address many privacy concerns.
+ The inputs to the function are partitioned among more than one party, and
+ the function is computed collaboratively while preserving the privacy of
+ each participant's individual inputs.
+ In this case, privacy is considered preserved if no party learns any informatio
+n that would affect their estimate of the probability distribution of another
+ party's inputs, except for that which can be calculated by the parties'
+ own inputs and the output of the joint function.
+ In comparison with other methods, secure multiparty computation is the
+ only method that can be used to guarantee privacy when parties collaborate
+ on joint computation.
+ 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+\begin_inset Note Greyedout
+status open
+
+\begin_layout Plain Layout
+Needs clarification 
+\end_layout
+
+\end_inset
+
+In other words, the entropy gain of each party is equivalent to the entropy
+ gain in an idealized protocol where a trusted third party collects all
+ the inputs, evaluates the function, and transmits only the output to each
+ party.
+ Depending on the protocol, the guarantees for some parties may be based
+ on typical assumptions of computational hardness, while the guarantees
+ for other parties may be information theoretic.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Although SFE has provable privacy guarantees, its implementation tends to
+ be very expensive for practical use in terms of time and space.
+ The space expense manifests itself in the large consumption of network
+ bandwidth used in the protocols, and the time expense comes from repeated
+ use of expensive cryptographic primitives, such as modular exponentiation.
+ These expenses explain why SFE has not been frequently used outside the
+ academic realm, despite the fact that it was formally introduced in the
+ literature in the early 1980s 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Y82"
+
+\end_inset
+
+.
+ There has been research in recent years to make SFE more practical.
+ This research falls into two categories: general and function specific.
+ General protocols allow any function expressed as a circuit computation
+ to be evaluated securely.
+ The Fairplay system 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Fairplay"
+
+\end_inset
+
+ is a straightforward implementation of the Yao protocol 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Yao86"
+
+\end_inset
+
+, presented in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Garbled-Circuit-Method"
+
+\end_inset
+
+, along with a supporting compiler that allows secure functions to be written
+ in a more familiar functional programming notation.
+ We demonstrated how 
+\emph on
+Ordered Binary Decision Diagrams
+\emph default
+ (OBDD) can be used to produce a more efficient protocol for secure evaluation
+ for certain functions 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger06"
+
+\end_inset
+
+.
+ Function specific protocol design has produced secure protocols which perform
+ dramatically better than general protocols.
+ Privacy-preserving data mining (PPDM) has been a major application driving
+ such research 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "verykios04stateart"
+
+\end_inset
+
+.
+ Other protocols have been developed for various classes of functions such
+ as polynomial evaluation 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "naor99otope"
+
+\end_inset
+
+ and string alignment algorithms such as edit distance 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger07"
+
+\end_inset
+
+.
+ Privacy-preserving protocols have benefitted from Moore's law as well,
+ as increased computational power has sped up the basic cryptographic primitives
+ involved.
+ We have shown that in many cases, the computation requirements of general
+ protocols can be adequate for practical use when performed on modern CPUs
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger06,kruger10"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+We have researched ways to improve the efficiency and practicality of privacy
+ preserving protocols.
+ Our work has investigated finding efficient protocols for specific classes
+ of functions; for example one study analyzes several designs of a 
+\begin_inset Formula $k$
+\end_inset
+
+-means clustering algorithm 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger05"
+
+\end_inset
+
+, and another discusses ways to design efficient protocols for many kinds
+ of dynamic programming problems 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger07"
+
+\end_inset
+
+.
+ We have also investigated the use of alternate circuit representations
+ using OBDDs to improve the performance of general purpose protocols and
+ showed that they can be beneficial for certain functions 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger06"
+
+\end_inset
+
+.
+ These works are discussed in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Techniques"
+
+\end_inset
+
+.
+ We also demonstrated a practical application of SFE as a new approach to
+ solving classic security problems with password authentication, using SFE
+ to model the hashing functions used in traditional password schemes.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger10"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Our thesis statement is that 
+\shape italic
+SFE can be used for practical purposes today, enabling privacy-preserving
+ computation to thrive in today's distributed world.
+ 
+\shape default
+ In the rest of this thesis, we will demonstrate this through practical
+ examples of the use of SFE.
+ We will show how traditional algorithms can be adapted to preserve privacy,
+ such as in the case of k-means clustering and privacy preserving genomic
+ algorithms.
+ We will show how cryptographic primitives suitable for real-time use can
+ be developed by presenting an oblivious transfer protocol based on the
+ modular square roots.
+ We will also show how traditional security problems can be solved using
+ SFE, by presenting a secure protocol for password authentication with strong
+ security guarentees and legacy interoperability that is better than other
+ authentication protocols in common use.
+\end_layout
+
+\end_body
+\end_document

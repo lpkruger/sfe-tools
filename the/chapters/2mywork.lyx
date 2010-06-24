@@ -1,0 +1,1499 @@
+#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options false
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+chapter{Techniques for Protocol Optimization}
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Techniques"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Optimizing secure function evaluation to make it more practical for real
+ world use will be the focus of this thesis.
+ Traditional methods for SFE, such as Yao's secure circuit evaluation protocol
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Yao86"
+
+\end_inset
+
+, are many orders of magnitude slower than the straightforward insecure
+ evaluation of functions, with factors of thousands or more.
+ Asymtotically, the time required to perform secure function evaluation
+ is equivalent to the time required to execute the function itself.
+ For example, the Yao protocol requires time and communication linear in
+ the number of circuit gates.
+ However, the need to encrypt every gate with multiple keys, and to perform
+ oblivious transfer on every circuit input is the cause of the enormous
+ slowdowns.
+ These tremendous performance penalties in the generic constructions highlight
+ the need for optimizing SFE.
+\end_layout
+
+\begin_layout Standard
+There are various ways to approach the problem of designing optimized secure
+ function evaluation protocols.
+ This thesis focuses on three general methodologies.
+ From most specific to most general, three approaches we have looked at
+ are algorithm specific, algorithm 
+\emph on
+class
+\emph default
+ specific, and a general approach that is applicable to all computable functions.
+ The trade-off between these different approaches is a balance between performan
+ce and general applicability.
+ This trade-off has an analogy in the literature of programming language
+ compiler optimizations.
+ General code optimizations, such as loop-unrolling or strength-reduction
+ can make all code faster to a limited degree (although this is not guaranteed),
+ but tuning a specific algorithm by hand often yields superior results.
+ Algorithm class methods fall in between, with conceptual ideas that apply
+ to classes of algorithms related by design methodology, such as dynamic
+ programming problems.
+\end_layout
+
+\begin_layout Section
+General: Protocol Optimization using Ordered Binary Decision Diagrams
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset label
+LatexCommand label
+name "OBDD-section"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this work, we evaluated the use of alternate representation of Boolean
+ circuits as a way to create more efficient general purpose secure function
+ evaluation protocols.
+ An 
+\emph on
+Ordered Binary Decision Diagram
+\emph default
+ (OBDD) is a directed acyclic graph-based representation of a Boolean function
+ that has been used in a variety of applications in computer-aided design,
+ including symbolic model checking (a technique for verifying designs),
+ verification of combinational logic, and verification of finite-state concurren
+t systems 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Bryant:BDD,Clarke:book"
+
+\end_inset
+
+.
+ OBDDs can be readily extended to represent functions with arbitrary domains
+ and ranges.
+ An OBDD is similar to a decision tree, in that evaluation is performed
+ from a head node to leaves.
+ However, an OBDD is not ordinarily a tree, because internal nodes with
+ identical structure are shared.
+ Given a function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+, the OBDD for that function will have 
+\begin_inset Formula $n$
+\end_inset
+
+ levels, with the 
+\begin_inset Formula $i^{th}$
+\end_inset
+
+ level corresponding to variable 
+\begin_inset Formula $x_{l_{i}}$
+\end_inset
+
+, where 
+\begin_inset Formula $(l_{1},\cdots,l_{n})$
+\end_inset
+
+ is a permutation of 
+\begin_inset Formula $(1,\cdots,n)$
+\end_inset
+
+.
+ There is a unique canonical OBDD corresponding to any function with respect
+ to a given ordering 
+\begin_inset Formula $(l_{1},\cdots,l_{n})$
+\end_inset
+
+.
+ An example of an OBDD to compute the function 
+\begin_inset Formula $F(x)=\#x1\#x3>\#x2\#x4$
+\end_inset
+
+ (two-bit millionaires' problem) is shown in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:OBDD-example"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename obdd1
+	scale 40
+	scaleBeforeRotation
+	rotateAngle 270
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:OBDD-example"
+
+\end_inset
+
+OBDD for two-bit millionaires' problem
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger06"
+
+\end_inset
+
+, we presented an SFE protocol that directly uses an OBDD representation
+ of the function 
+\begin_inset Formula $f$
+\end_inset
+
+ to be jointly computed.
+ The advantage of using an OBDD representation over the Boolean gate-representat
+ion is that OBDDs are more succinct for certain classes of functions than
+ the Boolean gate representation, including most linear functions.
+ For example, the OBDD representation is more efficient than the Boolean
+ gate representation for 8-bit AND, 8-bit addition, and the millionaires'
+ and billionaires' problems 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Yao86"
+
+\end_inset
+
+ OBDDs are not a universal solution, however, for other functions, such
+ as multiplication, the OBDD can be far worse than the Boolean gate representati
+on, due to exponential node explosion 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Bryant:BDD"
+
+\end_inset
+
+.
+ For the classes of functions in which the OBDD representation is efficient,
+ our thesis 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger06"
+
+\end_inset
+
+ shows that the protocol described next can perform 2 to 4 times better
+ than the classical Yao protocol.
+\end_layout
+
+\begin_layout Standard
+The protocol is loosely designed in a similar fashion as Yao's protocol
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Yao86"
+
+\end_inset
+
+.
+ We present two variations of the protocol.
+ An overview of the 3 main steps of the protocols are shown in figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:OBDD-overview"
+
+\end_inset
+
+, using the example millionaires' problem pictured above.
+ In the first step, Alice sends to Bob the encrypted OBDD.
+ The next step is Bob acquiring a subset of the encryption keys from Alice
+ using 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+.
+ In the final step, Bob uses the obtained keys to decrypt a single path
+ through the OBDD yielding the result of the computation.
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+% A formal description follows.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename obdd_proto_overview
+	scale 40
+	scaleBeforeRotation
+	rotateAngle 270
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:OBDD-overview"
+
+\end_inset
+
+OBDD secure evaluation protocol
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%
+\backslash
+input{bdd-proto.tex}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We then define an optimized variation which is identical to the protocol
+ just described, except that Alice first reduces the number of nodes to
+ be sent to Bob using an operation called 
+\emph on
+restriction
+\emph default
+, which is a partial evaluation applied to OBDDs.
+ Restriction is defined as follows.
+\end_layout
+
+\begin_layout Standard
+Given an 
+\begin_inset Formula $n$
+\end_inset
+
+ variable Boolean function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+ and a Boolean value 
+\begin_inset Formula $b$
+\end_inset
+
+, the restriction 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b}$
+\end_inset
+
+ is a Boolean function of 
+\begin_inset Formula $n-1$
+\end_inset
+
+ variables 
+\begin_inset Formula $x_{1},\cdots,x_{i-1},x_{i+1},\cdots,x_{n}$
+\end_inset
+
+.
+ 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b}(x_{1},\cdots,x_{i-1},x_{i+1},\cdots,x_{n})$
+\end_inset
+
+ is equal to 
+\begin_inset Formula $f(x_{1},\cdots,x_{i-1},b,x_{i+1},\cdots,x_{n})$
+\end_inset
+
+.
+ Essentially, 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b}$
+\end_inset
+
+ is the function obtained by substituting the value 
+\begin_inset Formula $b$
+\end_inset
+
+ for the variable 
+\begin_inset Formula $x_{i}$
+\end_inset
+
+ in the function 
+\begin_inset Formula $f$
+\end_inset
+
+.
+ The restriction operation can be performed over multiple variables by restricti
+ng each variable independently, e.g., 
+\begin_inset Formula $f\mid_{x_{i}\leftarrow b,x_{j}\leftarrow b'}=(f\mid_{x_{i}\leftarrow b})\mid_{x_{j}\leftarrow b'}$
+\end_inset
+
+.
+ The order in which the variables are restricted is unimportant.
+\end_layout
+
+\begin_layout Standard
+\align left
+For protocol 2, both parties' inputs include the 
+\begin_inset Formula $OBDD(f)$
+\end_inset
+
+ for the Boolean function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+ with the ordering 
+\begin_inset Formula $x_{1}<x_{2}<\cdots<x_{n}$
+\end_inset
+
+.
+ Furthermore, Alice holds the inputs for the variables in the set 
+\begin_inset Formula $X_{A}$
+\end_inset
+
+ and Bob holds the inputs for the variables in the set 
+\begin_inset Formula $X_{B}\;=\;\{x_{1},\cdots,x_{n}\}-X_{A}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Alice performs the following steps:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Alice computes the OBDD 
+\begin_inset Formula ${\cal O}_{A}$
+\end_inset
+
+ as the restriction of her inputs on the function 
+\begin_inset Formula $f\mid_{X_{A}}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Alice encrypts the 
+\begin_inset Formula $O_{A}$
+\end_inset
+
+ and sends it to Bob.
+ This step is exactly the same as in for Protocol 1.
+ Alice also sends the secret corresponding to the root of the OBDD 
+\begin_inset Formula ${\cal O}_{A}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+The computation for Bob is exactly the same as that for Protocol 1.
+ 
+\end_layout
+
+\begin_layout Standard
+The results of this work demonstrate that OBDDs showed improved performance
+ with secure evaluation of certain functions, as will be discussed in chapter
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chapter:obdd"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Problem Specific: Protocol Optimization of Evaluating Hash Functions for
+ Password Authentication
+\end_layout
+
+\begin_layout Standard
+In chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chapter:pw"
+
+\end_inset
+
+, based on our paper Secure Password Authentication Using SFE 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Kruger10"
+
+\end_inset
+
+, we use some properties of the problem of authentication to transform the
+ semi-honest protocol into an efficient protocol that is secure in the malicious
+ model.
+ This work presents a new solution to the "Secure Password and Key Authenticatio
+n" (SPAKA) problem, which is the design of protocols to mutually authenticate
+ a client to a server using 
+\end_layout
+
+\begin_layout Enumerate
+The client's knowledge of the password X, and 
+\end_layout
+
+\begin_layout Enumerate
+The servers's knowledge of a one-way hash function h(X).
+ 
+\end_layout
+
+\begin_layout Standard
+The protocol must not leak any additional information or allow access if
+ one of the parties is an inposter and does not know their expected credential.
+ Our solution provides a property, unique among SPAKA protocols, that it
+ can work with arbitrary and legacy hash functions used in commodity operating
+ systems today.
+ This protocol takes advantage of specific properties of the authentication
+ problem and takes "shortcuts" to achieve efficiency.
+ Although these shortcuts would not be secure in a general SFE setting,
+ we prove that these shortcuts are in fact secure in the context of the
+ authentication protocol presented.
+ This allows us to design a protocol in which a malicious adversary is thwarted
+ with probability 
+\begin_inset Formula $1-2^{-l}$
+\end_inset
+
+ where 
+\begin_inset Formula $l$
+\end_inset
+
+ is a security parameter representing the number of semi-honest circuits.
+ We show that on modern multicore processors, the authentication can be
+ performed in a matter of seconds, which we believe is practical for interactive
+ use between servers and authenticating users.
+\end_layout
+
+\begin_layout Section
+Class of Algorithm Specific: Protocol Optimization of Dynamic Programming
+\end_layout
+
+\begin_layout Standard
+In this work, we considered a design 
+\emph on
+methodology
+\emph default
+ for creating secure protocols based on typical dynamic programming algorithms.
+ Unlike the OBDD protocol discussed in the previous section, this is not
+ an automatic tool for generating secure protocols, but rather a set of
+ concepts that are applicable to designing secure protocols for evaluating
+ dynamic programming algorithms.
+ We illustrate these ideas with several example protocols for computing
+ the edit distance problem, which is the minimum number of character insertions,
+ deletions, and substitutions needed to change string 
+\begin_inset Formula $x$
+\end_inset
+
+ to string 
+\begin_inset Formula $y$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula ${\cal P}(x,y)$
+\end_inset
+
+ be a problem with two inputs 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+.
+ Typically, a dynamic-programming algorithm 
+\begin_inset Formula ${\cal A}_{{\cal P}}$
+\end_inset
+
+ for problem 
+\begin_inset Formula ${\cal P}$
+\end_inset
+
+ has the following components: 
+\end_layout
+
+\begin_layout Itemize
+A set 
+\begin_inset Formula $S$
+\end_inset
+
+ of sub-problems and a dependency relation 
+\begin_inset Formula $R\subseteq S\times S$
+\end_inset
+
+ between the sub-problems.
+ Intuitively, 
+\begin_inset Formula $(s,s')\in R$
+\end_inset
+
+ means that the sub-problem 
+\begin_inset Formula $s'$
+\end_inset
+
+ depends on the sub-problem 
+\begin_inset Formula $s$
+\end_inset
+
+.
+ If there is a dependency between 
+\begin_inset Formula $s$
+\end_inset
+
+ and 
+\begin_inset Formula $s'$
+\end_inset
+
+, we write it as 
+\begin_inset Formula $s\rightarrow s'$
+\end_inset
+
+.
+ In the case of the problem of computing edit-distance between two strings
+ 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ and 
+\begin_inset Formula $\beta$
+\end_inset
+
+ of length 
+\begin_inset Formula $n$
+\end_inset
+
+ and 
+\begin_inset Formula $m$
+\end_inset
+
+, the set of sub-problems is 
+\begin_inset Formula $[0,\cdots,n]\times[0,\cdots,m]$
+\end_inset
+
+.
+ For all sub-problems 
+\begin_inset Formula $(i,j)$
+\end_inset
+
+ such that 
+\begin_inset Formula $i\not=0$
+\end_inset
+
+ and 
+\begin_inset Formula $j\not=0$
+\end_inset
+
+, we have the following dependencies: 
+\begin_inset Formula $(i-1,j)\rightarrow(i,j)$
+\end_inset
+
+, 
+\begin_inset Formula $(i,j-1)\rightarrow(i,j)$
+\end_inset
+
+, and 
+\begin_inset Formula $(i-1,j-1)\rightarrow(i,j)$
+\end_inset
+
+.
+ The 
+\shape italic
+base sub-problems
+\shape default
+ are 
+\begin_inset Formula $s\in S$
+\end_inset
+
+ such that they have no dependencies.
+ For the edit-distance problem, the base sub-problems are: 
+\begin_inset Formula \[
+\begin{array}{l}
+\{(i,0)\;\mid\;0\leq i\leq n\}\\
+\{(0,j)\;\mid\;0\leq j\leq m\}\end{array}\]
+
+\end_inset
+
+ We also assume that there is a unique root sub-problem 
+\begin_inset Formula ${\it root}\in S$
+\end_inset
+
+ such that there does not exist a sub-problem that depends on 
+\begin_inset Formula ${\it root}$
+\end_inset
+
+.
+ For the edit-distance problem the unique root sub-problem is 
+\begin_inset Formula $(n,m)$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Itemize
+Each sub-problem 
+\begin_inset Formula $s$
+\end_inset
+
+ is assigned a value 
+\begin_inset Formula ${\it val}(s)$
+\end_inset
+
+.
+ The goal is to compute 
+\begin_inset Formula ${\it val}({\it root})$
+\end_inset
+
+.
+ The function 
+\begin_inset Formula ${\it val}$
+\end_inset
+
+ from 
+\begin_inset Formula $S$
+\end_inset
+
+ to 
+\begin_inset Formula $\Re$
+\end_inset
+
+ assigns values to sub-problems, such that it satisfies the following properties
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+For all the base sub-problems 
+\begin_inset Formula $s\in S$
+\end_inset
+
+, 
+\begin_inset Formula ${\it val}(s)$
+\end_inset
+
+ is defined.
+ 
+\end_layout
+
+\begin_layout Itemize
+Let 
+\begin_inset Formula $s\in S$
+\end_inset
+
+ be a non-base sub-problem.
+ Define 
+\begin_inset Formula ${\it pred}(s)$
+\end_inset
+
+ as all the predecessors of 
+\begin_inset Formula $s$
+\end_inset
+
+, i.e.
+ the set 
+\begin_inset Formula ${\it pred}(s)$
+\end_inset
+
+ is defined as 
+\begin_inset Formula $\{s'\;\mid\; s'\rightarrow s\}$
+\end_inset
+
+.
+ Assume that 
+\begin_inset Formula ${\it pred}(s)$
+\end_inset
+
+ is equal to 
+\begin_inset Formula $\{s_{1},\cdots,s_{k}\}$
+\end_inset
+
+.
+ There is a recursive function 
+\begin_inset Formula $f$
+\end_inset
+
+ defining 
+\begin_inset Formula ${\it val}(s)$
+\end_inset
+
+ in terms of 
+\begin_inset Formula ${\it val}(s_{1}),{\it val}(s_{2}),\cdots,{\it val}(s_{k})$
+\end_inset
+
+, 
+\begin_inset Formula $s(x)$
+\end_inset
+
+, and 
+\begin_inset Formula $s(y)$
+\end_inset
+
+, where 
+\begin_inset Formula $s(x)$
+\end_inset
+
+ and 
+\begin_inset Formula $s(y)$
+\end_inset
+
+ are parts of the input 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ that are relevant to the sub-problem 
+\begin_inset Formula $s$
+\end_inset
+
+.
+ In case of the edit-distance problem 
+\begin_inset Formula ${\it val}((i,j))$
+\end_inset
+
+ is equal to 
+\begin_inset Formula $D(i,j)$
+\end_inset
+
+.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+We implemented three variations of the protocol in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger07"
+
+\end_inset
+
+, and showed that the techniques produce efficient ways to compute the edit
+ distance of two strings.
+ For example, the protocol is able to compute the edit distance of two strings
+ of length 
+\begin_inset Formula $200$
+\end_inset
+
+ (which has 
+\begin_inset Formula $200^{2}=40000$
+\end_inset
+
+ sub-computations), in under 10 minutes.
+ Our most efficient protocol computes elements of the dynamic programming
+ matrix in large blocks during each round of the computation.
+ We experimentally determined than a block size of 
+\begin_inset Formula $(20,20)$
+\end_inset
+
+ yielded an optimum trade-off between a decreased number of rounds, and
+ larger block circuits.
+ Using a 
+\begin_inset Formula $(20,20)$
+\end_inset
+
+ circuit allows 
+\begin_inset Formula $20^{2}=400$
+\end_inset
+
+ elements of the matrix to be evaluated during each round of the protocol,
+ which allows the overall 
+\begin_inset Formula $(200,200)$
+\end_inset
+
+ problem to be evaluated in 
+\begin_inset Formula $100$
+\end_inset
+
+ rounds.
+ In comparison, using the generic techniques to compile the edit distance
+ algorithms into a secure circuit produced circuits which were to too large
+ for evaluation beyond problems of size 
+\begin_inset Formula $(25,25)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Algorithm Specific: Protocol Optimization of K-Means Clustering
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset Formula $k$
+\end_inset
+
+-means algorithm is a common clustering technique in data mining.
+ Suppose that we are given 
+\begin_inset Formula $n$
+\end_inset
+
+ samples 
+\begin_inset Formula $x_{1},\cdots,x_{n}$
+\end_inset
+
+, where each sample is a 
+\begin_inset Formula $m$
+\end_inset
+
+-dimensional vector of real numbers.
+ The problem is to assign the samples to 
+\begin_inset Formula $c$
+\end_inset
+
+ clusters in such a manner that similar points are grouped together.
+ Similarity is defined using a distance metric.
+ The standard clustering algorithm maintains 
+\begin_inset Formula $c$
+\end_inset
+
+ means 
+\begin_inset Formula $\mu_{1},\cdots,\mu_{c}$
+\end_inset
+
+.
+ Initially, assume that the means are assigned arbitrary values.
+ A sample 
+\begin_inset Formula $x_{i}$
+\end_inset
+
+ is deemed to be in the cluster 
+\begin_inset Formula $j$
+\end_inset
+
+ if it is closest to the mean 
+\begin_inset Formula $\mu_{j}$
+\end_inset
+
+, where mean of a cluster 
+\begin_inset Formula $\{x'_{1},\cdots,x'_{r}\}$
+\end_inset
+
+ is 
+\begin_inset Formula $\frac{x'_{1}+\cdots,x'_{r}}{r}$
+\end_inset
+
+.
+ In a Euclidean space, the distance between two 
+\begin_inset Formula $m$
+\end_inset
+
+-dimensional vectors 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ is 
+\begin_inset Formula $\sum_{j=1}^{m}(x[j]-y[j])^{2}$
+\end_inset
+
+, where 
+\begin_inset Formula $x[j]$
+\end_inset
+
+ is the 
+\begin_inset Formula $j$
+\end_inset
+
+-th element of the vector 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ Other distance metrics
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+after "Chapter 10"
+key "pattern-classification"
+
+\end_inset
+
+, such as scatter metrics, can be used instead of the distance metric mentioned
+ above.
+ Each iteration of the 
+\begin_inset Formula $k$
+\end_inset
+
+-means algorithms recomputes the means and reclassifies the samples.
+ The algorithm terminates when it detects no change in the means.
+ See 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:clusters"
+
+\end_inset
+
+ for an illustration.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename clusters
+	scale 30
+	scaleBeforeRotation
+	rotateAngle 270
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:clusters"
+
+\end_inset
+
+Thirteen data points after clustering.
+ The small dots are cluster means.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We implement protocols to securely evaluate this algorithm in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chapter:kmeans"
+
+\end_inset
+
+ based on our paper 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "kruger05"
+
+\end_inset
+
+, and showed that a protocol based on homomorphic encryption was able to
+ classify partitioned data sets with tens of thousands of data points in
+ under two minutes, which is about 15 times slower than the protocol implemented
+ without privacy protection, and over 100 times faster than the same protocol
+ built with Yao circuits.
+\end_layout
+
+\begin_layout Section
+Other Optimizations
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Other-Optimizations"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the usual formulation of secure function evaluation, there are designated
+ outputs for each party, and it is required that no extra information is
+ learned by any party.
+ This definition could be expanded to assign non-output values the labels
+ 
+\begin_inset Quotes eld
+\end_inset
+
+sensitive
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+non-sensitive
+\begin_inset Quotes erd
+\end_inset
+
+, where the protocol is considered secure if no sensitive information is
+ leaked.
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%Since the overhead of privacy protection is substantial,
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%I propose to research the of design secure protocols that use this
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%relaxation of the problem definition to improve efficiency.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Primitives"
+
+\end_inset
+
+, I presented many basic cryptographic primitives that are used in SFE.
+ Improving the state of the art of any one of those primitives would automatical
+ly benefit all SFE protocols that make use of that primitive.
+ Based on my experience with real implementations of SFE protocols, the
+ oblivious transfer steps tend to be very expensive in terms of space and
+ communication.
+ Common oblivious transfer protocols are based on discrete logarithms, but
+ other trapdoor functions may be used as well.
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%One thing I propose to try is implementing
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%Naor-Pinkas 
+\backslash
+cite{Noar-Pinkas:2001} using more compact representations,
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%for example, with elliptic curve groups.
+ I have recently developed
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+A new 
+\begin_inset Formula $OT_{2}^{1}$
+\end_inset
+
+ protocol is presented in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:OT-SquareRoots"
+
+\end_inset
+
+.
+ and its security and performance are compared with the Naor-Pinkas protocol.
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%In particular, I conjecture that this protocol
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%may require less communication overhead than other OT protocols.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Section
+An Efficient Protocol Design Framework
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:An-Efficient-Framework"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+Even with all these optimizations, protocols still must be hand-coded.
+ Each protocol I have implemented has required brand new code to be written,
+ with only some common cryptographic primitives being shared between implementat
+ions.
+ In this case, I define the term protocol to mean a structured sequence
+ of communications between parties which enables the computation to performed.
+ Fairplay 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Fairplay"
+
+\end_inset
+
+ suggested the idea of having a common framework for protocol design, but
+ because Fairplay is a straightforward implementation of Yao's garbled circuit
+ method 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Yao86"
+
+\end_inset
+
+, it suffers from poor performance.
+ Fairplay's contribution is to create a compiler for expressing algorithms
+ functionally, and compiling them into a circuit representation suitable
+ for secure evaluation.
+ In this sense, it functions as a simple CAD design tool.
+\end_layout
+
+\begin_layout Plain Layout
+I propose to take this concept much further, and create an 
+\emph on
+optimizing
+\emph default
+ protocol compiler, aggregating the techniques discussed here, and creating
+ a tool to greatly simplify the creation of efficient secure protocols for
+ SFE.
+ The compiler will include the following components: 
+\end_layout
+
+\begin_layout Itemize
+Convenient programming language for expressing secure computations
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Language will include support as language primitives for common SFE and
+ cryptographic techniques, such as homomorphic encryption 
+\end_layout
+
+\begin_layout Itemize
+Language will support metadata for designating inputs and outputs from specific
+ parties, and for classifying the required privacy of intermediate computations
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Compiler which translates this language into an abstract securely evaluable
+ 
+\begin_inset Quotes eld
+\end_inset
+
+machine code
+\begin_inset Quotes erd
+\end_inset
+
+, which consists of securely evaluable representations of the program.
+ 
+\end_layout
+
+\begin_layout Itemize
+An automated optimizer.
+ The optimizer will automatically try different representations of the functions
+, including OBDDs, Boolean circuits, and other ideas from my research, and
+ search for the most efficient representation as possible.
+ 
+\end_layout
+
+\begin_layout Itemize
+Manual optimization tools, making it convenient to apply and design techniques
+ that I have researched.
+ This includes a toolkit of cryptographic protocols, such as oblivious transfer,
+ which can be used in a black box way.
+ 
+\end_layout
+
+\begin_layout Itemize
+An embeddable protocol evaluator library, which will allow ordinary application
+ to make straightforward use of secure function evaluation.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+The security of protocols produced by the compiler is based on the security
+ of each individual component of the protocol.
+ For example, when choosing optimal circuit representations, the compiler
+ will choose among several possible representations, each of which has a
+ corresponding secure evaluation protocol.
+ In cases where a computation is broken into multiple sub-protocols, I will
+ prove that composition of these sub-protocols maintains the overall security
+ of the protocol.
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+bibliographystyle{plain}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "somesh"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\end_body
+\end_document
