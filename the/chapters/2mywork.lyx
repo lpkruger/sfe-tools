@@ -204,7 +204,8 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename obdd1
+	filename obdd1.png
+	lyxscale 5
 	scale 40
 	scaleBeforeRotation
 	rotateAngle 270
@@ -341,7 +342,8 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename obdd_proto_overview
+	filename obdd_proto_overview.png
+	lyxscale 5
 	scale 40
 	scaleBeforeRotation
 	rotateAngle 270
@@ -568,8 +570,15 @@ key "Kruger10"
 , we use some properties of the problem of authentication to transform the
  semi-honest protocol into an efficient protocol that is secure in the malicious
  model.
- This work presents a new solution to the "Secure Password and Key Authenticatio
-n" (SPAKA) problem, which is the design of protocols to mutually authenticate
+ This work presents a new solution to the 
+\begin_inset Quotes eld
+\end_inset
+
+Secure Password and Key Authentication
+\begin_inset Quotes erd
+\end_inset
+
+ (SPAKA) problem, which is the design of protocols to mutually authenticate
  a client to a server using 
 \end_layout
 
@@ -589,7 +598,15 @@ The protocol must not leak any additional information or allow access if
  can work with arbitrary and legacy hash functions used in commodity operating
  systems today.
  This protocol takes advantage of specific properties of the authentication
- problem and takes "shortcuts" to achieve efficiency.
+ problem and takes 
+\begin_inset Quotes eld
+\end_inset
+
+shortcuts
+\begin_inset Quotes erd
+\end_inset
+
+ to achieve efficiency.
  Although these shortcuts would not be secure in a general SFE setting,
  we prove that these shortcuts are in fact secure in the context of the
  authentication protocol presented.
@@ -1091,7 +1108,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename clusters
+	filename clusters.png
+	lyxscale 5
 	scale 30
 	scaleBeforeRotation
 	rotateAngle 270
