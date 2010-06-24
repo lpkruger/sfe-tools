@@ -1,7 +1,7 @@
 default:	thesis.pdf
 
 TEXSOURCES=
-LYXSOURCES=chapters/1background.tex chapters/0intro.tex
+LYXSOURCES=chapters/2mywork.tex chapters/1background.tex chapters/0intro.tex
 
 $(LYXSOURCES): proclyx
 
@@ -39,5 +39,7 @@ clean:
 	find . -name \*.aux -exec rm -v "{}" \;
 
 moreclean:      clean
-	rm thesis*.pdf
+	-rm thesis*.pdf
+	-rm $(LYXSOURCES)
+	-rm thesis.tex thesis_.tex
 
