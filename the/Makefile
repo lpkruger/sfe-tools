@@ -1,9 +1,13 @@
 default:	thesis.pdf
 
-TEXSOURCES=chapters/0intro.tex
-LYXSOURCES=chapters/1background.tex
+TEXSOURCES=
+LYXSOURCES=chapters/1background.tex chapters/0intro.tex
 
-thesis.tex:	thesis.lyx proctex.pl $(LYXSOURCES)
+$(LYXSOURCES): proclyx
+
+thesis.tex:	thesis.lyx proctex.pl $(LYXSOURCES) proclyx
+
+proclyx:
 	-rm thesis.tex
 	lyx -e pdflatex thesis.lyx
 	mv thesis.tex thesis_.tex

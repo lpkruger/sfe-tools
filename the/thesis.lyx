@@ -1,4 +1,4 @@
-#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -41,7 +41,7 @@
 
 \begin_body
 
-\begin_layout Plain Layout
+\begin_layout Standard
 \begin_inset Note Note
 status open
 
@@ -73,7 +73,7 @@ key "Yao86"
 \begin_layout Standard
 \begin_inset CommandInset include
 LatexCommand include
-filename "chapters/0intro.tex"
+filename "chapters/0intro.lyx"
 
 \end_inset
 
@@ -84,6 +84,16 @@ filename "chapters/0intro.tex"
 \begin_inset CommandInset include
 LatexCommand include
 filename "chapters/1background.lyx"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand include
+filename "chapters/2mywork.lyx"
 
 \end_inset
 
