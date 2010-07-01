@@ -1,4 +1,4 @@
-#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.6.1 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -37,24 +37,16 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
 
-\begin_layout Standard
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-chapter{Techniques for Protocol Optimization}
+\begin_layout Section
+Techniques for Protocol Optimization
 \end_layout
 
-\end_inset
-
-
+\begin_layout Standard
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:Techniques"
@@ -110,7 +102,7 @@ ce and general applicability.
  programming problems.
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 General: Protocol Optimization using Ordered Binary Decision Diagrams
 \end_layout
 
@@ -547,7 +539,7 @@ reference "chapter:obdd"
 .
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 Problem Specific: Protocol Optimization of Evaluating Hash Functions for
  Password Authentication
 \end_layout
@@ -625,7 +617,7 @@ shortcuts
  use between servers and authenticating users.
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 Class of Algorithm Specific: Protocol Optimization of Dynamic Programming
 \end_layout
 
@@ -981,7 +973,7 @@ key "kruger07"
 .
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 Algorithm Specific: Protocol Optimization of K-Means Clustering
 \end_layout
 
@@ -1165,7 +1157,7 @@ key "kruger05"
  built with Yao circuits.
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 Other Optimizations
 \end_layout
 

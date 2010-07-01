@@ -1,7 +1,8 @@
 default:	thesis.pdf
 
 TEXSOURCES=
-LYXSOURCES=chapters/2mywork.tex chapters/1background.tex chapters/0intro.tex
+LYXSOURCES=chapters/5cluster.tex chapters/3obdd.tex \
+	chapters/2mywork.tex chapters/1background.tex chapters/0intro.tex
 
 $(LYXSOURCES): proclyx
 
@@ -13,7 +14,7 @@ proclyx:
 	mv thesis.tex thesis_.tex
 	cat header.tex > thesis.tex
 	perl -n proctex.pl thesis_.tex >> thesis.tex
-	perl -i -n -s proctex.pl -doprint chapters/1background.tex
+	perl -i -n -s proctex.pl -doprint $(LYXSOURCES)
 
 viewpdf:	thesis.pdf
 	acroread thesis.pdf

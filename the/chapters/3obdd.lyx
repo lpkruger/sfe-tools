@@ -1,4 +1,4 @@
-#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.6.1 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -36,6 +36,7 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
@@ -44,8 +45,343 @@
 Ordered Binary Decision Diagrams
 \end_layout
 
-\begin_layout Standard
+\begin_layout Subsection
+Introduction
+\end_layout
 
+\begin_layout Standard
+The ease and transparency of information flow on the Internet has heightened
+ concerns of personal privacy [28, 108].
+ Various Internet activities, such as Web surfing, email, and other services
+ leak sensitive information.
+ As a result, there has been interest in developing technologies [27, 47,
+ 103] and protocols to address these concerns.
+ In particular, privacy-preserving protocols [38, 40, 74, 79] that allow
+ multiple parties to perform joint computations without revealing their
+ private inputs have been the subject of much interest.
+ Our focus in this paper is on two party privacy-preserving protocols.
+\end_layout
+
+\begin_layout Standard
+One of the fundamental cryptographic primitives for designing privacy-preserving
+ protocols is secure function evaluation (SFE).
+ A protocol for SFE enables two parties 
+\begin_inset Formula $A$
+\end_inset
+
+ and 
+\begin_inset Formula $B$
+\end_inset
+
+ with inputs 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+ respectively to jointly compute a function 
+\begin_inset Formula $f(x,y)$
+\end_inset
+
+ while preserving the privacy of the two parties (i.e., at the end of the
+ protocol, party 
+\begin_inset Formula $A$
+\end_inset
+
+ only knows its input 
+\begin_inset Formula $x$
+\end_inset
+
+ and the value of the function 
+\begin_inset Formula $f(x,y)$
+\end_inset
+
+, and similarly for 
+\begin_inset Formula $B$
+\end_inset
+
+).
+ Yao showed that for a polynomial-time computable function 
+\begin_inset Formula $f$
+\end_inset
+
+, there exists a SFE protocol that executes in polynomial time [51, ?] (details
+ about this protocol can be found in Goldreich’s book [49, Chapter 7]).
+ Yao’s classic solution for SFE has been used to design privacy-preserving
+ protocols for various applications [8].
+ The importance of Yao’s protocol spurred researchers to design a compiler
+ that takes a description of the function f and emits code corresponding
+ to Yao’s protocol for secure evaluation of f.
+ Such compilers, for example Fairplay [84], enable wider applicability of
+ SFE.
+ MacKenzie et al.
+ [80] implemented a compiler [46] for generating secure two-party protocols
+ for a restricted but important class of functions, which is particularly
+ suited for applications where the secret key is protected using threshold
+ cryptography.
+ 
+\end_layout
+
+\begin_layout Standard
+For most applications, the classic protocol for SFE is quite expensive,
+ which has led researchers to develop more efficient privacy-preserving
+ protocols for specific problems [38, 40, 74, 79].
+\end_layout
+
+\begin_layout Standard
+In the classic SFE protocol, the function f is represented as circuit comprised
+ of gates.
+ Fairplay uses this circuit representation of f.
+ Ordered Binary Decision Diagrams (OBDDS) are a graph-based representation
+ of Boolean functions that have been used in a variety of applications in
+ computer-aided design, including symbolic model checking (a technique for
+ verifying designs), verification of combinational logic, and verification
+ of finite-state concurrent systems [23, 26].
+\end_layout
+
+\begin_layout Standard
+OBDDs can be readily extended to represent functions with arbitrary domains
+ and ranges.
+ Given an OBDD representation of the function to be jointly computed by
+ the two parties, Yao’s protocol can be directly used by first converting
+ the OBDD into a circuit.
+ Converting an OBDD to a circuit, however, incurs a blow-up in the number
+ of gates required.
+ To empirically measure this blowup, we implemented a compiler that takes
+ an OBDD and converts it into a circuit description that can be used in
+ Fairplay.
+ On the average, this conversion from OBDD to circuit resulted in a increase
+ in size by a factor of 10.
+ Details of this experiment can be found in Section 3.4.
+\end_layout
+
+\begin_layout Standard
+In this thesis, we present a SFE algorithm that directly uses an OBDD representa
+tion of the function f that the two parties want to jointly compute.
+ The advantage of using an OBDD representation over the gate-representation
+ is that OBDDs are more succinct for certain widely used classes of functions
+ than the gate representation.
+ For example, among other functions, our results show the OBDD representation
+ is more efficient than the gate representation for 8-bit AND, 8-bit addition,
+ and the millionaire’s and billionaire’s problems [?].
+ As a result, our protocol has reduced bandwidth consumption over the classic
+ Yao protocol implemented in Fairplay.
+ Because processor speeds have increased at a more rapid pace than bandwidth
+ availability over the past years, network bandwidth is likely to be the
+ bottleneck for a number of applications.
+ In particular, our protocols are especially useful for applications operating
+ over networks with limited bandwidth, such as wireless and sensor networks.
+ Furthermore, we have empirically confirmed this statement by implementing
+ our protocol and comparing it with Fairplay.
+\end_layout
+
+\begin_layout Standard
+This paper makes the following contributions: 
+\end_layout
+
+\begin_layout Standard
+• We present a SFE protocol that uses the OBDD representation of the function
+ to be jointly computed by two parties.
+ Our new protocol along with the correctness proof is provided in Section
+ 3.3.
+ 
+\end_layout
+
+\begin_layout Standard
+• Experimental results based upon a prototype implementation of our protocol
+ demonstrate that for certain functions, our implementation results in a
+ smaller encrypted circuit than Fairplay.
+ For example, for the classic millionaire’s problem, our implementation
+ reduces the bandwidth by approximately 
+\begin_inset Formula $45\%$
+\end_inset
+
+ over Fairplay.
+ Our implementation and experimental results are described in Section 3.4.
+ In summary, this paper presents a new SFE protocol that uses the OBDD represent
+ation.
+ The OBDD representation is more efficient for several practical functions
+ of interest.
+ For other functions, the circuit description (and therefore FairPlay) will
+ be more efficient.
+ This paper presents a generic alternative to Boolean circuits that can
+ be used when appropriate.
+ 
+\end_layout
+
+\begin_layout Subsection
+Ordered Binary Decision Diagrams (OBDDs)
+\end_layout
+
+\begin_layout Standard
+Ordered binary decision diagrams (OBDDs) are a canonical representation
+ for Boolean formulas [23].
+ They are often substantially more compact than traditional normal forms,
+ such as conjunctive normal form (CNF) and disjunctive normal form (DNF),
+ and they can be manipulated efficiently.
+ Therefore, they are widely used for a variety of applications in computer-aided
+ design, including symbolic model checking, verification of combinational
+ logic, and verification of finite state concurrent systems [26].
+ A detailed discussion of OBDDs can be found in Bryant’s seminal article
+ [23].
+ 
+\end_layout
+
+\begin_layout Standard
+Given a Boolean function f(x1, x2, · · · , xn) of n variables x1, · · ·
+ , xn and a total ordering on the n variables, the OBDD for f, denoted by
+ OBDD(f), is a rooted, directed acyclic graph (DAG) with two types of vertices:
+ terminal and nonterminal vertices.
+ OBDD(f) also has the following components:
+\end_layout
+
+\begin_layout Standard
+• Each vertex v has a level, denoted by level (v), between 0 and n.
+ There is a distinguished vertex called root whose level is 0.
+ 
+\end_layout
+
+\begin_layout Standard
+• Each nonterminal vertex v is labeled by a variable var(v) 2 {x1, · · ·
+ , xn} and has two successors, low(v) and high(v).
+ Each terminal vertex is labeled with either 0 or 1.
+ There are only two terminal vertices in an OBDD.
+ Moreover, the labeling of vertices respects the total ordering < on the
+ variables, i.e., if u has a nonterminal successor v, then var(u) < var(v).
+\end_layout
+
+\begin_layout Standard
+Given an assignment A = <x1 b1, · · · , xn bn> to the variables x1, · ·
+ · , xn the value of the Boolean function f(b1, · · · , bn) can be found
+ by starting at the root and following the path where the edges on the path
+ are labeled with b1, · · · , bn.
+ OBDDs can also be used to represent functions with finite range and domain.
+ Let g be a function of n Boolean variables with output that can be encoded
+ by k Boolean variables.
+ The function g can be represented as an array of k OBDDs where the i-th
+ OBDD represents the Boolean function corresponding to the i-th output bit
+ of g.
+ For the rest of the paper we will assume that the function f is a Boolean
+ function, but our protocols can be easily extended for the case of functions
+ with a finite range.
+ We will illustrate OBDDs with an example.
+\end_layout
+
+\begin_layout Standard
+Example 4.1 Figure 4.1 shows the OBDD for the function f(x1, x2, x3, x4) =
+ (x1 = x2) ^ (x3 = x4) of four variables x1, x2, x3, x4 with the total ordering
+ x1 < x2 < x3 < x4.1 Notice that the ordering of the labels on the vertices
+ on any path from the root to the terminals of the OBDD corresponds to the
+ total ordering of the Boolean variables.
+ Consider the assignment hx1 1, x2 1, x3 0, x4 0i.
+ In the OBDD shown in Figure 4.1, if we start at the root and follow the
+ edges corresponding to the assignment, we end up at the terminal vertex
+ labeled with 1.
+ Therefore, the value of f(1, 1, 0, 0) is 1.
+\end_layout
+
+\begin_layout Standard
+One of the advantages of OBDDs is that they can be manipulated efficiently,
+ i.e., given OBDDs for f and g, OBDDs for f ^ g, f _ g, and ¬f can be computed
+ efficiently.
+ We now describe an operation called restriction, which is used in our protocol.
+ Given a n variable Boolean function f(x1, x2, · · · , xn) and a Boolean
+ value b, f |xi b is a Boolean function of n − 1 variables 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+OBDDs are sensitive to variable ordering, e.g., with the ordering x1 < x3
+ < x2 < x4 the OBDD for (x1 = x2) ^ (x3 = x4) has 11 nodes.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+x1, · · · , xi−1, xi+1, · · · , xn defined as follows: f |xi b (x1, · ·
+ · , xi−1, xi+1, · · · , xn) is equal to f(x1, · · · , xi−1, b, xi+1, ·
+ · · , xn).
+ Essentially f |xi b is the function obtained by substituting the value
+ b for the variable xi in the function f.
+ Given the OBDD for f, the OBDD for f |xi b can be efficiently computed
+ [23, Section 4].
+ The restriction operation can be extended to multiple variables in a straightfo
+rward manner, e.g., f |xi b,xj b0 can be computed as (f |xi b) |xj b0 .
+ We explain the algorithm using our example; the reader is referred to [23]
+ for details.
+ Consider the function f(x1, x2, x3, x4) described in example 4.1.
+ The OBDD corresponding to f |x1 1,x3 0 is shown in Figure 4.2.
+ Since x1 1, the root of OBDD (f |x1 1,x3 0) is the left vertex labeled
+ with x2.
+ Consider the two vertices v1 and v2 labeled with x2.
+ If v1 has an edge that points to the vertex labeled with x3, then that
+ edge is changed to point to the right vertex labeled with x4 (because this
+ is the vertex reached if x3 is equal to 1).
+ Notice that in the reduced OBDD shown in Figure 4.2 the vertices that are
+ labeled with x1 and x3 have been eliminated.
+ 
+\end_layout
+
+\begin_layout Subsection
+Two Party SFE with OBDDs
+\end_layout
+
+\begin_layout Standard
+For our protocols, we require a symmetric encryption scheme with two easily
+ attained special properties [76], which are (1) elusive range: an encryption
+ under one key is in the range of an encryption with a different key with
+ negligible probability, and (2) efficiently verifiable range: given a key,
+ a user can efficiently verify that a ciphertext is in the range of that
+ key.
+ These properties are required so that the receiver of the garbled OBDD
+ can correctly decrypt nodes in the OBDD.
+ The formal definition of these properties by Lindell and Pinkas [76] is
+ provided with the proofs.
+ An example of a symmetric key encryption scheme that fulfills these properties
+ is Ek(m) = (r , fk(r) mk 0n), where f : {0, 1}n × {0, 1}n ! {0, 1}2n is
+ a pseudo-random function and r R {0, 1}n is a n-bit random sequence.
+ Unless stated otherwise, all symmetric key encryption schemes in this paper,
+ besides being semantically secure [49, Chapter 5], also require these two
+ properties.
+\end_layout
+
+\begin_layout Standard
+Our protocol also uses a 1-out-of-2 oblivious transfer (denoted OT2 1 )
+ protocol.
+ A 1-out-of-k oblivious transfer OTk 1 is a protocol that lets Bob obtain
+ one of k secrets held by Alice, without Alice learning which secret Bob
+ obtains.
+\end_layout
+
+\begin_layout Standard
+We now give the protocol for securely computing an OBDD between two parties
+ where each party holds a part of the input.
+ Assume f is a Boolean function f(x1, x2, · · · , xn) of n Boolean variables
+ x1, x2, · · · , xn.
+ Let OBDD(f) denote the OBDD for f with the ordering x1 < x2 < · · · < xn.
+ We describe the protocol in stages.
+ Protocol 1 described in Section 4.3.1 assumes that Alice holds inputs correspondi
+ng to the first k variables, and Bob has the inputs corresponding to last
+ n−k variables xk+1, .
+ .
+ .
+ , xn.
+ Protocol 2 described in Section 3.3.2 allows arbitrary sharing of inputs,
+ and it uses the restriction operation on OBDDs described earlier to reduce
+ the bandwidth requirement of the protocol.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Protocol 1
 \end_layout
 
 \end_body
