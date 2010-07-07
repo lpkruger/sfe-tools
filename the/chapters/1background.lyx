@@ -813,6 +813,7 @@ One of the fundamental cryptographic primitives for designing privacy-preserving
 secure function evaluation (SFE)
 \shape default
 .
+ Techniques for optimizing SFE are the topic of this thesis.
  A protocol for SFE enables two parties 
 \begin_inset Formula $A$
 \end_inset
@@ -1180,7 +1181,11 @@ Alice selects a random bit
 \end_layout
 
 \begin_layout Enumerate
-Alice constructs a quadruple 
+Alice constructs a quadruple:
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset Formula $\left(g(x_{a},y_{a})\oplus z_{a},\, g(x_{a},1-y_{a})\oplus z_{a},\, g(1-x_{a},y_{a})\oplus z_{a},\, g(1-x_{a},1-y_{a})\oplus z_{a}\right)$
 \end_inset
 
@@ -1420,8 +1425,8 @@ key "Malin04"
 
 \end_inset
 
-.
- Secure multiparty computation is the basis of the other approach.
+, which is why we use secure multiparty computation in this thesis, the
+ basis of the other approach.
  A survey of such techniques is presented in 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -1430,16 +1435,41 @@ key "PinkasCryptoPPDM02"
 \end_inset
 
 .
- This approach will be used in this thesis.
+ 
 \end_layout
+
+\begin_layout Subsection
+\begin_inset Note Note
+status open
 
 \begin_layout Subsection
 Password Authentication
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
+\begin_inset Note Greyedout
+status open
+
+\begin_layout Plain Layout
+Note: this section still needs work
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 Password authentication is a well-known means for accessing services as
  a user with a known identity.
+ SPAKA (Secure Password Authentication and Key Agreement) is a type of password
+ authentication protocol with security properties that allow for mutual
+ authentication and protection of the password from imposters.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
