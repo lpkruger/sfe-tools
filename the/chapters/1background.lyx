@@ -457,62 +457,29 @@ key "benaloh94"
  
 \end_layout
 
-\begin_layout Description
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-{
+\begin_layout Standard
+The homomorphic encryption methods we use in secure function evaluation
+ must satisfy some properties:
 \end_layout
 
-\end_inset
-
+\begin_layout Description
 Semantically-secure
 \begin_inset space ~
 \end_inset
 
-additive
-\begin_inset space ~
-\end_inset
-
-homomorphic
-\begin_inset space ~
-\end_inset
-
-encryption.
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
- A cipher is 
+cipher A cipher is 
 \shape italic
 semantically secure
 \shape default
- if it satisfies certain properties.
  
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-% that are useful in SFE protocols.
- 
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Goldwasser:Micali"
 
 \end_inset
 
-Let 
+ if it satisfies certain properties.
+ Let 
 \begin_inset Formula $(G,E,D,M)$
 \end_inset
 
@@ -555,61 +522,66 @@ Let
 \end_layout
 
 \begin_layout Itemize
-The encryption scheme is semantically secure 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Goldwasser:Micali"
+Informally, the encryption scheme is semantically secure if the ciphertext
+ leaks no useful information about the plaintext even if the attacker has
+ previously observed many plaintext-ciphertext pairs on plaintexts of his
+ choice.
+ 
+\end_layout
+
+\begin_layout Itemize
+Formally, the encryption scheme is semantically secure if for every probabilisti
+c polynomial time algorithm 
+\begin_inset Formula $A$
+\end_inset
+
+ there exists a probabilistic polynomial-time algorithm 
+\begin_inset Formula $A'$
+\end_inset
+
+ such that for every probabilistic ensemble 
+\begin_inset Formula $\left\{ X_{n}\right\} _{n\in\mathbb{N}}$
+\end_inset
+
+ with 
+\begin_inset Formula $\left|X_{n}\right|\le\mbox{poly}\left(n\right)$
+\end_inset
+
+ every pair of polynomially bounded functions 
+\begin_inset Formula $f,h:\left\{ 0,1\right\} ^{*}\rightarrow\left\{ 0,1\right\} ^{*}$
+\end_inset
+
+, every positive polynomial 
+\begin_inset Formula $p$
+\end_inset
+
+ and all sufficiently large 
+\begin_inset Formula $n$
+\end_inset
+
+, then the following inequality holds:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{\left|X_{n}\right|},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
 
 \end_inset
 
-.
- Informally, this means that the ciphertext leaks no useful information
- about the plaintext even if the attacker has previously observed many plaintext
--ciphertext pairs on plaintexts of his choice.
- Formally, let 
-\begin_inset Formula $P(m)$
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+<\Pr\left[A'\left(1^{n},1^{\left|X_{n}\right|},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
+
 \end_inset
 
- be any efficently computable Boolean predicate 
-\begin_inset Formula $P(m)$
-\end_inset
 
-.
- WLOG, assume that 
-\begin_inset Formula $Pr[P(m)\mbox{ is true}]=p\ge0.5$
-\end_inset
+\end_layout
 
- if 
-\begin_inset Formula $m$
-\end_inset
-
- is chosen uniformly from 
-\begin_inset Formula $M$
-\end_inset
-
-.
- For any 
-\begin_inset Formula $m$
-\end_inset
-
-, the adversary, given 
-\begin_inset Formula $E(m)$
-\end_inset
-
- must not be able to correctly compute 
-\begin_inset Formula $P(m)$
-\end_inset
-
- with probability 
-\begin_inset Formula $p+\epsilon$
-\end_inset
-
-, unless 
-\begin_inset Formula $\epsilon$
-\end_inset
-
- is negligible.
- With any semantically secure encryption scheme, encrypting the same message
+\begin_layout Itemize
+With any semantically secure encryption scheme, encrypting the same message
  twice will yield different ciphertexts with high probability, so 
 \begin_inset Formula $E(m)$
 \end_inset
@@ -629,6 +601,25 @@ key "Goldwasser:Micali"
 \end_inset
 
  
+\end_layout
+
+\begin_layout Description
+Homomorphic
+\begin_inset space ~
+\end_inset
+
+Cipher A cipher is called 
+\emph on
+homomorphic
+\emph default
+ if there is a computable homomorphism between plaintexts and ciphertexts.
+ There exist various homomorphic ciphers with homomorphisms over addition,
+ multiplication, and other operators.
+ An 
+\emph on
+additive homomorphic cipher
+\emph default
+, which will be used in this thesis, satisfies the following homomorphism:
 \end_layout
 
 \begin_layout Itemize
@@ -710,8 +701,8 @@ There exists a computable function
 
 \begin_layout Standard
 There are several encryption schemes that satisfy these properties, of which
- Paillier's encryption scheme, based on composite residue classes, is the
- most widely used 
+ Paillier's encryption scheme, based on composite residue classes, is widely
+ used for its efficiency 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Paillier99"
