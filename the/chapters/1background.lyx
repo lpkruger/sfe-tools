@@ -1,4 +1,4 @@
-#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.6.1 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -43,7 +43,7 @@
 \begin_body
 
 \begin_layout Section
-Background and Related Work
+Background and Cryptographic Primitives
 \end_layout
 
 \begin_layout Subsection
@@ -291,7 +291,15 @@ key "Rabin81"
 \begin_inset Formula $OT_{n}^{1}$
 \end_inset
 
-, is a protocol between two parties, the Chooser and the Sender.
+, is a protocol between two parties, the 
+\emph on
+Chooser
+\emph default
+ and the 
+\emph on
+Sender
+\emph default
+.
  The Sender's inputs into the protocol are 
 \begin_inset Formula $n$
 \end_inset
@@ -339,6 +347,7 @@ reference "sub:Comparison-with-Naor-Pinkas"
 \end_inset
 
 .
+ The steps of the Naor-Pinkas OT protocol are summarized next.
  We will also investigate other OT methods based on modular square roots
  in chapter 
 \begin_inset CommandInset ref
@@ -347,7 +356,185 @@ reference "BROKEN: Ref: sec:OT-SquareRoots"
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Enumerate
+Let 
+\begin_inset Formula $q$
+\end_inset
+
+ be a prime number and let 
+\begin_inset Formula $g$
+\end_inset
+
+ be a generator for the field 
+\begin_inset Formula $\mathbb{Z}_{q}$
+\end_inset
+
 .
+ 
+\begin_inset Formula $q$
+\end_inset
+
+ and 
+\begin_inset Formula $g$
+\end_inset
+
+ are known to both parties.
+ Also, let 
+\begin_inset Formula $s\in\left\{ 0,1\right\} $
+\end_inset
+
+ be the chooser's secret choice, and let 
+\begin_inset Formula $M_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $M_{1}$
+\end_inset
+
+ be the sender's messages.
+ At the end of the protocol, the chooser should learn 
+\begin_inset Formula $M_{s}$
+\end_inset
+
+ only and no party should learn any other information.
+\end_layout
+
+\begin_layout Enumerate
+The sender picks a random number 
+\begin_inset Formula $C\in\mathbb{Z}_{q}$
+\end_inset
+
+ and sends 
+\begin_inset Formula $C$
+\end_inset
+
+ to the chooser
+\emph on
+.
+\end_layout
+
+\begin_layout Enumerate
+The chooser picks a random number 
+\begin_inset Formula $k\in\mathbb{Z}_{q}$
+\end_inset
+
+ and computes two values: 
+\begin_inset Formula $K_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $K_{1}$
+\end_inset
+
+, where 
+\begin_inset Formula $K_{s}=g^{k}$
+\end_inset
+
+ and 
+\begin_inset Formula $K_{1-s}=\frac{C}{g^{k}}$
+\end_inset
+
+.
+ The chooser sends 
+\begin_inset Formula $K_{0}$
+\end_inset
+
+ to the sender.
+\end_layout
+
+\begin_layout Enumerate
+The sender encrypts 
+\begin_inset Formula $M_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $M_{1}$
+\end_inset
+
+.
+ Specifically, the sender chooses random values 
+\begin_inset Formula $r_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $r_{1}$
+\end_inset
+
+ and computes 
+\begin_inset Formula $E_{0}=E_{K_{0}^{r_{0}}}\left(M_{0}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $E_{1}=E_{K_{1}^{r_{1}}}\left(M_{1}\right)$
+\end_inset
+
+ where 
+\begin_inset Formula $E_{k}\left(M\right)$
+\end_inset
+
+ is a conventional encryption function.
+ Ideally 
+\begin_inset Formula $E_{k}\left(M\right)=H\left(k\right)\oplus M$
+\end_inset
+
+ where 
+\begin_inset Formula $H\left(x\right)$
+\end_inset
+
+ is a random oracle, and in practice is typically implemented by a secure
+ hash function.
+ The values 
+\begin_inset Formula $g^{r_{0}}$
+\end_inset
+
+, 
+\begin_inset Formula $E_{0}$
+\end_inset
+
+, 
+\begin_inset Formula $g^{r_{1}}$
+\end_inset
+
+ and 
+\begin_inset Formula $E_{1}$
+\end_inset
+
+ are sent to the chooser.
+\end_layout
+
+\begin_layout Enumerate
+The chooser can decrypt message 
+\begin_inset Formula $E_{s}=E_{K_{s}^{r_{s}}}\left(M_{s}\right)$
+\end_inset
+
+ by computing the key 
+\begin_inset Formula $K_{s}^{r_{s}}=\left(g^{r_{s}}\right)^{k}$
+\end_inset
+
+.
+ Thus the chooser learns 
+\begin_inset Formula $M_{s}$
+\end_inset
+
+.
+ The chooser cannot decrypt 
+\begin_inset Formula $E_{1-s}$
+\end_inset
+
+ unless the chooser can find 
+\begin_inset Formula $k'$
+\end_inset
+
+ such that 
+\begin_inset Formula $g^{k'}=\frac{C}{g^{k}}$
+\end_inset
+
+.
+ Thus, the security of Naor-Pinkas OT depends on the Diffie-Hellman assumption
+ that finding discrete logarithms is a hard problem.
 \end_layout
 
 \begin_layout Subsubsection
