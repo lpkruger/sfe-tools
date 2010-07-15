@@ -1,4 +1,4 @@
-#LyX 1.6.6.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -65,15 +65,7 @@ The ease and transparency of information flow on the Internet has heightened
 \begin_layout Standard
 One of the fundamental cryptographic primitives for designing privacy-preserving
  protocols is secure function evaluation (SFE).
- A protocol for SFE enables two parties 
-\begin_inset Formula $A$
-\end_inset
-
- and 
-\begin_inset Formula $B$
-\end_inset
-
- with inputs 
+ A protocol for SFE enables two parties A and B with inputs 
 \begin_inset Formula $x$
 \end_inset
 
@@ -86,11 +78,7 @@ One of the fundamental cryptographic primitives for designing privacy-preserving
 \end_inset
 
  while preserving the privacy of the two parties (i.e., at the end of the
- protocol, party 
-\begin_inset Formula $A$
-\end_inset
-
- only knows its input 
+ protocol, party A only knows its input 
 \begin_inset Formula $x$
 \end_inset
 
@@ -98,11 +86,7 @@ One of the fundamental cryptographic primitives for designing privacy-preserving
 \begin_inset Formula $f(x,y)$
 \end_inset
 
-, and similarly for 
-\begin_inset Formula $B$
-\end_inset
-
-).
+, and similarly for B).
  Yao showed that for a polynomial-time computable function 
 \begin_inset Formula $f$
 \end_inset
@@ -230,85 +214,257 @@ Ordered binary decision diagrams (OBDDs) are a canonical representation
 \end_layout
 
 \begin_layout Standard
-Given a Boolean function f(x1, x2, · · · , xn) of n variables x1, · · ·
- , xn and a total ordering on the n variables, the OBDD for f, denoted by
- OBDD(f), is a rooted, directed acyclic graph (DAG) with two types of vertices:
- terminal and nonterminal vertices.
+Given a Boolean function 
+\begin_inset Formula $f(x_{1},x_{2},\cdots,x_{n})$
+\end_inset
+
+ of n variables 
+\begin_inset Formula $x_{1},\cdots,x_{n}$
+\end_inset
+
+ and a total ordering on the n variables, the OBDD for f, denoted by OBDD(f),
+ is a rooted, directed acyclic graph (DAG) with two types of vertices: terminal
+ and nonterminal vertices.
  OBDD(f) also has the following components:
 \end_layout
 
 \begin_layout Standard
-• Each vertex v has a level, denoted by level (v), between 0 and n.
- There is a distinguished vertex called root whose level is 0.
+• Each vertex 
+\begin_inset Formula $v$
+\end_inset
+
+ has a level, denoted by 
+\begin_inset Formula $level(v)$
+\end_inset
+
+, between 
+\begin_inset Formula $0$
+\end_inset
+
+ and 
+\begin_inset Formula $n$
+\end_inset
+
+.
+ There is a distinguished vertex called root whose level is 
+\begin_inset Formula $0$
+\end_inset
+
+.
  
 \end_layout
 
 \begin_layout Standard
-• Each nonterminal vertex v is labeled by a variable var(v) 2 {x1, · · ·
- , xn} and has two successors, low(v) and high(v).
- Each terminal vertex is labeled with either 0 or 1.
+• Each nonterminal vertex 
+\begin_inset Formula $v$
+\end_inset
+
+ is labeled by a variable 
+\begin_inset Formula $var(v)\in\left\{ x_{1},\cdots,x_{n}\right\} $
+\end_inset
+
+ and has two successors, 
+\begin_inset Formula $low(v)$
+\end_inset
+
+ and 
+\begin_inset Formula $high(v)$
+\end_inset
+
+.
+ Each terminal vertex is labeled with either 
+\begin_inset Formula $0$
+\end_inset
+
+ or 
+\begin_inset Formula $1$
+\end_inset
+
+.
  There are only two terminal vertices in an OBDD.
- Moreover, the labeling of vertices respects the total ordering < on the
- variables, i.e., if u has a nonterminal successor v, then var(u) < var(v).
+ Moreover, the labeling of vertices respects the total ordering 
+\begin_inset Formula $<$
+\end_inset
+
+ on the variables, i.e., if 
+\begin_inset Formula $u$
+\end_inset
+
+ has a nonterminal successor 
+\begin_inset Formula $v$
+\end_inset
+
+, then 
+\begin_inset Formula $var(u)<var(v)$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
-Given an assignment A = <x1 b1, · · · , xn bn> to the variables x1, · ·
- · , xn the value of the Boolean function f(b1, · · · , bn) can be found
- by starting at the root and following the path where the edges on the path
- are labeled with b1, · · · , bn.
+Given an assignment 
+\begin_inset Formula $\mathcal{A}=\left\langle x_{1}\leftarrow b_{1},\cdots,x_{n}\leftarrow b_{n}\right\rangle $
+\end_inset
+
+ to the variables 
+\begin_inset Formula $x_{1},\cdots,x_{n}$
+\end_inset
+
+ the value of the Boolean function 
+\begin_inset Formula $f\left(b_{1},\cdots,b_{n}\right)$
+\end_inset
+
+ can be found by starting at the root and following the path where the edges
+ on the path are labeled with 
+\begin_inset Formula $b_{1},\cdots,b_{n}$
+\end_inset
+
+.
  OBDDs can also be used to represent functions with finite range and domain.
- Let g be a function of n Boolean variables with output that can be encoded
- by k Boolean variables.
- The function g can be represented as an array of k OBDDs where the i-th
- OBDD represents the Boolean function corresponding to the i-th output bit
- of g.
- For the rest of the paper we will assume that the function f is a Boolean
- function, but our protocols can be easily extended for the case of functions
- with a finite range.
+ Let 
+\begin_inset Formula $g$
+\end_inset
+
+ be a function of 
+\begin_inset Formula $n$
+\end_inset
+
+ Boolean variables with output that can be encoded by 
+\begin_inset Formula $k$
+\end_inset
+
+ Boolean variables.
+ The function 
+\begin_inset Formula $g$
+\end_inset
+
+ can be represented as an array of 
+\begin_inset Formula $k$
+\end_inset
+
+ OBDDs where the 
+\begin_inset Formula $i$
+\end_inset
+
+-th OBDD represents the Boolean function corresponding to the 
+\begin_inset Formula $i$
+\end_inset
+
+-th output bit of 
+\begin_inset Formula $g$
+\end_inset
+
+.
+ For the rest of the paper we will assume that the function 
+\begin_inset Formula $f$
+\end_inset
+
+ is a Boolean function, but our protocols can be easily extended for the
+ case of functions with a finite range.
  We will illustrate OBDDs with an example.
 \end_layout
 
 \begin_layout Standard
-Example 4.1 Figure 4.1 shows the OBDD for the function f(x1, x2, x3, x4) =
- (x1 = x2) ^ (x3 = x4) of four variables x1, x2, x3, x4 with the total ordering
- x1 < x2 < x3 < x4.1 Notice that the ordering of the labels on the vertices
- on any path from the root to the terminals of the OBDD corresponds to the
- total ordering of the Boolean variables.
- Consider the assignment hx1 1, x2 1, x3 0, x4 0i.
- In the OBDD shown in Figure 4.1, if we start at the root and follow the
- edges corresponding to the assignment, we end up at the terminal vertex
- labeled with 1.
- Therefore, the value of f(1, 1, 0, 0) is 1.
-\end_layout
+Example 4.1 Figure 4.1 shows the OBDD for the function 
+\begin_inset Formula $f(x_{1},x_{2},x_{3},x_{4})=(x_{1}=x_{2})\wedge(x_{3}=x_{4})$
+\end_inset
 
-\begin_layout Standard
-One of the advantages of OBDDs is that they can be manipulated efficiently,
- i.e., given OBDDs for f and g, OBDDs for f ^ g, f _ g, and ¬f can be computed
- efficiently.
- We now describe an operation called restriction, which is used in our protocol.
- Given a n variable Boolean function f(x1, x2, · · · , xn) and a Boolean
- value b, f |xi b is a Boolean function of n − 1 variables 
-\end_layout
+ of four variables 
+\begin_inset Formula $x_{1},x_{2},x_{3},x_{4}$
+\end_inset
 
-\begin_layout Standard
+ with the total ordering 
+\begin_inset Formula $x_{1}<x_{2}<x_{3}<x_{4}$
+\end_inset
+
+.
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-OBDDs are sensitive to variable ordering, e.g., with the ordering x1 < x3
- < x2 < x4 the OBDD for (x1 = x2) ^ (x3 = x4) has 11 nodes.
+OBDDs are sensitive to variable ordering, e.g., with the ordering 
+\begin_inset Formula $x_{1}<x_{3}<x_{2}<x_{4}$
+\end_inset
+
+ the OBDD for 
+\begin_inset Formula $(x1=x2)\wedge(x3=x4)$
+\end_inset
+
+ has 
+\begin_inset Formula $11$
+\end_inset
+
+ nodes.
 \end_layout
 
 \end_inset
 
+ Notice that the ordering of the labels on the vertices on any path from
+ the root to the terminals of the OBDD corresponds to the total ordering
+ of the Boolean variables.
+ Consider the assignment 
+\begin_inset Formula $\left\langle x_{1}\leftarrow1,x_{2}\leftarrow1,x_{3}\leftarrow0,x_{4}\leftarrow0\right\rangle $
+\end_inset
 
+.
+ In the OBDD shown in Figure 4.1, if we start at the root and follow the
+ edges corresponding to the assignment, we end up at the terminal vertex
+ labeled with 
+\begin_inset Formula $1$
+\end_inset
+
+.
+ Therefore, the value of 
+\begin_inset Formula $f(1,1,0,0)$
+\end_inset
+
+ is 
+\begin_inset Formula $1$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
-x1, · · · , xi−1, xi+1, · · · , xn defined as follows: f |xi b (x1, · ·
- · , xi−1, xi+1, · · · , xn) is equal to f(x1, · · · , xi−1, b, xi+1, ·
- · · , xn).
+One of the advantages of OBDDs is that they can be manipulated efficiently,
+ i.e., given OBDDs for f and g, OBDDs for 
+\begin_inset Formula $f\wedge g$
+\end_inset
+
+, 
+\begin_inset Formula $f\vee g$
+\end_inset
+
+, and 
+\begin_inset Formula $\neg f$
+\end_inset
+
+ can be computed efficiently.
+ We now describe an operation called restriction, which is used in our protocol.
+ Given a n variable Boolean function 
+\begin_inset Formula $f\left(x_{1},\cdots,x_{n}\right)$
+\end_inset
+
+ and a Boolean value b, f |xi b is a Boolean function of 
+\begin_inset Formula $n-1$
+\end_inset
+
+ variables 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $x_{1},\cdots,x_{i-1},x_{i+1},\cdots,x_{n}$
+\end_inset
+
+ defined as follows: 
+\begin_inset Formula $f_{|x_{i}=b}\left(x_{1},\cdots,x_{i-1},x_{i+1},\cdots,x_{n}\right)$
+\end_inset
+
+ is equal to 
+\begin_inset Formula $f\left(x_{1},\cdots,x_{i-1},b,x_{i+1},\cdots,x_{n}\right)$
+\end_inset
+
+.
  Essentially f |xi b is the function obtained by substituting the value
  b for the variable xi in the function f.
  Given the OBDD for f, the OBDD for f |xi b can be efficiently computed
@@ -364,16 +520,36 @@ Our protocol also uses a 1-out-of-2 oblivious transfer (denoted OT2 1 )
 \begin_layout Standard
 We now give the protocol for securely computing an OBDD between two parties
  where each party holds a part of the input.
- Assume f is a Boolean function f(x1, x2, · · · , xn) of n Boolean variables
- x1, x2, · · · , xn.
- Let OBDD(f) denote the OBDD for f with the ordering x1 < x2 < · · · < xn.
+ Assume f is a Boolean function 
+\begin_inset Formula $f\left(x_{1},x_{2},\cdots,x_{n}\right)$
+\end_inset
+
+ of 
+\begin_inset Formula $n$
+\end_inset
+
+ Boolean variables 
+\begin_inset Formula $x_{1},x_{2},\cdots,x_{n}$
+\end_inset
+
+.
+ Let OBDD(f) denote the OBDD for f with the ordering 
+\begin_inset Formula $x_{1}<x_{2}<\cdots<x_{n}$
+\end_inset
+
+.
  We describe the protocol in stages.
  Protocol 1 described in Section 4.3.1 assumes that Alice holds inputs correspondi
 ng to the first k variables, and Bob has the inputs corresponding to last
- n−k variables xk+1, .
- .
- .
- , xn.
+ 
+\begin_inset Formula $n-k$
+\end_inset
+
+ variables 
+\begin_inset Formula $x_{k+1},\cdots,x_{n}$
+\end_inset
+
+.
  Protocol 2 described in Section 3.3.2 allows arbitrary sharing of inputs,
  and it uses the restriction operation on OBDDs described earlier to reduce
  the bandwidth requirement of the protocol.
