@@ -502,8 +502,11 @@ For our protocols, we require a symmetric encryption scheme with two easily
  The formal definition of these properties by Lindell and Pinkas [76] is
  provided with the proofs.
  An example of a symmetric key encryption scheme that fulfills these properties
- is Ek(m) = (r , fk(r) mk 0n), where f : {0, 1}n × {0, 1}n ! {0, 1}2n is
- a pseudo-random function and r R {0, 1}n is a n-bit random sequence.
+ is Ek(m) = (r , fk(r) mk 0n), where 
+\begin_inset Formula $f:\left\{ 0,1\right\} ^{n}\times\left\{ 0,1\right\} ^{n}\rightarrow\left\{ 0,1\right\} ^{2n}$
+\end_inset
+
+ is a pseudo-random function and r R {0, 1}n is a n-bit random sequence.
  Unless stated otherwise, all symmetric key encryption schemes in this paper,
  besides being semantically secure [49, Chapter 5], also require these two
  properties.
