@@ -1,97 +1,218 @@
 
-\section{Background and Related Work}
+\chapter{Background and Cryptographic Primitives}
 
 
-\subsection{Primitives \label{sub:Primitives}}
+\section{Threat Models\label{sub:Threat-Models}}
+
+It is well known that there are many threats and malicious parties
+on the internet, as discussed in the previous section. We now present
+formalizations of these threats into threat models from the literature,
+suitable for formal cryptographic analysis. The three threat models
+presented here, known as the {}``semi-honest'', {}``malicious'',
+and {}``covert'' models, cover a variety of assumptions and levels
+of trust among cooperating and non-cooperating parties, ranging from
+parties who basically trust each other but want to keep information
+private, all the way to parties who have no trust relationship at
+all. In particular, the {}``malicious'' model is strong enough to
+encompass malicious behavior from any party in a protocol, as will
+be discussed below.
+
+In the {}``semi-honest'' threat model, also known as {}``honest
+but curious'', or {}``passive'', \cite{GMW87} a party to the computation
+is assumed to behave correctly and follow the protocol as prescribed.
+However, the party also runs additional probabilistic polynomially
+bounded computation on the side in order to learn information to which
+he is not entitled. A security proof using the semi-honest threat
+model implies that the protocol as designed does not {}``leak''
+information. The semi-honest model is an important theoretical tool
+despite the fact that it is weaker than the malicious model and does
+not capture the full range of malicious behaviors we would expect
+of an adversary. It is useful because a protocol that has been proven
+secure in the semi-honest model is guarenteed to have an analogous
+protocol that is secure in the malicious model \cite{GMW87}. The
+proof of this theorem is constructive and involves extending the protocol
+in an automated way, using a protocol {}``compiler'', to a more
+secure protocol. Essentially, the protocol compiler inserts additional
+steps into the protocol to force the parties to prove to one another
+their faithful adherence to the protocol. This fact notwithstanding,
+the semi-honest model may itself be a realistic model in certain cases,
+for example, when the parties communicating need to preserve privacy
+of data from one another, but also have a pre-existing trust relationship
+sufficient to believe the other party will not maliciously attempt
+to cheat the protocol.
+
+In the {}``malicious'' threat model, an adversarial party is free
+to use any available methods to thwart the computation, including
+sending false or inconsistent messages at any step of the protocol.
+The malicious threat model naturally characterizes the malicious behavior
+that a secure protocol would need to protect against. If a protocol
+is shown to be secure in the malicious threat model, then we can reasonably
+assume that a malicious party or interloper will not be able to learn
+any private information by attacking the protocol.
+
+In the {}``covert'' threat model, similar to the {}``malicious''
+model, the adversary is also free to use any available methods to
+thwart the computation. Although the allowable behavior of the adversary
+is the same as in the malicious model, the security guarentee is relaxed.
+In particular, a protocol is considered secure in the covert model
+if the probability of the attacker not getting caught is small but
+non-negligable. The covert model can be considered appropriate for
+real-world scenarios only when the consequences to the adversary for
+being caught are a significant deterrence to trying to cheat (\ie
+loss of reputation, monetary or legal penalties, etc) compared to
+the benefit of a successful attack. \cite{aumannlindell}
 
 
-\subsubsection{Oblivious Transfer}
+\section{Primitives \label{sub:Primitives}}
+
+With these threat models firmly in mind, we can begin examining methods
+for constructing protocols that are secure in one or more of the threat
+models. We find in the design of secure protocols that certain sub-protocols
+and techniques are used so frequently as building blocks that they
+deserve to be called primitives. These primitives solve simple problems,
+such as one party needing to choose a value from another party in
+a privacy preserving way, and also are self-contained cryptographic
+steps that cannot be decomposed into still simpler steps.
+
+
+\subsection{Oblivious Transfer}
 
 Oblivious transfer is a protocol originally proposed by Rabin \cite{Rabin81}.
 Informally, a 1-out-of-n oblivious transfer, denoted as $OT_{n}^{1}$,
-is a protocol between two parties, the Chooser and the Sender. The
-Sender's inputs into the protocol are $n$ values $v_{1},...,v_{n}$.
+is a protocol between two parties, the \emph{Chooser} and the \emph{Sender}.
+The Sender's inputs into the protocol are $n$ values $v_{1},...,v_{n}$.
 The Chooser's input is an index $i$ such that $1\le i\le n$. As
 a result of the protocol, the Chooser receives $v_{i}$, but does
 not learn any additional information about the rest of the Sender's
-values. The Sender learns nothing. 
+values. The Sender learns nothing.
 
-The Naor-Pinkas OT protocol \cite{NaorPinkas99}, based on discrete
-logarithms, is a very efficient OT protocol that we have chosen for practical
-implementations.  The performance characteristics of this protocol
-are discussed in chapter \ref{sub:Comparison-with-Naor-Pinkas}.  We will also
-investigate other OT methods based on modular square roots in a later section.
+There are a variety of OT protocols presented in cryptographic literature.
+We focus on the Naor-Pinkas OT protocol \cite{NaorPinkas99}, based
+on discrete logarithms, because it is a very efficient OT protocol
+that we have chosen for practical implementations. The performance
+characteristics of this protocol are discussed in chapter \ref{sub:Comparison-with-Naor-Pinkas}.
+The steps of the Naor-Pinkas OT protocol are summarized next. We will
+also investigate other OT methods based on modular square roots in
+chapter \ref{BROKEN: Ref: sec:OT-SquareRoots}
+\begin{enumerate}
+\item Let $q$ be a prime number and let $g$ be a generator for the field
+$\mathbb{Z}_{q}$. $q$ and $g$ are known to both parties. Also,
+let $s\in\left\{ 0,1\right\} $ be the chooser's secret choice, and
+let $M_{0}$ and $M_{1}$ be the sender's messages. At the end of
+the protocol, the chooser should learn $M_{s}$ only and no party
+should learn any other information.
+\item The sender picks a random number $C\in\mathbb{Z}_{q}$ and sends $C$
+to the chooser\emph{.}
+\item The chooser picks a random number $k\in\mathbb{Z}_{q}$ and computes
+two values: $K_{0}$ and $K_{1}$, where $K_{s}=g^{k}$ and $K_{1-s}=\frac{C}{g^{k}}$.
+The chooser sends $K_{0}$ to the sender.
+\item The sender encrypts $M_{0}$ and $M_{1}$. Specifically, the sender
+chooses random values $r_{0}$ and $r_{1}$ and computes $E_{0}=E_{K_{0}^{r_{0}}}\left(M_{0}\right)$
+and $E_{1}=E_{K_{1}^{r_{1}}}\left(M_{1}\right)$ where $E_{k}\left(M\right)$
+is a conventional encryption function. Ideally $E_{k}\left(M\right)=H\left(k\right)\oplus M$
+where $H\left(x\right)$ is a random oracle, and in practice is typically
+implemented by a secure hash function. The values $g^{r_{0}}$, $E_{0}$,
+$g^{r_{1}}$ and $E_{1}$ are sent to the chooser.
+\item The chooser can decrypt message $E_{s}=E_{K_{s}^{r_{s}}}\left(M_{s}\right)$
+by computing the key $K_{s}^{r_{s}}=\left(g^{r_{s}}\right)^{k}$.
+Thus the chooser learns $M_{s}$. The chooser cannot decrypt $E_{1-s}$
+unless the chooser can find $k'$ such that $g^{k'}=\frac{C}{g^{k}}$.
+Thus, the security of Naor-Pinkas OT depends on the Diffie-Hellman
+assumption that finding discrete logarithms is a hard problem.
+\end{enumerate}
 
-\subsubsection{Homomorphic Encryption}
+\subsection{Homomorphic Encryption}
 
 Homomorphic Encryption is a class of public key encryption algorithms
-that satisfies a homomorphism property.  If $E(x)$ is an encryption function
-for a cipher, then an additive homomorphic cipher
-satisfies $E(a+b)=E(a)\oplus E(b)$ where $\oplus$ is an efficiently
-computable operator that requires no secret information.  Similarly,
-a multiplicative homomorphic cipher satisfies $E(ab)=E(a)\otimes E(b)$.
-Some of the most famous public key ciphers have the multiplicative
-homomorphic property, including the Elgamal cipher \cite{elgamal85}
-and the RSA cipher \cite{rivest83rsa}. The homomorphic properties
-have traditionally been considered undesirable for general purpose
-cryptography \cite{jmsw02}. %
+that satisfies a homomorphism property. If $E(x)$ is an encryption
+function for a cipher, then an additive homomorphic cipher satisfies
+$E(a+b)=E(a)\oplus E(b)$ where $\oplus$ is an efficiently computable
+operator that requires no secret information. Similarly, a multiplicative
+homomorphic cipher satisfies $E(ab)=E(a)\otimes E(b)$. Some of the
+most famous public key ciphers have the multiplicative homomorphic
+property, including the Elgamal cipher \cite{elgamal85} and the RSA
+cipher \cite{rivest83rsa}. The homomorphic properties have traditionally
+been considered undesirable for general purpose cryptography \cite{jmsw02}.
+%
 \begin{comment}
-mention Cramer-Shoup?
+mention Cramer-Shoup? 
 \end{comment}
 {}Specifically, the malleability of ciphertexts can allow the adversary
 to violate integrity constraints, and also make such ciphers insecure
 against %
 \begin{comment}
- because the homomorphic structure aids in cryptanalysis and allows
+because the homomorphic structure aids in cryptanalysis and allows
 encrypted messages to be modified, violating integrity constraints.
-\cite{jmsw02}. This leads to insecurity against
+\cite{jmsw02}. This leads to insecurity against 
 \end{comment}
 {}\emph{adaptive chosen ciphertext} (CCA2) attacks \cite{bleichenbacher98chosen}.
-However, despite these concerns, homomorphic encryption schemes have found use in novel
-cryptographic applications such as secure voting \cite{benaloh94}. 
+However, despite these concerns, homomorphic encryption schemes have
+found use in novel cryptographic applications such as secure voting
+\cite{benaloh94}. 
+
+The homomorphic encryption methods we use in secure function evaluation
+must satisfy some properties:
 \begin{description}
-\item [{Semantically-secure~additive~homomorphic~encryption.}] 
-A cipher is {\it semantically secure} if it satisfies certain properties.
-% that are useful in SFE protocols. 
-Let $(G,E,D,M)$ be a public-key encryption scheme.
-$E_{e}(m)$ and $D_{d}(c)$ are the encryption and decryption functions
-for plaintext $m$ and ciphertext $c$, with respect to a public/private
-key pair ($e,d)$. $G$ is a key generation function that can be used
-to randomly generate $(e,d)$ pairs, and $M$ is the message space
-respectively. \end{description}
+\item [{Semantically-secure~cipher}] A cipher is \textit{semantically
+secure} \cite{Goldwasser:Micali} if it satisfies certain properties.
+Let $(G,E,D,M)$ be a public-key encryption scheme. $E_{e}(m)$ and
+$D_{d}(c)$ are the encryption and decryption functions for plaintext
+$m$ and ciphertext $c$, with respect to a public/private key pair
+($e,d)$. $G$ is a key generation function that can be used to randomly
+generate $(e,d)$ pairs, and $M$ is the message space respectively. \end{description}
 \begin{itemize}
-\item The encryption scheme is semantically secure \cite{Goldwasser:Micali}.
-Informally, this means that the ciphertext leaks no useful information
-about the plaintext even if the attacker has previously observed many
-plaintext-ciphertext pairs on plaintexts of his choice. Formally,
-let $P(m)$ be any efficently computable Boolean predicate $P(m)$.
-WLOG, assume that $Pr[P(m)\mbox{ is true}]=p\ge0.5$ if $m$ is chosen
-uniformly from $M$. For any $m$, the adversary, given $E(m)$ must
-not be able to correctly compute $P(m)$ with probability $p+\epsilon$,
-unless $\epsilon$ is negligible. With any semantically secure encryption
-scheme, encrypting the same message twice will yield different ciphertexts
-with high probability, so $E(m)$ must be a randomized one-to-many
-function representing a set of possible ciphertexts that can be obtained
-by encrypting $m$. Naturally, if $m_{1}\neq m_{2}$, then $E(m_{1})\cap E(m_{2})=\emptyset$
+\item Informally, the encryption scheme is semantically secure if the ciphertext
+leaks no useful information about the plaintext even if the attacker
+has previously observed many plaintext-ciphertext pairs on plaintexts
+of his choice. 
+\item Formally, the encryption scheme is semantically secure if for every
+probabilistic polynomial time algorithm $A$ there exists a probabilistic
+polynomial-time algorithm $A'$ such that for every probabilistic
+ensemble $\left\{ X_{n}\right\} _{n\in\mathbb{N}}$ with $|X_{n}|\le\mbox{poly}\left(n\right)$
+every pair of polynomially bounded functions $f,h:\left\{ 0,1\right\} ^{*}\rightarrow\left\{ 0,1\right\} ^{*}$,
+every positive polynomial $p$ and all sufficiently large $n$, then
+the following inequality holds:
+\end{itemize}
+\[
+\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{|X_{n}|},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
+
+
+\[
+<\Pr\left[A'\left(1^{n},1^{|X_{n}|},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
+
+\begin{itemize}
+\item With any semantically secure encryption scheme, encrypting the same
+message twice will yield different ciphertexts with high probability,
+so $E(m)$ must be a randomized one-to-many function representing
+a set of possible ciphertexts that can be obtained by encrypting $m$.
+Naturally, if $m_{1}\neq m_{2}$, then $E(m_{1})\cap E(m_{2})=\emptyset$ \end{itemize}
+\begin{description}
+\item [{Homomorphic~Cipher}] A cipher is called \emph{homomorphic} if
+there is a computable homomorphism between plaintexts and ciphertexts.
+There exist various homomorphic ciphers with homomorphisms over addition,
+multiplication, and other operators. An \emph{additive homomorphic
+cipher}, which will be used in this thesis, satisfies the following
+homomorphism:\end{description}
+\begin{itemize}
 \item There exists a computable function $f$, computable without the private
 key or other secret information, such that for all messages $m_{1}$,
 $m_{2}$, and $c_{1}\in E(m_{1})$, $c_{2}\in E(m_{2})$, the following
 property holds:\\
-$f\left(c_{1},c_{2}\right)\in E(m_{1}+m_{2})$
+ $f\left(c_{1},c_{2}\right)\in E(m_{1}+m_{2})$ 
 \item There exists a computable function $g$ such that for all $m_{1}\in M$
 and $\alpha\in M$, $c_{1}\in E(m)$ implies that $g(c_{1},\alpha)\in E(\alpha m_{1})$.
 In addition, $g$ must be computable without using the private key
 or other secret information. This property follows automatically from
 the previous requirement, because it is always possible to define
-$g$ in terms of $O(\log\alpha)$ invocations of the function $f$.
+$g$ in terms of $O(\log\alpha)$ invocations of the function $f$. 
 \end{itemize}
 There are several encryption schemes that satisfy these properties,
 of which Paillier's encryption scheme, based on composite residue
-classes, is the most widely used \cite{Paillier99}. In the Paillier
-cryptosystem, the message space is all $m<n$, where $n=pq$ for $p$
-and $q$ prime. The ciphertext space is $E(m)<n^{2}$. Let $g<n^{2}$
-such that $g$ has order $n\alpha$. Using the public key $(g,n)$,
-the encryption function $E(m)=g^{m}r^{n}\left(\mbox{mod }n^{2}\right)$,
+classes, is widely used for its efficiency \cite{Paillier99}. In
+the Paillier cryptosystem, the message space is all $m<n$, where
+$n=pq$ for $p$ and $q$ prime. The ciphertext space is $E(m)<n^{2}$.
+Let $g<n^{2}$ such that $g$ has order $n\alpha$. Using the public
+key $(g,n)$, the encryption function $E(m)=g^{m}r^{n}\left(\mbox{mod }n^{2}\right)$,
 for a random $r<n$. Using the private key $\lambda=\mbox{lcm}(p-1,q-1)$,
 the decryption function for ciphertext $c$ is $m=\frac{L\left(c^{\lambda}\mbox{ mod }n^{2}\right)}{L\left(g^{\lambda}\mbox{ mod }n^{2}\right)}\mbox{ mod }n$
 where $L(u)=\frac{u-1}{n}$ is a well-defined function for $u\equiv1\;(\mbox{mod }n)$.
@@ -100,16 +221,17 @@ which satisfies the additive homomorphic property. Further details
 can be found in \cite{Paillier99}.
 
 
-\subsection{Secure Function Evaluation}
+\section{Secure Function Evaluation}
 
 One of the fundamental cryptographic primitives for designing privacy-preserving
-protocols is \textit{secure function evaluation (SFE)}. A protocol
-for SFE enables two parties $A$ and $B$ with inputs $x$ and $y$
-respectively to jointly compute a function $f(x,y)$ while preserving
-the privacy of the two parties' respective inputs. At the end of the
-protocol, party $A$ only knows its input $x$ and the value of the
-function $f(x,y)$, and a similar condition holds for $B$. It was
-proven by Yao \cite{Yao86} and Goldreich, Micali, and Wigderson \cite{GMW87}
+protocols is \textit{secure function evaluation (SFE)}. Techniques
+for optimizing SFE are the topic of this thesis. A protocol for SFE
+enables two parties $A$ and $B$ with inputs $x$ and $y$ respectively
+to jointly compute a function $f(x,y)$ while preserving the privacy
+of the two parties' respective inputs. At the end of the protocol,
+party $A$ only knows its input $x$ and the value of the function
+$f(x,y)$, and a similar condition holds for $B$. It was proven by
+Yao \cite{Yao86} and Goldreich, Micali, and Wigderson \cite{GMW87}
 that for any polynomially-computable function $f$, there exist protocols
 for securely evaluating $f$ that execute in polynomial time. Both
 proofs are constructive, and provide a method for transforming a Boolean
@@ -117,14 +239,14 @@ circuit description of the function $f$ into a protocol for secure
 evaluation of $f$. These protocols are summarized below.
 
 
-\subsubsection{Garbled Circuit Method \label{sub:Garbled-Circuit-Method}}
+\subsection{Garbled Circuit Method \label{sub:Garbled-Circuit-Method}}
 
 Consider any Boolean circuit $C$, and two parties: Alice and Bob,
 who wish to evaluate $C$ on their respective inputs $x$ and $y$.
 In Yao's {}``garbled circuits'' method \cite{Yao86}, Alice transforms
 the circuit in such a way that Bob can evaluate it obliviously, i.e.,
 without learning Alice's inputs or the values on any internal circuit
-wire except the output wires. The steps are as follows:
+wire except the output wires. The steps are as follows: 
 \begin{enumerate}
 \item Alice generates two random keys $k_{i,0}$ and $k_{i,1}$ for each
 circuit wire $i$, one representing $0$ on that wire, the other representing
@@ -139,13 +261,13 @@ values representing $g(0,0)$, $g(0,1)$, $g(1,0)$, and $g(1,1)$
 fully specify the gate $g$. Alice sends the garbled circuit to Bob.
 Computation of the garbled circuit does not depend on input values
 and can be performed in advance. However, the same garbled circuit
-must not be used more than once, or Alice's privacy may be violated.
+must not be used more than once, or Alice's privacy may be violated. 
 \item Alice sends the keys corresponding to her own input wires to Bob.
 Bob obtains the keys corresponding to his input wires from Alice using
 an $OT_{2}^{1}$ protocol. For each of Bob's input wires, Bob acts
-as the chooser using his corresponding input bit to the function as the choice 
-into $OT_{2}^{1}$ , and Alice acts as the sender with the two wire keys for that wire
-as her inputs into $OT_{2}^{1}$ .
+as the chooser using his corresponding input bit to the function as
+the choice into $OT_{2}^{1}$ , and Alice acts as the sender with
+the two wire keys for that wire as her inputs into $OT_{2}^{1}$ . 
 \item Bob evaluates the circuit. Because of the way that the garbled circuit
 is constructed, Bob, having one wire key for each gate input, can
 decrypt exactly one row of the garbled truth table and obtain the
@@ -156,11 +278,56 @@ to values is not known to Bob (except for the wire keys corresponding
 to his own inputs), this does not leak any information about actual
 wire values. 
 \end{enumerate}
-After these steps the circuit has been evaluated obliviously by Bob.  The final step is for Bob to send
-to Alice her output wire keys, from which she will learn Alice's designated outputs.
-A complete description of Yao's method and security proofs can be found in \cite{Goldreich:vol2}.
+After these steps the circuit has been evaluated obliviously by Bob.
+The final step is for Bob to send to Alice her output wire keys, from
+which she will learn Alice's designated outputs. A complete description
+of Yao's method and security proofs can be found in \cite{Goldreich:vol2}.
+A simple example of an encrypted AND gate is shown here:
 
-\subsubsection{Secure Computation With Random Shares}
+Suppose Alice has $x$ and Bob has $y$ and Alice and Bob wish to
+compute $z=x\wedge y$. The truth table for this gate is as follows:
+
+\begin{tabular}{|c|c|c|}
+\hline 
+$x$ & $y$ & $z=x\wedge y$\tabularnewline
+\hline
+\hline 
+$0$ & $0$ & $0$\tabularnewline
+\hline 
+$0$ & $1$ & $0$\tabularnewline
+\hline 
+$1$ & $0$ & $0$\tabularnewline
+\hline 
+$1$ & $1$ & $1$\tabularnewline
+\hline
+\end{tabular}
+
+Alice generates a pair of random wire keys for each of $x$, $y$,
+and $z$. Then, the encrypted AND gate will look like this:
+
+\begin{tabular}{|c|c|c|}
+\hline 
+$K_{x}$ & $K_{y}$ & $E\left(K_{z}\right)$\tabularnewline
+\hline
+\hline 
+$k_{x,0}$ & $k_{y,0}$ & $E_{k_{x,0}}\left(E_{k_{y,0}}\left(k_{z,0}\right)\right)$\tabularnewline
+\hline 
+$k_{x,0}$ & $k_{y,1}$ & $E_{k_{x,0}}\left(E_{k_{y,1}}\left(k_{z,0}\right)\right)$\tabularnewline
+\hline 
+$k_{x,1}$ & $k_{y,0}$ & $E_{k_{x,1}}\left(E_{k_{y,0}}\left(k_{z,0}\right)\right)$\tabularnewline
+\hline 
+$k_{x,1}$ & $k_{y,1}$ & $E_{k_{x,1}}\left(E_{k_{y,1}}\left(k_{z,1}\right)\right)$\tabularnewline
+\hline
+\end{tabular}
+
+For the sake of concreteness, suppose $x=1$ and $y=0$. Then Alice
+will send $k_{x,1}$to Bob, and Bob will choose $k_{y,0}$ in the
+$OT_{2}^{1}$ step, and Bob will only be able to successfully decrypt
+$E_{k_{x,1}}\left(E_{k_{y,0}}\left(k_{z,0}\right)\right)$ from the
+truth table.
+
+
+\subsection{Secure Computation With Random Shares}
 
 \cite{GMW87} presents a protocol for securely evaluating circuits
 known as \emph{secure computation with shares} (SCWS). This protocol
@@ -170,16 +337,25 @@ is the bit value of the wire. Therefore, Alice's and Bob's shares
 add up to $b_{w}$, but because the shares are random, neither party
 knows the actual wire value. For each output wire of the circuit,
 Alice and Bob combine their shares to reconstruct the circuit output.
-Suppose $g(x,y)$ is a gate, $x$ and $y$ are the input wires to
-the $g$ and $x_{a}\oplus x_{b}=x$ and $y_{a}\oplus y_{b}=y$ are
-Alice and Bob's shares of $x$ and $y$. The following steps will
-securely evaluate the gate:
+Suppose $g(x,y)$ is a 2-input gate, $x$ and $y$ are the input wires
+to the gate $g$ and $x_{a}\oplus x_{b}=x$ and $y_{a}\oplus y_{b}=y$
+are Alice and Bob's shares of $x$ and $y$. The following steps will
+securely evaluate the gate: 
 \begin{enumerate}
-\item Alice selects a random bit $z_{a}$ 
-\item Alice constructs a quadruple $\left(g(x_{a},y_{a})\oplus z_{a},\, g(x_{a},1-y_{a})\oplus z_{a},\, g(1-x_{a},y_{a})\oplus z_{a},\, g(1-x_{a},1-y_{a})\oplus z_{a}\right)$. 
+\item Alice selects a random bit $z_{a}\in\left\{ 0,1\right\} $ 
+\item Alice constructs a quadruple. The quadruple contains each of the 4
+possible values of $g\oplus a_{z}$\\
+$\left(g(x_{a},y_{a})\oplus z_{a},\, g(x_{a},1-y_{a})\oplus z_{a},\, g(1-x_{a},y_{a})\oplus z_{a},\, g(1-x_{a},1-y_{a})\oplus z_{a}\right)$. 
 \item Using an $OT_{4}^{1}$ protocol, Bob selects the bit from Alice's
-quadruple with index $s=2x_{b}+y_{b}$. The value received by Bob
-is $z_{b}=g(x_{a}\oplus x_{b},y_{a}\oplus y_{b})\oplus z_{a}=g(x,y)\oplus z_{a}$. 
+quadruple with index $s=2x_{b}+y_{b}$, in other words, the position
+corresponding to Bob's shares of wires $x$ and $y$. The value received
+by Bob is $z_{b}=g(x_{a}\oplus x_{b},y_{a}\oplus y_{b})\oplus z_{a}=g(x,y)\oplus z_{a}$,
+which is Bob's share of the output wire of gate $g$. Alice's share
+is $z_{a}$.
+\item As a shortcut, certain gates $g$ can be evaluated without interaction
+between Alice and Bob. For example, if $g=x\oplus y$ then $g_{a}=x_{a}\oplus y_{a}$
+and $g_{b}=x_{b}\oplus y_{b}$ maintains the share invariant without
+communication between Alice and Bob.
 \end{enumerate}
 At the beginning of the evaluation, Alice sets her share of the input
 wires to her input values, and her share of Bob's input wires to $0$,
@@ -189,24 +365,27 @@ by repeated applying the above steps, the entire circuit can be evaluated
 starting from the inputs, and progressing gate by gate until the output.
 Further details and security proofs are presented in \cite{Goldreich:vol2}.
 
-In practice, the garbled circuit method is more commonly used, because
-it is more efficient. Then garbled circuit method requires only a
-single transfer of data from Alice to Bob, followed by an $OT_{2}^{1}$
-for each the $|B|$ values representing Bob's inputs. These OTs can
-be combined into a single parallel OT. Then Bob obliviously evaluates
-the entire circuit on his own, and sends the output keys of Alice's
-outputs back to her. In contrast, the SCWS method requires an $OT_{4}^{1}$
-for each gate. This will require at least $depth(C)$ distinct rounds
-of the OT, where $depth(C)$ is the maximum number of gates along
-any path from an input to an output. The increased number of OTs,
-combined with the increased number of rounds needed to execute them,
-makes the SCWS evaluation protocol primarily of theoretical interest.
-However, the SCWS principle can be emulated with the Yao protocol,
-by explicitly including extra gates in the circuit to combine and
-split the share values. 
+In practice, Yao's garbled circuit method is more commonly used, because
+it is more efficient than the computation with shares. The garbled
+circuit method requires only a single transfer of data from Alice
+to Bob, followed by an $OT_{2}^{1}$ for each the $|B|$ values representing
+Bob's inputs. These OTs can be combined into a single parallel OT.
+Then Bob obliviously evaluates the entire circuit on his own, and
+sends the output keys of Alice's outputs back to her. In contrast,
+the SCWS method requires an $OT_{4}^{1}$ for each gate. Some of these
+OTs can be parallelized, but because of dependencies not all can be
+parallelized, and therefore the protocol requires at least $depth(C)$
+distinct rounds of the OT, where $depth(C)$ is the maximum number
+of gates along any path from an input to an output. The increased
+number of OTs, combined with the increased number of rounds needed
+to execute them, makes the SCWS evaluation protocol primarily of theoretical
+interest. However, the SCWS principle can be emulated with the Yao
+protocol, by explicitly including extra gates in the circuit to combine
+and split the share values. We will use this technique later in this
+thesis.
 
 
-\subsection{Implementations}
+\section{Implementations}
 
 In recent years, there have been implementations of SFE undertaken
 by researchers to design secure multiparty protocols. In the past,
@@ -217,7 +396,7 @@ availability of processing power and network bandwidth are making
 SFE an area of increasingly significant practical value.
 
 
-\subsubsection{Fairplay}
+\subsection{Fairplay}
 
 Fairplay \cite{Fairplay} is an example of an SFE implementation designed
 to enable wider application of SFE. Fairplay is the first system,
@@ -232,7 +411,7 @@ evaluates an SHDL function. \cite{Fairplay} provides the first empirical
 measurements from an implementation of the Yao protocol.
 
 
-\subsubsection{Application specific}
+\subsection{Application specific}
 
 Fairplay showed that the classic protocol for SFE is still quite expensive
 for all but the simplest circuits. There has been much research effort
@@ -248,7 +427,7 @@ A particularly important application of secure computation is discussed
 in the next section.
 
 
-\subsection{Privacy Preserving Data Mining }
+\section{Privacy Preserving Data Mining }
 
 Initial focus in this area was on construction of decision trees from
 distributed data sets \cite{Agrawal-Srikant,Lindell-Pinkas}. There
@@ -260,63 +439,15 @@ to perturb the data set before the algorithm is applied, by replacing
 sensitive data with random unique identifiers. This approach for designing
 privacy-preserving algorithms is taken by several researchers \cite{Klusch,MeruguGhosh,Oliveira}.
 However, this approach suffers from the lack of formal security guarantee,
-and has been shown to be vulnerable to data correlation attacks \cite{Malin04}.
-Secure multiparty computation is the basis of the other approach.
-A survey of such techniques is presented in \cite{PinkasCryptoPPDM02}.
-This approach will be used in this thesis.
-
-\subsection{Password Authentication}
-Password authentication is a well-known means for accessing services as a user with a known
-identity.
-
-\subsection{Threat Models\label{sub:Threat-Models}}
-
-In the {}``semi-honest'' threat model, also known as {}``honest
-but curious'', or {}``passive'', \cite{GMW87} a party to the computation is
-assumed to behave correctly and follow the protocol as prescribed.
-However, the party also runs additional probabilistic polynomially
-bounded computation on the side in order to learn information to which
-he is not entitled. A security proof using the semi-honest threat
-model implies that the protocol as designed does not {}``leak''
-information. The semi-honest model is an important theoretical tool
-despite the fact that it is weaker than the malicious model 
-and does not capture the full range
-of malicious behaviors we would expect of an adversary. It is useful because
-a protocol that has been proven secure in the semi-honest model can
-be extended in an automated way, using a protocol {}``compiler'',
-to a more secure protocol that is secure in the malicious model \cite{GMW87}.
-Essentially, the protcol compiler inserts additional steps into the
-protocol to force the parties to prove to one another their faithful
-adherence to the protocol. The semi-honest model may itself be a realistic
-model in certain cases, for example, when the parties communicating
-need to preserve privacy of data from one another, but also have a
-pre-existing trust relationship sufficient to believe the other party
-will not maliciously attempt to cheat the protocol.
-
-In the {}``malicious'' threat model, an adversarial party is free
-to use any available methods to thwart the computation , including
-sending false or inconsistent messages at any step of the protocol.
-The malicious threat model naturally characterizes the malicious behavior
-that a secure protocol would need to protect against. If a protocol
-is shown to be secure in the malicious threat model, then we can reasonably
-assume that a malicious party or interloper will not be able to learn
-any private information by attacking the protocol.
-
-In the {}``covert'' threat model, similar to the {}``malicious'' model,
-the adversary is also free to use any available methods to thwart the computation.
-Although the allowable behavior of the adversary is the same as in the malicious model, the 
-security guarentee is relaxed.  In particular, a protocol is considered secure
-in the covert model if the probability of the attacker not getting caught
-is small but non-negligable.  The covert model can be considered appropriate
-for real-world scenarios only when the consequences to the adversary for being
-caught are a significant deterrence to trying to cheat (\ie loss of reputation,
-monetary or legal penalties, etc) compared to the benefit of a successful attack.
-\cite{aumannlindell}
+and has been shown to be vulnerable to data correlation attacks \cite{Malin04},
+which is why we use secure multiparty computation in this thesis,
+the basis of the other approach. A survey of such techniques is presented
+in \cite{PinkasCryptoPPDM02}. 
 
 %
 \begin{comment}
-\bibliographystyle{plain}
+\bibliographystyle{plain} \bibliographystyle{plain}
 \bibliography{privacy,somesh,crypto}
 
 \end{comment}
-{}
+{} 

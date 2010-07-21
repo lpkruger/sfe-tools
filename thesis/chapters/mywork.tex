@@ -1,37 +1,40 @@
 
-\chapter{Techniques for Protocol Optimization}\label{sec:Techniques}
+\chapter{Techniques for Protocol Optimization}
+
+\label{sec:Techniques}
 
 Optimizing secure function evaluation to make it more practical for
-real world use will be the focus of this thesis.  Traditional methods
+real world use will be the focus of this thesis. Traditional methods
 for SFE, such as Yao's secure circuit evaluation protocol \cite{Yao86},
-are many orders of magnitude slower than the straightforward insecure evaluation of
-functions, with factors of thousands or more.  Asymtotically, the time
-required to perform secure function evaluation
-is equivalent to the time required to execute the function itself.
-For example, the Yao protocol
-requires time and communication linear in the number of circuit gates.
-However, the need to encrypt every gate with multiple keys, and to
-perform oblivious transfer on every circuit input is the cause of the enormous
-slowdowns.  These tremendous performance penalties in the generic constructions highlight
-the need for optimizing SFE.
+are many orders of magnitude slower than the straightforward insecure
+evaluation of functions, with factors of thousands or more. Asymtotically,
+the time required to perform secure function evaluation is equivalent
+to the time required to execute the function itself. For example,
+the Yao protocol requires time and communication linear in the number
+of circuit gates. However, the need to encrypt every gate with multiple
+keys, and to perform oblivious transfer on every circuit input is
+the cause of the enormous slowdowns. These tremendous performance
+penalties in the generic constructions highlight the need for optimizing
+SFE.
 
 There are various ways to approach the problem of designing optimized
-secure function evaluation protocols.  This thesis focuses
-on three general methodologies. From most specific to most general,
-three approaches we have looked at are algorithm specific, algorithm
-\emph{class} specific, and a general approach that is applicable to
-all computable functions. The trade-off between these different approaches
-is a balance between performance and general applicability. This trade-off
-has an analogy in the literature of programming language compiler
-optimizations. General code optimizations, such as loop-unrolling
-or strength-reduction can make all code faster to a limited degree
-(although this is not guaranteed), but tuning a specific algorithm
-by hand often yields superior results. Algorithm class methods fall
-in between, with conceptual ideas that apply to classes of algorithms
-related by design methodology, such as dynamic programming problems.
+secure function evaluation protocols. This thesis focuses on three
+general methodologies. From most specific to most general, three approaches
+we have looked at are algorithm specific, algorithm \emph{class} specific,
+and a general approach that is applicable to all computable functions.
+The trade-off between these different approaches is a balance between
+performance and general applicability. This trade-off has an analogy
+in the literature of programming language compiler optimizations.
+General code optimizations, such as loop-unrolling or strength-reduction
+can make all code faster to a limited degree (although this is not
+guaranteed), but tuning a specific algorithm by hand often yields
+superior results. Algorithm class methods fall in between, with conceptual
+ideas that apply to classes of algorithms related by design methodology,
+such as dynamic programming problems.
 
 
 \section{General: Protocol Optimization using Ordered Binary Decision Diagrams}
+
 \label{OBDD-section}
 
 In this work, we evaluated the use of alternate representation of
@@ -57,7 +60,7 @@ An example of an OBDD to compute the function $F(x)=\#x1\#x3>\#x2\#x4$
 %
 \begin{figure}
 \begin{centering}
-\includegraphics[scale=0.4,angle=270]{obdd1}
+\includegraphics[scale=0.4,angle=270]{chapters/obdd1} 
 \par\end{centering}
 
 \caption{\label{fig:OBDD-example}OBDD for two-bit millionaires' problem}
@@ -87,13 +90,13 @@ using the example millionaires' problem pictured above. In the first
 step, Alice sends to Bob the encrypted OBDD. The next step is Bob
 acquiring a subset of the encryption keys from Alice using $OT_{2}^{1}$.
 In the final step, Bob uses the obtained keys to decrypt a single
-path through the OBDD yielding the result of the computation. 
-% A formal description follows. 
+path through the OBDD yielding the result of the computation. % A formal description follows. 
+
 
 %
 \begin{figure}
 \begin{centering}
-\includegraphics[scale=0.4,angle=270]{obdd_proto_overview}
+\includegraphics[scale=0.4,angle=270]{chapters/obdd_proto_overview} 
 \par\end{centering}
 
 \caption{\label{fig:OBDD-overview}OBDD secure evaluation protocol}
@@ -103,11 +106,12 @@ path through the OBDD yielding the result of the computation.
 
 %\input{bdd-proto.tex}
 
+
 We then define an optimized variation which is identical to the protocol
 just described, except that Alice first reduces the number of nodes
 to be sent to Bob using an operation called \emph{restriction}, which
 is a partial evaluation applied to OBDDs. Restriction is defined as
-follows. 
+follows.
 
 Given an $n$ variable Boolean function $f(x_{1},x_{2},\cdots,x_{n})$
 and a Boolean value $b$, the restriction $f\mid_{x_{i}\leftarrow b}$
@@ -128,42 +132,52 @@ the variables in the set $X_{A}$ and Bob holds the inputs for the
 variables in the set $X_{B}\;=\;\{x_{1},\cdots,x_{n}\}-X_{A}$. 
 \par\end{flushleft}
 \begin{enumerate}
-\item Alice performs the following steps: 
+\item Alice performs the following steps:
 
 \begin{enumerate}
 \item Alice computes the OBDD ${\cal O}_{A}$ as the restriction of her
 inputs on the function $f\mid_{X_{A}}$. 
 \item Alice encrypts the $O_{A}$ and sends it to Bob. This step is exactly
 the same as in for Protocol 1. Alice also sends the secret corresponding
-to the root of the OBDD ${\cal O}_{A}$.
+to the root of the OBDD ${\cal O}_{A}$. 
 \end{enumerate}
-\item The computation for Bob is exactly the same as that for Protocol 1.
+\item The computation for Bob is exactly the same as that for Protocol 1. 
 \end{enumerate}
 The results of this work demonstrate that OBDDs showed improved performance
-with secure evaluation of certain functions, as will be discussed in chapter \ref{chapter:obdd}.
+with secure evaluation of certain functions, as will be discussed
+in chapter \ref{chapter:obdd}.
 
-\section{Problem Specific: Protocol Optimization of Evaluating Hash Functions for Password Authentication}
-In chapter \ref{chapter:pw}, 
-based on our paper Secure Password Authentication Using SFE \cite{Kruger10}, 
-we use some properties of the problem of
-authentication to transform the semi-honest protocol into an efficient protocol that is secure in the malicious model.  
-This work presents a new solution to the "Secure Password and Key Authentication" (SPAKA) problem,
-which is the design of protocols to mutually authenticate a client to a server using
+
+\section{Problem Specific: Protocol Optimization of Evaluating Hash Functions
+for Password Authentication}
+
+In chapter \ref{chapter:pw}, based on our paper Secure Password Authentication
+Using SFE \cite{Kruger10}, we use some properties of the problem
+of authentication to transform the semi-honest protocol into an efficient
+protocol that is secure in the malicious model. This work presents
+a new solution to the {}``Secure Password and Key Authentication''
+(SPAKA) problem, which is the design of protocols to mutually authenticate
+a client to a server using 
 \begin{enumerate}
-\item The client's knowledge of the password X, and
-\item The servers's knowledge of a one-way hash function h(X).
+\item The client's knowledge of the password X, and 
+\item The servers's knowledge of a one-way hash function h(X). 
 \end{enumerate}
-The protocol must not leak any additional information or allow access if one of the parties
-is an inposter and does not know their expected credential.
-Our solution provides a property, unique among SPAKA protocols, that it can work with
-arbitrary and legacy hash functions used in commodity operating systems today.
-This protocol takes
-advantage of specific properties of the authentication problem and takes "shortcuts" to achieve efficiency.  Although
-these shortcuts would not be secure in a general SFE setting, we prove that these shortcuts are in fact secure in the 
-context of the authentication protocol presented.  This allows us to design a protocol in which a malicious adversary
-is thwarted with probability $1-2^{-l}$ where $l$ is a security parameter representing the number of semi-honest circuits.
-We show that on modern multicore processors, the authentication can be performed in a matter of seconds, which we believe is practical
-for interactive use between servers and authenticating users.
+The protocol must not leak any additional information or allow access
+if one of the parties is an inposter and does not know their expected
+credential. Our solution provides a property, unique among SPAKA protocols,
+that it can work with arbitrary and legacy hash functions used in
+commodity operating systems today. This protocol takes advantage of
+specific properties of the authentication problem and takes {}``shortcuts''
+to achieve efficiency. Although these shortcuts would not be secure
+in a general SFE setting, we prove that these shortcuts are in fact
+secure in the context of the authentication protocol presented. This
+allows us to design a protocol in which a malicious adversary is thwarted
+with probability $1-2^{-l}$ where $l$ is a security parameter representing
+the number of semi-honest circuits. We show that on modern multicore
+processors, the authentication can be performed in a matter of seconds,
+which we believe is practical for interactive use between servers
+and authenticating users.
+
 
 \section{Class of Algorithm Specific: Protocol Optimization of Dynamic Programming}
 
@@ -179,7 +193,7 @@ and substitutions needed to change string $x$ to string $y$.
 
 Let ${\cal P}(x,y)$ be a problem with two inputs $x$ and $y$. Typically,
 a dynamic-programming algorithm ${\cal A}_{{\cal P}}$ for problem
-${\cal P}$ has the following components:
+${\cal P}$ has the following components: 
 \begin{itemize}
 \item A set $S$ of sub-problems and a dependency relation $R\subseteq S\times S$
 between the sub-problems. Intuitively, $(s,s')\in R$ means that the
@@ -198,14 +212,14 @@ are: \[
 \{(0,j)\;\mid\;0\leq j\leq m\}\end{array}\]
  We also assume that there is a unique root sub-problem ${\it root}\in S$
 such that there does not exist a sub-problem that depends on ${\it root}$.
-For the edit-distance problem the unique root sub-problem is $(n,m)$.
+For the edit-distance problem the unique root sub-problem is $(n,m)$. 
 \item Each sub-problem $s$ is assigned a value ${\it val}(s)$. The goal
 is to compute ${\it val}({\it root})$. The function ${\it val}$
 from $S$ to $\Re$ assigns values to sub-problems, such that it satisfies
 the following properties:
 
 \begin{itemize}
-\item For all the base sub-problems $s\in S$, ${\it val}(s)$ is defined.
+\item For all the base sub-problems $s\in S$, ${\it val}(s)$ is defined. 
 \item Let $s\in S$ be a non-base sub-problem. Define ${\it pred}(s)$ as
 all the predecessors of $s$, i.e. the set ${\it pred}(s)$ is defined
 as $\{s'\;\mid\; s'\rightarrow s\}$. Assume that ${\it pred}(s)$
@@ -238,9 +252,9 @@ evaluation beyond problems of size $(25,25)$.
 The $k$-means algorithm is a common clustering technique in data
 mining. Suppose that we are given $n$ samples $x_{1},\cdots,x_{n}$,
 where each sample is a $m$-dimensional vector of real numbers. The
-problem is to assign the samples to $c$ clusters in such a manner that
-similar points are grouped together. Similarity is defined using a
-distance metric. The standard clustering algorithm maintains $c$
+problem is to assign the samples to $c$ clusters in such a manner
+that similar points are grouped together. Similarity is defined using
+a distance metric. The standard clustering algorithm maintains $c$
 means $\mu_{1},\cdots,\mu_{c}$. Initially, assume that the means
 are assigned arbitrary values. A sample $x_{i}$ is deemed to be in
 the cluster $j$ if it is closest to the mean $\mu_{j}$, where mean
@@ -256,7 +270,7 @@ illustration.
 
 %
 \begin{figure}
-\includegraphics[scale=0.3,angle=270]{clusters}
+\includegraphics[scale=0.3,angle=270]{chapters/clusters}
 
 \caption{\label{fig:clusters}Thirteen data points after clustering. The small
 dots are cluster means.}
@@ -265,25 +279,27 @@ dots are cluster means.}
 
 
 We implement protocols to securely evaluate this algorithm in chapter
-\ref{chapter:kmeans} based on our paper \cite{kruger05},
-and showed that a protocol based on homomorphic encryption was able
-to classify partitioned data sets with tens of thousands of data points
-in under two minutes, which is about 15 times slower than the protocol
-implemented without privacy protection, and over 100 times faster than the same protocol
-built with Yao circuits.
+\ref{chapter:kmeans} based on our paper \cite{kruger05}, and showed
+that a protocol based on homomorphic encryption was able to classify
+partitioned data sets with tens of thousands of data points in under
+two minutes, which is about 15 times slower than the protocol implemented
+without privacy protection, and over 100 times faster than the same
+protocol built with Yao circuits.
 
 
-\section{Other Optimizations}\label{sub:Other-Optimizations}
+\section{Other Optimizations}
+
+\label{sub:Other-Optimizations}
 
 In the usual formulation of secure function evaluation, there are
 designated outputs for each party, and it is required that no extra
 information is learned by any party. This definition could be expanded
 to assign non-output values the labels {}``sensitive'' and {}``non-sensitive'',
 where the protocol is considered secure if no sensitive information
-is leaked. 
-%Since the overhead of privacy protection is substantial,
+is leaked. %Since the overhead of privacy protection is substantial,
 %I propose to research the of design secure protocols that use this
 %relaxation of the problem definition to improve efficiency. 
+
 
 In section \ref{sub:Primitives}, I presented many basic cryptographic
 primitives that are used in SFE. Improving the state of the art of
@@ -292,19 +308,21 @@ that make use of that primitive. Based on my experience with real
 implementations of SFE protocols, the oblivious transfer steps tend
 to be very expensive in terms of space and communication. Common oblivious
 transfer protocols are based on discrete logarithms, but other trapdoor
-functions may be used as well. 
-%One thing I propose to try is implementing
+functions may be used as well. %One thing I propose to try is implementing
 %Naor-Pinkas \cite{Noar-Pinkas:2001} using more compact representations,
 %for example, with elliptic curve groups. I have recently developed
 A new $OT_{2}^{1}$ protocol is presented in chapter \ref{sec:OT-SquareRoots}.
-and its security and performance are compared with the Naor-Pinkas protocol. 
-%In particular, I conjecture that this protocol
+and its security and performance are compared with the Naor-Pinkas
+protocol. %In particular, I conjecture that this protocol
 %may require less communication overhead than other OT protocols.
 
 
 %
 \begin{comment}
-\section{An Efficient Protocol Design Framework}\label{sub:An-Efficient-Framework}
+
+\chapter{An Efficient Protocol Design Framework}
+
+\label{sub:An-Efficient-Framework}
 
 Even with all these optimizations, protocols still must be hand-coded.
 Each protocol I have implemented has required brand new code to be
@@ -322,30 +340,30 @@ evaluation. In this sense, it functions as a simple CAD design tool.
 I propose to take this concept much further, and create an \emph{optimizing}
 protocol compiler, aggregating the techniques discussed here, and
 creating a tool to greatly simplify the creation of efficient secure
-protocols for SFE. The compiler will include the following components:
+protocols for SFE. The compiler will include the following components: 
 \begin{itemize}
 \item Convenient programming language for expressing secure computations
 
 \begin{itemize}
 \item Language will include support as language primitives for common SFE
-and cryptographic techniques, such as homomorphic encryption
+and cryptographic techniques, such as homomorphic encryption 
 \item Language will support metadata for designating inputs and outputs
 from specific parties, and for classifying the required privacy of
-intermediate computations
+intermediate computations 
 \end{itemize}
 \item Compiler which translates this language into an abstract securely
 evaluable {}``machine code'', which consists of securely evaluable
-representations of the program.
+representations of the program. 
 \item An automated optimizer. The optimizer will automatically try different
 representations of the functions, including OBDDs, Boolean circuits,
 and other ideas from my research, and search for the most efficient
-representation as possible.
+representation as possible. 
 \item Manual optimization tools, making it convenient to apply and design
 techniques that I have researched. This includes a toolkit of cryptographic
 protocols, such as oblivious transfer, which can be used in a black
-box way.
+box way. 
 \item An embeddable protocol evaluator library, which will allow ordinary
-application to make straightforward use of secure function evaluation.
+application to make straightforward use of secure function evaluation. 
 \end{itemize}
 The security of protocols produced by the compiler is based on the
 security of each individual component of the protocol. For example,
@@ -355,8 +373,8 @@ secure evaluation protocol. In cases where a computation is broken
 into multiple sub-protocols, I will prove that composition of these
 sub-protocols maintains the overall security of the protocol.
 
-\bibliographystyle{plain}
+\bibliographystyle{plain} \bibliographystyle{plain}
 \bibliography{somesh}
 
 \end{comment}
-{}
+{} 
