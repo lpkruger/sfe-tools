@@ -1,4 +1,4 @@
-#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.6.1 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -1791,7 +1791,7 @@ secure computation with shares
 \begin_inset Formula $g(x,y)$
 \end_inset
 
- is a gate, 
+ is a 2-input gate, 
 \begin_inset Formula $x$
 \end_inset
 
@@ -1799,7 +1799,7 @@ secure computation with shares
 \begin_inset Formula $y$
 \end_inset
 
- are the input wires to the 
+ are the input wires to the gate 
 \begin_inset Formula $g$
 \end_inset
 
@@ -1825,14 +1825,19 @@ secure computation with shares
 
 \begin_layout Enumerate
 Alice selects a random bit 
-\begin_inset Formula $z_{a}$
+\begin_inset Formula $z_{a}\in\left\{ 0,1\right\} $
 \end_inset
 
  
 \end_layout
 
 \begin_layout Enumerate
-Alice constructs a quadruple:
+Alice constructs a quadruple.
+ The quadruple contains each of the 4 possible values of 
+\begin_inset Formula $g\oplus a_{z}$
+\end_inset
+
+
 \begin_inset Newline newline
 \end_inset
 
@@ -1853,13 +1858,50 @@ Using an
 \begin_inset Formula $s=2x_{b}+y_{b}$
 \end_inset
 
+, in other words, the position corresponding to Bob's shares of wires 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
 .
  The value received by Bob is 
 \begin_inset Formula $z_{b}=g(x_{a}\oplus x_{b},y_{a}\oplus y_{b})\oplus z_{a}=g(x,y)\oplus z_{a}$
 \end_inset
 
+, which is Bob's share of the output wire of gate 
+\begin_inset Formula $g$
+\end_inset
+
 .
- 
+ Alice's share is 
+\begin_inset Formula $z_{a}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+As a shortcut, certain gates 
+\begin_inset Formula $g$
+\end_inset
+
+ can be evaluated without interaction between Alice and Bob.
+ For example, if 
+\begin_inset Formula $g=x\oplus y$
+\end_inset
+
+ then 
+\begin_inset Formula $g_{a}=x_{a}\oplus y_{a}$
+\end_inset
+
+ and 
+\begin_inset Formula $g_{b}=x_{b}\oplus y_{b}$
+\end_inset
+
+ maintains the share invariant without communication between Alice and Bob.
 \end_layout
 
 \begin_layout Standard
@@ -1888,9 +1930,9 @@ key "Goldreich:vol2"
 \end_layout
 
 \begin_layout Standard
-In practice, the garbled circuit method is more commonly used, because it
- is more efficient.
- Then garbled circuit method requires only a single transfer of data from
+In practice, Yao's garbled circuit method is more commonly used, because
+ it is more efficient than the computation with shares.
+ The garbled circuit method requires only a single transfer of data from
  Alice to Bob, followed by an 
 \begin_inset Formula $OT_{2}^{1}$
 \end_inset
@@ -1908,7 +1950,8 @@ In practice, the garbled circuit method is more commonly used, because it
 \end_inset
 
  for each gate.
- This will require at least 
+ Some of these OTs can be parallelized, but because of dependencies not
+ all can be parallelized, and therefore the protocol requires at least 
 \begin_inset Formula $depth(C)$
 \end_inset
 
@@ -1922,6 +1965,7 @@ In practice, the garbled circuit method is more commonly used, because it
  theoretical interest.
  However, the SCWS principle can be emulated with the Yao protocol, by explicitl
 y including extra gates in the circuit to combine and split the share values.
+ We will use this technique later in this thesis.
 \end_layout
 
 \begin_layout Subsection
