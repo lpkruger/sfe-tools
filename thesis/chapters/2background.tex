@@ -5,7 +5,7 @@
 \section{Threat Models\label{sub:Threat-Models}}
 
 It is well known that there are many threats and malicious parties
-on the internet, as discussed in the previous section. We now present
+on the Internet, as discussed in the previous section. We now present
 formalizations of these threats into threat models from the literature,
 suitable for formal cryptographic analysis. The three threat models
 presented here, known as the {}``semi-honest'', {}``malicious'',
@@ -28,7 +28,7 @@ information. The semi-honest model is an important theoretical tool
 despite the fact that it is weaker than the malicious model and does
 not capture the full range of malicious behaviors we would expect
 of an adversary. It is useful because a protocol that has been proven
-secure in the semi-honest model is guarenteed to have an analogous
+secure in the semi-honest model is guaranteed to have an analogous
 protocol that is secure in the malicious model \cite{GMW87}. The
 proof of this theorem is constructive and involves extending the protocol
 in an automated way, using a protocol {}``compiler'', to a more
@@ -53,10 +53,10 @@ any private information by attacking the protocol.
 In the {}``covert'' threat model, similar to the {}``malicious''
 model, the adversary is also free to use any available methods to
 thwart the computation. Although the allowable behavior of the adversary
-is the same as in the malicious model, the security guarentee is relaxed.
+is the same as in the malicious model, the security guarantee is relaxed.
 In particular, a protocol is considered secure in the covert model
 if the probability of the attacker not getting caught is small but
-non-negligable. The covert model can be considered appropriate for
+non-negligible. The covert model can be considered appropriate for
 real-world scenarios only when the consequences to the adversary for
 being caught are a significant deterrence to trying to cheat (\ie
 loss of reputation, monetary or legal penalties, etc) compared to

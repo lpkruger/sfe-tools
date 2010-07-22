@@ -145,7 +145,7 @@ used instead of min-of-3.
 We also constructed a protocol for Smith-Waterman based on Protocol
 2. Recall that in Protocol $2$ for edit distance, a circuit for
 equality of the characters is evaluated. For Smith-Waterman, an
-$OT_{|\Sigma|}^{1}$ is performed instead. Alice, acting as the sender,
+$OT_{\mid \Sigma \mid}^{1}$ is performed instead. Alice, acting as the sender,
 creates an array with a row of the cost function subtracted from her
 random share $r$.  Each element of the array is $r-c(\alpha[i],\beta)$
 for each possible $\beta\in\Sigma$. Bob, acting as the chooser, selects
@@ -158,13 +158,13 @@ as for edit distance.
 
 Figure~\ref{fig:sw-histogram} shows the timing measurements for the
 three protocols.  For Protocols 1 and 3, the computation time scales
-with the size of the score matrix, which is $|\Sigma|^{2}$. For
+with the size of the score matrix, which is ${\mid \Sigma \mid}^{2}$. For
 example, the bytes transferred over the network aligning protein
 sequences using BLOSUM62 are approximately 40 times that of for simple
 edit distance of the same size problem.  This is caused by the use of
 extra gates in the Yao circuit which encode each value of the score
 function.  For Protocol 2, the computation scales with the alphabet
-size $|\Sigma|$. For a very large alphabet with hundreds of symbols,
+size $\mid \Sigma \mid$. For a very large alphabet with hundreds of symbols,
 Protocol $2$ would be the best choice because the cost of embedding
 the entire matrix into a Yao circuit becomes prohibitive.
 
