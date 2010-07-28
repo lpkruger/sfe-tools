@@ -90,10 +90,10 @@ There are a variety of OT protocols presented in cryptographic literature.
 We focus on the Naor-Pinkas OT protocol \cite{NaorPinkas99}, based
 on discrete logarithms, because it is a very efficient OT protocol
 that we have chosen for practical implementations. The performance
-characteristics of this protocol are discussed in chapter \ref{sub:Comparison-with-Naor-Pinkas}.
+characteristics of this protocol are discussed in section \ref{sub:Comparison-with-Naor-Pinkas}.
 The steps of the Naor-Pinkas OT protocol are summarized next. We will
 also investigate other OT methods based on modular square roots in
-chapter \ref{sec:OT-SquareRoots}
+chapter \ref{sec:OT-SquareRoots}.
 \begin{enumerate}
 \item Let $q$ be a prime number and let $g$ be a generator for the field
 $\mathbb{Z}_{q}$. $q$ and $g$ are known to both parties. Also,
@@ -168,17 +168,17 @@ of his choice.
 \item Formally, the encryption scheme is semantically secure if for every
 probabilistic polynomial time algorithm $A$ there exists a probabilistic
 polynomial-time algorithm $A'$ such that for every probabilistic
-ensemble $\left\{ X_{n}\right\} _{n\in\mathbb{N}}$ with $\mid X_{n}\mid \le\mbox{poly}\left(n\right)$
+ensemble $\left\{ X_{n}\right\} _{n\in\mathbb{N}}$ with $\mid X_{n}\mid\le\mbox{poly}\left(n\right)$
 every pair of polynomially bounded functions $f,h:\left\{ 0,1\right\} ^{*}\rightarrow\left\{ 0,1\right\} ^{*}$,
 every positive polynomial $p$ and all sufficiently large $n$, then
 the following inequality holds:
 \end{itemize}
 \[
-\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{\mid X_{n}\mid },h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
+\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
 
 
 \[
-<\Pr\left[A'\left(1^{n},1^{\mid X_{n}\mid },h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
+<\Pr\left[A'\left(1^{n},1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
 
 \begin{itemize}
 \item With any semantically secure encryption scheme, encrypting the same
@@ -443,7 +443,6 @@ and has been shown to be vulnerable to data correlation attacks \cite{Malin04},
 which is why we use secure multiparty computation in this thesis,
 the basis of the other approach. A survey of such techniques is presented
 in \cite{PinkasCryptoPPDM02}. 
-
 
 %
 \begin{comment}
