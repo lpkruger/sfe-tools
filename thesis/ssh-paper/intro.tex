@@ -101,7 +101,7 @@ hash of the SSH client's password and compare it for equality with the
 hash value provided by the SSH server.
 
 Yao's original protocol is only secure against passive or semi-honest
-adversaries~\cite{lindellpinkas-jcs,yao-focs86}, \ie, under the assumption
+adversaries~\cite{lindellpinkas-jcs,Yao86}, \ie, under the assumption
 that all participants faithfully follow the protocol.  This model is
 clearly unsuitable for SSH, which must be secure even if one of the
 participants maliciously deviates from the protocol specification.
@@ -205,7 +205,7 @@ key establishment protocol to satisfy, in the context of SSH, the
 three design principles listed above.  We show that the secure
 password storage and the secure key establishment requirements can be
 achieved by comparing the authentication credentials of the user and
-the server using \emph{secure function evaluation} (SFE)~\cite{yao82},
+the server using \emph{secure function evaluation} (SFE)~\cite{Y82},
 in a legacy-compatible manner.
 
 The main insight that enables backward compatibility with existing
