@@ -22,3 +22,8 @@ thesis.pdf:	thesis.tex thesis.aux ${depends}
 
 booklet:	thesis.pdf
 	sh splitpdf.sh thesis.pdf
+
+viewpdf:	thesis.pdf
+	acroread thesis.pdf
+
+pdf:	clean thesis.pdf
