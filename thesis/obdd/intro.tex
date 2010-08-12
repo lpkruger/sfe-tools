@@ -9,16 +9,16 @@
 % Describe our basic contribution.
 
 {\it Ordered Binary Decision Diagrams (OBDDS)}, introduced and
-described in section 3.?, are a graph-based representation of Boolean
-functions.  We present an
+described in section 3.1, are a graph-based representation of Boolean
+functions.  In this chapter, we present an
 SFE algorithm that directly uses an OBDD representation of the
 function $f$ that the two parties want to jointly compute. 
 
 % List of contributions.
-Our thesis presents the following contributions:
+This dissertation presents the following contributions:
 \begin{itemize}
 \item We present a SFE protocol that uses the OBDD representation of
-the function to be jointly computed by two parties. Our new protocol along with the
+the function to be jointly computed by two parties. The new protocol along with the
 correctness proof is provided in Section~\ref{sec:sfe-obdd}.
 
 \item 
@@ -27,7 +27,7 @@ protocol demonstrate that for certain functions, our
 implementation results in a smaller encrypted circuit than
 the equivalent Yao circuit. For example, for the classic millionaire's problem, our
 implementation reduces the bandwidth by approximately $45$\% over the Yao
-protocol.  Our
+protocol.  The
 implementation and experimental results are described in
 Section~\ref{sec:experiments}.
 \end{itemize}
@@ -45,10 +45,10 @@ increased at a more rapid pace than bandwidth availability over the
 past years, network bandwidth is likely to be the bottleneck for a number of applications. In particular, our
 protocols are especially useful for applications operating over
 networks with limited bandwidth, such as wireless and sensor networks.
-Furthermore, we have empirically confirmed this statement by
+In section~\ref{sec:experiments}, we empirically confirm this statement by
 implementing our protocol and comparing it with the Yao protocol.
 
-In summary, our thesis presents a new SFE protocol that uses the OBDD representation.
+In summary, this dissertation presents a new SFE protocol that uses the OBDD representation.
 The OBDD representation is more efficient for several practical functions of 
 interest. For other functions, the circuit description (and therefore
 FairPlay) will be more efficient. This protocol presents a generic alternative to 

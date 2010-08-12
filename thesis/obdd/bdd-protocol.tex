@@ -2,7 +2,6 @@
 \label{sec:sfe-obdd}
 
 
-
 For our protocols, we require a symmetric encryption scheme with two
 easily attained special properties~\cite{LP04}, which are {\sf (1)} {\it elusive
 range}: an encryption under one key is in the range of an encryption
@@ -16,22 +15,17 @@ of a symmetric key encryption scheme that fulfills these properties is
 $E_k(m)=(r\,,\,f_k(r)\oplus m\,\|\,0^n)$, where
 $f:\binset^n\times\binset^n\rightarrow\binset^{2n}$ is a pseudo-random
 function and $r\rfrom\binset^n$ is a $n$-bit random sequence. Unless
-stated otherwise, all symmetric key encryption schemes in this paper,
-besides being semantically secure~\cite[Chapter 5]{Goldreich:vol2},
-also require these two properties.
-
-Our protocol also uses a $1$-out-of-$2$
-oblivious transfer (denoted $OT^2_1$) protocol. A $1$-out-of-$k$ oblivious transfer
-$OT^k_1$ is a protocol that lets Bob obtain one of $k$ secrets held
-by Alice, without Alice learning which secret Bob obtains.
-
+stated otherwise, all symmetric key encryption schemes in this chapter,
+besides being semantically secure (see section 2.?)
+also require these two properties.  We will also use the $1$-out-of-$2$
+oblivious transfer (denoted $OT^2_1$) protocol described in section 2.?.
 
 We now give the protocol for securely computing an OBDD between two
 parties where each party holds a part of the input. Assume $f$ is a
 Boolean function $f(x_1,x_2,\cdots,x_n)$ of $n$ Boolean variables
 $x_1,x_2,\cdots,x_n$. Let $OBDD(f)$ denote the OBDD for $f$ with the
 ordering $x_1 < x_2 < \cdots < x_n$. We describe the protocol in stages.
-Protocol 1 described in Section~\ref{sec:basicprotocol} assumes that
+Protocol 1 described in Section~\ref{sec:obdd-basicprotocol} assumes that
 Alice holds inputs corresponding to the first $k$ variables, and 
 Bob has the inputs corresponding to last $n-k$ variables
 $x_{k+1},\ldots,x_n$. Protocol 2 described in Section~\ref{subsec:protocol2}
@@ -40,7 +34,7 @@ operation on OBDDs described earlier to reduce the bandwidth requirement
 of the protocol.
 
 \subsection{Protocol 1}
-\label{sec:basicprotocol}
+\label{sec:obdd-basicprotocol}
 
 
 For this protocol, we assume that Alice holds the inputs
@@ -93,9 +87,11 @@ node $n$ is changed to $n'$, both $0$ and $1$-successors of $n'$ are
 set to $n''$, and both $0$ and $1$-successors of $n''$ are set to
 $n'''$.
 
+\vspace{2ex}
+The steps of protocol 1 are as follows:
 
-\begin{center}
-\begin{boxfig*}{ht!}{
+%\begin{center}
+%\begin{boxfig*}{ht!}{
 \textsc{\bf Input:} Both parties' inputs include the $OBDD(f)$ for the Boolean function
 $f(x_1,x_2,\cdots,x_n)$ with the ordering $x_1 < x_2 < \cdots < x_n$.
 Furthermore, Alice holds the inputs $(i_1,\ldots,i_k)$ corresponding
@@ -174,19 +170,14 @@ Alice.
 \end{enumerate}
 
 \end{enumerate}
-}
-\vspace{-0.1cm}
-\caption{\label{protbasicobdd} Protocol 1.}
-\end{boxfig*}
-\end{center}
+%}
+%\vspace{-0.1cm}
+%\caption{\label{protbasicobdd} Protocol 1.}
+%\end{boxfig*}
+%\end{center}
 
-We prove correctness and security in the case of semi-honest
-parties. In the semi-honest model, both parties are assumed to perform
-computations and send messages according to their prescribed actions
-in the protocol. They may also record whatever they see during the
-protocol (i.e. their own input and randomness, and the messages they
-receive).  We refer readers to Goldreich's book~\cite{Goldreich:vol2}
-for the complete definitions.  Claim~\ref{claim:protocol1correct}
+We prove correctness and security in the semi-honest threat model,
+defined in section 2.1.  Claim~\ref{claim:protocol1correct}
 proves that the protocol shown in Figure~\ref{protbasicobdd} is
 correct; that is, Bob computes the function $f(i_1,\cdots,i_n)$.
 Claim~\ref{claim:protocol1secure} proves that protocol 1 is secure
@@ -256,7 +247,7 @@ protocol is secure, then Protocol 1 is secure against semi-honest
 Alice and Bob.
 \label{claim:protocol1secure}
 \end{claim}
-Proof of this claim is tedious and is given in Appendix~\ref{appendix:proof}.
+\input{obdd/aproof1.tex}
 
 
 \subsection{Protocol 2}
@@ -283,7 +274,7 @@ vertices, in which case there are 4 nodes regardless of Alice's
 inputs. The description of this protocol is given in
 Figure~\ref{fig:protocol2}. The proof of correctness of this protocol
 is almost identical to the one presented in
-Section~\ref{sec:basicprotocol}. Example~\ref{example:protocol2} shows
+Section~\ref{sec:obdd-basicprotocol}. Example~\ref{example:protocol2} shows
 an execution of this protocol on a small function.
 
 
@@ -314,8 +305,11 @@ Figure \ref{cap:BDDpe}(c)\tabularnewline
 
 \end{figure*}
 
-\begin{center}
-\begin{boxfig}{ht!}{
+\vspace{2ex}
+The steps of protocol 2 are as follows:
+
+%\begin{center}
+%\begin{boxfig}{ht!}{
 \textsc{\bf Input:} Both parties' inputs include the $OBDD(f)$ for the Boolean function
 $f(x_1,x_2,\cdots,x_n)$ with the ordering $x_1 < x_2 < \cdots < x_n$.
 Furthermore, Alice holds the inputs for the variables in the set $X_A$ and
@@ -337,11 +331,11 @@ the secret corresponding to the root of the OBDD ${\cal O}_A$.
 \item The computation for Bob is exactly the same as that for Protocol 1. 
 
 \end{enumerate}
-}
-\vspace{-0.1cm}
-\caption{\label{fig:protocol2} Protocol 2.}
-\end{boxfig}
-\end{center}
+%}
+%\vspace{-0.1cm}
+%\caption{\label{fig:protocol2} Protocol 2.}
+%\end{boxfig}
+%\end{center}
 
 
 \begin{example}
@@ -392,4 +386,4 @@ protocol is secure, then Protocol 2 is secure against semi-honest
 Alice and Bob.
 \label{claim:protocol2secure}
 \end{claim}
-Proof of this claim is tedious and is given in Appendix~\ref{appendix:proof}.
+\input{obdd/aproof2.tex}

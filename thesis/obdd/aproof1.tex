@@ -1,0 +1,217 @@
+\begin{proof} 
+
+%[{\it Proof of Claim~\ref{claim:protocol1secure}}]
+
+Intuitively, Bob's security follows directly from the security of the
+1-out-of-2 oblivious transfer protocol he uses to obtain the secrets
+corresponding to his input. Alice's security follows from both the
+security of the oblivious transfer protocol (allowing Bob to only
+obtain only one key per node) and the semantic security of the
+encryption scheme (which allows Bob to only decrypt one entry in each
+node). We now flesh out the details by providing a simulation proof
+from Alice and Bob's view of the protocol. Let $x$ and $y$ be the
+inputs of Alice and Bob respectively and $\Pi$ be a protocol for
+secure-function evaluation of $f(x,y)$.  Let ${\sf VIEW}_A^\Pi (x,y)$
+and ${\sf VIEW}_B^\Pi (x,y)$ be the view of Alice and Bob for the run
+of the protocol $\Pi$ on input $x$ and $y$ (view of a party consists
+of its input, output, and all messages it receives during the
+execution of the protocol). In a simulation proof one needs to show
+two probabilistic polynomial-time algorithms $S_A$ and $S_B$ such that
+$S_A (x,f(x,y))$ and $S_B (y,f(x,y))$ are computationally
+indistinguishable from ${\sf VIEW}_A^\Pi (x,y)$ and ${\sf VIEW}_B^\Pi
+(x,y)$, respectively.  For a precise definition of a simulation proof
+the reader should refer to~\cite[Chapter 7]{Goldreich:vol2}.
+
+We first consider the case where Alice is corrupt. Alice's view in an
+execution of Protocol 1 consists of her view of the oblivious transfer
+protocol executions and the output of the function from Bob at the
+end. We now build a simulator that simulates Alice's view given access
+only to her input and output. Because the oblivious transfer protocol
+is secure, there exists a simulator that can simulate the transcript
+of Alice's view of the oblivious transfer protocol without knowing
+Bob's input. On input $(i_1,\ldots,i_k, f(i_1,\ldots,i_n))$, the
+simulator first simulates Alice's view of all $n-k$ executions of the
+oblivious transfer protocol by repeatedly running the oblivious
+transfer protocol simulator. Using a standard hybrid argument on the
+transcripts of all $n-k$ executions oblivious transfer protocols, we
+see that if the oblivious transfer protocol is secure, then the
+distributions of the simulated and real combined transcripts of all
+$n-k$ oblivious transfer executions are indistinguishable with
+non-negligible probability.
+
+Finally, the simulator writes $f(i_1,\ldots,i_n)$ on the transcript
+of Alice's view. We now show that the distribution of the output $f$
+is indistinguishable (except with negligible probability) from the
+real output, which amounts to showing that Bob outputs
+$f(i_1,\ldots,i_n))$ correctly on a real interaction. By the security
+of the oblivious transfer protocol, Bob is provided with the correct
+keys corresponding to its input during each execution of the oblivious
+transfer protocol. Applying claim~\ref{claim:protocol1correct}, it
+follows immediately that, except with negligible probability, Alice
+obtains the correct output from Bob, except with negligible
+probability. Therefore, the distribution of the simulated transcript
+is indistinguishable, except with negligible probability, from a real
+transcript, concluding the case when Alice is corrupt.
+
+We now consider the case when Bob is corrupt. Given
+$(i_{k+1},\ldots,i_n, f(i_1,\ldots,i_n))$, the simulator $\simu$ must
+simulate both a garbled OBDD that Bob can use to correctly compute
+$f(i_1,\ldots,i_n)$, and Bob's view of the $n-k$ executions of the
+oblivious transfer protocol. We first show how $\simu$ simulates the
+$n-k$ oblivious transfer protocol executions. As in the previous case,
+because the oblivious transfer protocol is secure, there exists a
+simulator that can simulate the transcript of Bob's view of the
+oblivious transfer protocol without knowing Alice's input. Therefore,
+$\simu$ simulates Bob's view of all $n-k$ executions of the
+oblivious transfer protocol by running the oblivious transfer protocol
+simulator $n-k$ times. Using a standard hybrid argument on the
+transcripts of the oblivious transfer protocols, we see that if the
+oblivious transfer protocol is secure, then the distributions of the
+simulated and real transcripts of all $n-k$ oblivious transfer
+executions are indistinguishable except with negligible probability.
+
+We now show how $\simu$ builds a garbled OBDD that Bob can use to
+successfully compute $f(i_1,\ldots,i_n)$. Since $\simu$ does not know
+$i_1,\ldots,i_k$, it cannot generate the garbled OBDD according to the
+protocol instructions. Instead, $\simu$ generates a garbled OBDD that
+always evaluates to $f(i_1,\ldots,i_n)$ regardless of the keys
+used. Such a garbled OBDD is built by first generating a chain of $n-k$
+garbled nodes $n_{k+1},\ldots,n_{n}$ such that Bob's computation
+starts at  $n_{k+1}$ and proceeds along the chain through
+$n_{k+2}$ and so on, before ending at node $n_{n}$; note that there is
+one such node for every level from $k+1$ to $n$. To ensure the
+computation always proceeds along this chain, \textit{both}
+ciphertexts in garbled nodes $n_{k+1},\ldots,n_{n-1}$ are encryptions
+(under different keys) of the same label-key message such that the
+label points to the next node along the chain and the node key
+combined with the level key allows successful decryption of that node;
+for example, simulated node $n_j$ for $k+1 \leq j\leq n-1$ has the
+form
+\[
+\begin{array}{l}
+\left( label(n_j)\,\,,\,\,E_{s_{n_j} \oplus s_{l}^0} (label(n_{j+1}) \,\|\, s_{n_{j+1}}) \right. \\
+\left. E_{s_{n_j} \oplus s_{l}^1} (label(n_{j+1}) \,\|\, s_{n_{j+1}})\right)\,\,\,.
+\end{array}
+\]
+Node $n_{n}$ is the terminal node and it is set to
+$f(i_1,\ldots,i_n)$. Once $n_{k+1},\ldots,n_{n}$ is generated, the
+simulator generates a number of ``fake'' nodes so that the simulated
+garbled OBDD contains the correct number of nodes; this number can be
+determined from $OBDD(f)$. Fake nodes are nodes whose ciphertext pair
+contain encryptions under different keys of the same label-key
+message; in a fake node, the label, the keys used to encrypt the
+ciphertext pair, and the label-key message encrypted in the ciphertext
+pair are chosen randomly.
+
+All that remains is to show that the distribution of the simulated
+garbled OBDD is indistinguishable from that of a real garbled OBDD. We
+do this by using a standard hybrid argument over the nodes in the
+garbled OBDD. Specifically, we run hybrid experiments with garbled OBDDs
+where real nodes are replaced by simulated nodes. We define the hybrid
+distributions such that $H_0(i_1,\ldots,i_n)$ contains the real
+garbled OBDD and $H_{B}(i_1,\ldots,i_n)$ contains the simulated garbled
+OBDD where $B$ is the number of non-dummy nodes in the real garbled
+OBDD. We do not need to consider dummy nodes in our hybrid experiment
+OBDDs because dummy nodes have the same distribution as the simulated
+fake nodes and do not affect our argument.
+
+We now define the hybrid garbled OBDD in experiment
+$H_i(i_1,\ldots,i_n)$; the difficulty here is that the hybrid OBDD
+contains both real and simulated nodes but must still allow Bob to
+correctly compute $f(i_1,\ldots,i_n)$. First, we traverse the real
+garbled OBDD and label a node as active if it is used by Bob in the
+process of evaluating the OBDD and inactive otherwise. Note that there
+will be only $n-k$ active nodes. Next, we order the nodes in the
+garbled OBDD by their level with level $j+1$ nodes placed ahead of
+level $j+2$ and so on; within the same level, nodes are ordered
+arbitrarily. The hybrid OBDD is defined as follows: first take the real
+garbled OBDD and replace the first $i$ non-dummy nodes as follows:
+inactive nodes are replaced with simulated fake nodes. An active node
+at level $j$ is altered by replacing its current ciphertext pair with
+two encryptions of the label-key message corresponding to the next
+active node at level $j+1$. These replacement ciphertexts are created
+with the keys used to create the original ciphertext pair. Note that
+the distribution of this altered active node is identical to that of
+the simulated node $n_j$ in the node chain described above. It is easy
+to see that a garbled OBDD built with this definition has the same
+distribution as 1) a real garbled OBDD when $i=0$ (i.e. for $H_0$), and
+2) a simulated garbled OBDD when $i=B$ (i.e. for $H_B$).
+
+We are now ready to show that the distribution of the simulated
+garbled OBDD is indistinguishable from that of a real garbled OBDD; that
+is, we will show that
+$\{H_0(i_1,\ldots,i_n)\}=\{H_{B}(i_1,\ldots,i_n)\}$. Suppose to the
+contrary that the distributions are distinguishable; that is, there
+exists a poly-time distinguisher $\disting$ that 
+\[
+\begin{array}{l}
+\vert \Pr[\disting(H_0(i_1,\ldots,i_n))=1] - \\
+\Pr[\disting(H_{B}(i_1,\ldots,i_n))=1]>1/p\vert
+\end{array}
+\]
+ for some polynomial
+$p$. Then there exists a $j$ such that 
+\[
+\begin{array}{l}
+\vert
+\Pr[\disting(H_{j-1}(i_1,\ldots,i_n))=1] - \\
+\Pr[\disting(H_{j}(i_1,\ldots,i_n))=1]>1/pB\vert
+\end{array}
+\]
+
+Using $\disting$, we now build an adversary that breaks the semantic
+security of the encryption scheme used to encrypt the garbled
+nodes. Recall in a semantic security game, the adversary sends two
+messages $m_0,m_1$ to the challenger and receives the encryption of
+$m_b$ for $b=\binset$; the adversary's goal is to determine $b$. Let
+$n^j$ be the $j$th node and we denote its two ciphertext terms as
+$c^{j}_0$ and $c^{j}_1$. Note that node $n^j$ in the hybrid OBDD in
+distribution $H^*_{j-1}$ is a real garbled node, whereas the same node
+for distribution $H^*_{j}$ is a simulated garbled node; specifically,
+$c^{j}_0$ and $c^{j}_1$ in distribution $H^*_{j-1}$ are encryptions of
+different label-key messages, whereas they are encryptions of the same
+label-key message in distribution $H^*_{j}$. We exploit this fact to
+build the adversary $\adver$ that breaks semantic security of the
+encryption scheme.
+
+First, $\adver$ creates the hybrid garbled OBDD corresponding to the
+distribution $H^*_{j-1}(i_1,\ldots,i_n)$. One of the two ciphertexts
+$c^{j}_0$ and $c^{j}_1$ in node $n^j$ is an encryption of the label
+and key for the active node $n^{j+1}$, whereas the other ciphertext is
+an encryption of the label and key for an inactive node. Let $\ell_0$
+be the label-key message encrypted in $c^j_0$ and $\ell_1$ be that
+encrypted in $c^j_1$. Next, $\adver$ sends $\ell_0$ and $\ell_1$ to
+the semantic security challenger and receives $c^*$, which is an
+encryption of either $\ell_0$ or $\ell_1$. Without loss of generality,
+let $\ell_0$ be the label-key message (contained in ciphertext
+$c^{j}_0$) that leads to the next active node. $\adver$ replaces
+$c^j_1$ with $c^*$ in node $n^j$ in the garbled OBDD that it built in
+the first step, and then feeds the altered OBDD together with the other
+required inputs to the hybrid distinguisher $\disting$. Note that
+$c^*$ cannot be decrypted with the node and level keys for node
+$n^j$. This fact, however, does not prevent the garbled OBDD from being
+evaluated correctly because $c^*$ replaces $c^j_1$, which contains the
+label and key to an inactive node, and would not be successfully
+decrypted while evaluating the garbled OBDD on the inputs
+$(i_1,\ldots,i_n)$.
+
+$\disting$ eventually outputs a result stating that the input is of
+distribution $H^*_{j-1}$ or $H^*_{j}$. If $\disting$ outputs that the
+input is of distribution $H^*_{j-1}$, then $\adver$ outputs that $c^*$
+is an encryption of $\ell_1$; otherwise $\adver$ outputs that $c^*$ is
+an encryption of $\ell_0$. Notice that if $c^*$ is an encryption of
+$\ell_0$, then both ciphertexts in node $n^j$ are encryptions of the
+same label-message, and the input to $\disting$ has distribution
+$H^*_{j}$. Similarly, if $c^*$ is an encryption of $\ell_1$, then the
+input to $\disting$ has distribution $H^*_{j-1}$. Since $\disting$
+distinguishes between $H^*_{j-1}$ and $H^*_{j}$ with non-negligible
+probability, we see that $\adver$ wins the semantic security game with
+non-negligible advantage. Since we assume that the encryption scheme is
+semantically secure, this implication is a contradiction, and there is
+no such distinguisher $\disting$ that distinguishes between
+$H_0(i_1,\ldots,i_n)$ and $H_{B}(i_1,\ldots,i_n)$; that is, the
+distribution of the simulated garbled OBDD is indistinguishable from
+that of a real garbled OBDD. Therefore, Bob's simulated view is
+indistinguishable, except with negligible probability, to the real
+view, concluding the proof.
+\end{proof}
