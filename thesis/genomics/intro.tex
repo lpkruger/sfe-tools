@@ -1,5 +1,53 @@
 \section{Contribution}
+In this chapter, we discuss the design and implementation of
+practical mechanisms for
+collaborative two-party computation on genome data.  Our main focus is
+on the dynamic programming algorithms such as the edit distance and
+the Smith-Waterman algorithm for sequence alignment, which are among
+the fundamental building blocks of computational biology~\cite[Chapter
+11]{Gusfield}.
 
+Specifically, the following contributions are made:
+
+\begin{itemize}
+
+\item 
+We design and implement several efficient, privacy-preserving protocols
+for computing the \emph{edit distance} between two strings $\alpha$
+and $\beta$, \ie, the minimum number of {\sf delete}, {\sf insert},
+and {\sf replace} operations needed to convert $\alpha$ into $\beta$.
+
+\item
+We construct an efficient solution for computing the Smith-Waterman~\cite{Smith-Waterman}
+similarity score between two sequences. The Smith-Waterman similarity score is used for
+sequence alignment.
+
+\item
+We demonstrate that, in addition to privacy-preserving computation on
+genomic data, our techniques generalize to a wide variety of dynamic
+programming problems~\cite[Chapter 15]{CLR}.
+
+\item
+We evaluate our implementation on realistic case studies, including
+protein sequences from the Pfam database~\cite{pfam2002}.  Our experimental results
+demonstrate that our methods are practical on sequences of up to several
+hundred symbols in length.
+
+\item
+Even though theoretical constructions for various secure multi-party
+computation (SMC) tasks have received much attention (see related
+work below), actual implementations and performance measurements
+are exceptionally rare.  In contrast to the vast majority of
+SMC research, the implementations of the protocols presented here have been
+evaluated on real protein sequences and analysis workloads, demonstrating
+that they can be used in practice on problem instances of realistic size,
+while achieving the same level of cryptographic security as theoretical
+constructions.  We also make all of the implementation available as open source
+software.\footnote{\url{http://www.cs.wisc.edu/~lpkruger/genomics}}
+
+\end{itemize}
+
+\section{Threats}
 Genomic data such as DNA and protein sequences are increasingly collected
 by government agencies for law enforcement and medical purposes,
 disseminated via public repositories for research and medical studies,
@@ -30,58 +78,7 @@ genomic data without requiring the participants to release the underlying
 DNA and protein sequences is perhaps the most important privacy challenge
 in computational biology today.
 
-In this paper, we design and implement practical mechanisms for
-collaborative two-party computation on genome data.  Our main focus is
-on the dynamic programming algorithms such as the edit distance and
-the Smith-Waterman algorithm for sequence alignment, which are among
-the fundamental building blocks of computational biology~\cite[Chapter
-11]{Gusfield}.
-
-This paper makes the following contributions:
-
-\begin{itemize}
-
-\item 
-We design and implement several efficient, privacy-preserving protocols
-for computing the \emph{edit distance} between two strings $\alpha$
-and $\beta$, \ie, the minimum number of {\sf delete}, {\sf insert},
-and {\sf replace} operations needed to convert $\alpha$ into $\beta$.
-
-\item
-We construct an efficient solution for computing the Smith-Waterman~\cite{Smith-Waterman}
-similarity score between two sequences. The Smith-Waterman similarity score is used for
-sequence alignment.
-
-\item
-We demonstrate that, in addition to privacy-preserving computation on
-genomic data, our techniques generalize to a wide variety of dynamic
-programming problems~\cite[Chapter 15]{CLR}.
-
-\item
-We evaluate our implementation on realistic case studies, including
-protein sequences from the Pfam database~\cite{pfam2002}.  Our experimental results
-demonstrate that our methods are practical on sequences of up to several
-hundred symbols in length.
-
-{\sf Note:}
-Our implementation is available for download from \url{anonymized}.
-
-\end{itemize}
-
-Even though theoretical constructions for various secure multi-party
-computation (SMC) tasks have received much attention (see related
-work below), actual implementations and performance measurements
-are \emph{exceptionally} rare.  In contrast to the vast majority of
-SMC research, the protocols presented in this paper are accompanied
-by publicly available implementations.  The implementations have been
-evaluated on real protein sequences and analysis workloads, demonstrating
-that they can be used in practice on problem instances of realistic size,
-while achieving the same level of cryptographic security as theoretical
-constructions.
-
-\vspace{1ex}
-\noindent
-\textbf{Related work:} 
+\section{Related work:} 
 Public availability of personal information due to the Internet has
 brought privacy concerns to the forefront~\cite{cra99,tur03}.  Therefore,
 there has been considerable interest in developing privacy protection
@@ -89,13 +86,8 @@ technologies~\cite{p3p02,gwb97,rks+97}.
 
 One of the fundamental cryptographic primitives for designing
 privacy-preserving protocols is \emph{secure function evaluation (SFE)},
-Generic protocols for SFE~\cite{GMW87,Yao86} enable two parties $A$ and
-$B$ with respective inputs $x$ and $y$ to jointly compute any efficiently
-computable (\ie, probabilistic polynomial-time) function $f(x,y)$ while
-preserving the privacy of their respective inputs, \ie, $A$ does not learn
-anything from the protocol execution beyond what is revealed by her own
-input $x$ and the result $f(x,y)$; a symmetric condition holds for $B$.
-Generic constructions, however, are not always practical in real-world
+introduced in chapter 2.  Generic constructions, however, are not always
+practical in real-world
 application scenarios.  For example, direct application of SFE to the
 computational biology problems is infeasible on anything but toy examples.
 
@@ -124,15 +116,12 @@ scalable, as demonstrated by our evaluation on realistic instances of
 genomic analysis problems.
 
 For testing equality between two values, our constructions use
-Yao's ``garbled circuits'' method~\cite{LP04,Yao86}, albeit in
+Yao's garbled circuits method presented in section 2.?, albeit in
 a non-``black-box'' way (our edit distance protocol exploits the
 specifics of circuit encoding in Yao's method).  Related work on
 equality testing includes Damg{\aa}rd \textit{et al.}~\cite{Dam-TCC06}.
 Their techniques guarantee unconditional security, but only allow a
 minority of passive (semi-honest) adversaries, and thus do not apply in
-the two-party setting of our protocol.  We also employ the oblivious
-transfer protocol due to Naor and Pinkas~\cite{Naor-Pinkas:2001}.
-Related work include techniques for communication-efficient $1$-out-of-$n$
-oblivious transfer~\cite{gentry-icalp05,lipmaa-isc05}, but we only use
-$1$-out-of-$2$ oblivious transfer in our constructions.
-
+the two-party setting of our protocol.  We will use as a building
+block, the Pinkas-Naor oblivious transfer protocol presented
+in chapter 2.

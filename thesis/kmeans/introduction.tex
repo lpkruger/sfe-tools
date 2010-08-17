@@ -2,17 +2,48 @@
 %% cite laws and popular articles
 
 \section{Contribution}
+The previous chapter introduced our work in privacy-preserving
+genomics by presenting algorithms for dynamic programming such
+as the Smith-Waterman sequence alignment.  In this chapter,
+we present a privacy preserving algorithm for clustering, an
+unsupervised learning algorithm used in genomics and many other
+machine-learning domains.
 
-The ease and transparency of information flow on the Internet has
-heightened concerns of personal privacy~\cite{cra99,tur03}.  Web
-surfing, email, and other services constantly leak information about
-who we are and what we care about.  Many have accepted that some
-privacy will be lost in exchange for the benefits of digital
-services~\cite{tay03}.  However, in other domains privacy is so
-important that its protection is federally mandated~\cite{hippa}.
-Technologies for protecting privacy are
-emerging in response to these growing
-concerns~\cite{p3p02,gwb97,rks+97}.  Recently, more emphasis has been placed on preserving the
+%% Contributions of this paper
+
+This chapter makes the following contributions:
+
+\begin{itemize}
+\item We present the design and analysis of privacy-preserving $k$-means
+clustering algorithm for horizontally partitioned data (see
+Section~\ref{sec:k-means}). The crucial step in our algorithm is
+privacy-preserving of cluster means. We present two protocols for
+privacy-preserving computation of cluster means. The first protocol is
+based on oblivious polynomial evaluation and the second one on
+homomorphic encryption. These protocols are described in detail in
+Section~\ref{sec:WAP}.
+
+\item We present an open-source implementation of our algorithm. 
+We believe that modular design of our implementation will enable other
+researchers to use our implementation.  We evaluated the two privacy-preserving
+clustering algorithms on real data sets. Our first conclusion is that
+privacy-preserving clustering is feasible. For example, for a large
+data set ($5,687$ samples and $12$ features) from the speech
+recognition domain our homomorphic-encryption-based algorithm took
+approximately $66$ seconds. We also observed that both in bandwidth
+efficiency and execution overhead algorithms based on homomorphic
+encryption performed better than the one based on oblivious polynomial
+evaluation. A detailed discussion of our evaluation is given in
+Section~\ref{sec:eval}.
+
+\end{itemize}
+
+
+
+\section{Related work}
+
+As discussed in the previous chapter,
+emphasis has been placed on preserving the
 privacy of user-data aggregations, e.g., databases of personal
 information.  Access to these  collections is, however, enormously
 useful.  It is from this balance between privacy and utility that the
@@ -74,38 +105,5 @@ have used clustering to predict gene function. We believe that
 privacy-preserving clustering can be used in bioinformatics where the
 data sets are owned by separate organizations, who do not want to
 reveal their individual data sets.
-
-This paper makes the following contributions:
-
-\begin{itemize}
-\item We present the design and analysis of privacy-preserving $k$-means
-clustering algorithm for horizontally partitioned data (see
-Section~\ref{sec:k-means}). The crucial step in our algorithm is
-privacy-preserving of cluster means. We present two protocols for
-privacy-preserving computation of cluster means. The first protocol is
-based on oblivious polynomial evaluation and the second one on
-homomorphic encryption. These protocols are described in detail in
-Section~\ref{sec:WAP}.
-
-\item We have also have a JAVA implementation of our algorithm. 
-We believe that modular design of our implementation will enable other
-researchers to use our implementation. Our clustering tool is
-available by request.  We evaluated the two privacy-preserving
-clustering algorithms on real data sets. Our first conclusion is that
-privacy-preserving clustering is feasible. For example, for a large
-data set ($5,687$ samples and $12$ features) from the speech
-recognition domain our homomorphic-encryption-based algorithm took
-approximately $66$ seconds. We also observed that both in bandwidth
-efficiency and execution overhead algorithms based on homomorphic
-encryption performed better than the one based on oblivious polynomial
-evaluation. A detailed discussion of our evaluation is given in
-Section~\ref{sec:eval}.
-
-\end{itemize}
-
-
-
-
-%% Contributions of this paper
 
 
