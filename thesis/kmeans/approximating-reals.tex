@@ -1,0 +1,38 @@
+
+
+\section{Approximating Reals}
+\label{sec:approximating-reals}
+
+Assume that real numbers occur in the interval $[M,-M)$. We divide
+the interval $[M,-M)$ into $2MN$ sub-intervals of size $\frac{1}{N}$.
+The $i$-th sub-interval (where $0 \leq i < 2MN$) is given by
+\[
+\left[ -M + \frac{i}{N}, -M + \frac{i+1}{N} \right)
+\]
+We denote by $I(x)$ as the sub-interval the real number $x$ lies in,
+i.e.  $x \in [-M + \frac{I(x)}{N}, -M + \frac{I(x)+1}{N} )$. If $x$
+and $y$ are two real numbers that lie in the sub-interval $I(x)$ and $I(y)$,
+then $x+y$ lies in the sub-interval $[ -2M + \frac{I(x)+I(y)}{N}, -2M
++ \frac{I(x)+I(y)+2}{N})$.
+
+For the rest of the sub-section we will approximate real numbers with
+the the interval they lie in. In our protocol, a party obtains 
+$z (I(x)+I(y))$ and $z (n+m)$, where $z$ is the random number. 
+Using some simple arithmetic we can deduce that $\frac{z (I(x)+I(y))}{z(n+m)}$
+lies in the interval $[-M + \frac{Q}{N}, -M+\frac{Q+1}{N} )$, where 
+$Q$ is the quotient of $q_1$ divided by $q_2$. Integers $q_1$ and 
+$q_2$ are shown below:
+\begin{eqnarray*}
+q_1 & = & MN ( z (n+m) -2) + z(n+m) \cdot z (I(x)+I(y)) \\
+q_2 & = & z (n+m)
+\end{eqnarray*}
+In all our algorithms, we have to use a large enough space so that
+all the operations used to calculate $q_1$ and $q_2$ are exact, i.e.,
+there is no ``wrap around''. If all the integers used in $q_1$ and
+$q_2$ are bounded by $2^k$, then the size of the field should be 
+greater than or equal to $2^{4k+5}$. 
+
+
+
+
+

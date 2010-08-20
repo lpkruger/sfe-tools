@@ -1,0 +1,47 @@
+\section{Definitions and Proofs}
+\label{appendix:definitions-proofs}
+
+\begin{definition}
+\label{def:semantic-secure}
+\rm
+Assume that the message space $M$ can be sampled in polynomial time,
+i.e., there exists a probabilistic polynomial time algorithm $A_M$ such
+that it takes input $1^k$ and generates a message $m \in M$. Let $h : M \rightarrow R$
+be a function, which can be thought of as  some information about the message, e.g.,
+$h(m)=1$ iff message has a substring ``Bob'' in it. Consider the following two games:
+\begin{itemize}
+\item {\bf (Game 1):} Adversary is informed that I am about to choose a message $m$ using
+the sampling algorithm $A_M$. The adversary is  asked to guess $h(m)$.
+
+\item {\bf (Game 2):} In addition to the information given in game 1, he is also told
+the encryption $\alpha \in E(m)$ of the message. The adversary is again asked to guess $h(m)$.
+\end{itemize}
+An encryption function $E$ is called {\em semantically secure} if the difference
+between the probabilities of the adversary succeeding in the two games is negligible. The 
+probability is computed over the message space.
+\end{definition}
+
+\noindent
+{\bf Proof of Theorem~\ref{thm:privacy-homomorphic}:} The view of the two parties is shown below:
+\begin{eqnarray*}
+\mbox{VIEW}_1^{\mathcal{P}_H} (x,n) & = & (x,n, z (x+y), z (n+m)) \\
+\mbox{VIEW}_2^{\mathcal{P}_H} (y,m) & = & (y,m,x_1,n_1,\frac{x+y}{n+m})
+\end{eqnarray*}
+Let $z'$ be a message uniformly chosen from $M$. Define $S_1 (x,n,\frac{x+y}{n+m})$ as follows:
+\[
+(x,n, z' \frac{x+y}{n+m}, z')
+\]
+It is easy to see that $S_1 (x,n,\frac{x+y}{n+m})$ and
+$\mbox{VIEW}_1^{\mathcal{P}_H} (x,n)$ are statistically
+indistinguishable (this proof is very similar to the proof of
+Theorem~\ref{thm:privacy-PRPE} given in Section~\ref{subsec:OPE}).
+
+Recall that $x_1 \in E(x)$ and $n_1 \in E(n)$. Since $(G,E,D)$ is
+semantically secure, party $2$ cannot gain extra information from the
+encrypted values $x_1$ and $n_1$.  In other words. Let $x'_1 \in
+E(x')$ and $n'_1 \in E(n')$, where $x'$ and $n'$ are randomly chosen
+messages. An adversary cannot distinguish between
+$\mbox{VIEW}_2^{\mathcal{P}_H} (y,m)$ and
+$(y,m,x'_1,n'_1,\frac{x+y}{n+m})$ with more than negligible
+probability.  Therefore, privacy of party $1$ with respect to party $2$
+follows.  $\Box$

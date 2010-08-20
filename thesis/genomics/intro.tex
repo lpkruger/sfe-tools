@@ -79,10 +79,10 @@ DNA and protein sequences is perhaps the most important privacy challenge
 in computational biology today.
 
 \section{Related work:} 
-Public availability of personal information due to the Internet has
-brought privacy concerns to the forefront~\cite{cra99,tur03}.  Therefore,
-there has been considerable interest in developing privacy protection
-technologies~\cite{p3p02,gwb97,rks+97}.
+%Public availability of personal information due to the Internet has
+%brought privacy concerns to the forefront~\cite{cra99,tur03}.  Therefore,
+%there has been considerable interest in developing privacy protection
+%technologies~\cite{p3p02,gwb97,rks+97}.
 
 One of the fundamental cryptographic primitives for designing
 privacy-preserving protocols is \emph{secure function evaluation (SFE)},
@@ -101,7 +101,7 @@ al.}~\cite{atallah} and Szaida \textit{et al.}~\cite{Szajda:NDSS:2004}.
 Neither paper provides a proof of security.  The edit distance protocol
 of~\cite{atallah} is impractical even for very small problem instances due
 to its immense computational cost: a single iteration requires at least
-300,000 modular multiplications (see appendix~\ref{appendix-atallah}).
+300,000 modular multiplications (see section~\ref{appendix-atallah}).
 The distributed Smith-Waterman algorithm of~\cite{Szajda:NDSS:2004}
 involves decomposing the problem instance into several sub-problems,
 which are spread out to several participants.  The intuition is that
@@ -116,7 +116,8 @@ scalable, as demonstrated by our evaluation on realistic instances of
 genomic analysis problems.
 
 For testing equality between two values, our constructions use
-Yao's garbled circuits method presented in section 2.?, albeit in
+Yao's garbled circuits method presented in 
+section~\ref{sub:Garbled-Circuit-Method}, albeit in
 a non-``black-box'' way (our edit distance protocol exploits the
 specifics of circuit encoding in Yao's method).  Related work on
 equality testing includes Damg{\aa}rd \textit{et al.}~\cite{Dam-TCC06}.
@@ -124,4 +125,4 @@ Their techniques guarantee unconditional security, but only allow a
 minority of passive (semi-honest) adversaries, and thus do not apply in
 the two-party setting of our protocol.  We will use as a building
 block, the Pinkas-Naor oblivious transfer protocol presented
-in chapter 2.
+in section~\ref{sub:Oblivious-Transfer}.

@@ -178,7 +178,7 @@ Alice.
 
 We prove correctness and security in the semi-honest threat model,
 defined in section 2.1.  Claim~\ref{claim:protocol1correct}
-proves that the protocol shown in Figure~\ref{protbasicobdd} is
+proves that protocol 1 is
 correct; that is, Bob computes the function $f(i_1,\cdots,i_n)$.
 Claim~\ref{claim:protocol1secure} proves that protocol 1 is secure
 in the semi-honest model; that is, at the end of protocol 1, Alice only
@@ -271,14 +271,11 @@ Alice's value is $0$, there are only 2 nodes, but in
 Figure~\ref{cap:BDDpe}(b), there are 3 nodes.
 Figure~\ref{cap:BDDpe}(c) shows the result of retaining extra
 vertices, in which case there are 4 nodes regardless of Alice's
-inputs. The description of this protocol is given in
-Figure~\ref{fig:protocol2}. The proof of correctness of this protocol
+inputs. The description of this protocol is presented next.
+The proof of correctness of this protocol
 is almost identical to the one presented in
 Section~\ref{sec:obdd-basicprotocol}. Example~\ref{example:protocol2} shows
 an execution of this protocol on a small function.
-
-
-
 
 \begin{figure*}
 
@@ -322,7 +319,7 @@ Bob holds the inputs for the variables in the set $X_B \; = \; \{ x_1,\cdots,x_n
 operation described in Section~\ref{sec:OBDDs}.
 
 \item Alice encrypts the OBDD for the function $f \mid_{X_A}$ and sends it to Bob. This
-step is exactly the same as for Protocol 1 described in Figure~\ref{protbasicobdd}. Alice also sends
+step is exactly the same as for Protocol 1.  Alice also sends
 the secret corresponding to the root of the OBDD ${\cal O}_A$. 
 
 

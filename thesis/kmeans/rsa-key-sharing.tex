@@ -1,0 +1,60 @@
+
+\section{Generation of shared RSA keys and WAP}
+\label{sec:shared-RSA}
+
+We assume that all elements are drawn from a finite field
+$\mathcal{F}$.  Suppose that party $1$ and $2$ have a pair of numbers
+$(a,b)$ and $(c,d)$ and they want to privately compute
+$(a+c)(b+d)$. In other words, they want to privately compute the
+following functionality:
+\begin{eqnarray*}
+((a,b),(c,d)) & \longmapsto & (a+c)(b+d)
+\end{eqnarray*}
+This problem is one of the crucial steps in the protocol for sharing
+RSA keys. Let $\mathcal{P}_{sk}$ be the protocol for solving this
+problem. We will show that $\mathcal{P}_{sk}$ can be used to design a
+protocol $\mathcal{P}_{WAP}$ for solving WAP (see Section~\ref{sec:WAP} for a description
+of this problem). Protocol $\mathcal{P}_{WAP}$ works as follows:
+
+\begin{itemize}
+
+\item Party $1$ and party $2$ generate two random elements $z_1$ and $z_2$ chosen
+uniformly from $\mathcal{F}$.
+
+\item Two parties invoke the protocol $\mathcal{P}_{sk}$ with inputs
+$(x,z_1)$ and $(y,z_2)$. Each party obtains $r_1 \; = \; (x+y)(z_1+z_2)$.
+
+\item Two parties invoke the protocol $\mathcal{P}_{sk}$ with inputs
+$(n,z_1)$ and $(m,z_2)$. Each party obtains $r_2 \; = \; (n+m)(z_1+z_2)$.
+
+\item The two parties obtain $\frac{x+y}{n+m}$ by computing $\frac{r_1}{r_2}$.
+
+\end{itemize}
+
+Next we argue that $\mathcal{P}_{WAP}$ is privacy preserving.  The
+views of the two parties in this protocol are:
+\begin{eqnarray*}
+\mbox{VIEW}_1 (x,n) & = & (x,n,(x+y)(z_1+z_2),  (n+m)(z_1+z_2)) \\
+\mbox{VIEW}_2 (y,m)  & = & (y,m,(x+y)(z_1+z_2),  (n+m)(z_1+z_2))
+\end{eqnarray*}
+Let $z'$ be a random element of $\mathcal{F}$ and $S_1 (x,n,\frac{x+y}{n+m})$
+be defined as follows:
+\[
+(x,n, z' \frac{x+y}{n+m},z')
+\]
+If we fix $x$, $y$, and $z_1$ and pick $z_2$ uniformly from $\mathcal{F}$, then
+$(x+y)(z_1+z_2)$ is a random element distributed uniformly over $\mathcal{F}$.
+Therefore, $\mbox{VIEW}_1 (x,n)$ and $S_1
+(x,n,\frac{x+y}{n+m}))$ are statistically indistinguishable. 
+Let $z'$ be a random element of $\mathcal{F}$ and $S_2 (y,m,\frac{x+y}{n+m}))$
+be defined as follows:
+\[
+(y,m, z' \frac{x+y}{n+m},z')
+\]
+It is easy to see that $\mbox{VIEW}_2 (y,m)$ and $S_2(y,m,\frac{x+y}{n+m}))$ 
+are statistically indistinguishable. Using the composition theorem the 
+privacy of $\mathcal{P}_{WAP}$ follows.
+
+
+
+

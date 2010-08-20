@@ -119,14 +119,14 @@ $C_{D(i,j-1)}$, $C_{D(i-1,j)}$, and, $C_{D(i-1,j-1)}$.  Once we have
 the circuit representation $C_{D(n,m)}$ for the edit distance problem,
 we can compute $C_{D(n,m)}(\alpha,\beta)$ in a privacy-preserving
 manner using standard algorithms for secure circuit evaluation (see
-section~\ref{crypto}).
+section~\ref{sub:Garbled-Circuit-Method}).
 
 
 \subsection{Protocol 2}
 
 Protocol 1 represents the entire problem instance as a single circuit.
 The resulting representation, however, is impractically large for
-problems of realistic size (see section~\ref{sec:experimental}).
+problems of realistic size (see section~\ref{sec:genomics-experimental}).
 Protocol 2 is designed to use much smaller circuits as building blocks.
 It employs Yao's ``garbled circuits'' technique for circuit evaluation
 in a non-black-box way, \ie, it exploits the \emph{specific circuit
@@ -136,7 +136,7 @@ representation} in Yao's protocol instead of using it simply as an
 Let $w=\mid \Sigma \mid$ be the size of the alphabet for which the two
 strings are drawn, and recall that $q = \lceil \log_2 (w) \rceil$.
 Let $r$ be the length of wire keys in Yao's ``garbled circuits''
-construction (see section~\ref{yao}); $r$ can be viewed as the security
+construction (see section~\ref{sub:Garbled-Circuit-Method}); $r$ can be viewed as the security
 parameter for Yao's protocol.  Protocol 2 involves evaluation of multiple
 instances of the following two circuits.
 
@@ -168,7 +168,7 @@ the same functionality would not be sufficient for our purposes.)
 Bob, acting as the circuit evaluator in Yao's protocol, learns
 $k^{\sigma}_{\mathit{eq}}$.  He does not learn whether this value
 represents $0$ or $1$, since he does not know the mapping from random
-wire keys to the bit values they represent (see section~\ref{yao}).
+wire keys to the bit values they represent.
 This property, too, is essential in our construction.
 
 \vspace{1ex}
@@ -245,7 +245,7 @@ Bob has obtained and thus does not learn the result of the equality test.
 All $n \times m$ instances of $\CE$ can be evaluated in parallel.
 Each instance requires $q$ $1$-out-of-$2$ oblivious transfers in order
 to transfer the wire keys representing Bob's $q$-bit input into $\CE$
-from Alice to Bob (see section~\ref{yao}).  These oblivious transfers can
+from Alice to Bob.  These oblivious transfers can
 be parallelized.  The total number of communication rounds is equal to
 those of a single oblivious transfer, \eg, $2$ in the case of Naor-Pinkas
 protocol~\cite{Naor-Pinkas:2001}.  Evaluation of all $n \times m$
@@ -277,7 +277,7 @@ Phase 2 requires $n \times m$ iterations.  Let $(i,j)$ be the indices
 of the iterations.  In each iteration $(i,j)$, Alice and Bob perform an
 instance of Yao's secure circuit evaluation protocol on circuit $\CM$.
 Alice creates a garbled instance of $\CM$ in the usual way (see
-section~\ref{yao}), generating two fresh random wire keys for each
+section~\ref{sub:Garbled-Circuit-Method}), generating two fresh random wire keys for each
 circuit wire \emph{except} Bob's input wire corresponding to value $t$.
 
 Instead of generating new wire keys for this wire, Alice re-uses the
@@ -322,7 +322,7 @@ Alice and Bob to reconstruct the edit distance as $D_A(n,m) \oplus D_B(n,m)$.
 
 Each iteration of phase 2 requires $3 \log(n+m)$ instances of $OT_1^2$ in
 order to transfer the wire keys representing Bob's inputs into $\CM(i,j)$
-from Alice to Bob (see section~\ref{yao}).  These oblivious transfers
+from Alice to Bob.  These oblivious transfers
 can be parallelized.  The total number of iterations is equal
 to $2nm$, assuming a 2-round oblivious transfer protocol.
 
@@ -510,7 +510,9 @@ and ${\it left}(D(i,j),l,w)$, respectively. We have the following lemma:
 $D(i,j)$, can be expressed as a function of ${\it bottom}(D(i,j),l,w)$,
 ${\it left}(D(i,j),l,w)$, $ \alpha [ i-w+1 \cdots  i ]$, and $\beta [ j-l+1 \cdots j]$.
 \end{lemma}
-The proof for this lemma is straightforward but tedious and is provided in appendix~\ref{appendix:lemma}.
+%The proof for this lemma is straightforward but tedious and is provided 
+%in appendix~\ref{appendix:lemma}.
+\input{genomics/appendix-lemma.tex}
 
 
 Protocol 3 is described in Figure~\ref{fig:protocol-3} and proceeds in
