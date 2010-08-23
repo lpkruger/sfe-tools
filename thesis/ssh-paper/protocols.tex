@@ -15,7 +15,7 @@
 %% \begin{document}
 
 \section{Protocols}
-\label{sec:proto}
+\label{sec:ssh-proto}
 
 % Describe the sem-honest and malicious model
 % Explain why these are not the right model
@@ -154,7 +154,7 @@ had not cheated.
 
 
 \subsection{Protocol 1: Strawman Protocol}
-\label{subsec:protocol-1}
+\label{subsec:ssh-protocol-1}
 
 Recall that the client ($C$) has the password $x=P$ and the server
 ($S$) has the hash of the password $y=H(P)$. The protocol works as
@@ -211,7 +211,7 @@ the client should only be able to successfully authenticate if he knows
 the password whose hash matches what the server has).  The key idea is
 that the hash function $H$ is included in the functionality, which makes
 our protocol resilient against malicious servers impersonating clients
-(see Section~\ref{subsec:protocol-1}): knowledge of the password hash
+(see Section~\ref{subsec:ssh-protocol-1}): knowledge of the password hash
 is \emph{not} sufficient to authenticate as the client.
 
 The following protocol description assumes that the reader is familiar

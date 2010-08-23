@@ -1,11 +1,12 @@
 \input{ssh-paper/sfe-proto-fig}
 \section{Implementation and Experiments}
-\label{sec:eval}
+\label{sec:ssh-eval}
 
 We modified an existing open-source SSH client and server to use each
-of the protocols described in Section~\ref{sec:proto}, and took
+of the protocols described in Section~\ref{sec:ssh-proto}, and took
 several performance measurements to evaluate the feasibility of our
-approach. Our findings can be summarized as follows:
+approach.  We implemented and tested the salted MD5 and SHA-512 hashing methods
+commonly used in Linux distributions.  Our findings can be summarized as follows:
 \begin{itemize}
 \item Protocols that are secure in the semi-honest model, which is only 
 secure against passive adversaries, can be executed very quickly.
@@ -17,7 +18,7 @@ time from around 2 seconds to 12 seconds.  Although this may seem
 tedious for some users, we achieve a high level of security with only
 modest delays on inexpensive modern hardware.  We conclude that the technique
 can achieve a favorable balance between efficient practicality and high
-security.
+security on systems using MD5 hashing.
 
 \item Due the simplicity of private equality testing, Protocol 1 (the Straw man protocol)
 can run extremely quickly even under the covert model at the expense
@@ -25,7 +26,7 @@ of resisting impersonation by an adversary who has gained knowledge of
 a user's password hash.  If this security requirement can be relaxed
 (for example, in an environment where passwords are stored on the
 server using an identity hash, i.e. in plaintext) protocol 1 could be
-a useful as high-speed authentication protocol.
+a useful high-speed authentication protocol.
 \end{itemize}
 
 \subsection{Implementation}
@@ -34,14 +35,14 @@ We implemented the protocols by modifying the Dropbear 0.52 SSH client
 and server to support a new authentication protocol, to which we
 assigned the name {}``sfeauth'' in the SSH authentication protocol
 namespace. The scheme used for incorporating the protocols into the
-SSH protocol is shown in Figure \ref{fig:sfeauth}. The Yao
-sub-protocol is conducted through the encrypted SSH tunnel using a
+SSH protocol is shown in Figure~\ref{fig:sfeauth}. Our
+protocol is executed through the encrypted SSH tunnel using a
 reserved message which we dubbed
 \texttt{SSH\_MSG\_USERAUTH\_SFEMSG}. If at any time the server detects
-a cheating attempt by the client, the server fails the authentication
+a cheating attempt by the client, the server denies the authentication
 and terminates the protocol.
 
-The MD5 and private equality circuits were implemented using a
+The MD5, SHA-512, and private equality circuits were implemented using a
 prototype circuit compiler we developed first described in
 \cite{1398071}, which also contains an embeddable implementation of
 the Yao {}``garbled circuit'' protocol. The protocol was extended
@@ -59,17 +60,17 @@ To improve performance of the protocols, we introduced several
 optimizations to our implementation.
 \begin{enumerate}
 \item The client computes the garbled circuits used in the
-authentication protocol in advance of the online protocol.  By
-precomputing and storing garbled circuits, the time spent in this CPU
-intensive step is removed from the user's perceived wait time to login
-to a server.
+authentication protocol in advance of interacting with the online
+protocol.  By precomputing and storing garbled circuits, the time
+spent in this CPU intensive step is removed from the user's perceived
+wait time to login to a server.
 \item We implemented an optimization described by 
 Goyal \textit{et al.}~\cite{goyalmohasselsmith-eurocrypt08}.  In
 constructing the garbled Yao circuits, the client generates a set of
-seeds for a cryptographically-secure pseudorandom number generator.
+seeds for a cryptographically-secure pseudorandom number generator (PRNG).
 The circuits are garbled using this PRNG, with one seed per circuit,
 and hashes of the circuits are sent in place of the whole circuits.
-After the server has chosen which circuits to evaluate, the seeds for
+After the server has chosen which circuits to open, the seeds for
 the non-chosen circuits are revealed to the server, who then uses the
 PRNG to reconstruct the garbled circuit and verify the hash values,
 and only the circuits to be evaluated are transferred in full.  This
@@ -78,8 +79,9 @@ protocol performance.
 \end{enumerate}
 
 The prototype SSH client and server, as well as further documentation,
-can be downloaded from our project
-website.\footnote{\url{http://www.cs.wisc.edu/~lpkruger/ssh}}
+can be downloaded from our project 
+website.\footnote{\url{ANONYMIZED}}
+% website.\footnote{\url{http://www.cs.wisc.edu/~lpkruger/ssh}}
 
 
 \subsection{Experiments}
@@ -90,7 +92,7 @@ settings. Note that the semi-honest version is not secure for
 real-world usage where the possibility of active malicious adversaries
 cannot be ruled out, but the experiment is useful to establish an
 upper bound for the potential performance with further
-optimization. The tests were performed over a local network using
+optimizations. The tests were performed over a local network using
 computers with eight core Intel Xeon processors and 8GB of RAM.
 
 The performance results of our experiments are shown in
@@ -105,28 +107,44 @@ the time required to complete the protocol increases linearly as the
 number of circuits increases, while the security guarantee increases
 exponentially in this measure. Note that for less than an order of
 magnitude increase over semi-honest implementation, sufficient
-security guarantees for many practical settings can be attained. These
-trends indicate that our technique is suitable for common use in real
-applications.
+security guarantees for many practical settings can be attained, especially
+when using the MD5 protocol.
+
+The experiments on 120 and 150 circuits for SHA-512 could not be completed.
+This is due to the complexity of the SHA-512 circuit, which has close to 124,000 gates, compared to under 18,000 for the MD5 circuit. 
+Because of this, our test machines did not have enough RAM to hold 120 or more encrypted copies of the circuit.
+SHA-512 uses 80 rounds of its compression functions. As a performance optimization, it would be 
+possible to use a reduced-round variant of the circuit into which the client inputs into 
+the circuit the output after the first $N$ rounds, and the circuit computes the 
+remaining $80-N$ rounds. Such an optimization would reduce the margin of safety built 
+into the SHA-512 hash function against pre-image attacks, if the password database were compromised. 
+However, such an optimization would reduce the size of the circuit by a factor of $\frac{80-N}{80}$,
+with a corresponding increase in performance. Naturally, this optimization would need to be
+weighed carefully against the cryptographic consequences.
+
+Overall, we believe these results indicate that our technique is suitable for common use in real
+applications, especially on systems based on a simpler hash function than SHA-512, such as the common MD5 standard.
 
 \begin{table}[t]
 \centering
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|c|}
 \hline
-{\it \# Circuits} & {\it Online Time (seconds)} & {\it Ratio to
-Semi-Honest} & {\it Probability of attack success} \\
+{\it \# Circuits} & 
+{\it \parbox[t]{0.8in}{MD5 Online Time (sec)}} & {\it \parbox[t]{0.9in}{MD5 Ratio to Semi-Honest}} & 
+{\it \parbox[t]{1in}{SHA-512 Online Time (sec)}} & {\it \parbox[t]{1in}{SHA-512 Ratio to Semi-Honest}} & 
+{\it \parbox[t]{0.9in}{Probability of attack success}} \\
 \hline\hline
-1 ({\it Semi-Honest}) & 0.52 & 1.0 & 100\% \\
+1 ({\it Semi-Honest}) & 0.52 & 1.0 & 3.02 & 1.0 & 100\% \\
 \hline
-30 & 3.99 & 7.7 & $1.86 \times 10^{-7}$\% \\
+30 & 3.99 & 7.7 & 28.8 & 9.5 & $1.86 \times 10^{-7}$\% \\
 \hline
-60 & 7.86 & 15.2 & $1.73 \times 10^{-16}$\% \\
+60 & 7.86 & 15.2 & 62.6 & 20.7 & $1.73 \times 10^{-16}$\% \\
 \hline
-90 & 12.35 & 23.8 & $1.62 \times 10^{-25}$\% \\
+90 & 12.35 & 23.8 & 85.0 & 28.1 & $1.62 \times 10^{-25}$\% \\
 \hline
-120 & 16.46 & 31.8 & $1.50 \times 10^{-34}$\% \\
+120 & 16.46 & 31.8 & N/A & N/A & $1.50 \times 10^{-34}$\% \\
 \hline
-150 & 20.57 & 39.6 & $1.40 \times 10^{-43}$\% \\
+150 & 20.57 & 39.6 & N/A & N/A & $1.40 \times 10^{-43}$\% \\
 \hline
 \end{tabular}
 \vspace{1em}

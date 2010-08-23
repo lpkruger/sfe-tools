@@ -1,5 +1,5 @@
 \section{SSH Protocol Overview}
-\label{sec:overview}
+\label{sec:ssh-overview}
 
 \begin{figure*}[t]
   \centering
@@ -53,10 +53,10 @@ the server's key, to prevent a man-in-the-middle attack. The SSH
 specification includes a single Diffie-Hellman group for key
 exchange~\cite{rfc4251}, although later proposals have extended this
 layer to allow new Diffie-Hellman groups to be added as
-needed~\cite{rfc4419}. As described in Section~\ref{sec:intro}, the
+needed~\cite{rfc4419}. As described in Section~\ref{sec:ssh-intro}, the
 host's key is validated by querying the user. Thus, this layer is
 responsible for the vulnerability described in
-Section~\ref{sec:intro}.
+Section~\ref{sec:ssh-intro}.
 
 \paragraph{User Authentication:}
 
@@ -140,7 +140,7 @@ follows (depicted in Figure~\ref{fig:auth}):
 %% server is an impersonator and the protocol can terminate, not having
 %% leaked any additional information to the adversary other than the
 %% outcome of the authentication attempt~\cite{yao82}. We discuss this
-%% protocol in greater detail in Section~\ref{sec:protocol}.
+%% protocol in greater detail in Section~\ref{sec:ssh-protocol}.
 
 \begin{figure*}
   \centering

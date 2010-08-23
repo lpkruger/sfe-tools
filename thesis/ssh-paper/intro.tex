@@ -1,74 +1,77 @@
 \section{Contribution}
-\label{sec:intro}
+\label{sec:ssh-intro}
 
 %% SSH is a widely-used protocol. As such, it is often used in settings
 %% where sophisticated authentication mechanisms are not available.
 
 Originally designed as a secure alternative to telnet, SSH has since
 evolved into a layered protocol that serves as the secure transport
-layer over which many other protocols execute. This functionality has
-simplified the task of providing sophisticated cryptographic security
-to a number of applications that need it. Unfortunately, it has also
-encouraged SSH deployment in settings where strong authentication
-mechanisms are not available, or worse yet, take a backseat to more
-convenient measures such as interactive password login. This poses a
-significant problem, as many casual SSH users may assume that the mere
-presence of SSH guarantees security, unaware of the risks associated
-with password authentication and the improper use of public key
-cryptography~\cite{DBLP:journals/compsec/YangS99}. For example, in
-Section~\ref{sec:overview} we describe a man-in-the-middle attack on
-SSH password authentication.
+layer over which many other protocols execute.  This functionality has
+simplified the task of providing cryptographic security to
+applications that need it.  Unfortunately, it has also encouraged SSH
+deployment in settings where strong authentication mechanisms are not
+available, or worse yet, take a backseat to more convenient methods
+such as interactive password login, which is a significant problem.
+Casual SSH users may assume that the mere presence of SSH guarantees
+security, unaware of the risks associated with password authentication
+and improper use of public-key
+cryptography~\cite{DBLP:journals/compsec/YangS99}.  It is difficult
+for a human user to verify authenticity of the server's public key
+from a hexadecimal fingerprint; in Section~\ref{subsec:ssh-mitm}, we
+describe a man-in-the-middle attack on SSH password authentication
+which exploits this fact.  However, we note that this is not a new
+attack and was known before. This problem is not limited to SSH, but
+also affects other Internet services relying on password
+authentication.
 
 \vspace{1ex}
 \noindent
-To address the attack described in Section~\ref{subsec:ssh-mitm}.  we
-design a practical, yet cryptographically secure protocol for
-password-based authentication and key establishment in SSH.  Even though
-we use our protocol in the context of SSH, our technique can be applied 
-to any scenario where password-based authentication is applicable. An
-implementation of our protocol is available at \url{http://www.cs.wisc.edu/~lpkruger/ssh}. Our protocol
-satisfies three important design principles.
+We designed and implemented a practical, yet cryptographically secure
+protocol for password-based authentication and key establishment in SSH.
+Even though we use our protocol in the context of SSH, our technique
+can be applied to any scenario where password-based authentication
+is necessary.  An implementation of our protocol is available at
+%\url{http://www.cs.wisc.edu/~lpkruger/ssh}. 
+\url{ANONYMIZED.}
+Our protocol satisfies three important requirements.
 
 \begin{description}
 
-\item[(1) Compatible with legacy infrastructure.] Our protocol is
-compatible with existing password authentication infrastructures.  It
-does not require any changes to \emph{legacy servers} beyond upgrading
-the SSH software and is thus deployable in common settings.  The use
-of cryptographic hash databases to store passwords is common practice
-on both Unix and Windows systems~\cite{smith08}. Typical Linux systems
-(current versions of Ubuntu~\cite{ubuntu-shadow},
-RedHat~\cite{redhat-shadow}, and Debian~\cite{debian-shadow})
-typically use either the MD5 or SHA-512 hash function, with salts and
-iterated rounds for added security against offline brute-force
-attacks. Current Windows versions use a proprietary technology known
-as the NT Hash~\cite{nt-hash}, but the principle is identical. Our
-protocol is specifically designed to support the use of hash functions
-to store passwords.
+\item[(1) Compatible with legacy infrastructure.] 
+Our protocol is compatible with existing password authentication
+infrastructures.  It does not require any changes to \emph{legacy servers}
+beyond upgrading the SSH software and is thus deployable in common
+settings.  The use of cryptographic hash databases to store passwords is
+common practice on both Unix and Windows systems~\cite{smith08}. Typical
+Linux systems (current versions of Ubuntu~\cite{ubuntu-shadow},
+RedHat~\cite{redhat-shadow}, and Debian~\cite{debian-shadow}) typically
+use either MD5, or SHA-512 hash function, with salts and iterated rounds
+for added security against offline brute-force attacks.  Current versions
+of Windows use a proprietary NT Hash technology~\cite{nt-hash}, but
+the principle is identical.  Our protocol is specifically designed to
+support storage of passwords in hashed form.
 
 By contrast, other solutions for password-authenticated key exchange
 require users to re-generate passwords, which greatly limits their
 deployability.  They cannot be installed on legacy servers with large
 existing user bases.  Some also require additional information to be
-stored on the server or assume the existence of public-key
-infrastructure (PKI).
+stored on the server or assume the existence of public-key infrastructure
+(PKI).
 
-\item[(2) Does not decrease security of password storage.] At the very
-least, the password authentication mechanism should not provide weaker
-security guarantees than the current system, in which users' passwords
-are stored on the server in hashed form.  If the server stores
-passwords in the clear, a compromise of the server will reveal the
-passwords of all users.  Even without an external compromise, a
-malicious server operator may impersonate a user in other
-authentication domains.
+\item[(2) Does not decrease security of password storage.] 
+At the very least, the password authentication mechanism should not
+provide weaker security guarantees than the current system, in which
+users' passwords are stored on the server in hashed form.  If the server
+stores passwords in the clear, a compromise of the server will reveal
+the passwords of all users.  Even without an external attack, a malicious
+server operator may impersonate a user in other authentication domains.
 
 Our protocol takes as inputs the password from the user and the hashed
-password from the client (it is essential that the user's input into
-the protocol is the actual password and not a hash; otherwise, a
-malicious server operator could impersonate the user).  Therefore,
-from the viewpoint of password security, it is as strong as existing
-solutions, while providing significantly more protection against
-man-in-the-middle attacks.
+password from the server (it is essential that the user's input be the
+actual password and not a hash; otherwise, a malicious server could
+impersonate the user).  Therefore, from the viewpoint of password
+security, it is as strong as existing solutions, while providing
+significantly more protection against man-in-the-middle attacks.
 
 \item[(3) Enables derivation of a secure, shared cryptographic key.]
 Our protocol enables the user and the server to derive a shared
@@ -101,22 +104,21 @@ hash of the SSH client's password and compare it for equality with the
 hash value provided by the SSH server.
 
 Yao's original protocol is only secure against passive or semi-honest
-adversaries~\cite{lindellpinkas-jcs,Yao86}, \ie, under the assumption
-that all participants faithfully follow the protocol.  This model is
-clearly unsuitable for SSH, which must be secure even if one of the
-participants maliciously deviates from the protocol specification.
-This includes the case when a malicious SSH client---who constructs
-the garbled circuits in our protocol---deliberately creates a faulty
-circuit in an attempt to learn the server's input into the protocol.
-For example, the client may put malformed ciphertexts into the rows of
-the garbled truth table which will only be evaluated when a certain
-input bit from the server is equal to ``1,'' and correct ciphertexts
-into the rows which will be evaluated when this bit is equal to ``0.''
-By observing whether the server's evaluation of this circuit fails or
-not, the malicious client can learn the value of the bit in question.
-The malicious client may also submit a circuit which computes something
-other than the hash-and-check-for-equality function required by SSH
-authentication.
+adversaries~\cite{lindellpinkas-jcs,Yao86}, \ie, if all participants
+faithfully follow the protocol.  This model is clearly unsuitable for
+SSH, which must be secure even if one of the participants maliciously
+deviates from the protocol specification.  This includes the case when
+a malicious SSH client---who constructs the garbled circuits in our
+protocol---deliberately creates a faulty circuit in an attempt to learn
+the server's input into the protocol.  For example, the client may put
+malformed ciphertexts into the rows of the garbled truth table which will
+only be evaluated when a certain input bit from the server is equal to
+``1,'' and correct ciphertexts into the rows which will be evaluated when
+this bit is equal to ``0.''  By observing whether the server's evaluation
+of this circuit fails or not, the malicious client can learn the value
+of the bit in question.  The malicious client may also submit a circuit
+which computes something other than the hash-and-check-for-equality
+function required by SSH authentication.
 
 Yao's protocol can be modified to achieve security
 against malicious parti\-cipants---either via cut-and-choose
@@ -135,7 +137,7 @@ cut-and-choose construction for SFE in the malicious model requires that
 the server evaluate several garbled circuits submitted by the client and
 the majority of them must be correct~\cite{lindellpinkas-eurocrypt07}.
 In the context of password authentication for SSH, it is sufficient that a
-\emph{single} circuit is correct.  Even if all but one circuits evaluated
+\emph{single} circuit be correct.  Even if all but one circuits evaluated
 by the server are faulty, a malicious client does not learn any more
 than he would have been learned simply by submitting a wrong password.
 
@@ -147,8 +149,8 @@ Our key observation is that to prevent a malicious client from
 authenticating without the correct password, it is sufficient for the
 SSH server to either (a) detect that one of the circuits submitted by
 the client is incorrect, or (b) evaluate at least one correct circuit.
-In other words, the SSH server either detects the client's misbehavior or
-rejects the client's candidate password because its hash does not match
+In other words, the SSH server either detects the client's misbehavior,
+or rejects the client's candidate password because its hash does not match
 the server's value.  In either case, authentication attempt is rejected.
 
 We prove the security of our protocol against malicious
@@ -172,11 +174,13 @@ denial-of-service attack by refusing to communicate the result of
 authentication to the client, this is inevitable in any client-server
 architecture.
 
-The protocol is also secure against replay attacks since a
-man-in-the-middle eavesdropper on an instance of the protocol does not
-learn anything about the client's input (password), server's input
-(password hash), or the shared key established by the client and
-the server.
+The protocol is secure against replay attacks, since a man-in-the-middle
+eavesdropper on an instance of the protocol does not learn anything about
+the client's input (password), server's input (password hash), or the
+shared key established by the client and the server.  Furthermore, we
+show that even if a man-in-the-middle attacker tampers with the protocol
+execution, he does not learn more than he would have learned simply by
+attempting to authenticate with a wrong password.
 
 %% When password authentication is used, steps must be taken to prevent a
 %% MITM attack wherein a malicious third party learns the client's
@@ -186,42 +190,42 @@ the server.
 
 \vspace{1ex}
 \noindent
-\textbf{SPAKA protocols.}  Bellovin and Merritt pioneered a class of
-protocols that use the client password as a shared secret for mutual
-authentication~\cite{bellovin92}. These protocols, commonly referred
-to as SPAKA (\emph{Secure Password and Key Authentication}) or PAKE
-(\emph{Password Authenticated Key Exchange}), are resistant to the
-password compromise scenario described above, \emph{even when the
-client is communicating directly with a malicious impersonator.}
-Furthermore, these protocols alert the client to the presence of an
-impersonator, allowing the SSH user to curtail further communications
-in high-risk situations.  However, existing SPAKA protocols impose
-requirements that make them difficult to deploy in most settings,
+\textbf{PAKE protocols.}  
+Bellovin and Merritt pioneered a class of protocols
+that use the client password as a shared secret for mutual
+authentication~\cite{bellovin92}. These protocols, commonly referred to
+as PAKE (\emph{Password-Authenticated Key Exchange}), are resistant to
+the password compromise scenario described above, even when the client is
+communicating directly with a malicious impersonator.  Furthermore, these
+protocols alert the client to the presence of an impersonator, allowing
+the SSH user to cut further communications in high-risk situations.
+However, existing PAKE protocols are difficult to deploy in many settings,
 especially when legacy servers and legacy hashed-password files are
-involved (see Section~\ref{sec:related}).
+involved (see Section~\ref{sec:ssh-related}).
 
 In this paper, we present the first password-based authentication and
-key establishment protocol to satisfy, in the context of SSH, the
-three design principles listed above.  We show that the secure
-password storage and the secure key establishment requirements can be
-achieved by comparing the authentication credentials of the user and
-the server using \emph{secure function evaluation} (SFE)~\cite{Y82},
-in a legacy-compatible manner.
+key establishment protocol to satisfy the three design principles
+listed above.  We show that the secure password storage and the
+secure key establishment requirements can be achieved by comparing the
+authentication credentials of the user and the server using \emph{secure
+function evaluation} (SFE)~\cite{Y82}, in a legacy-compatible manner.
 
 The main insight that enables backward compatibility with existing
-infrastructures is that SFE gives the protocol complete flexibility to
-compute arbitrary hash functions while performing authentication.
-This makes our protocol suitable as a ``drop-in'' authentication
-module in most legacy environments, requiring only that the server and
-client software be updated to use the new protocol.
+infrastructures is that SFE gives the protocol complete flexibility
+to compute arbitrary hash functions while performing authentication.
+This makes our protocol suitable as a ``drop-in'' authentication module
+in most legacy environments, requiring only that the server and client
+software be updated to use the new protocol.
 
 
 \vspace{1ex}
 \noindent
-\textbf{Organization of the paper.}  In Section~\ref{sec:related}, we
-discuss related work, and explain why existing SPAKA protocols are not
-suitable for SSH in terms of the three requirements previously
-listed. In Section~\ref{sec:overview}, we present a technical overview
-of our problem setting, as well as our proposed solution. In
-Section~\ref{sec:proto}, we describe our contributions in further
-detail, and in Section~\ref{sec:eval} we evaluate our implementation.
+\textbf{Organization of the paper.}  
+In Section~\ref{sec:ssh-related}, we discuss related work, and explain why
+existing PAKE protocols are not suitable for SSH in terms of the three
+requirements listed in the introduction. In Section~\ref{sec:ssh-overview},
+we present a technical overview of our problem setting, as well as our
+proposed solution. In Section~\ref{sec:ssh-proto}, we describe the design
+and implementation of our scheme, and in Section~\ref{sec:ssh-eval} we
+evaluate it.
+
