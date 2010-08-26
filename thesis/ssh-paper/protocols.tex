@@ -184,10 +184,9 @@ password itself.  First, this means that if the server is compromised,
 then the attacker can impersonate any client whose password was stored
 on the compromised server, even if these passwords were stored in a
 hashed form.  Second, if the server is malicious, then it can
-impersonate any client who successfully authenticates to it.
-
-Nevertheless, the straw man protocol may be useful in certain environments
-with relaxed security requirements.
+impersonate any client who successfully authenticates to it. 
+Nevertheless, the straw man protocol may be useful in certain
+environments with relaxed security requirements.
 
 % Protocol 2
 % The hash function is incorporated in the circuit
@@ -220,7 +219,7 @@ construction and oblivious transfer).
 
 \begin{itemize}
 
-\item {\bf (Step 1)}  Client creates $l$ garbled circuits $C_1,\cdots,C_l$ of the  for $\delta (H(x), y)$. Let server's 
+\item {\bf (Step 1)}  Client creates $l$ garbled circuits $C_1,\cdots,C_l$ for $\delta (H(x), y)$. Let server's 
 input $y \; = \; y_1 \cdots y_m$ be $m$ bits. The wire keys corresponding
 to the $j$-bit of server's input for the $i$-th garbled circuit $C_i$
 is denoted by $k^0_{i,j}$ and $k^1_{i,j}$. Client sends circuits
@@ -271,7 +270,7 @@ if $B$ is a subset of $\neg S$ (the complement of $S$), \ie, all invalid
 circuits are in the unopened set.
 
 \item 
-The server's response to the client is computed as the logical AND of the
+The server's response to the client is computed as the $\wedge$ of the
 outputs of all unopened circuits (Step 5).  This exploits the essential
 feature of password authentication, namely, that the client receives a
 single bit from the server.
@@ -344,7 +343,7 @@ information about the client's input. Consider the circuits $C_j$ $(j
 nothing else. Consider an ensemble of garbled circuits $C'_j$ $(j
 \not\in S)$, 
 where $C'_j$ computes the constant function $\delta (H(x),y)$.\footnote{ We assume $C'_j$ is constructed from the same
-encryption scheme that was used to construct $C_1,\cdots,C_j$.}. If
+encryption scheme that was used to construct $C_1,\cdots,C_j$.} If
 the encryption-scheme is semantically secure, then ${\cal A}$ cannot
 distinguish between circuits $C_j$ and $C'_j$ (for $j \not\in
 S$). Essentially ${\cal A}$ only learns whether hash of client's
@@ -369,15 +368,13 @@ In particular, we show that that the protocol is secure unless the
 client perfectly guesses the subset $S$ of the $l$ circuits that
 the server will choose and prepares the encrypted circuits accordingly.
 
-It is sufficient to assume that the malicious client does not know
-the correct password. If the client knows the password then there
-is no information to be learned from the server that he does not already
-possess. There is no useful purpose to cheating the protocol, since
-he would achieve the desired outcome by executing it faithfully. In
-this case we simply do not care if the client cheats because he only
-hurts himself.
-
-There are three possible cases:
+It is sufficient to assume that the malicious client does not know the
+correct password. If the client knows the password then there is no
+information to be learned from the server that he does not already
+possess. There is no useful purpose to cheating the protocol, since he
+would achieve the desired outcome by executing it faithfully. In this
+case we simply do not care if the client cheats because he only hurts
+himself. There are three possible cases:
 \begin{itemize}
 \item {\bf (Case 1)} The client includes an invalid circuit in $S$. The server
 will detect this in and reject the authentication
@@ -402,10 +399,11 @@ client as authentic.
 Since the server chooses the subset $S$ uniformly from the space of
 proper subsets, the probability of case 3 happening is $2^{-l}$.
 
-Assume that the server is honest and the
-client is malicious. The client is controlled by an
-adversary ${\cal A}$. We construct a simulator ${\sf Sim}$ which works
-in the ideal model. ${\sf Sim}$ acts as the server for ${\cal A}$.
+Assume that the server is honest and the client is malicious. The
+client is controlled by an adversary ${\cal A}$. We construct a
+simulator ${\sf Sim}$ which works in the ideal model. Recall that in
+the ideal model the joint computation is performed using a trusted
+party (TP). ${\sf Sim}$ acts as the server for ${\cal A}$.
 \begin{itemize}
 \item ${\cal A}$ sends $l$ copies of the garbled circuits $C_1,\cdots,C_l$ to ${\sf Sim}$.
 \item ${\sf Sim}$ acts as TP for ${\cal A}$ for the $m$ oblivious transfer protocols. ${\sf Sim}$ knows the
@@ -467,29 +465,27 @@ the server's input, the probability of the simulator failing is bounded
 by $2^{-l+1}$.  This model is very similar to the ``failed simulation''
 model given by Aumann and Lindell~\cite[Section 3.2]{aumannlindell}.
 
-\vspace{1ex}
-\noindent
-\textbf{Other attacks:}
-Observing an instance of our protocol yields no information that will be
-useful in subsequent instances of the protocol (\eg, it does not reveal
-the parties' inputs).  Therefore, our construction is secure against
-replay attacks.
+\subsubsection{Security against man-in-the-middle attacks}
 
-Consider a replay attack in which a malicious part (Eve) captures all
-messages exchanged between the client and the server.  Now Eve replays
-message from an old session to impersonate the client. This attack is
-thwarted because various steps in the protocol use fresh, randomly
+Observing an instance of our protocol yields no information that will
+be useful in subsequent instances of the protocol (\eg, it does not
+reveal the parties' inputs).  Consider a man-in-the-middle (MITM)
+attacker who captures all messages exchanged between the client and
+the server.  The attacker will not be able to replay a message from an
+old session because various steps in the protocol use fresh, randomly
 generated values.  For example, in each instance of the Naor-Pinkas
 oblivious-transfer protocol, the chooser (in our case the SSH server)
 generates a random value $k$ and sends $g^k$ or $\frac{C}{g^k}$ (where $g$
 is generator of the underlying group and $C$ is an element in the group).
-Therefore, observing the server's inputs to the protocol does not reveal
-the password hash, nor any information that can be used in subsequent
-sessions.
+Therefore, observing the client's and server's inputs into our protocol
+does not reveal the password hash, nor any other information that can
+be used in subsequent sessions.
 
 % A man-in-the-middle attack (MITM) also does not yield any information
 % for the attacker because a transcript of our protocol does not reveal
 % the inputs of the parties or the session key.
+
+\input{ssh-paper/MITM_attacks}
 
 
 
@@ -500,8 +496,7 @@ In the context of SSH, client and server need to compare their inputs and
 also establish a session key if the comparison between their inputs is 
 successful.  The protocol is an easy extension of our main protocol.
 \begin{itemize}
-\item Client picks a random key $K$.
-\item Client and server execute a variation of the main protocol
+\item Client picks a random key $K$. Client and server execute a variation of the main protocol
 that computes the following functionality:
 \[
 ((x,K),y) \; \mapsto \; (\mbox{\bf if} \; (H(x) = y) \;\; \mbox{\bf

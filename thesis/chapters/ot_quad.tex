@@ -1,32 +1,41 @@
-
 \chapter{Oblivious Transfer with Modular Square Roots}\label{sec:OT-SquareRoots}
 \label{chapter:otquad}
 
-A new $OT_{2}^{1}$ protocol is presented, using the square root function
-in modular multiplicative groups as a trapdoor function. Here, I present
-a informal sketch of correctness, security, and efficiency. I propose
-to complete the proofs and perform a thorough experimental evaluation
-of its performance with respect to other oblivious transfer protocols.
 
+\section{Contribution}
+
+A new oblivious transfer protocol is presented, with a proof of correctness
+and security, and an analysis of efficiency. 
+
+The following contributions are made:
+\begin{itemize}
+\item An $OT_{2}^{1}$ protocol is presented, using the square root function
+in modular multiplicative groups as a trapdoor function.
+\item The protocol is proven correct and secure
+\item The efficiency is analyzed and compared to the common Pinkas-Naor
+OT, discussed in section ??.
+\item The protocol is extended to $OT_{N}^{1}$ in a natural and efficient
+way.
+\end{itemize}
 
 \section{Protocol}
 \begin{enumerate}
 \item The sender chooses large random prime numbers $p$ and $q$ such that
 $p\equiv q\equiv3\;(\mbox{mod }4)$ and calculates $n=pq$. $n$ is
 sent to the chooser. This is a one time setup step that need not be
-repeated for subsequent uses of the protocol.
+repeated for subsequent uses of the protocol. 
 \item The chooser uniformly chooses a random value $x\in S\subset Z_{n}^{*}$
 where $S=\{z\in Z_{n}^{*}:$~$z\le\frac{n-1}{2}\mbox{ and }$ $\left(\frac{z}{n}\right)=-1$
 if $s=1$ otherwise $\left(\frac{z}{n}\right)=+1\}$. The chooser
 computes $y\equiv x^{2}(\mbox{mod }n)$ and sends $y$ to the sender.
 $\left(\frac{x}{n}\right)$ denotes the Jacobi symbol of $x$ and
-$n$.
+$n$. 
 \item The sender calculates the square roots $a^{2}\equiv b^{2}\equiv y\;(mod\, n)$
 such that $\left(\frac{a}{n}\right)=-1$ and $\left(\frac{b}{n}\right)=+1$
-and $a,b\le\frac{n-1}{2}$
+and $a,b\le\frac{n-1}{2}$ 
 \item The sender encrypts $E_{a}(m_{1})$ and $E_{b}(m_{2})$ and sends
-them to the chooser.
-\item The chooser computes $D_{x}(E_{x}(m_{s}))$ to decrypt the output.
+them to the chooser. 
+\item The chooser computes $D_{x}(E_{x}(m_{s}))$ to decrypt the output. 
 \end{enumerate}
 
 \section{Correctness}
@@ -54,7 +63,7 @@ square roots $a^{2}\equiv b^{2}$, $a\neq-b$, then $(a-b)(a+b)\equiv0$
 so $(a-b)(a+b)=kpq$ Under the standard complexity assumption that
 factoring $n$ is infeasable, then the chooser can not efficiently
 learn the other square root of $x^{2}$, which is the encryption key
-of $E(m_{3-s})$ and the sender's privacy is preserved. 
+of $E(m_{3-s})$ and the sender's privacy is preserved.
 
 The chooser's privacy is preserved because the sender does not know
 whether the chooser calculated $y=a^{2}$ or $y=b^{2}$. From the
@@ -77,26 +86,17 @@ From then on, each OT requires the following:
 \item Computation of Jacobi symbols $\left(\frac{x}{n}\right)$ by the chooser.
 If the chooser uses random trials to find an appropriate $x$, then
 the expected number of trials is $2$. Computing Jacobi symbols can
-be performed in $O(k\log x)\le O(k^{2})$ steps \cite{1996-bach-book}. 
-\item There is a potential optimization of step 1. The chooser can pre-compute
-a single number $\alpha$ where $\left(\frac{\alpha}{n}\right)=-1$.
-From then on, the chooser can choose any random $\beta$ and have
-$\left(\frac{\beta^{2}}{n}\right)=+1$ and $\left(\frac{\alpha\beta^{2}}{n}\right)=-1$.
-This optimization as presented is insecure, because it breaks statistical
-indistinguishability for the chooser~%
-\footnote{The optimization will never produce a non-QR with $+1$ Jacobi symbol%
-}. However, I speculate that there may exist a variation which avoids
-this flaw and thereby reduces the chooser's overall complexity to
-$O(k)$.
-\item Transmission of a single $k$ bit number from chooser to sender
+be performed in $O(k\log x)\le O(k^{2})$ steps \cite{1996-bach-book}.
+
+\item Transmission of a single $k$ bit number from chooser to sender 
 \item Computation by the sender of square roots of $y$. This can be performed
 using a randomized algorithm in expected time $O(k\ \log\, p^{2})\le O(k^{3})$
 steps for $p>q$ \cite{1996-bach-book}. 
 \item Encryption and transmission by the sender of the two messages. If
 the sender does not need to hide the length of the unreceived message,
 then this requires no more bandwidth than the actual size of the messages,
-which is $O(\log m)$
-\item Decryption by the receiver of one of the messages, which is $O(\log m)$.
+which is $O(\log m)$ 
+\item Decryption by the receiver of one of the messages, which is $O(\log m)$. 
 \end{enumerate}
 If the sender and chooser wish to execute the protocol multiple times,
 the chooser can simply send a vector $[y_{1},\cdots,y_{j}]$ and the
@@ -116,28 +116,40 @@ that calculating discrete logarithms is infeasible. The communication
 consists of a message of size $\log n$ from sender to chooser, a
 message of size $\log n$ from chooser to sender, and two messages
 of size $\log m+\log n$ from sender to chooser, where $\log m$ is
-the size of the chooser's outputs. The protocol presented here cuts
-the final messages to $\log m$, which effectively reduces the bandwidth
-with a tradeoff in computation time. My experimentation with running
-SFE algorithms using fast modern CPUs indicates that this tradeoff
-may be worthwhile. I plan to make empirical measurements with implementations
-of the to comparitively measure the actual performance.
+the size of the chooser's outputs. The protocol presented here shortens
+the final messages to $O(\log m)$ bits, which effectively reduces
+the bandwidth with a tradeoff in computation time. My experimentation
+with running SFE algorithms using fast modern CPUs indicates that
+this tradeoff may be worthwhile.
 
 
 \section{Extensions}
 
-It may be possible to extend the construction to cover the more general
-$OT_{k}^{1}$. I have not investigated this yet, but one idea is to
-let $n=\prod_{i=1}^{k}p_{i}$ where each $p_{i}$ is a large prime
-number. In $Z_{n}^{*}$, each quadratic residue will have $2^{k}$
-square roots consisting of $2^{k-1}$ pairs $(x,n-x)$
+This protocol can be extended to $OT_{N}^{1}$ where $N\le2^{k}$
+in a straightforward way. Suppose the chooser wants to pick value
+$s$ from $N$ choices. The chooser will express $s$ as a binary
+integer $s=b_{1}b_{2}\cdots b_{k}$
 
-%
+In step 2, where the chooser picks a value $x$, instead the chooser
+picks a tuple $\left\{ x_{1},\cdots,x_{k}\right\} $. Each value $x_{i}$
+is chosen such that $\left(\frac{x_{i}}{n}\right)=+1$ iff $b_{i}=1$,
+otherwise $\left(\frac{x_{i}}{n}\right)=-1$. The chooser sends to
+the sender the tuple of the square of the $x_{i}$ values. i.e., he
+sends $\left\{ \left(x_{1}\right)^{2},\cdots,\left(x_{k}\right)^{2}\right\} $.
+
+In step 3, the sender computes two square roots for each $x_{j}$.
+
+In step 4, each message $M_{i}$ is encrypted with a key derived from
+the binary expansion of $i=b_{1}^{i}b_{2}^{i}\cdots b_{k}^{i}$ where
+the square root of $\left(x_{i}\right)^{2}$ with positive Jacobi
+sign is chosen when $b_{j}^{i}=1$ , and with negative Jacobi sign
+when $b_{j}^{i}=0$. In particular, the key for message $i$ would
+be a function $f(x'_{1},\cdots,x'_{k})$ where $\left(x'_{j}\right)^{2}=\left(x_{j}\right)^{2}$
+and $\left(\frac{x_{j}}{n}\right)=+1$ iff $b_{j}^{i}=1$
+
+In step 5, the chooser decrypts message $M_{s}$ using key $f(x_{1},\cdots,x_{k})$
+
 \begin{comment}
-\bibliographystyle{plain}
+\bibliographystyle{plain} \bibliographystyle{plain}
 \bibliography{crypto,privacy,somesh}
-
 \end{comment}
-{}
-
-
