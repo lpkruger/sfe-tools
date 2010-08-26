@@ -71,7 +71,7 @@ between the iterations of each phase).
 All garbled circuits can be pre-computed in advance, because the
 representation of the circuit in Yao's protocol is independent of the
 actual input values.  Each row of the truth table of each gate becomes
-a double-encrypted symmetric ciphertext (see section~\ref{yao}), for
+a double-encrypted symmetric ciphertext (see section~\ref{sub:Garbled-Circuit-Method}), for
 a total of $4 \times 2 q + (4 \times 10s +  8 \times (5s - 6))$ = $8q
 + 80s - 48$ ciphertexts.  Decrypting each double-encrypted ciphertext
 requires two online symmetric decryptions, but, on average, the evaluator
