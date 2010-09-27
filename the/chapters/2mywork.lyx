@@ -622,7 +622,14 @@ Class of Algorithm Specific: Protocol Optimization of Dynamic Programming
 \end_layout
 
 \begin_layout Standard
-In this work, we considered a design 
+In this work, presented in detail in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chapter:genomics"
+
+\end_inset
+
+, we considered a design 
 \emph on
 methodology
 \emph default

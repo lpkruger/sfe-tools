@@ -59,7 +59,7 @@ name "sub:Threat-Models"
 
 \begin_layout Standard
 It is well known that there are many threats and malicious parties on the
- internet, as discussed in the previous section.
+ Internet, as discussed in the previous section.
  We now present formalizations of these threats into threat models from
  the literature, suitable for formal cryptographic analysis.
  The three threat models presented here, known as the 
@@ -153,7 +153,7 @@ leak
  that it is weaker than the malicious model and does not capture the full
  range of malicious behaviors we would expect of an adversary.
  It is useful because a protocol that has been proven secure in the semi-honest
- model is guarenteed to have an analogous protocol that is secure in the
+ model is guaranteed to have an analogous protocol that is secure in the
  malicious model 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -221,9 +221,9 @@ malicious
  model, the adversary is also free to use any available methods to thwart
  the computation.
  Although the allowable behavior of the adversary is the same as in the
- malicious model, the security guarentee is relaxed.
+ malicious model, the security guarantee is relaxed.
  In particular, a protocol is considered secure in the covert model if the
- probability of the attacker not getting caught is small but non-negligable.
+ probability of the attacker not getting caught is small but non-negligible.
  The covert model can be considered appropriate for real-world scenarios
  only when the consequences to the adversary for being caught are a significant
  deterrence to trying to cheat (
@@ -338,7 +338,7 @@ key "NaorPinkas99"
 
 , based on discrete logarithms, because it is a very efficient OT protocol
  that we have chosen for practical implementations.
- The performance characteristics of this protocol are discussed in chapter
+ The performance characteristics of this protocol are discussed in section
  
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -352,11 +352,11 @@ reference "sub:Comparison-with-Naor-Pinkas"
  in chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "BROKEN: Ref: sec:OT-SquareRoots"
+reference "sec:OT-SquareRoots"
 
 \end_inset
 
-
+.
 \end_layout
 
 \begin_layout Enumerate
@@ -731,7 +731,7 @@ c polynomial time algorithm
 \end_inset
 
  with 
-\begin_inset Formula $\left|X_{n}\right|\le\mbox{poly}\left(n\right)$
+\begin_inset Formula $\mid X_{n}\mid\le\mbox{poly}\left(n\right)$
 \end_inset
 
  every pair of polynomially bounded functions 
@@ -751,7 +751,7 @@ c polynomial time algorithm
 
 \begin_layout Standard
 \begin_inset Formula \[
-\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{\left|X_{n}\right|},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
+\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
 
 \end_inset
 
@@ -760,7 +760,7 @@ c polynomial time algorithm
 
 \begin_layout Standard
 \begin_inset Formula \[
-<\Pr\left[A'\left(1^{n},1^{\left|X_{n}\right|},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
+<\Pr\left[A'\left(1^{n},1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
 
 \end_inset
 

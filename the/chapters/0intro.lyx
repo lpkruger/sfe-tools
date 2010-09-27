@@ -134,7 +134,7 @@ Despite these many privacy concerns, there is also a conflicting desire
  benefit, without exposing their sensitive business data.
  Therefore, the challenge is how to balance these competing concerns, making
  data available for desirable uses while preserving as much privacy as possible.
- By providing strong privacy guarentees, we enable new uses of sensitive
+ By providing strong privacy guarantees, we enable new uses of sensitive
  data.
 \end_layout
 
@@ -346,7 +346,7 @@ key "kruger07"
 \end_inset
 
 .
- Privacy-preserving protocols have benefitted from Moore's law as well,
+ Privacy-preserving protocols have benefited from Moore's law as well,
  as increased computational power has sped up the basic cryptographic primitives
  involved.
  We have shown that in many cases, the computation requirements of general
@@ -433,7 +433,7 @@ SFE can be used for practical purposes today, enabling privacy-preserving
  modular square roots.
  We will also show how traditional security problems can be solved using
  SFE, by presenting a secure protocol for password authentication with strong
- security guarentees and legacy interoperability that is better than other
+ security guarantees and legacy interoperability that is better than other
  authentication protocols in common use.
 \end_layout
 
