@@ -56,7 +56,7 @@ These concerns are not merely theoretical. In 2000, Ford Motor Explorer
 SUVs had a well publicized problem with their Firestone tires, in
 which the tire treads could fail under certain circumstances. At least
 271 deaths resulted \cite{NYTFordFirestone}. The problem resulted
-from the \emph{combination} of products, \ie there were no problems with
+from the \emph{combination} of products, \ie ~there were no problems with
 the same tires in other vehicles, nor with Ford Explorers using other
 tires. It has been suggested that the crisis could have been averted
 using joint data-mining, however, due to business secrecy concerns,
@@ -76,7 +76,7 @@ to reconstruct the obfuscated data, thereby breaking the privacy protection
 \cite{Malin04}. 
 
 Another method for preserving privacy is known as \emph{secure multiparty
-computation}\cite{Yao86}. This is a technique of performing computations on inputs
+computation}, or SMC \cite{Yao86}. This is a technique of performing computations on inputs
 supplied by multiple parties while provably maintaining privacy guarantees.
 If the computation is a function evaluation, then it is called \emph{secure
 function evaluation}, or SFE. This is a technique which in theory can address
@@ -119,7 +119,7 @@ protocols allow any function expressed as a circuit computation to
 be evaluated securely. The Fairplay system \cite{Fairplay} is a straightforward
 implementation of the Yao protocol \cite{Yao86}, presented in section
 \ref{sub:Garbled-Circuit-Method}, along with a supporting compiler
-that allows secure functions to be written in a more familiar functional
+that allows functions to be written in a more familiar functional
 programming notation. We demonstrated
 how \emph{Ordered Binary Decision Diagrams} (OBDD)  can be used to
 produce a more efficient protocol for secure evaluation for certain
@@ -140,7 +140,7 @@ of privacy preserving protocols. Our work has investigated finding
 efficient protocols for specific classes of functions; for example
 one study analyzes several designs of a $k$-means clustering algorithm
 \cite{kruger05}, and another discusses ways to design efficient protocols
-for many kinds of dynamic programming problems \cite{kruger07}. We
+for many kinds of dynamic-programming problems \cite{kruger07}. We
 have also investigated the use of alternate circuit representations
 using OBDDs to improve the performance of general purpose protocols
 and showed that they can be beneficial for certain functions \cite{kruger06}.
@@ -154,10 +154,10 @@ Our thesis statement is that {\it SFE can be used for practical purposes today,
 enabling privacy-preserving computation to thrive in today's distributed
 world. } In the rest of this thesis, we will demonstrate this through
 practical examples of the use of SFE.  We will show how traditional algorithms
-can be adapted to preserve privacy, such as in the case of k-means clustering
+can be adapted to preserve privacy, such as in the case of $k$-means clustering
 and privacy preserving genomic algorithms.  We will show how cryptographic
 primitives suitable for real-time use can be developed by presenting an
-oblivious transfer protocol based on the modular square roots.  We will
+oblivious-transfer protocol based on the modular square roots.  We will
 also show how traditional security problems can be solved using SFE,
 by presenting a secure protocol for password authentication with strong
 security guarantees and legacy interoperability that is better than other

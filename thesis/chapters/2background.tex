@@ -19,7 +19,7 @@ be discussed below.
 
 In the {}``semi-honest'' threat model, also known as {}``honest
 but curious'', or {}``passive'', \cite{GMW87} a party to the computation
-is assumed to behave correctly and follow the protocol as prescribed.
+is assumed to behave correctly and follow the prescribed protocol.
 However, the party also runs additional probabilistic polynomially
 bounded computation on the side in order to learn information to which
 he is not entitled. A security proof using the semi-honest threat
@@ -47,19 +47,19 @@ sending false or inconsistent messages at any step of the protocol.
 The malicious threat model naturally characterizes the malicious behavior
 that a secure protocol would need to protect against. If a protocol
 is shown to be secure in the malicious threat model, then we can reasonably
-assume that a malicious party or interloper will not be able to learn
+assume that a malicious party will not be able to learn
 any private information by attacking the protocol.
 
 In the {}``covert'' threat model, similar to the {}``malicious''
 model, the adversary is also free to use any available methods to
 thwart the computation. Although the allowable behavior of the adversary
-is the same as in the malicious model, the security guarantee is relaxed.
+is the same as in the malicious model, the security guarantees are relaxed.
 In particular, a protocol is considered secure in the covert model
 if the probability of the attacker not getting caught is small but
 non-negligible. The covert model can be considered appropriate for
 real-world scenarios only when the consequences to the adversary for
-being caught are a significant deterrence to trying to cheat (\ie
-loss of reputation, monetary or legal penalties, etc) compared to
+being caught are a significant deterrence to trying to cheat (e.g. 
+loss of reputation, monetary or legal penalties) compared to
 the benefit of a successful attack. \cite{aumannlindell}
 
 
@@ -78,25 +78,26 @@ steps that cannot be decomposed into still simpler steps.
 \subsection{Oblivious Transfer \label{sub:Oblivious-Transfer}}
 
 Oblivious transfer is a protocol originally proposed by Rabin \cite{Rabin81}.
-Informally, a 1-out-of-n oblivious transfer, denoted as $OT_{n}^{1}$,
-is a protocol between two parties, the \emph{Chooser} and the \emph{Sender}.
-The Sender's inputs into the protocol are $n$ values $v_{1},...,v_{n}$.
-The Chooser's input is an index $i$ such that $1\le i\le n$. As
-a result of the protocol, the Chooser receives $v_{i}$, but does
-not learn any additional information about the rest of the Sender's
-values. The Sender learns nothing.
+Informally, a 1-out-of-n \emph{oblivious transfer}, denoted as $OT_{1}^{n}$,
+is a protocol between two parties, the \emph{chooser} and the \emph{sender}.
+The sender's inputs into the protocol are $n$ values $v_{1},...,v_{n}$.
+The chooser's input is an index $i$ such that $1\le i\le n$. As
+a result of the protocol, the chooser receives $v_{i}$, but does
+not learn any additional information about the rest of the sender's
+values. The sender learns nothing.
 
 There are a variety of OT protocols presented in cryptographic literature.
-We focus on the Naor-Pinkas OT protocol \cite{NaorPinkas99}, based
+We focus on the Naor-Pinkas OT protocol~\cite{NaorPinkas99}, based
 on discrete logarithms, because it is a very efficient OT protocol
 that we have chosen for practical implementations. The performance
 characteristics of this protocol are discussed in section \ref{sub:Comparison-with-Naor-Pinkas}.
-The steps of the Naor-Pinkas OT protocol are summarized next. We will
-also investigate other OT methods based on modular square roots in
+The steps of the Naor-Pinkas $OT_{1}^{2}$ protocol are summarized next.
+It is possible to extend this to $OT_{1}^{n}$~\cite{NaorPinkas99}.
+We will also investigate other OT methods based on modular square roots in
 chapter \ref{sec:OT-SquareRoots}.
 \begin{enumerate}
 \item Let $q$ be a prime number and let $g$ be a generator for the field
-$\mathbb{Z}_{q}$. $q$ and $g$ are known to both parties. Also,
+$\mathbb{Z}_{q}$.  Elements $q$ and $g$ are known to both parties. Also,
 let $s\in\left\{ 0,1\right\} $ be the chooser's secret choice, and
 let $M_{0}$ and $M_{1}$ be the sender's messages. At the end of
 the protocol, the chooser should learn $M_{s}$ only and no party
@@ -119,6 +120,8 @@ Thus the chooser learns $M_{s}$. The chooser cannot decrypt $E_{1-s}$
 unless the chooser can find $k'$ such that $g^{k'}=\frac{C}{g^{k}}$.
 Thus, the security of Naor-Pinkas OT depends on the Diffie-Hellman
 assumption that finding discrete logarithms is a hard problem.
+For a formal proof and additional details, please see the paper by 
+Pinkas and Naor~\cite{NaorPinkas99}.
 \end{enumerate}
 
 \subsection{Homomorphic Encryption}
@@ -130,9 +133,9 @@ $E(a+b)=E(a)\oplus E(b)$ where $\oplus$ is an efficiently computable
 operator that requires no secret information. Similarly, a multiplicative
 homomorphic cipher satisfies $E(ab)=E(a)\otimes E(b)$. Some of the
 most famous public key ciphers have the multiplicative homomorphic
-property, including the Elgamal cipher \cite{elgamal85} and the RSA
-cipher \cite{rivest83rsa}. The homomorphic properties have traditionally
-been considered undesirable for general purpose cryptography \cite{jmsw02}.
+property, including the Elgamal cipher~\cite{elgamal85} and the RSA
+cipher~\cite{rivest83rsa}. The homomorphic properties have traditionally
+been considered undesirable for general purpose cryptography~\cite{jmsw02}.
 %
 \begin{comment}
 mention Cramer-Shoup? 
@@ -142,19 +145,19 @@ to violate integrity constraints, and also make such ciphers insecure
 against %
 \begin{comment}
 because the homomorphic structure aids in cryptanalysis and allows
-encrypted messages to be modified, violating integrity constraints.
-\cite{jmsw02}. This leads to insecurity against 
+encrypted messages to be modified, violating integrity 
+constraints~\cite{jmsw02}. This leads to insecurity against 
 \end{comment}
-{}\emph{adaptive chosen ciphertext} (CCA2) attacks \cite{bleichenbacher98chosen}.
+{}\emph{adaptive chosen ciphertext} (CCA2) attacks~\cite{bleichenbacher98chosen}.
 However, despite these concerns, homomorphic encryption schemes have
-found use in novel cryptographic applications such as secure voting
-\cite{benaloh94}. 
+found use in novel cryptographic applications such as secure
+voting~\cite{benaloh94}. 
 
 The homomorphic encryption methods we use in secure function evaluation
 must satisfy some properties:
 \begin{description}
 \label{semantically-secure-cipher} 
-\item [{Semantically-secure~cipher}] A cipher is \textit{semantically
+\item [{Semantically-secure~cipher.}] A cipher is \textit{semantically
 secure} \cite{Goldwasser:Micali} if it satisfies certain properties.
 Let $(G,E,D,M)$ be a public-key encryption scheme. $E_{e}(m)$ and
 $D_{d}(c)$ are the encryption and decryption functions for plaintext
@@ -188,18 +191,17 @@ so $E(m)$ must be a randomized one-to-many function representing
 a set of possible ciphertexts that can be obtained by encrypting $m$.
 Naturally, if $m_{1}\neq m_{2}$, then $E(m_{1})\cap E(m_{2})=\emptyset$ \end{itemize}
 \begin{description}
-\item [{Homomorphic~Cipher}] A cipher is called \emph{homomorphic} if
+\item [{Homomorphic~Cipher.}] A cipher is called \emph{homomorphic} if
 there is a computable homomorphism between plaintexts and ciphertexts.
 There exist various homomorphic ciphers with homomorphisms over addition,
 multiplication, and other operators. An \emph{additive homomorphic
 cipher}, which will be used in this thesis, satisfies the following
-homomorphism:\end{description}
+homomorphic properties.\end{description}
 \begin{itemize}
 \item There exists a computable function $f$, computable without the private
 key or other secret information, such that for all messages $m_{1}$,
 $m_{2}$, and $c_{1}\in E(m_{1})$, $c_{2}\in E(m_{2})$, the following
-property holds:\\
- $f\left(c_{1},c_{2}\right)\in E(m_{1}+m_{2})$ 
+property holds:  $f\left(c_{1},c_{2}\right)\in E(m_{1}+m_{2})$ 
 \item There exists a computable function $g$ such that for all $m_{1}\in M$
 and $\alpha\in M$, $c_{1}\in E(m)$ implies that $g(c_{1},\alpha)\in E(\alpha m_{1})$.
 In addition, $g$ must be computable without using the private key
