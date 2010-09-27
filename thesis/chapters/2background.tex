@@ -211,19 +211,27 @@ $g$ in terms of $O(\log\alpha)$ invocations of the function $f$.
 \end{itemize}
 There are several encryption schemes that satisfy these properties,
 of which Paillier's encryption scheme, based on composite residue
-classes, is widely used for its efficiency \cite{Paillier99}. In
+classes, is widely used for its efficiency \cite{Paillier99}.  The
+Paillier cryptosystem is briefly summarized here.  Further details and
+proofs can be found in \cite{Paillier99}.
+\begin{itemize}
+\item In
 the Paillier cryptosystem, the message space is all $m<n$, where
 $n=pq$ for $p$ and $q$ prime. The ciphertext space is $E(m)<n^{2}$.
-Let $g<n^{2}$ such that $g$ has order $n\alpha$. Using the public
-key $(g,n)$, the encryption function $E(m)=g^{m}r^{n}\left(\mbox{mod }n^{2}\right)$,
-for a random $r<n$. Using the private key $\lambda=\mbox{lcm}(p-1,q-1)$,
-the decryption function for ciphertext $c$ is $m=\frac{L\left(c^{\lambda}\mbox{ mod }n^{2}\right)}{L\left(g^{\lambda}\mbox{ mod }n^{2}\right)}\mbox{ mod }n$
-where $L(u)=\frac{u-1}{n}$ is a well-defined function for $u\equiv1\;(\mbox{mod }n)$.
-Notice that $E(m_{1})\cdot E(m_{2})=g^{m_{1}}r_{1}^{n}g^{m_{2}}r_{2}^{n}=g^{m_{1}+m_{2}}(r_{1}r_{2})^{n}\in E(m_{1}+m_{2})$,
-which satisfies the additive homomorphic property. Further details
-can be found in \cite{Paillier99}.
+\item Let $g<n^{2}$ such that $g$ has order $n\alpha$.  $(g,n)$ is the public key.
+\item The encryption function is $E(m)=g^{m}r^{n}\left(\mbox{mod }n^{2}\right)$,
+for a random $r<n$. 
+\item Define $\lambda=\mbox{lcm}(p-1,q-1)$.  $\lambda$ is the private key.
+\item
+Define $L(u)=\frac{u-1}{n}$ which is a well-defined function for $u\equiv1\;(\mbox{mod }n)$.  Then the decryption function for ciphertext $c$ is 
+$m=\frac{L\left(c^{\lambda}\mbox{ mod }n^{2}\right)}{L\left(g^{\lambda}\mbox{ mod }n^{2}\right)}\mbox{ mod }n$.
+
+\item Notice that $E(m_{1})\cdot E(m_{2})=g^{m_{1}}r_{1}^{n}g^{m_{2}}r_{2}^{n}=g^{m_{1}+m_{2}}(r_{1}r_{2})^{n}\in E(m_{1}+m_{2})$,
+which satisfies the additive homomorphic property. 
 
 
+
+\end{itemize}
 \section{Secure Function Evaluation}
 
 One of the fundamental cryptographic primitives for designing privacy-preserving
