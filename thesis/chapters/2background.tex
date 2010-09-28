@@ -1,78 +1,24 @@
 
 \chapter{Background and Cryptographic Primitives}
 
-
-\section{Threat Models\label{sub:Threat-Models}}
-
-It is well known that there are many threats and malicious parties
-on the Internet, as discussed in the previous section. We now present
-formalizations of these threats into threat models from the literature,
-suitable for formal cryptographic analysis. The three threat models
-presented here, known as the {}``semi-honest'', {}``malicious'',
-and {}``covert'' models, cover a variety of assumptions and levels
-of trust among cooperating and non-cooperating parties, ranging from
-parties who basically trust each other but want to keep information
-private, all the way to parties who have no trust relationship at
-all. In particular, the {}``malicious'' model is strong enough to
-encompass malicious behavior from any party in a protocol, as will
-be discussed below.
-
-In the {}``semi-honest'' threat model, also known as {}``honest
-but curious'', or {}``passive'', \cite{GMW87} a party to the computation
-is assumed to behave correctly and follow the prescribed protocol.
-However, the party also runs additional probabilistic polynomially
-bounded computation on the side in order to learn information to which
-he is not entitled. A security proof using the semi-honest threat
-model implies that the protocol as designed does not {}``leak''
-information. The semi-honest model is an important theoretical tool
-despite the fact that it is weaker than the malicious model and does
-not capture the full range of malicious behaviors we would expect
-of an adversary. It is useful because a protocol that has been proven
-secure in the semi-honest model is guaranteed to have an analogous
-protocol that is secure in the malicious model \cite{GMW87}. The
-proof of this theorem is constructive and involves extending the protocol
-in an automated way, using a protocol {}``compiler'', to a more
-secure protocol. Essentially, the protocol compiler inserts additional
-steps into the protocol to force the parties to prove to one another
-their faithful adherence to the protocol. This fact notwithstanding,
-the semi-honest model may itself be a realistic model in certain cases,
-for example, when the parties communicating need to preserve privacy
-of data from one another, but also have a pre-existing trust relationship
-sufficient to believe the other party will not maliciously attempt
-to cheat the protocol.
-
-In the {}``malicious'' threat model, an adversarial party is free
-to use any available methods to thwart the computation, including
-sending false or inconsistent messages at any step of the protocol.
-The malicious threat model naturally characterizes the malicious behavior
-that a secure protocol would need to protect against. If a protocol
-is shown to be secure in the malicious threat model, then we can reasonably
-assume that a malicious party will not be able to learn
-any private information by attacking the protocol.
-
-In the {}``covert'' threat model, similar to the {}``malicious''
-model, the adversary is also free to use any available methods to
-thwart the computation. Although the allowable behavior of the adversary
-is the same as in the malicious model, the security guarantees are relaxed.
-In particular, a protocol is considered secure in the covert model
-if the probability of the attacker not getting caught is small but
-non-negligible. The covert model can be considered appropriate for
-real-world scenarios only when the consequences to the adversary for
-being caught are a significant deterrence to trying to cheat (e.g. 
-loss of reputation, monetary or legal penalties) compared to
-the benefit of a successful attack. \cite{aumannlindell}
-
+In this chapter, we will present background material that will be used
+later in this thesis.  We will begin with a discussion of common
+cryptographic primitives that are used in this dissertation and
+related work.  We will discuss in more detail Secure Function Evaluation
+(SFE) and existing techniques and protocols which accomplish this.
+We will also discuss threat models and other related work.
 
 \section{Primitives \label{sub:Primitives}}
 
-With these threat models firmly in mind, we can begin examining methods
-for constructing protocols that are secure in one or more of the threat
-models. We find in the design of secure protocols that certain sub-protocols
+We find in the design of secure protocols that certain sub-protocols
 and techniques are used so frequently as building blocks that they
 deserve to be called primitives. These primitives solve simple problems,
 such as one party needing to choose a value from another party in
 a privacy preserving way, and also are self-contained cryptographic
 steps that cannot be decomposed into still simpler steps.
+We will now present some primitives used in this thesis in an informal
+way.  For a formal presentation with more details, see
+\cite{GoldreichBookVol1} and \cite{Goldreich:vol2}.
 
 
 \subsection{Oblivious Transfer \label{sub:Oblivious-Transfer}}
@@ -169,27 +115,29 @@ generate $(e,d)$ pairs, and $M$ is the message space respectively. \end{descript
 leaks no useful information about the plaintext even if the attacker
 has previously observed many plaintext-ciphertext pairs on plaintexts
 of his choice. 
-\item Formally, the encryption scheme is semantically secure if for every
-probabilistic polynomial time algorithm $A$ there exists a probabilistic
-polynomial-time algorithm $A'$ such that for every probabilistic
-ensemble $\left\{ X_{n}\right\} _{n\in\mathbb{N}}$ with $\mid X_{n}\mid\le\mbox{poly}\left(n\right)$
-every pair of polynomially bounded functions $f,h:\left\{ 0,1\right\} ^{*}\rightarrow\left\{ 0,1\right\} ^{*}$,
-every positive polynomial $p$ and all sufficiently large $n$, then
-the following inequality holds:
-\end{itemize}
-\[
-\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
-
-
-\[
-<\Pr\left[A'\left(1^{n},1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
-
-\begin{itemize}
+%\item Formally, the encryption scheme is semantically secure if for every
+%probabilistic polynomial time algorithm $A$ there exists a probabilistic
+%polynomial-time algorithm $A'$ such that for every probabilistic
+%ensemble $\left\{ X_{n}\right\} _{n\in\mathbb{N}}$ with $\mid X_{n}\mid\le\mbox{poly}\left(n\right)$
+%every pair of polynomially bounded functions $f,h:\left\{ 0,1\right\} ^{*}\rightarrow\left\{ 0,1\right\} ^{*}$,
+%every positive polynomial $p$ and all sufficiently large $n$, then
+%the following inequality holds:
+%\end{itemize}
+%\[
+%\Pr\left[A\left(1^{n},E_{G_{1}\left(1^{n}\right)}\left(X_{n}\right),1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]\]
+%
+%
+%\[
+%<\Pr\left[A'\left(1^{n},1^{\mid X_{n}\mid},h\left(1^{n},X_{n}\right)\right)=f\left(1^{n},X_{n}\right)\right]+\frac{1}{p(n)}\]
+%
+%\begin{itemize}
 \item With any semantically secure encryption scheme, encrypting the same
 message twice will yield different ciphertexts with high probability,
 so $E(m)$ must be a randomized one-to-many function representing
 a set of possible ciphertexts that can be obtained by encrypting $m$.
-Naturally, if $m_{1}\neq m_{2}$, then $E(m_{1})\cap E(m_{2})=\emptyset$ \end{itemize}
+Naturally, if $m_{1}\neq m_{2}$, then $E(m_{1})\cap E(m_{2})=\emptyset$ 
+\item For a formal definition of semantic security, see \cite{Goldreich:vol2}
+\end{itemize}
 \begin{description}
 \item [{Homomorphic~Cipher.}] A cipher is called \emph{homomorphic} if
 there is a computable homomorphism between plaintexts and ciphertexts.
@@ -247,7 +195,68 @@ that for any polynomially-computable function $f$, there exist protocols
 for securely evaluating $f$ that execute in polynomial time. Both
 proofs are constructive, and provide a method for transforming a Boolean
 circuit description of the function $f$ into a protocol for secure
-evaluation of $f$. These protocols are summarized below.
+evaluation of $f$. These protocols are summarized below, with respect
+to the following threat models:
+
+\subsection{Threat Models\label{sub:Threat-Models}}
+
+The threat models used in the SFE literature
+formalize varying levels of assumptions about the trustworthiness
+of participating protocol actors.  The three threat models
+presented here, known as the {}``semi-honest'', {}``malicious'',
+and {}``covert'' models, cover a variety of assumptions and levels
+of trust among cooperating and non-cooperating parties, ranging from
+parties who basically trust each other but want to keep information
+private, all the way to parties who have no trust relationship at
+all. In particular, the {}``malicious'' model is strong enough to
+encompass malicious behavior from any party in a protocol, as will
+be discussed below.
+
+In the {}``semi-honest'' threat model, also known as {}``honest
+but curious'', or {}``passive'', \cite{GMW87} a party to the computation
+is assumed to behave correctly and follow the prescribed protocol.
+However, the party also runs additional probabilistic polynomially
+bounded computation on the side in order to learn information to which
+he is not entitled. A security proof using the semi-honest threat
+model implies that the protocol as designed does not {}``leak''
+information. The semi-honest model is an important theoretical tool
+despite the fact that it is weaker than the malicious model and does
+not capture the full range of malicious behaviors we would expect
+of an adversary. It is useful because a protocol that has been proven
+secure in the semi-honest model is guaranteed to have an analogous
+protocol that is secure in the malicious model \cite{GMW87}. The
+proof of this theorem is constructive and involves extending the protocol
+in an automated way, using a protocol {}``compiler'', to a more
+secure protocol. Essentially, the protocol compiler inserts additional
+steps into the protocol to force the parties to prove to one another
+their faithful adherence to the protocol. This fact notwithstanding,
+the semi-honest model may itself be a realistic model in certain cases,
+for example, when the parties communicating need to preserve privacy
+of data from one another, but also have a pre-existing trust relationship
+sufficient to believe the other party will not maliciously attempt
+to cheat the protocol, for example, if the parties are large corporations
+involved in joint data mining.
+
+In the {}``malicious'' threat model, an adversarial party is free
+to use any available methods to thwart the computation, including
+sending false or inconsistent messages at any step of the protocol.
+The malicious threat model naturally characterizes the malicious behavior
+that a secure protocol would need to protect against. If a protocol
+is shown to be secure in the malicious threat model, then we can reasonably
+assume that a malicious party will not be able to learn
+any private information by attacking the protocol.
+
+In the {}``covert'' threat model, similar to the {}``malicious''
+model, the adversary is also free to use any available methods to
+thwart the computation. Although the allowable behavior of the adversary
+is the same as in the malicious model, the security guarantees are relaxed.
+In particular, a protocol is considered secure in the covert model
+if the probability of the attacker not getting caught is small but
+non-negligible. The covert model can be considered appropriate for
+real-world scenarios only when the consequences to the adversary for
+being caught are a significant deterrence to trying to cheat (e.g. 
+loss of reputation, monetary or legal penalties) compared to
+the benefit of a successful attack. \cite{aumannlindell}
 
 
 \subsection{Garbled Circuit Method \label{sub:Garbled-Circuit-Method}}
@@ -342,9 +351,10 @@ will send $k_{x,1}$ to Bob, and Bob will choose $k_{y,0}$ in the
 $OT_{1}^{2}$. 
 
 \item \emph{Circuit Evaluation} \\
+Using the wire keys received in the previous step,
 Bob will only be able to successfully decrypt
 $E_{k_{x,1}}\left(E_{k_{y,0}}\left(k_{z,0}\right)\right)$ from the
-truth table.
+truth table, revealing the answer $z=f(x,y)=0$.
 \end{enumerate}
 \end{example}
 
