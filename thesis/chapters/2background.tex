@@ -259,7 +259,8 @@ the circuit in such a way that Bob can evaluate it obliviously, i.e.,
 without learning Alice's inputs or the values on any internal circuit
 wire except the output wires. The steps are as follows: 
 \begin{enumerate}
-\item Alice generates two random keys $k_{i,0}$ and $k_{i,1}$ for each
+\item \emph{Generating Garbled Circuits} \\
+Alice generates two random keys $k_{i,0}$ and $k_{i,1}$ for each
 circuit wire $i$, one representing $0$ on that wire, the other representing
 $1$. For all wires in the circuit except input wires, the truth table
 for the corresponding Boolean gate is encrypted. If $g(x,y)$ is a
@@ -267,19 +268,21 @@ gate with input wires $j$ and $l$, and output wire $i$, then the
 truth table value for $g(x,y)$ is encoded as $E_{k_{j,x}}\left(E_{k_{l,y}}\left(k_{i,g(x,y)}\right)\right)$.
 Here, $k_{j,x}$ is the encryption key for value $x$ of wire $j$,
 and similarly for $k_{l,j}$. $k_{i,g(x,y)}$ is the encryption key
-for the output wire of $g$ with value $g(x,y)$ The four encrypted
+for the output wire of $g$ with value $g(x,y)$.  The four encrypted
 values representing $g(0,0)$, $g(0,1)$, $g(1,0)$, and $g(1,1)$
 fully specify the gate $g$. Alice sends the garbled circuit to Bob.
 Computation of the garbled circuit does not depend on input values
 and can be performed in advance. However, the same garbled circuit
 must not be used more than once, or Alice's privacy may be violated. 
-\item Alice sends the keys corresponding to her own input wires to Bob.
+\item \emph{Sending Wire Keys} \\
+Alice sends the keys corresponding to her own input wires to Bob.
 Bob obtains the keys corresponding to his input wires from Alice using
 an $OT_{2}^{1}$ protocol. For each of Bob's input wires, Bob acts
 as the chooser using his corresponding input bit to the function as
 the choice into $OT_{2}^{1}$ , and Alice acts as the sender with
 the two wire keys for that wire as her inputs into $OT_{2}^{1}$ . 
-\item Bob evaluates the circuit. Because of the way that the garbled circuit
+\item \emph{Circuit Evaluation} \\
+Bob evaluates the circuit. Because of the way that the garbled circuit
 is constructed, Bob, having one wire key for each gate input, can
 decrypt exactly one row of the garbled truth table and obtain the
 key encoding the value of the output wire. Yao's protocol maintains
@@ -295,9 +298,10 @@ which she will learn Alice's designated outputs. A complete description
 of Yao's method and security proofs can be found in \cite{Goldreich:vol2}.
 A simple example of an encrypted AND gate is shown here:
 
+\begin{example} 
+\label{yao-example}
 Suppose Alice has $x$ and Bob has $y$ and Alice and Bob wish to
 compute $z=x\wedge y$. The truth table for this gate is as follows:
-
 \begin{tabular}{|c|c|c|}
 \hline 
 $x$ & $y$ & $z=x\wedge y$\tabularnewline
@@ -313,9 +317,10 @@ $1$ & $1$ & $1$\tabularnewline
 \hline
 \end{tabular}
 
+\begin{enumerate}
+\item \emph{Generating Garbled Circuits} \\
 Alice generates a pair of random wire keys for each of $x$, $y$,
 and $z$. Then, the encrypted AND gate will look like this:
-
 \begin{tabular}{|c|c|c|}
 \hline 
 $K_{x}$ & $K_{y}$ & $E\left(K_{z}\right)$\tabularnewline
@@ -331,17 +336,22 @@ $k_{x,1}$ & $k_{y,1}$ & $E_{k_{x,1}}\left(E_{k_{y,1}}\left(k_{z,1}\right)\right)
 \hline
 \end{tabular}
 
+\item \emph{Sending Wire Keys} \\
 For the sake of concreteness, suppose $x=1$ and $y=0$. Then Alice
-will send $k_{x,1}$to Bob, and Bob will choose $k_{y,0}$ in the
-$OT_{2}^{1}$ step, and Bob will only be able to successfully decrypt
+will send $k_{x,1}$ to Bob, and Bob will choose $k_{y,0}$ in the
+$OT_{1}^{2}$. 
+
+\item \emph{Circuit Evaluation} \\
+Bob will only be able to successfully decrypt
 $E_{k_{x,1}}\left(E_{k_{y,0}}\left(k_{z,0}\right)\right)$ from the
 truth table.
-
+\end{enumerate}
+\end{example}
 
 \subsection{Secure Computation With Random Shares \label{sub:SCWS}}
 
-\cite{GMW87} presents a protocol for securely evaluating circuits
-known as \emph{secure computation with shares} (SCWS). This protocol
+Goldreich et. al.  presents a protocol for securely evaluating circuits
+known as \emph{secure computation with shares} (SCWS)~\cite{GMW87}. This protocol
 maintains the invariant that, for every circuit wire $w$, Alice learns
 a random value $s$ and Bob learns $b_{w}\oplus s$, where $b_{w}$
 is the bit value of the wire. Therefore, Alice's and Bob's shares
@@ -355,7 +365,7 @@ securely evaluate the gate:
 \begin{enumerate}
 \item Alice selects a random bit $z_{a}\in\left\{ 0,1\right\} $ 
 \item Alice constructs a quadruple. The quadruple contains each of the 4
-possible values of $g\oplus a_{z}$\\
+possible values of $g\oplus z_{a}$\\
 $\left(g(x_{a},y_{a})\oplus z_{a},\, g(x_{a},1-y_{a})\oplus z_{a},\, g(1-x_{a},y_{a})\oplus z_{a},\, g(1-x_{a},1-y_{a})\oplus z_{a}\right)$. 
 \item Using an $OT_{4}^{1}$ protocol, Bob selects the bit from Alice's
 quadruple with index $s=2x_{b}+y_{b}$, in other words, the position
@@ -372,18 +382,40 @@ At the beginning of the evaluation, Alice sets her share of the input
 wires to her input values, and her share of Bob's input wires to $0$,
 and vice versa for Bob. Each gate $g$ may be evaluated after Alice
 and Bob have computed their shares of the gate's input wires. Thus,
-by repeated applying the above steps, the entire circuit can be evaluated
+by repeated application of the above steps, the entire circuit can be evaluated
 starting from the inputs, and progressing gate by gate until the output.
 Further details and security proofs are presented in \cite{Goldreich:vol2}.
 
+\begin{example} 
+Consider again the simple example of a single and gate, i.e.
+$f(x,y)=x \wedge y$.  The truth table for this gate was given
+in example~\ref{yao-example}.  Again, suppose $x=1$ and $y=0$.
+At the beginning, we have $x_{a}=1$, $x_{b}=0$, $y_{a}=0$, and $y_{b}=0$.
+Taking this example through the 4 steps above:
+\begin{enumerate}
+\item Alice selects a random bit $z_{a}\in\left\{ 0,1\right\} $.  Suppose
+Alice chooses $z_{a}=0$
+\item Alice will construct the quadruple according to her shares and
+the value of $z_{a}$, which will be $\left(0,1,0,0\right)$
+\item Because  $x_{b}=0$ and $y_{b}=0$,  Bob selects the $0^{th}$ value from
+this quadruple from Alice, during the $OT_{1}^{4}$.  This reveals to
+Bob that Bob's share $z_{b}=0$.
+\item Note that the invariant $z_{a} \oplus z_{b}=z=f(x,y)=0$ is maintained.
+\end{enumerate}
+
+\end{example} 
+
 In practice, Yao's garbled circuit method is more commonly used, because
 it is more efficient than the computation with shares. The garbled
-circuit method requires only a single transfer of data from Alice
-to Bob, followed by an $OT_{2}^{1}$ for each the $|B|$ values representing
-Bob's inputs. These OTs can be combined into a single parallel OT.
+circuit method requires only a single transfer of garbled circuit
+data from Alice
+to Bob, followed by an $OT_{1}^{2}$ to transfer wire keys for each of the 
+$\mid B\mid $ values representing
+Bob's inputs. These OTs can be combined into a single parallel OT,
+using for example the methods in~\cite{naor99otope}.
 Then Bob obliviously evaluates the entire circuit on his own, and
 sends the output keys of Alice's outputs back to her. In contrast,
-the SCWS method requires an $OT_{4}^{1}$ for each gate. Some of these
+the SCWS method requires an $OT_{1}^{4}$ for each gate. Some of these
 OTs can be parallelized, but because of dependencies not all can be
 parallelized, and therefore the protocol requires at least $depth(C)$
 distinct rounds of the OT, where $depth(C)$ is the maximum number
@@ -449,10 +481,10 @@ data mining algorithms. The first approach is to use transformations
 to perturb the data set before the algorithm is applied, by replacing
 sensitive data with random unique identifiers. This approach for designing
 privacy-preserving algorithms is taken by several researchers \cite{Klusch,MeruguGhosh,Oliveira}.
-However, this approach suffers from the lack of formal security guarantee,
-and has been shown to be vulnerable to data correlation attacks \cite{Malin04},
-which is why we use secure multiparty computation in this thesis,
-the basis of the other approach. A survey of such techniques is presented
+However, this approach suffers from the lack of formal security guarantees,
+and has been shown to be vulnerable to data correlation attacks \cite{Malin04}.
+Therefore, we use secure multiparty computation in this thesis.
+A survey of such techniques is presented
 in \cite{PinkasCryptoPPDM02}. 
 
 %
