@@ -1,13 +1,13 @@
 
-\chapter{Techniques for Protocol Optimization}
+\chapter{Optimizing Secure Function Evaluation}
 
 \label{sec:Techniques}
 
-Optimizing secure function evaluation to make it more practical for
-real world use will be the focus of this thesis. Traditional methods
+Optimizing secure function evaluation (SFE) to make it more practical for
+real world use will be the primary focus of this thesis. Traditional methods
 for SFE, such as Yao's secure circuit evaluation protocol \cite{Yao86},
 are many orders of magnitude slower than the straightforward insecure
-evaluation of functions, with factors of thousands or more. Asymtotically,
+evaluation of functions. Asymtotically,
 the time required to perform secure function evaluation is equivalent
 to the time required to execute the function itself. For example,
 the Yao protocol requires time and communication linear in the number
@@ -24,7 +24,7 @@ we have looked at are algorithm specific, algorithm \emph{class} specific,
 and a general approach that is applicable to all computable functions.
 The trade-off between these different approaches is a balance between
 performance and general applicability. This trade-off has an analogy
-in the literature of programming language compiler optimizations.
+in the literature of programming-language compiler optimizations.
 General code optimizations, such as loop-unrolling or strength-reduction
 can make all code faster to a limited degree (although this is not
 guaranteed), but tuning a specific algorithm by hand often yields
@@ -49,59 +49,57 @@ OBDDs can be readily extended to represent functions with arbitrary
 domains and ranges. An OBDD is similar to a decision tree, in that
 evaluation is performed from a head node to leaves. However, an OBDD
 is not ordinarily a tree, because internal nodes with identical structure
-are shared. Given a function $f(x_{1},x_{2},\cdots,x_{n})$, the OBDD
+are shared. Given a function $f(x_{1},x_{2},\cdots,x_{n})$, where the
+$x_{i}$ variables are individual bits, the OBDD
 for that function will have $n$ levels, with the $i^{th}$ level
 corresponding to variable $x_{l_{i}}$, where $(l_{1},\cdots,l_{n})$
 is a permutation of $(1,\cdots,n)$. There is a unique canonical OBDD
 corresponding to any function with respect to a given ordering $(l_{1},\cdots,l_{n})$.
-An example of an OBDD to compute the function $F(x)=\#x1\#x3>\#x2\#x4$
-(two-bit millionaires' problem) is shown in \ref{fig:OBDD-example}.
+An example of an OBDD to compute the millionaire's problem 
+$F(a,b)=a>b$ where $a=x_1 x_3$ and $b=x_2 x_4$
+(i.e., $a$ and $b$ are two-bit numbers) is shown in figure \ref{fig:obdd-gt-1}.
 
 %
 \begin{figure}
 \begin{centering}
-\includegraphics[scale=0.4,angle=270]{chapters/obdd1} 
+\includegraphics[scale=0.4,angle=0]{chapters/obdd-gt-1} 
 \par\end{centering}
-
-\caption{\label{fig:OBDD-example}OBDD for two-bit millionaires' problem}
-
+\caption{\label{fig:obdd-gt-1}OBDD for the two-bit millionaires' problem}
 \end{figure}
 
 
-In \cite{kruger06}, we presented an SFE protocol that directly uses
+In chapter \ref{chapter:obdd}, we present an SFE protocol that directly uses
 an OBDD representation of the function $f$ to be jointly computed.
-The advantage of using an OBDD representation over the Boolean gate-representation
+The advantage of using an OBDD representation over the traditional Boolean gate-representation
 is that OBDDs are more succinct for certain classes of functions than
 the Boolean gate representation, including most linear functions.
 For example, the OBDD representation is more efficient than the Boolean
-gate representation for 8-bit AND, 8-bit addition, and the millionaires'
-and billionaires' problems \cite{Yao86} OBDDs are not a universal
-solution, however, for other functions, such as multiplication, the
+gate representation for 8-bit AND ($\wedge$), 8-bit addition, and the millionaires'
+and billionaires' problems \cite{Yao86}.  However, OBDDs are not a universal
+solution because for other functions, such as multiplication, the
 OBDD can be far worse than the Boolean gate representation, due to
 exponential node explosion \cite{Bryant:BDD}. For the classes of
 functions in which the OBDD representation is efficient, our thesis
-\cite{kruger06} shows that the protocol described next can perform
+shows that the protocol presented can perform
 2 to 4 times better than the classical Yao protocol.
 
 The protocol is loosely designed in a similar fashion as Yao's protocol
-\cite{Yao86}. We present two variations of the protocol. An overview
-of the 3 main steps of the protocols are shown in figure \ref{fig:OBDD-overview},
-using the example millionaires' problem pictured above. In the first
-step, Alice sends to Bob the encrypted OBDD. The next step is Bob
+\cite{Yao86}. We present two variations of the protocol in chapter \ref{chapter:obdd}.
+%An overview
+%of the 3 main steps of the protocols are depicted in figure \ref{fig:OBDD-overview},
+%using the example millionaires' problem pictured above. In the first
+For protocol 1, Alice encrypts and sends to Bob the OBDD. The next step is Bob
 acquiring a subset of the encryption keys from Alice using $OT_{2}^{1}$.
 In the final step, Bob uses the obtained keys to decrypt a single
 path through the OBDD yielding the result of the computation. % A formal description follows. 
 
 
-%
-\begin{figure}
-\begin{centering}
-\includegraphics[scale=0.4,angle=270]{chapters/obdd_proto_overview} 
-\par\end{centering}
-
-\caption{\label{fig:OBDD-overview}OBDD secure evaluation protocol}
-
-\end{figure}
+%\begin{figure}
+%\begin{centering}
+%\includegraphics[scale=0.4,angle=270]{chapters/obdd_proto_overview} 
+%\par\end{centering}
+%\caption{\label{fig:OBDD-overview}OBDD secure evaluation protocol}
+%\end{figure}
 
 
 %\input{bdd-proto.tex}
@@ -111,7 +109,7 @@ We then define an optimized variation which is identical to the protocol
 just described, except that Alice first reduces the number of nodes
 to be sent to Bob using an operation called \emph{restriction}, which
 is a partial evaluation applied to OBDDs. Restriction is defined as
-follows.
+follows:
 
 Given an $n$ variable Boolean function $f(x_{1},x_{2},\cdots,x_{n})$
 and a Boolean value $b$, the restriction $f\mid_{x_{i}\leftarrow b}$
@@ -123,6 +121,18 @@ the value $b$ for the variable $x_{i}$ in the function $f$. The
 restriction operation can be performed over multiple variables by
 restricting each variable independently, e.g., $f\mid_{x_{i}\leftarrow b,x_{j}\leftarrow b'}=(f\mid_{x_{i}\leftarrow b})\mid_{x_{j}\leftarrow b'}$.
 The order in which the variables are restricted is unimportant.
+
+\begin{figure}
+\begin{centering}
+\includegraphics[scale=0.4,angle=0]{chapters/obdd-gt-2} 
+\par\end{centering}
+\caption{\label{fig:obdd-gt-2}Restricted OBDD for the two-bit millionaires' problem}
+\end{figure}
+
+For example, consider again the millionaires' problem $f(x_1,x_2,x_3,x_4)$ depicted in 
+figure \ref{fig:obdd-gt-1}.
+Suppose we want the restriction $f\mid_{x_1\leftarrow 1,x_3\leftarrow 1}$.  This restriction is
+shown in figure \ref{fig:obdd-gt-2} as a function $f(x_2,x_4)$.
 
 \begin{flushleft}
 For protocol 2, both parties' inputs include the $OBDD(f)$ for the
@@ -137,11 +147,11 @@ variables in the set $X_{B}\;=\;\{x_{1},\cdots,x_{n}\}-X_{A}$.
 \begin{enumerate}
 \item Alice computes the OBDD ${\cal O}_{A}$ as the restriction of her
 inputs on the function $f\mid_{X_{A}}$. 
-\item Alice encrypts the $O_{A}$ and sends it to Bob. This step is exactly
+\item Alice encrypts the ${\cal O}_{A}$ and sends it to Bob. This step is exactly
 the same as in for Protocol 1. Alice also sends the secret corresponding
 to the root of the OBDD ${\cal O}_{A}$. 
 \end{enumerate}
-\item The computation for Bob is exactly the same as that for Protocol 1. 
+\item The computation for Bob is also the same as that for Protocol 1. 
 \end{enumerate}
 The results of this work demonstrate that OBDDs showed improved performance
 with secure evaluation of certain functions, as will be discussed
@@ -155,16 +165,16 @@ In chapter \ref{chapter:pw}, based on our paper Secure Password Authentication
 Using SFE \cite{kruger10}, we use some properties of the problem
 of authentication to transform the semi-honest protocol into an efficient
 protocol that is secure in the malicious model. This work presents
-a new solution to the {}``Secure Password and Key Authentication''
-(SPAKA) problem, which is the design of protocols to mutually authenticate
+a new solution to the {}``Password Authenticated Key Exchange''
+(PAKE) problem, which is the design of protocols to mutually authenticate
 a client to a server using 
 \begin{enumerate}
-\item The client's knowledge of the password X, and 
-\item The servers's knowledge of a one-way hash function h(X). 
+\item The client's knowledge of the password $X$, and 
+\item The servers's knowledge of a one-way hash function $h(X)$. 
 \end{enumerate}
 The protocol must not leak any additional information or allow access
-if one of the parties is an inposter and does not know their expected
-credential. Our solution provides a property, unique among SPAKA protocols,
+if one of the parties is an imposter and does not know their expected
+credential. Our solution provides a property, unique among PAKE protocols,
 that it can work with arbitrary and legacy hash functions used in
 commodity operating systems today. This protocol takes advantage of
 specific properties of the authentication problem and takes {}``shortcuts''
@@ -190,7 +200,8 @@ applicable to designing secure protocols for evaluating dynamic programming
 algorithms. We illustrate these ideas with several example protocols
 for computing the edit distance problem, which is the minimum number
 of character insertions, deletions, and substitutions needed to change
-string $x$ to string $y$.
+string $x$ to string $y$.  For example, the strings "AAA" and "AABB" have an edit
+distance of $2$, because one "A" is changed to a "B", and another "B" is added.
 
 Let ${\cal P}(x,y)$ be a problem with two inputs $x$ and $y$. Typically,
 a dynamic-programming algorithm ${\cal A}_{{\cal P}}$ for problem
@@ -238,7 +249,7 @@ compute the edit distance of two strings of length $200$ (which has
 $200^{2}=40000$ sub-computations), in under 10 minutes. Our most
 efficient protocol computes elements of the dynamic programming matrix
 in large blocks during each round of the computation. We experimentally
-determined than a block size of $(20,20)$ yielded an optimum trade-off
+determined that a block size of $(20,20)$ yielded an optimum trade-off
 between a decreased number of rounds, and larger block circuits. Using
 a $(20,20)$ circuit allows $20^{2}=400$ elements of the matrix to
 be evaluated during each round of the protocol, which allows the overall
@@ -248,7 +259,7 @@ into a secure circuit produced circuits which were to too large for
 evaluation beyond problems of size $(25,25)$.
 
 
-\section{Algorithm Specific: Protocol Optimization of K-Means Clustering}
+\section{Algorithm Specific: Protocol Optimization of $k$-means Clustering}
 
 The $k$-means algorithm is a common clustering technique in data
 mining. Suppose that we are given $n$ samples $x_{1},\cdots,x_{n}$,
@@ -266,14 +277,15 @@ the $j$-th element of the vector $x$. Other distance metrics~\cite[Chapter 10]{p
 such as scatter metrics, can be used instead of the distance metric
 mentioned above. Each iteration of the $k$-means algorithms recomputes
 the means and reclassifies the samples. The algorithm terminates when
-it detects no change in the means. See \ref{fig:clusters} for an
+it detects no change in the means. See figure \ref{fig:clusters} for an
 illustration.
 
 %
 \begin{figure}
-\includegraphics[scale=0.3,angle=270]{chapters/clusters}
+\centering
+\includegraphics[scale=0.4,angle=0]{chapters/kmeans}
 
-\caption{\label{fig:clusters}Thirteen data points after clustering. The small
+\caption{\label{fig:clusters}Nine data points after clustering. The small
 dots are cluster means.}
 
 \end{figure}
