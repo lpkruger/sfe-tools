@@ -9,7 +9,7 @@ they can be manipulated efficiently. Therefore, they are widely used for a
 variety of applications in computer-aided design, including symbolic
 model checking, verification of combinational logic, and verification of
 finite-state concurrent systems~\cite{Clarke:book}.  A detailed
-discussion of OBDDs can be found in Bryant's seminal
+discussion of OBDDs can be obtained in Bryant's seminal
 article~\cite{Bryant:BDD}.
 
 
@@ -31,7 +31,7 @@ variables, i.e., if $u$ has a nonterminal successor $v$, then ${\it var}(u) < {\
 \end{itemize}
 Given an assignment ${\cal A} \; = \; \langle x_1 \leftarrow b_1,
 \cdots, x_n \leftarrow b_n \rangle$ to the variables $x_1,\cdots,x_n$
-the value of the Boolean function $f(b_1,\cdots,b_n)$ can be found by
+the value of the Boolean function $f(b_1,\cdots,b_n)$ can be obtained by
 starting at the root and following the path where the edges on the
 path are labeled with $b_1, \cdots, b_n$. OBDDs can also be used to
 represent functions with finite range and domain. Let $g$ be a
@@ -73,9 +73,8 @@ x_4)$.}
 \begin{minipage}{3in}
 \centering
 \fbox{\epsfysize=2.5in \epsfbox{obdd/figures/bdd-fig2.pdf}}
-\caption{OBDD for the restriction $f \mid_{x_1 \leftarrow 1, x_3 \leftarrow 0}$ where
- $f(x_1,x_2,x_3, x_4) \; = \; (x_1 \; = \; x_2) \wedge (x_3 \; = \;
-x_4)$.}
+\caption{OBDD for the restriction $\;\;\;\;$ $f\mid_{x_1 \leftarrow 1, x_3 \leftarrow 0}$ where
+ $f(x_1,x_2,x_3, x_4) \; = \; (x_1 \; = \; x_2) \wedge (x_3 \; = \; x_4)$.}
 \label{fig:OBDD-reduced}
 \end{minipage}
 \end{figure}
@@ -90,7 +89,7 @@ $f(x_1,x_2,\cdots,x_n)$ and a Boolean value $b$, $f
 \mid_{x_i \leftarrow b}$ is a Boolean function of $n-1$ variables
 $x_1, \cdots, x_{i-1},x_{i+1},\cdots,x_n$ defined as follows:\\
 $f \mid_{x_i \leftarrow b} (x_1, \cdots, x_{i-1},x_{i+1},\cdots,x_n)$ is
-equal to \\ $f(x_1, \cdots, x_{i-1},b,x_{i+1},\cdots,x_n)$.
+equal to $f(x_1, \cdots, x_{i-1},b,x_{i+1},\cdots,x_n)$.
 Essentially $f \mid_{x_i \leftarrow b}$ is the function obtained by substituting
 the value $b$ for the variable $x_i$ in the function $f$. 
 Given the OBDD for $f$, the $OBDD$ for $f \mid_{x_i \leftarrow b}$ can

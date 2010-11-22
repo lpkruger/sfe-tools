@@ -9,16 +9,14 @@ we present a privacy preserving algorithm for clustering, an
 unsupervised learning algorithm used in genomics and many other
 machine-learning domains.
 
-%% Contributions of this paper
-
 This chapter makes the following contributions:
 
 \begin{itemize}
 \item We present the design and analysis of privacy-preserving $k$-means
 clustering algorithm for horizontally partitioned data (see
 Section~\ref{sec:k-means}). The crucial step in our algorithm is
-privacy-preserving of cluster means. We present two protocols for
-privacy-preserving computation of cluster means. The first protocol is
+privacy-preserving computation of cluster means. We present two protocols for
+this. The first protocol is
 based on oblivious polynomial evaluation and the second one on
 homomorphic encryption. These protocols are described in detail in
 Section~\ref{sec:WAP}.
@@ -37,6 +35,23 @@ evaluation. A detailed discussion of our evaluation is given in
 Section~\ref{sec:eval}.
 
 \end{itemize}
+
+%% Problem description
+
+Assume that Alice $A$ and Bob $B$ have two unlabeled samples $D_A$ and
+$D_B$. We assume that each sample in $D_A$ and $D_B$ has all the
+attributes, or the data sets are horizontally partitioned between $A$
+and $B$. Alice and Bob want to cluster the joint data set $D_A \cup
+D_B$ without revealing the individual items of their data sets (of
+course Alice only obtains the clusters corresponding to her data set
+$D_A$). In this chapter, we assume that clustering the joint data set
+$D_A \cup D_B$ provides better results than individually clustering
+$D_A$ and $D_B$.  Using a large data set from the networking domain we also demonstrate
+that clustering the joint data set results in significantly different
+clusters than individually clustering the data sets (see end of
+section~\ref{sec:eval} for details). We present a privacy-preserving
+version of the $k$-means algorithm where only the cluster means at the
+various steps of the algorithm are revealed to Alice and Bob.
 
 
 
@@ -63,26 +78,8 @@ learning~\cite{Mitchell:AI,Quinlan:86}). Moreover, clusters can also
 be used to identify features that will be useful for
 classification. There is significant research on privacy-preserving
 algorithms for designing
-classifiers~\cite{Agrawal-Srikant,Lindell-Pinkas}. This paper
+classifiers~\cite{Agrawal-Srikant,Lindell-Pinkas}. This chapter
 addresses the problem of privacy-preserving algorithms for clustering.
-
-
-%% Problem description
-
-Assume that Alice $A$ and Bob $B$ have two unlabeled samples $D_A$ and
-$D_B$. We assume that each sample in $D_A$ and $D_B$ has all the
-attributes, or the data sets are horizontally partitioned between $A$
-and $B$. Alice and Bob want to cluster the joint data set $D_A \cup
-D_B$ without revealing the individual items of their data sets (of
-course Alice only obtains the clusters corresponding to her data set
-$D_A$). In this paper, we assume that clustering the joint data set
-$D_A \cup D_B$ provides better results than individually clustering
-$D_A$ and $D_B$.  Using a large data set from the networking domain we also demonstrate
-that clustering the joint data set results in significantly different
-clusters than individually clustering the data sets (see end of
-section~\ref{sec:eval} for details). We present a privacy-preserving
-version of the $k$-means algorithm where only the cluster means at the
-various steps of the algorithm are revealed to Alice and Bob.
 
 
 %% Applications of clustering to medical informatics

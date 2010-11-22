@@ -12,7 +12,7 @@ so that the receiver of the garbled OBDD can correctly decrypt
 nodes in the OBDD. The formal definition of these properties by
 Lindell and Pinkas~\cite{LP04} is provided with the proofs. An example
 of a symmetric key encryption scheme that fulfills these properties is
-$E_k(m)=(r\,,\,f_k(r)\oplus m\,\|\,0^n)$, where
+$E_k(m)=(r\,,\,f_k(r)\oplus (m\,\|\,0^n))$, where
 $f:\binset^n\times\binset^n\rightarrow\binset^{2n}$ is a pseudo-random
 function and $r\rfrom\binset^n$ is a $n$-bit random sequence. Unless
 stated otherwise, all symmetric key encryption schemes in this chapter,
@@ -105,7 +105,7 @@ input $(i_1,\cdots,i_k)$, which results in a node $v_{init}$ at level
 $k$.
 
 \item She uniformly and independently at random creates $(n-k)$ pairs
-of secrets $(s_1^0,s_1^1),\cdots,(s_{n-k}^0,s_{n-k}^1)$.  In addition,
+of secrets\\$(s_1^0,s_1^1),\cdots,(s_{n-k}^0,s_{n-k}^1)$.  In addition,
 for each node $v$ in the $OBDD(f)$ whose level is between $k$ and $n-1$,
 Alice also creates a secret $s_v$. 
 
@@ -191,7 +191,7 @@ Denote the range of the scheme by
 $\alg{Range}_n(k)=\{E_k(x)\}_{x\in\binset^n}$. We say that
 \begin{enumerate}
 	\item \alg{(G},\alg{E},\alg{D)} has an \textbf{elusive range}
-	if for every probabilistic poly-time machine A, every
+	if for every probabilistic poly-time machine $A$, every
 	polynomial $p(\cdot)$, and all sufficiently large $n$,
 	$\Pr_{k\from\alg{G(1^n)}}[A(1^n)\in\alg{Range}_n(k)]<1/p(n)$.
 
@@ -202,7 +202,8 @@ $\alg{Range}_n(k)=\{E_k(x)\}_{x\in\binset^n}$. We say that
 \end{enumerate}
 \end{definition}
 
-\begin{claim} If the encryption scheme has an elusive range and the
+\begin{claim} If the encryption scheme has 
+an efficiently verifiable elusive range, and the
 oblivious transfer protocol is secure, then Protocol 1 is correct for
 semi-honest Alice and Bob.
 \label{claim:protocol1correct}
@@ -352,7 +353,7 @@ $(s_1^0,s_1^1)$. The garbled OBDD corresponding to
 Figure~\ref{cap:BDDpe}(c) is shown below (terminal nodes
 are shown as $0$ and $1$ and lab denotes label). 
 \begin{center}
-\begin{tabular}{|l|} \hline
+\begin{tabular}{|c|} \hline
 $(lab(v_1), E_{s_{v_1} \oplus s_1^0} (lab(0)  \,\|\, s_0), E_{s_{v_1} \oplus s_1^1} (lab(0) \,\|\, s_0))$ \\ \hline
 $(lab(v_2), E_{s_{v_2} \oplus s_1^0} (lab(0) \,\|\, s_0), E_{s_{v_2} \oplus s_1^1} (lab(1) \,\|\, s_1))$ \\ \hline
 $(0,lab(0))$ \\ \hline

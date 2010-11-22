@@ -22,9 +22,9 @@ as {\it round}.  Our first privacy-preserving protocol (referred to as
 described in detail in Section~\ref{subsec:OPE}.  For oblivious
 polynomial evaluation we use the protocol presented by Naor and
 Pinkas~\cite{NaorPinkas99}. The next privacy-preserving protocol
-(referred to as {\it DPE}) uses homomorphic encryption scheme of
-Benaloh~\cite{Benaloh:94}. This protocol is described in detail in
-Section~\ref{subsec:homomorphic}.  
+(referred to as {\it HE}) uses homomorphic encryption scheme of
+Paillier~\cite{Paillier99}. This protocol is described in detail in
+Section~\ref{sec:homomorphic-encryption}.  
 
 \paragraph{Implementation.}
 Our system consists of approximately $3000$ lines of Java code, split
@@ -36,7 +36,7 @@ the cluster.  The {\small\sf protocol} module sets up the framework of
 communication, and calls the specific protocol handlers with a common
 interface, depending on which protocol is selected. In the {\it
 simple} handler, Alice sends $(x,n)$ to Bob, who computes the cluster
-mean $\frac{x+y}{n+m}$ and sends it to Alice.  The OPE and DPE
+mean $\frac{x+y}{n+m}$ and sends it to Alice.  The OPE and HE
 protocol handlers implement the protocols described in
 Sections~\ref{subsec:OPE} and~\ref{subsec:homomorphic}.
 
@@ -48,13 +48,13 @@ The central results uncovered by this investigation include:
 \itembase
 
 \item
-Clustering using DPE is two orders of magnitude more bandwidth
+Clustering using HE is two orders of magnitude more bandwidth
 efficient than OPE, and executes in 4.5 to 5 times less time.  This is
 largely due to bandwidth and computational costs associated with the
 oblivious transfers used by OPE.
 
 \item 
-Our protocols clustering with perfect fidelity; that is, the clusters
+Our protocols perform clustering with perfect fidelity; that is, the clusters
 resulting from our algorithms are identical to those reported by a
 $k$-means algorithm with no privacy for reasonable parameter choices.
 
@@ -184,7 +184,7 @@ clustering diverge from those reported by a simple $k$-means
 algorithm, and is calculated as follows.  Let $X = \{x_1, \dots,
 x_n\}$ be the sample data set to be clustered.  $C_1 \subseteq 2^X$ is
 the clustering of $X$ by the simple algorithm, and $C_2 \subseteq 2^X$
-is the clustering returned by the OPE algorithm (the DPE metric is
+is the clustering returned by the OPE algorithm (the HE metric is
 defined similarly in the obvious manner).  For each pair $(x_i,x_j)$
 such that $1 \leq i < j \leq n$ an error occurs if
 
@@ -208,8 +208,8 @@ they are in different clusters.
 The total number of errors is denoted $E$.  The maximum number of
 errors is $N = n(n-1)/2$.  The precision $P$ is given by $(N-E)/N$.
 
-Both OPE and DPE have unique parameters which dictate the performance
-and security of each protocol.  The performance of DPE is most
+Both OPE and HE have unique parameters which dictate the performance
+and security of each protocol.  The performance of HE is most
 effected by the size of the primes used to select the homomorphic
 encryption keys.  Small primes can be cryptanalyzed, and large ones
 can unnecessarily increase bandwidth use and computational costs.
@@ -217,11 +217,9 @@ Like RSA, linear increases in the size of the primes should result in
 exponential security improvements.
 
 We use interval arithmetic to approximate real numbers (see
-appendix~\ref{sec:approximating-reals}).  The size of the message space in
-DPE and the finite-field in OPE are chosen to achieve the desired
-precision. In Benaloh's encryption scheme $r$ denotes the size of the
-message space. For efficiency reasons we choose $r=3^k$
-(see~\cite{Benaloh:94} for details). Two crucial parameters in the
+section~\ref{sec:approximating-reals}).  The size of the message space in
+HE and the finite-field in OPE are chosen to achieve the desired
+precision.  Two crucial parameters in the
 oblivious polynomial evaluation protocol of Naor and Pinkas are $D$,
 the degree of the masking polynomial and $M$, the total number of
 points used (details of this algorithm can be found
@@ -262,7 +260,7 @@ Simple & 2 & 5959     & 0       & 0\%      & 168   & 0      & 0\% \\
 \hline
 OPE    & 2 & 1497823  & 124322 & 25035.48\%  & 10147 & 831.58 & 5939.88\%  \\
 \hline
-DPE    & 2 & 13580 & 635.08 & 127.89\% & 2135  & 163.9166667 & 1170.83\%  \\
+HE    & 2 & 13580 & 635.08 & 127.89\% & 2135  & 163.9166667 & 1170.83\%  \\
 \hline
 \hline  
 \multicolumn{8}{|l|}{\bf\it River ({\it 184 samples, 15 features})} \\
@@ -271,7 +269,7 @@ Simple & 16 & 74574 & 0 & 0\% & 772 & 0 & 0\% \\
 \hline
 OPE & 16 & 29916457 & 124241.17 & 40116.47\% & 176133 & 730.67 & 22715.16\% \\
 \hline
-DPE & 16 & 234422 & 566.03 & 314.35\% & 38721 & 158.12 & 4915.67\% \\
+HE & 16 & 234422 & 566.03 & 314.35\% & 38721 & 158.12 & 4915.67\% \\
 \hline
 \hline
 \multicolumn{8}{|l|}{\bf\it Robot ({\it 697 samples, 36 features})} \\
@@ -280,7 +278,7 @@ Simple & 8 & 94005 & 0 & 0\% & 1348 & 0 & 0\% \\
 \hline
 OPE & 8 & 36569040 & 126649.42 & 38801.16\% & 212776 & 734.125 & 15684.57\% \\
 \hline
-DPE & 8 & 269698 & 610.04 & 186.90\% & 47662 & 160.8125 & 3435.76\% \\
+HE & 8 & 269698 & 610.04 & 186.90\% & 47662 & 160.8125 & 3435.76\% \\
 \hline
 \hline
 \multicolumn{8}{|l|}{\bf\it Speech ({\it 5,687 samples, 12 features})} \\
@@ -289,7 +287,7 @@ Simple & 33 & 143479 & 0 & 0\% & 4198 & 0 & 0\% \\
 \hline
 OPE & 33 & 49359739 & 124183.48 & 34402.07\% & 294694 & 733.57 & 6919.87\% \\
 \hline
-DPE & 33 & 384644 & 509.00 & 268.08\% & 66101 & 156.3207071 & 1474.58\% \\
+HE & 33 & 384644 & 509.00 & 268.08\% & 66101 & 156.3207071 & 1474.58\% \\
 \hline
 \hline
 \multicolumn{8}{|l|}{\bf\it Ping ({\it 28,392 samples, 3 features})} \\
@@ -298,7 +296,7 @@ Simple & 9 & 11644 & 0 & 0\% & 2765 & 0 & 0\% \\
 \hline
 OPE & 9 & 3429688 & 126594.2 & 29354.55\% & 23767 & 777.8519 &   759.566\% \\
 \hline
-DPE & 9 & 30633 & 703.29 & 163.07\% & 9694 & 256.63 & 250.59\% \\
+HE & 9 & 30633 & 703.29 & 163.07\% & 9694 & 256.63 & 250.59\% \\
 \hline
 \end{tabular}
 \end{center}
@@ -311,23 +309,23 @@ WAP protocol.}
 \end{table}
 
 Our first battery of tests broadly profile the performance of OPE and
-DPE.  Shown in Table~\ref{tbl:results}, the most striking
+HE.  Shown in Table~\ref{tbl:results}, the most striking
 characteristic of these experiments is that they demonstrate that OPE
 protocols consume two orders of magnitude more network resources than
-the DPE protocols.  These costs can be directly attributed to the
+the HE protocols.  These costs can be directly attributed to the
 oblivious transfer algorithms whose primitive cryptographic operations
 require the transfer of many polynomials between hosts.  The total
-bandwidth costs scaled linearly for both OPE and DPE.  That is, the
+bandwidth costs scaled linearly for both OPE and HE.  That is, the
 bandwidth costs per feature/round are relatively constant for the
 given data sets, where we observed 0.03\% variance in scaled bandwidth
-usage in OPE and 9.36\% in DPE.  Note that the bandwidth is ultimately
+usage in OPE and 9.36\% in HE.  Note that the bandwidth is ultimately
 of limited interest; the worst case experiment only consumes 47
 megabytes of bandwidth over two and a half minutes.  Hence, our
 protocols would have visible impact only the slowest or busiest
 networks.
 
-A chief feature illustrated by the timing measurements is that DPE is
-much more time and bandwidth efficient than OPE.  Surprisingly, DPE is
+A chief feature illustrated by the timing measurements is that HE is
+much more time and bandwidth efficient than OPE.  Surprisingly, HE is
 4.5 to 5 times faster on all the data-sets for the selected
 parameters.  The reasons for this is that the underlying oblivious
 transfers incur large message exchanges between the two parties.
@@ -337,18 +335,18 @@ limited by the latency caused by many individual round-trips in the
 protocol.  We optimized these these by parallelizing exchanges, where
 possible.  This vastly improved protocol performance, and as a direct
 result, bandwidth and and computation have since emerged as the
-limiting factors.}  The efficiency of DPE with respect to OPE further
+limiting factors.}  The efficiency of HE with respect to OPE further
 shows fixed costs (startup) are likewise dominated by the underlying
 privacy preservation operations.  Further, like the bandwidth costs,
 the execution of each algorithm scale linearly with the number of
 features and rounds, where each feature round requires 730 and 160
-milliseconds for OPE and DPE to complete, respectively.
+milliseconds for OPE and HE to complete, respectively.
 
 The cost of privacy-preservation in large data-set clustering is
 noticeable.  For example, a large data-set containing 5687 samples and
-12 features takes DPE just 66 seconds to cluster, as opposed to the
+12 features takes HE just 66 seconds to cluster, as opposed to the
 4.19 seconds required by its simple $k$-means counterpart.  Hence for
-this experiment, DPE algorithm incurs slowdown of a factor of 15 and the
+this experiment, HE algorithm incurs slowdown of a factor of 15 and the
 more expensive OPE a factor of 70.  These results are, for most
 applications, clearly within the bounds of acceptable performance.
 This is particularly encouraging in the face of past attempts; circuit
@@ -359,8 +357,8 @@ complete~\cite{mnps04}.
 % precision
 
 For the parameters we selected the precision of our privacy-preserving
-algorithms (DPE and OPE) was $100\%$.  The reasons for this are
-two-fold.  The parameter choices for DPE resulted in a message space
+algorithms (HE and OPE) was $100\%$.  The reasons for this are
+two-fold.  The parameter choices for HE resulted in a message space
 of $3^{40}$ values, which allowed us to map cluster means to 4 decimal
 places.  Moreover, the data range was small in all our data-sets.
 Hence, the error rounding caused by using interval arithmetic was
@@ -375,13 +373,13 @@ all cases increased cost was nominal; the parameter sets slowed the
 performance of the algorithm down between 60\% and 190\% over a
 baseline experiment, i.e., $M=D=5$.  Again, these costs are a direct
 reflection of the costs of the underlying oblivious transfer.  Not
-shown, the bandwidth costs in DPE scale by a constant factor
+shown, the bandwidth costs in HE scale by a constant factor
 proportional to $D$ and $M$.
 
 \begin{figure}
 \begin{center}
 \fbox{\rotatebox{0}{\epsfysize=3.2in \epsfbox{kmeans/figures/dpe-param.pdf}}}
-\caption{DPE runtime costs by message space - in {\it
+\caption{HE runtime costs by message space - in {\it
 milliseconds}, the time to cluster the sample data-sets with various
 widths of $n$ message spaces.}
 \label{fig:dpe-param}
@@ -389,13 +387,13 @@ widths of $n$ message spaces.}
 \end{figure}
 
 As illustrated in Figure~\ref{fig:dpe-param}, increases the size $n$
-(which is a product of two primes) in DPE has modest affect on the
+(which is a product of two primes) in HE has modest affect on the
 performance of the protocols.  Exponential increases in $n$ result in
 linear increases in message size.  Because the network is a limiting
 factor, such increases are, as shown, reflected in linear slowdowns.
 Hence, very large intervals or high precision clustering can be
 supported by small increases in bandwidth consumption.  As in OPE,
-bandwidth costs in DPE scale by a constant factor in these
+bandwidth costs in HE scale by a constant factor in these
 experiments, where each protocol exchange increases directly in
 proportion to the size of the primes.
 

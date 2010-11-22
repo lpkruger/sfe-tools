@@ -36,10 +36,11 @@ necessary oblivious transfers.
 In this section, we present two privacy-preserving protocols for WAP
 that are more efficient than the standard protocols. The first
 protocol is based on oblivious polynomial evaluation and the second on
-homomorphic encryption. Similarity of WAP with a problem that occurs
-in protocols for generation of shared RSA
-keys~\cite{Boneh-Franklin-2001,Gilboa99} is discussed in
-appendix~\ref{sec:shared-RSA}.
+homomorphic encryption. 
+%Similarity of WAP with a problem that occurs
+%in protocols for generation of shared RSA
+%keys~\cite{Boneh-Franklin-2001,Gilboa99} is discussed in
+%appendix~\ref{sec:shared-RSA}.
 
 
 \subsection{Protocol based on oblivious polynomial evaluation}
@@ -154,47 +155,14 @@ theorem.
 \subsection{Protocol based on homomorphic encryption}
 \label{subsec:homomorphic}
 
-Let $(G,E,D,M)$ be a encryption scheme (where $G$ is the function to
-generate public parameters, $E$ and $D$ are the encryption and
-decryption functions, and $M$ is the message space respectively) with
-the following properties:
-\begin{itemize}
-\item The encryption scheme $(G,E,D)$ is {\em semantically secure}~\cite{Goldwasser:Micali}.
-Essentially, an encryption scheme is semantically secure
-if an adversary gains no extra information by inspecting the ciphertext.
-This is formally defined in the appendix (see definition~\ref{def:semantic-secure}).
-
-
-\item  For all $m \in M$ and $\alpha \in M$, $m_1 \in E(m)$
-implies that $m_1^\alpha \in E(m \alpha)$. Encrypting the same
-message twice in a probabilistic encryption function can
-yield a different ciphertext, so $E(m)$ denotes the set of
-ciphertexts that can be obtained by encrypting $m$.\footnote{
-Of course, to successfully decrypt  two different messages
-$m$ and $m'$ sets $E(m)$ and $E(m')$ should be disjoint.}
-
-\item There is a computable function $f$ such that for all messages $m_1$ and $m_2$
-the following property holds:
-\begin{eqnarray*}
-f(E(m_1),E(m_2)) & = & E (m_1+m_2)
-\end{eqnarray*}
-\end{itemize}
-There are several encryption scheme that have the three properties
-mentioned above~\cite{Benaloh:94,Naccache-Stern,Paillier99}. In our
-implementation, we used the {\it dense probabilistic encryption (DPE)}
-scheme of Benaloh~\cite{Benaloh:94}. The semantic security of the
-scheme provided by Benaloh is based on the intractability of 
-deciding prime residuosity.
-
-
-
+Homomorphic encryption and the Paillier cipher
+was introduced in section \ref{sec:homomorphic-encryption}.
 Party $1$ and $2$
 have a pair of messages $(x,n)$ and $(y,m)$. The two parties want to
 jointly compute $\frac{x+y}{n+m}$ in a privacy-preserving way. Assume
-that party $1$ sets up a probabilistic encryption scheme $(G,E,D,M)$, and
-publishes the public parameters $G$. We also assume that the probabilistic
-encryption scheme $(G,E,D,M)$ satisfies the three properties given at the
-beginning of the section. The protocol $\mathcal{P}_H$ for WAP is shown
+that party $1$ sets up a homomorphic encryption scheme $(G,E,D,M)$, and
+publishes the public parameters $G$. 
+The protocol $\mathcal{P}_H$ for WAP is shown
 in Figure~\ref{fig:protocol-homomorphic}.
 
 \begin{figure}
@@ -210,10 +178,8 @@ Party $2$ computes the following two messages and sends it to party $1$:
 m_1 & = & f(x_1^z,  z_1) \\
 m_2 & = & f(n_1^z, z_2) \\
 \end{eqnarray*}
-{\bf Note:} In our implementation we use the homomorphic-encryption scheme by~\cite{Benaloh:94} 
-where $f$ is multiplication.
 
-\item {\bf (Step 3)} Using the two properties of the probabilistic encryption scheme $(G,E,D)$,
+\item {\bf (Step 3)} Using the two properties of the homomorphic encryption scheme $(G,E,D)$,
 we have the following:
 \begin{eqnarray*}
 m_1 & = & E(z \cdot x + z \cdot y) \\
@@ -230,15 +196,12 @@ $\frac{x+y}{n+m}$. Party $1$ sends $\frac{x+y}{n+m}$ to party $2$.
 \begin{theorem}
 \label{thm:privacy-homomorphic}
 \rm
-Assume that the probabilistic encryption scheme $(G,E,D)$ has three
-properties mentioned at the beginning of this
-sub-section. $\mathcal{P}_H((x,n),(y,m))$ is a privacy-preserving
+Assume that the homomorphic encryption scheme $(G,E,D)$ is semantically
+secure.
+$\mathcal{P}_H((x,n),(y,m))$ is a privacy-preserving
 protocol to compute$\frac{x+y}{n+m}$.
 \end{theorem}
-The proof of this theorem is straightforward and is given in
-appendix~\ref{appendix:definitions-proofs}. The basic intuition is
-that party $2$ cannot tell the difference between $E(x)$ and $E(n)$
-and encryption of two arbitrary messages.
+\input{kmeans/proof1}
 
 The complexity of encryption and decryption operations of a scheme
 $(G,E,D,M)$ depends on size of the message space $M$. Therefore, in
@@ -253,14 +216,4 @@ receives $z (x+y)$ and $z (n+m)$ modulo $p_i$ (for $1 \leq i \leq
 m)$. CRT allows party $1$ to reconstruct $z (x+y)$ and $z (n+m)$
 modulo $N \; = \; \prod_{i=1}^m p_i$. This technique is also used by
 Gilboa~\cite{Gilboa99}.
-
-
-
-
-
-
-
-
-
-
 

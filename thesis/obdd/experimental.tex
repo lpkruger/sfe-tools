@@ -53,7 +53,8 @@ the OBDD and circuit are evaluating the same functions.
 
 For the cryptographic primitives we use exactly the same
 implementation as Fairplay. We use the 1-out-of-2 $(OT^{2}_{1})$
-proposed by Noar and Pinkas~\cite{Noar-Pinkas:2001}, and  the encryption
+proposed by Noar and Pinkas~\cite{Noar-Pinkas:2001}, and described in section
+\ref{sub:Oblivious-Transfer}, the encryption
 function is $E_k (m)$ was ${\rm SHA-1}(k) \oplus (m \,\|\,0^n)$.
 
 
@@ -232,10 +233,10 @@ garbled OBDD is the structure that Alice sends to Bob to
 evaluate. With respect to network bandwidth our implementation
 outperformed Fairplay for seven out of the nine functions. We have
 implemented a reverse compiler that takes as input an OBDD, and
-outputs an SHDL description of a boolean circuit to evaluate the OBDD.
+outputs an SHDL description of a Boolean circuit to evaluate the OBDD.
 This is performed via a straightforward transformation that takes each
 node in the OBDD and produces corresponding 3-input MUX gate in the
-boolean circuit.  Then, an optimization pass is run using the same
+Boolean circuit.  Then, an optimization pass is run using the same
 techniques described in~\cite{Fairplay}.  The column labeled as
 ``Converted Fairplay'' in Figure~\ref{table:size-bandwidth} shows the size
 of the encrypted circuits produced by running the FairPlay protocol on
@@ -266,6 +267,7 @@ for execution times.
 \begin{center}\begin{tabular}{|c||c|c|c||c|c|}
 \hline 
 Function & \multicolumn{3}{c|}{\sf Size in bytes.} & \multicolumn{2}{c|}{\sf Bandwidth in bytes} \\ 
+\hline 
 	&  SFE-OBDD & Fairplay & Converted Fairplay & SFE-OBDD & Fairplay\\ \hline
 
 Add4 & 970 & 1915 & 5382 & 3604 & 4684 \tabularnewline \hline
