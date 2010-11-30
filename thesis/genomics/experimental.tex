@@ -33,7 +33,7 @@ the three protocols of section~\ref{sec:protocols}.  For comparison
 purposes, we also implemented the edit distance protocol of Atallah
 \textit{et al.}~\cite{atallah}, using the Lin-Tzeng construction for
 the millionaires' protocol~\cite{lintzeng-acns05} and Paillier homomorphic
-encryption~\cite{Paillier99} (see appendix~\ref{appendix-atallah}).
+encryption~\cite{Paillier99} (see section~\ref{appendix-atallah}).
 All of the code was written in Java.
 
 The experiments were executed on two 3-GHz Pentium 4 machines, with two
@@ -104,15 +104,15 @@ round. Our experimental results confirm the protocol characteristics
 shown in Figure~\ref{fig:protocol-characteristics}.
 
 \begin{figure*}
-\centerline{\includegraphics[bb=22bp -50bp 600bp 1000bp,scale=0.4,angle=0]{genomics/proto123}}
+\centerline{\includegraphics[bb=22bp -50bp 600bp 1000bp,scale=0.6,angle=0]{genomics/proto123}}
 \caption{Timing measurements (in minutes and seconds) comparing protocols
 1, 2, and 3. The Atallah~\cite{atallah} protocol could not complete problems of
 sizes $(25,25)$ and $(25,25)$.}
 \label{fig:histogram} 
 \end{figure*}
 
-Detailed results for protocol $1$ and $2$ are presented in the
-appendix.  We discuss results for Protocol $3$ in detail. Recall that
+Detailed results for protocol $1$ and $2$ are presented in section~\ref{appendix-atallah}.
+We discuss here results for Protocol $3$ in detail. Recall that
 in this protocol a grid structure is used (see
 section~\ref{subsec:protocol3}).  Using Protocol $3$, we were able to
 solve problems instances of considerable size; here we present
@@ -169,7 +169,7 @@ Protocol $2$ would be the best choice because the cost of embedding
 the entire matrix into a Yao circuit becomes prohibitive.
 
 \begin{figure*}
-\centerline{\includegraphics[scale=0.4,angle=0]{genomics/sw123}}
+\centerline{\includegraphics[scale=0.6,angle=0]{genomics/sw123}}
 
 \caption{Timing measurements (in minutes and seconds) comparing Smith-Waterman
 Protocols 1, 2, and 3. For problem sizes (25,25) and (60,60), Protocol

@@ -43,7 +43,7 @@ we will assume that the construction of~\cite{atallah} is instantiated
 with a state-of-the-art sub-protocol for the millionaires' problem, \eg,
 the Lin-Tzeng protocol~\cite{lintzeng-acns05}.  This protocol requires
 $(1540 s' - 6)$ online modular multiplications per instance if $s'$-bit
-values are being compared ($1540 q - 6$ if $q$-bit values are being
+values are being compared ($1540 q - 6)$ if $q$-bit values are being
 compared), assuming the standard size of 512 bits for the prime moduli
 in ElGamal encryption.
 
@@ -80,8 +80,9 @@ before decryption succeeds and he obtains the wire key representing the
 bit value of the gate's output wire.
 
 Transferring the wire-key representation of Bob's $q$-bit input into $\CE$
-requires $q$ instances of $OT_1^2$.  The online cost of each instance
-is 2 modular exponentiations and 1 modular exponentiations.  Therefore,
+requires $q$ instances of $OT_1^2$.  The online cost of each instance using Pinkas-Naor OT
+(see section~\ref{sub:Oblivious-Transfer})
+is 2 modular exponentiations for the sender and 1 modular exponentiation for the chooser.  Therefore,
 assuming 512-bit moduli, the total online cost of obliviously transferring
 the inputs to $\CE$ is equivalent to $1025q$ modular multiplications.
 

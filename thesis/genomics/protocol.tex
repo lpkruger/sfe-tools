@@ -302,7 +302,7 @@ instance of $\CM$.  Alice's inputs are three $\log(n+m)$-bit values
 $D_A(i-1,j)$, $D_A(i,j-1)$, and $D_A(i-1,j-1)$.  Alice's fourth input is
 a fresh random $\log(n+m)$-bit value $r$. Bob's first three inputs are
 $\log(n+m)$-bit values $D_B(i-1,j)$, $D_B(i,j-1)$, and $D_B(i-1,j-1)$,
-and his fourth input is $T(i,j)$, \ie, the result of evaluating the
+and his fourth input is $t(i,j)$, \ie, the result of evaluating the
 equality-testing circuit $\CE(i,j)$ on $\alpha[i]$ and $\beta[j]$.
 
 Alice sets $D_A(i,j)=r$.  Bob obtains output $z$ from the protocol,
@@ -537,7 +537,7 @@ rounds can be brought down to $O(\frac{m+n}{k})$.
 
 \begin{figure}
 \centering
-    \includegraphics[height=1.3in]{genomics/grid.pdf}
+    \includegraphics[height=2.0in]{genomics/grid.pdf}
 \caption{Example grid.}
 \label{fig:grid}
 \end{figure}
