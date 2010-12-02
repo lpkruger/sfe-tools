@@ -3,12 +3,12 @@ In general, there are two approaches for designing privacy-preserving
 machine learning algorithms. The first approach is to use
 transformations to perturb the data set before the algorithm is
 applied. This approach for designing privacy-preserving clustering
-algorithms is taken by several
+algorithms has been taken by several
 researchers~\cite{Klusch,MeruguGhosh,Oliveira}. A second approach to
 designing privacy preserving algorithms is to use algorithms from the
 secure-multiparty computation literature. The advantage of this
 approach over the perturbation approach is that formal guarantees of
-privacy can be given for these algorithms. Our thesis takes the latter
+privacy can be given for these algorithms. This thesis takes the latter
 approach. Vaidya and Clifton~\cite{VaidyaClifton} present a
 privacy-preserving $k$-means algorithm for vertically-partitioned data
 sets, whereas our thesis considers
@@ -23,11 +23,10 @@ algorithm only depends on the number of steps taken by the $k$-means
 algorithm and the dimension of the data items. There are distributed
 clustering algorithms where the goal is to reduce communication
 costs~\cite{DhillonModha,Kargupta}.  These distributed clustering
-algorithms do not consider privacy.
+algorithms do not consider privacy issues.
 
 In our implementation, we approximate real numbers using intervals
 (see section~\ref{sec:approximating-reals}).  Finite-precision
 approximation to functions may leak information. Feigenbaum {\it et
 al.}~\cite{Nissim:2001} show that approximations to functions can be
 made private by adding noise.
-
