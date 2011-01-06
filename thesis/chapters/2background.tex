@@ -35,12 +35,11 @@ values. The sender learns nothing.
 There are a variety of OT protocols presented in cryptographic literature.
 We focus on the Naor-Pinkas OT protocol~\cite{NaorPinkas99}, based
 on discrete logarithms, because it is a very efficient OT protocol
-that we have chosen for practical implementations. The performance
-characteristics of this protocol are discussed in section \ref{sub:Comparison-with-Naor-Pinkas}.
+that we have chosen for practical implementations. 
+%The performance characteristics of this protocol are discussed in section \ref{sub:Comparison-with-Naor-Pinkas}.
 The steps of the Naor-Pinkas $OT_{1}^{2}$ protocol are summarized next.
 It is possible to extend this to $OT_{1}^{n}$~\cite{NaorPinkas99}.
-We will also investigate other OT methods based on modular square roots in
-chapter \ref{sec:OT-SquareRoots}.
+%We will also investigate other OT methods based on modular square roots in chapter \ref{sec:OT-SquareRoots}.
 \begin{enumerate}
 \item Let $q$ be a prime number and let $g$ be a generator for the field
 $\mathbb{Z}_{q}$.  Elements $q$ and $g$ are known to both parties. Also,
@@ -286,10 +285,10 @@ must not be used more than once, or Alice's privacy may be violated.
 \item \emph{Sending Wire Keys} \\
 Alice sends the keys corresponding to her own input wires to Bob.
 Bob obtains the keys corresponding to his input wires from Alice using
-an $OT_{2}^{1}$ protocol. For each of Bob's input wires, Bob acts
+an $OT_{1}^{2}$ protocol. For each of Bob's input wires, Bob acts
 as the chooser using his corresponding input bit to the function as
-the choice into $OT_{2}^{1}$ , and Alice acts as the sender with
-the two wire keys for that wire as her inputs into $OT_{2}^{1}$ . 
+the choice into $OT_{1}^{2}$ , and Alice acts as the sender with
+the two wire keys for that wire as her inputs into $OT_{1}^{2}$ . 
 \item \emph{Circuit Evaluation} \\
 Bob evaluates the circuit. Because of the way that the garbled circuit
 is constructed, Bob, having one wire key for each gate input, can
@@ -377,7 +376,7 @@ securely evaluate the gate:
 \item Alice constructs a quadruple. The quadruple contains each of the 4
 possible values of $g\oplus z_{a}$\\
 $\left(g(x_{a},y_{a})\oplus z_{a},\, g(x_{a},1-y_{a})\oplus z_{a},\, g(1-x_{a},y_{a})\oplus z_{a},\, g(1-x_{a},1-y_{a})\oplus z_{a}\right)$. 
-\item Using an $OT_{4}^{1}$ protocol, Bob selects the bit from Alice's
+\item Using an $OT_{1}^{4}$ protocol, Bob selects the bit from Alice's
 quadruple with index $s=2x_{b}+y_{b}$, in other words, the position
 corresponding to Bob's shares of wires $x$ and $y$. The value received
 by Bob is $z_{b}=g(x_{a}\oplus x_{b},y_{a}\oplus y_{b})\oplus z_{a}=g(x,y)\oplus z_{a}$,

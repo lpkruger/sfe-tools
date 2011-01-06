@@ -233,7 +233,7 @@ the receiver sends $(D+1) . M$ pairs of values to the sender.  Out
 of each set of $M$ pairs, one of them is related to $\alpha$ (the
 point the polynomial is being evaluated on), and the other $M-1$
 values are random.  The $1$-out-of-$M$ oblivious transfer protocol
-(denoted as $OT_1^M$) is repeated $D+1$ times to learn the required
+(denoted as $OT_M^1$) is repeated $D+1$ times to learn the required
 value.  So, increasing $M$ strengthens the receiver's security.
 Unless otherwise specified, we selected $D=7$ and $M=6$.  For brevity,
 we do not consider $D$ or $M$ further.
@@ -367,7 +367,7 @@ space is required to be smaller (likely for performance reasons) or
 the range of data values is large, precision errors may be introduced.
 
 The costs of OPE grow slightly with increases in $D$ and $M$.  We
-experimented with varied parameters of $D$ and $M$ equal 5, 10, 15 on
+experimented with varied parameters of $D$ and $M$ equal to 5, 10, 15 on
 all the non-synthetic data-sets (for a total of 27 experiments) .  In
 all cases increased cost was nominal; the parameter sets slowed the
 performance of the algorithm down between 60\% and 190\% over a

@@ -81,7 +81,10 @@ OBDD can be far worse than the Boolean gate representation, due to
 exponential node explosion \cite{Bryant:BDD}. For the classes of
 functions in which the OBDD representation is efficient, our thesis
 shows that the protocol presented can perform
-2 to 4 times better than the classical Yao protocol.
+2 to 4 times better than the classical Yao protocol.  This is due to the
+more compact representation of OBDDs compared to Boolean circuits for certain
+functions, combined with the fact that our protocol operates directly on the OBDD
+representation of the function, without requiring conversion to a Yao circuit.
 
 The protocol is loosely designed in a similar fashion as Yao's protocol
 \cite{Yao86}. We present two variations of the protocol in chapter \ref{chapter:obdd}.
@@ -89,7 +92,7 @@ The protocol is loosely designed in a similar fashion as Yao's protocol
 %of the 3 main steps of the protocols are depicted in figure \ref{fig:OBDD-overview},
 %using the example millionaires' problem pictured above. In the first
 For protocol 1, Alice encrypts and sends to Bob the OBDD. The next step is Bob
-acquiring a subset of the encryption keys from Alice using $OT_{2}^{1}$.
+acquiring a subset of the encryption keys from Alice using $OT_{1}^{2}$.
 In the final step, Bob uses the obtained keys to decrypt a single
 path through the OBDD yielding the result of the computation. % A formal description follows. 
 
@@ -242,8 +245,9 @@ $x$ and $y$ that are relevant to the sub-problem $s$. In case of
 the edit-distance problem ${\it val}((i,j))$ is equal to $D(i,j)$. 
 \end{itemize}
 \end{itemize}
-We implemented three variations of the protocol in \cite{kruger07},
-and showed that the techniques produce efficient ways to compute the
+We illustrate these techniques with a complete solution to the edit distance problem.
+We implement three variations of a protocol to compute edit distance
+and show that the techniques produce efficient ways to compute the
 edit distance of two strings. For example, the protocol is able to
 compute the edit distance of two strings of length $200$ (which has
 $200^{2}=40000$ sub-computations), in under 10 minutes. Our most
@@ -256,7 +260,9 @@ be evaluated during each round of the protocol, which allows the overall
 $(200,200)$ problem to be evaluated in $100$ rounds. In comparison,
 using the generic techniques to compile the edit distance algorithms
 into a secure circuit produced circuits which were to too large for
-evaluation beyond problems of size $(25,25)$.
+evaluation beyond problems of size $(25,25)$.  We also show variations of these
+protocols applied to the Smith-Waterman sequence alignment algorithm and discuss how these 
+techniques can be applied to many other dynamic programming problems.
 
 
 \section{Algorithm Specific: Protocol Optimization of $k$-means Clustering}
@@ -322,12 +328,13 @@ that make use of that primitive. Based on my experience with real
 implementations of SFE protocols, the oblivious transfer steps tend
 to be very expensive in terms of space and communication. Common oblivious
 transfer protocols are based on discrete logarithms, but other trapdoor
-functions may be used as well. %One thing I propose to try is implementing
+functions may be used as well. 
+%One thing I propose to try is implementing
 %Naor-Pinkas \cite{Noar-Pinkas:2001} using more compact representations,
 %for example, with elliptic curve groups. I have recently developed
-A new $OT_{2}^{1}$ protocol is presented in chapter \ref{sec:OT-SquareRoots}.
-and its security and performance are compared with the Naor-Pinkas
-protocol. %In particular, I conjecture that this protocol
+%A new $OT_{1}^{2}$ protocol is presented in chapter \ref{sec:OT-SquareRoots}.
+%and its security and performance are compared with the Naor-Pinkas
+%protocol. In particular, I conjecture that this protocol
 %may require less communication overhead than other OT protocols.
 
 \end{comment}
